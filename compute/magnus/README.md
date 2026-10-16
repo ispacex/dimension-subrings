@@ -16,6 +16,10 @@ and an improved sieve for 3-torsion in $D_5/\gamma_5$ on 3-groups of class 4. Ru
 | `e1.g`, `e1.log`, `e1_*.csv`, `e1b.*` | E1: improved sieve for 3-groups of class 4, orders 3^5–3^7 |
 | `e2.g`, `e2.log`, `bm_def.g`, `3group.gap` | derived series and rank of the large 3-groups (GAP pc definitions) |
 | `nq1.g`, `t.g` | scratch checks |
+| `liedim.py` | Lie rings (MATH-42): $\delta_n(L)/\gamma_n(L)$ for a finitely presented Lie ring with weighted generators, as $K/J$ inside $U(L)/\varpi^n = T_{<n}/I$ in the Lyndon basis, modulo $p^E$; prints the free rank, $\log_p$ of the torsion and its exponent |
+| `lie_bm2.py`, `lie_bm2_honest.py` | check: BM §9.1 2-torsion Lie ring, $\delta_4/\gamma_4 \cong \mathbb Z/2$, with a degree-2 generator as one weighted letter and as $[z, z']$ of fresh generators (both give $\mathbb Z/2$) |
+| `lie_bm2_n5.py` | positive control at $n = 5$: the same ring with $y_{0j}$ of degree 3, $\delta_5/\gamma_5 \cong \mathbb Z/2$ |
+| `lie_search5.py` | random search for 3-torsion in $\delta_5/\gamma_5$ over BM (9.1)-type rings: `python lie_search5.py SEED COUNT [E\|-] [wide]`, one JSON line per ring |
 
 The `*.log` files named above are not kept in git (`../.gitignore`); rerunning the scripts writes them.
 
