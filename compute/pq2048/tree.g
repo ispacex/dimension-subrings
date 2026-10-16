@@ -92,6 +92,7 @@ TR_Run := function()
   while stack <> [] do
     G := Remove(stack);
     fixed := G[2]; CH_IDS := G[3]; G := G[1];
+    if IsRecord(G) then G := PcGroupCode(G.code, G.order); fi;
     k := Log(Size(G), 2);
     if IsBound(TRACE) then Print("vertex ", Size(G), " ", CodePcGroup(G), "\n"); fi;
     if prof <> fail then
@@ -150,7 +151,12 @@ TR_Run := function()
           if k + s >= dlev then
             WriteAll(dump, Concatenation("{\"order\":", String(Size(H)), ",\"code\":", String(CodePcGroup(H)), "}\n"));
           else
-            Add(stack, [H, fail, fail]);
+            if k + s >= 9 then
+              # kept as its code until it is popped: an id-range piece pushes tens of thousands
+              Add(stack, [rec(code := CodePcGroup(H), order := Size(H)), fail, fail]);
+            else
+              Add(stack, [H, fail, fail]);
+            fi;
           fi;
         fi;
         if c >= 2 and MS_PClass(H) >= 3 then
