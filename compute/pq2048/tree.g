@@ -31,6 +31,8 @@
 #     whose abelianization has fewer than two invariants >= 4, its step-1 children of class 3 are
 #     dropped before (G_N) (counted in thmB[k+1]).  (Building only the class-2 children, CH_StepC(V, 3),
 #     is correct too but slower than PqDescendants: Aut(V) and the orbits in GAP.)
+#   TIGHT (environment PQ2048_TIGHT=1) — (G_N) of a class-2 vertex of order 2^(LOGQ-1) by PR_Tight2
+#     (prune.g, the tightness lemma) instead of PR_Data.
 #   TRACE — print each vertex (order, CodePcGroup) before it is expanded, to name the one that fails.
 #   PROFILE (environment PQ2048_PROFILE=FILE) — per vertex, appended to FILE (flushed line by line):
 #     {"start":k,"code":..} before it is expanded, then {"k":..,"code":..,"steps":[..],"ms_steps":..,
@@ -53,6 +55,7 @@ TR_Add := function(t, k, x) if not IsBound(t[k]) then t[k] := 0; fi; t[k] := t[k
 TR_List := t -> List([1..Length(t)], i -> function() if IsBound(t[i]) then return t[i]; fi; return 0; end());;
 TR_Rt := function() local r; r := Runtimes();
   return [r.user_time + r.system_time, r.user_time_children + r.system_time_children]; end;;
+TIGHT := IsBound(GAPInfo.SystemEnvironment.PQ2048_TIGHT) and GAPInfo.SystemEnvironment.PQ2048_TIGHT = "1";;
 THMB := IsBound(GAPInfo.SystemEnvironment.PQ2048_THMB) and GAPInfo.SystemEnvironment.PQ2048_THMB = "1";;
 THMA := IsBound(GAPInfo.SystemEnvironment.PQ2048_THMA) and GAPInfo.SystemEnvironment.PQ2048_THMA = "1";;
 TR_Live := function() local g; g := GasmanStatistics();
@@ -163,7 +166,10 @@ TR_Run := function()
            and ForAll(AbelianInvariants(H), x -> x = 2) then
           TR_Add(S.thmA, k + s, 1); continue;
         fi;
-        if not PR_Data(H, LOGQ).p5b then TR_Add(S.cut, k + s, 1); ncut := ncut + 1; continue; fi;
+        if TIGHT and c <= 2 and k + s = LOGQ - 1 then
+          # the tightness lemma: the same answer as PR_Data(H, LOGQ).p5b, about 16 times faster
+          if not PR_Tight2(H, LOGQ) then TR_Add(S.cut, k + s, 1); ncut := ncut + 1; continue; fi;
+        elif not PR_Data(H, LOGQ).p5b then TR_Add(S.cut, k + s, 1); ncut := ncut + 1; continue; fi;
         nkept := nkept + 1;
         TR_Add(S.vert, k + s, 1);
         if k + s < NMAX then
