@@ -6,7 +6,8 @@
 
 For each ring the whole of delta_5/gamma_5 is computed (liedim.analyse), not only omega.
 With 'wide': up to 5 generators e_i and extra linear relations sum 3^c e_i = 0 among them.
-Usage: python lie_search5.py SEED COUNT [E|-] [wide]  -> one JSON line per ring: free rank and
+With '212': the (2,1,2) slots of sample212.
+Usage: python lie_search5.py SEED COUNT [E|-] [wide|212]  -> one JSON line per ring: free rank and
 log_3 of the torsion of delta_5/gamma_5 ("free", "tors"), its exponent, witnesses.
 """
 import json
@@ -19,7 +20,19 @@ from liedim import Pres, analyse
 PAIRS = [(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)]
 
 
+def sample212(rng):
+    """Slots (2,1,2) of the wiki page 579, sec. 5: every e_i has a weight-2 root 3^{a_i} e_i = y_i,
+    and two or three pair relations are weight-1 roots 3^al e_i + 3^be e_j = 3^ga y_ij, ga >= 1."""
+    spec = {"y": [[i, 2, rng.randint(0, 5), 0] for i in range(4)], "yy": [], "lin": [], "k": 4}
+    for (i, j) in rng.sample(PAIRS, rng.randint(2, 3)):
+        al, be = rng.randint(0, 8), rng.randint(0, 8)
+        spec["yy"].append([i, j, 1, al, be, rng.randint(1, min(al, be) + 3)])
+    return spec
+
+
 def sample(rng, wide=False):
+    if wide == "212":
+        return sample212(rng)
     spec = {"y": [], "yy": [], "lin": [], "k": 4}
     if wide:
         # BM: "some extra linear conditions may be imposed on the variables"; optionally a 5th e
@@ -60,7 +73,7 @@ def build(spec, E=None):
 def main():
     seed, count = int(sys.argv[1]), int(sys.argv[2])
     E = int(sys.argv[3]) if len(sys.argv) > 3 and sys.argv[3] != "-" else None
-    wide = "wide" in sys.argv[4:]
+    wide = "212" if "212" in sys.argv[4:] else "wide" in sys.argv[4:]
     rng = random.Random(seed)
     for _ in range(count):
         spec = sample(rng, wide)
