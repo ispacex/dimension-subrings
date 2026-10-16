@@ -1,4 +1,4 @@
-# MATH-120: check the presentations written by c38.g (set IN to a c38 *.jsonl file first).
+# MATH-120: check the presentations written by c38.g (set CHKIN to a c38 *.jsonl file first).
 # For every survivor line: the 3-quotient of <x_1..x_k | rels> (ANUPQ, p-class <= 30) has order
 # 3^8 and class 4, and the image of z is central of order 3 and lies in Q''.
 LoadPackage("anupq"); LoadPackage("json");
@@ -23,5 +23,5 @@ CHK38 := function(path)
   od;
   Print("checked ", n, " presentations, bad = ", bad, "\n");
 end;
-CHK38(IN);
+CHK38(CHKIN);
 QUIT;
