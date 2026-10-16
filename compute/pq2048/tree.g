@@ -25,6 +25,8 @@
 #     with that line in its STARTFILE takes exactly those steps of that vertex.
 #     With LIBROOT (children.g) a deferred step of the root to order 512 is written as one line per
 #     CH_DEFERCHUNK (default 50000) library ids, {..,"steps":[s],"ids":[a,b]}: the pieces of stage B.
+#   THMA (environment PQ2048_THMA=1) — Theorem A of README: a kept-to-be vertex of order 2^(LOGQ-2),
+#     2-class 2, with elementary abelianization is dropped before (G_N) (counted in thmA[k]).
 #   TRACE — print each vertex (order, CodePcGroup) before it is expanded, to name the one that fails.
 #   PROFILE (environment PQ2048_PROFILE=FILE) — per vertex, appended to FILE (flushed line by line):
 #     {"start":k,"code":..} before it is expanded, then {"k":..,"code":..,"steps":[..],"ms_steps":..,
@@ -47,12 +49,13 @@ TR_Add := function(t, k, x) if not IsBound(t[k]) then t[k] := 0; fi; t[k] := t[k
 TR_List := t -> List([1..Length(t)], i -> function() if IsBound(t[i]) then return t[i]; fi; return 0; end());;
 TR_Rt := function() local r; r := Runtimes();
   return [r.user_time + r.system_time, r.user_time_children + r.system_time_children]; end;;
+THMA := IsBound(GAPInfo.SystemEnvironment.PQ2048_THMA) and GAPInfo.SystemEnvironment.PQ2048_THMA = "1";;
 TR_Live := function() local g; g := GasmanStatistics();
   if IsBound(g.full) and IsBound(g.full.livekb) then return g.full.livekb; fi; return -1; end;;
 TR_Run := function()
   local nd, prof, pv, ps, r0, r1, t1, nrej, nkept, ncut, ds, mc, dump, dlev, defer, fixed, S, stack, covers, G, k, s, H, c, t, r, cs, x, n, out, line, nm, j, st, steps;
   S := rec(vert := [], cut := [], par := [], cand := [], fallback := [], ms_desc := [], ms_cover := [],
-           ms_steps := [], calls := [], skipped := [], noexp := []);
+           ms_steps := [], calls := [], skipped := [], noexp := [], thmA := []);
   if IsBound(OUTFILE) then out := OutputTextFile(OUTFILE, false); SetPrintFormattingStatus(out, false); fi;
   if IsBound(STARTFILE) then
     stack := [];
@@ -144,6 +147,12 @@ TR_Run := function()
         c := NilpotencyClassOfGroup(H);
         if c > 3 then nrej := nrej + 1; continue; fi;
         if c = 3 and not IsCyclic(LowerCentralSeriesOfGroup(H)[3]) then nrej := nrej + 1; continue; fi;
+        # Theorem A (README): order 2^(LOGQ-2), 2-class 2, H_ab elementary => no step-1 descendant
+        # passes (G_LOGQ); H is no parent (2-class 2) and steps >= 2 pass NMAX = LOGQ - 1.
+        if THMA and k + s = LOGQ - 2 and NMAX = LOGQ - 1 and c <= 2 and MS_PClass(H) = 2
+           and ForAll(AbelianInvariants(H), x -> x = 2) then
+          TR_Add(S.thmA, k + s, 1); continue;
+        fi;
         if not PR_Data(H, LOGQ).p5b then TR_Add(S.cut, k + s, 1); ncut := ncut + 1; continue; fi;
         nkept := nkept + 1;
         TR_Add(S.vert, k + s, 1);
