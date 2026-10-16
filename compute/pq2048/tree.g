@@ -24,6 +24,10 @@
 #     ran out of memory that way); a line {"order":..,"code":..,"steps":[s]} goes to DEFERFILE instead, and a run
 #     with that line in its STARTFILE takes exactly those steps of that vertex.
 #   TRACE — print each vertex (order, CodePcGroup) before it is expanded, to name the one that fails.
+#   PROFILE (environment PQ2048_PROFILE=FILE) — per vertex, appended to FILE (flushed line by line):
+#     {"start":k,"code":..} before it is expanded, then {"k":..,"code":..,"steps":[..],"ms_steps":..,
+#     "by_step":[{"s","n" descendants,"gap","pq" CPU ms of the descendants call,"filter" ms,"kept","cut",
+#     "rej" (class > 3 or gamma_3 not cyclic)}],"covers","ms_cover","livekb" (GAP heap after the vertex)}.
 #   COMPACT := true — OUTFILE gets only what identifies a candidate,
 #     {"order":..,"id":..,"rank":..,"code":<CodePcGroup>,"n":<exponents of the involution>},
 #     about 150 bytes instead of about 4 KB; expand_compact.g rebuilds the full lines from it.
@@ -39,8 +43,12 @@ if not IsBound(KMAX) then KMAX := 14; fi;
 if not IsBound(CMAX) then CMAX := 4096; fi;
 TR_Add := function(t, k, x) if not IsBound(t[k]) then t[k] := 0; fi; t[k] := t[k] + x; end;;
 TR_List := t -> List([1..Length(t)], i -> function() if IsBound(t[i]) then return t[i]; fi; return 0; end());;
+TR_Rt := function() local r; r := Runtimes();
+  return [r.user_time + r.system_time, r.user_time_children + r.system_time_children]; end;;
+TR_Live := function() local g; g := GasmanStatistics();
+  if IsBound(g.full) and IsBound(g.full.livekb) then return g.full.livekb; fi; return -1; end;;
 TR_Run := function()
-  local dump, dlev, defer, fixed, S, stack, covers, G, k, s, H, c, t, r, cs, x, n, out, line, nm, j, st, steps;
+  local prof, pv, ps, r0, r1, t1, nrej, nkept, ncut, ds, mc, dump, dlev, defer, fixed, S, stack, covers, G, k, s, H, c, t, r, cs, x, n, out, line, nm, j, st, steps;
   S := rec(vert := [], cut := [], par := [], cand := [], fallback := [], ms_desc := [], ms_cover := [],
            ms_steps := [], calls := [], skipped := [], noexp := []);
   if IsBound(OUTFILE) then out := OutputTextFile(OUTFILE, false); SetPrintFormattingStatus(out, false); fi;
@@ -65,6 +73,8 @@ TR_Run := function()
     stack := [[ElementaryAbelianGroup(2 ^ D), fail]];
     TR_Add(S.vert, D, 1);
   fi;
+  prof := fail;
+  if IsBound(GAPInfo.SystemEnvironment.PQ2048_PROFILE) then prof := GAPInfo.SystemEnvironment.PQ2048_PROFILE; fi;
   dlev := infinity;
   if IsBound(DUMPLEVEL) then
     dlev := ValueGlobal("DUMPLEVEL");
@@ -80,6 +90,10 @@ TR_Run := function()
     fixed := G[2]; G := G[1];
     k := Log(Size(G), 2);
     if IsBound(TRACE) then Print("vertex ", Size(G), " ", CodePcGroup(G), "\n"); fi;
+    if prof <> fail then
+      AppendTo(prof, "{\"start\":", k, ",\"code\":", String(CodePcGroup(G)), "}\n");
+      pv := rec(steps := 0, by_step := []);
+    fi;
     if fixed <> fail then
       # a deferred step of a vertex counted by the run that wrote it
       steps := fixed;
@@ -87,6 +101,7 @@ TR_Run := function()
       st := TS_Steps(G, NMAX, LOGQ);
       steps := st.steps;
       TR_Add(S.ms_steps, k, st.ms);
+      if prof <> fail then pv.steps := st.ms; fi;
     else
       steps := [1 .. NMAX - k];
     fi;
@@ -105,11 +120,15 @@ TR_Run := function()
     t := TS_Cpu();
     covers := [];
     for s in steps do
-      for H in CH_Desc(G, s) do
+      r0 := TR_Rt();
+      ds := CH_Desc(G, s);
+      r1 := TR_Rt(); t1 := TS_Cpu(); nrej := 0; nkept := 0; ncut := 0;
+      for H in ds do
         c := NilpotencyClassOfGroup(H);
-        if c > 3 then continue; fi;
-        if c = 3 and not IsCyclic(LowerCentralSeriesOfGroup(H)[3]) then continue; fi;
-        if not PR_Data(H, LOGQ).p5b then TR_Add(S.cut, k + s, 1); continue; fi;
+        if c > 3 then nrej := nrej + 1; continue; fi;
+        if c = 3 and not IsCyclic(LowerCentralSeriesOfGroup(H)[3]) then nrej := nrej + 1; continue; fi;
+        if not PR_Data(H, LOGQ).p5b then TR_Add(S.cut, k + s, 1); ncut := ncut + 1; continue; fi;
+        nkept := nkept + 1;
         TR_Add(S.vert, k + s, 1);
         if k + s < NMAX then
           if k + s >= dlev then
@@ -125,8 +144,16 @@ TR_Run := function()
           fi;
         fi;
       od;
+      if prof <> fail then
+        Add(pv.by_step, Concatenation("{\"s\":", String(s), ",\"n\":", String(Length(ds)),
+          ",\"gap\":", String(r1[1] - r0[1]), ",\"pq\":", String(r1[2] - r0[2]),
+          ",\"filter\":", String(TS_Cpu() - t1), ",\"kept\":", String(nkept), ",\"cut\":", String(ncut),
+          ",\"rej\":", String(nrej), "}"));
+      fi;
+      Unbind(ds);
     od;
     TR_Add(S.ms_desc, k, TS_Cpu() - t);
+    mc := TS_Cpu();
     # the cover search on each parent just found
     for H in covers do
       k := Log(Size(H), 2);
@@ -163,6 +190,12 @@ TR_Run := function()
       fi;
       TR_Add(S.ms_cover, k, TS_Cpu() - t);
     od;
+    if prof <> fail then
+      AppendTo(prof, "{\"k\":", Log(Size(G), 2), ",\"code\":", String(CodePcGroup(G)),
+        ",\"steps\":", ReplacedString(String(steps), " ", ""), ",\"ms_steps\":", String(pv.steps),
+        ",\"by_step\":[", JoinStringsWithSeparator(pv.by_step, ","), "],\"covers\":", String(Length(covers)),
+        ",\"ms_cover\":", String(TS_Cpu() - mc), ",\"livekb\":", String(TR_Live()), "}\n");
+    fi;
   od;
   if IsBound(OUTFILE) then CloseStream(out); fi;
   if dlev < infinity then CloseStream(dump); fi;
