@@ -119,9 +119,11 @@ TR_Run := function()
         if LIBROOT and IsElementaryAbelian(G) and k + s = 9 then
           # CH_LibRoot takes this step from SmallGroups(512): one line per CH_DEFERCHUNK ids
           r := CH_RANGE512.(Log(Size(G), 2));
-          for n in [r[1], r[1] + CH_DEFERCHUNK .. r[2]] do
+          n := r[1];
+          while n <= r[2] do
             WriteAll(defer, Concatenation("{\"order\":", String(Size(G)), ",\"code\":", String(CodePcGroup(G)),
               ",\"steps\":[", String(s), "],\"ids\":[", String(n), ",", String(Minimum(r[2], n + CH_DEFERCHUNK - 1)), "]}\n"));
+            n := n + CH_DEFERCHUNK;
           od;
         else
           WriteAll(defer, Concatenation("{\"order\":", String(Size(G)), ",\"code\":", String(CodePcGroup(G)),
