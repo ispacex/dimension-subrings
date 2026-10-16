@@ -672,7 +672,10 @@ allowable ones. For $k > 22$ (`CH_KMAX`) `CH_Step1` returns `fail` and `CH_Desc`
 invariants instead when there are more than 200). Walks with both flags against the old code
 (`run_cmp_flag.sh`, `run_cmp_piece.sh` with `FLAGENV="PQ2048_OWNCOVER=1 PQ2048_OWNDESC=1"`):
 
-<!-- VC -->
+| vertices (all kept, step 1) | count | children of class ≤ 3 | differences | ms per vertex: `PqDescendants` → `CH_Step1` |
+|---|---|---|---|---|
+| orders 8, 16, 32, 64 | 5 + 14 + 48 + 235 | 10 + 31 + 144 + 1011 | **0** | 113 → 48 (order 64: 127 → 56) |
+<!-- VCMORE -->
 
 | run | CPU s, old → own cover → own cover + own children | counters | candidates |
 |---|---|---|---|
@@ -684,6 +687,16 @@ invariants instead when there are more than 200). Walks with both flags against 
 In the rank-6 piece the expansion of the one vertex with 2 240 children drops from 147.5 to
 54.6 s (≈ 66 → 24 ms per child, of which ≈ 11 ms is `PR_Data` on the child). What is left is the
 cover search on the 2 240 parents (36 s, ≈ 16 ms each) and `PR_Data`.
+
+**Rank 8.** Of the 12 rank-8 groups of order 512, `steps.g` drops 11 (nucleus 0, or $\nu = 0$);
+the twelfth, $\mathbb Z/4 \times (\mathbb Z/2)^7$, has a one-dimensional nucleus and $k = 36$
+(`probe_r8.g`). `PqDescendants` on it is OOM-killed at 8 GB, also with `SpaceEfficient` (6 GB,
+`probe_r8b.g`), and `CH_Step1` falls back to `PqDescendants` there ($2^{35}$ allowable functionals
+cannot be listed). So the own children do not help rank 8 as they stand: that one vertex needs
+either an orbit algorithm that does not list the functionals (a stabiliser chain over a ladder of
+subspaces, as in the standard algorithm) or a direct argument for groups of order $2^{11}$ and
+rank 8, where $|\Phi(Q)| = 8$ and every layer of the lower exponent-2 central series below
+$\Phi(Q)$ has order 2.
 
 ## Not proved
 
