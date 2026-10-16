@@ -148,10 +148,10 @@ result.txt`.
    | tag | code | amd64 (`intel_cpu`) | arm64 (`arm_cpu`) |
    |---|---|---|---|
    | `boinc-v1` | `71b4842` | `sha256:68a7a3854b7cac4cf213eb610eaed5fd73d713790109cd3c3c18fa6284c22e4f` | `sha256:5a033a08d31a87e85f6738788e58be68cbb7b8ea8d2dd3d6d5b796a2ab5c7819` |
+   | `boinc-v2` | `97cb2ec` | `sha256:a4e169d844d19a5a971d44737dbcc2ba630fe473be7781ef2bc8819c81628e1c` | `sha256:7ccf9780f0f4e6cb5c41e21fc658097e26a777bfbb53f0c8a4620ff76dd9d9f8` |
 
    `boinc-v1` does not read deferred-step lines and ignores `compact=true` (it writes the full
-   lines). The changes of `tree.g` after it (deferred steps, compact candidates) need an image
-   `boinc-v2` and the two variants updated with its digests.
+   lines); `boinc-v2` (deferred steps, compact candidates) is the one the variants use.
 2. **Science app** ("Manage BUDA apps" → "Add science app"), the fields of `buda/desc.json`:
    input file names `piece.txt`, output file names `result.txt`, max output size 64 MB, gzip
    output on, max delay 7 days.
