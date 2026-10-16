@@ -22,8 +22,6 @@ if not IsBound(OWNDESC) then
              and GAPInfo.SystemEnvironment.PQ2048_OWNDESC = "1";
 fi;
 
-CH_Step1 := V -> CH_StepC(V, 4);;
-
 # CH_StepC(V, j): the step-1 children of class < j (j = 4: CH_Step1; j = 3: class <= 2 only, the
 # allowable hyperplanes containing gamma_3(V*) ∩ M), one per isomorphism class, or fail (k > CH_KMAX).
 CH_StepC := function(V, j)
@@ -116,6 +114,8 @@ CH_LibRoot := function(V, s)
   od;
   return res;
 end;;
+
+CH_Step1 := V -> CH_StepC(V, 4);;
 
 CH_Desc := function(V, s)
   local res;
