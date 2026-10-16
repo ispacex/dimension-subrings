@@ -12,6 +12,10 @@ bracketing); it is a direct summand (PBW over Z), so coordinates in that basis a
 Both K and J are found in Lyndon coordinates by one Howell form of [psi(b) | e_b ; X | 0] with the
 T-columns first: the rows whose T-part vanishes span the preimage of span(X).
 
+Blocks.  When every relator is homogeneous in word length (e.g. all relators are linear in the
+generators, as in the Bartholdi-Mikhailov rings), T_{<n}, I, F_{<n} and J all split by word
+length, and each length is computed separately (analyse(..., blocks=[...]) restricts to some).
+
 Modulo p^E.  NON-membership is exact: if p^t w is not in I + p^E T, it is not in I.  Orders of
 elements of K/J are only lower bounds near p^E (a free summand of L/gamma_n shows up as order
 p^E); torsion of order well below p^E that is stable under a change of E is real.
@@ -134,37 +138,53 @@ class Pres:
     def minwt(self, x):
         return min(self.wt(m) for m in x)
 
+    # --- blocks -----------------------------------------------------------------------------
+    def key(self, m):
+        """Block of a monomial: its length when every relator is homogeneous in word length (then
+        T_{<n}, I, F_{<n} and J all split by length), else a single block 0."""
+        if not hasattr(self, "_homog"):
+            self._homog = all(len({len(m) for m in r}) == 1 for r in self.rels)
+        return len(m) if self._homog else 0
+
+    def xkey(self, x):
+        return self.key(next(iter(x)))
+
     # --- ideals ------------------------------------------------------------------------------
-    def ideal_rows(self):
+    def ideal_dicts(self, want=None):
         rows = []
         bywt = {}
         for m in [()] + self.monos:
             bywt.setdefault(self.wt(m), []).append(m)
         for r in self.rels:
-            o = self.minwt(r)
+            o, lr = self.minwt(r), len(next(iter(r)))
             for wu in range(self.n - o):
                 for wv in range(self.n - o - wu):
                     for u in bywt.get(wu, []):
                         for v in bywt.get(wv, []):
+                            if want is not None and self._homog and len(u) + lr + len(v) not in want:
+                                continue
                             x = self.mul(self.mul({u: 1}, r), {v: 1})
                             if x:
-                                rows.append(self.vec(x))
-        return np.array(rows)
+                                rows.append(x)
+        return rows
 
-    def lie_ideal_rows(self):
+    def lie_ideal_dicts(self, want=None):
+        top = max(want) if (want is not None and self._homog) else None
         rows = []
         for r in self.rels:
             frontier = [r]
             while frontier:
                 nxt = []
                 for x in frontier:
-                    rows.append(self.vec(x))
+                    rows.append(x)
+                    if top is not None and len(next(iter(x))) >= top:
+                        continue
                     for i in range(self.k):
                         y = self.br(x, self.g(i))
                         if y:
                             nxt.append(y)
                 frontier = nxt
-        return np.array(rows)
+        return rows
 
     def reduce_span(self, X, chunk=None):
         """Rows of a Howell form of span X, built chunk by chunk (same span, at most ~2 nT rows)."""
@@ -177,31 +197,56 @@ class Pres:
             H = howell(self.R, np.vstack(prev + [X[s:s + chunk]]) if prev else X[s:s + chunk])
         return np.array([r for _, _, r in H], dtype=np.int64).reshape(-1, X.shape[1])
 
-    def preimage(self, X):
-        """Howell form (Lyndon coordinates) of {l in F_{<n} : psi(l) in span X + p^E T}."""
-        X = self.reduce_span(X)
-        nT, nB = len(self.monos), len(self.basis)
-        top = np.hstack([np.array([self.vec(b) for b in self.basis]), np.eye(nB, dtype=np.int64)])
-        A = top if X.size == 0 else np.vstack([top, np.hstack([X, np.zeros((len(X), nB), dtype=np.int64)])])
-        H = howell(self.R, A)
-        return [(c - nT, v, row[nT:]) for c, v, row in H if c >= nT]
-
     def coords(self, x):
         """Lyndon coordinates of a Lie element x (exact: back-substitution over Z)."""
         x = dict(x)
         out = np.zeros(len(self.basis), dtype=np.int64)
-        # leading monomial of std(w) is w itself, with coefficient 1 (Lyndon property)
-        order = sorted(range(len(self.lyndon)), key=lambda j: (self.wt(self.lyndon[j]), self.lyndon[j]))
+        # std(w) = w + (lexicographically larger words of the same length): peel off the smallest
+        pos = {w: j for j, w in enumerate(self.lyndon)}
         while x:
-            # take the lexicographically smallest Lyndon word present among the monomials
-            cand = [j for j in order if self.lyndon[j] in x]
-            if not cand:
-                raise ValueError("not a Lie element: " + repr(sorted(x)[:3]))
-            j = cand[0]
-            c = x[self.lyndon[j]]
+            m = min(x, key=lambda w: (len(w), w))
+            if m not in pos:
+                raise ValueError("not a Lie element: " + repr(m))
+            j, c = pos[m], x[m]
             out[j] += c
             x = self.add(x, self.sc(-c, self.basis[j]))
         return out % self.R.D
+
+
+class Block:
+    """One block of T_{<n}: its monomials, its Lyndon words, and K, J there (Lyndon coordinates)."""
+
+    def __init__(self, P, b, Irows, Jrows):
+        R = P.R
+        self.P, self.b = P, b
+        self.cols = [m for m in P.monos if P.key(m) == b]
+        self.cidx = {m: i for i, m in enumerate(self.cols)}
+        self.lj = [j for j, w in enumerate(P.lyndon) if P.key(w) == b]
+        self.K = self.preimage([x for x in Irows if P.xkey(x) == b])
+        self.J = self.preimage([x for x in Jrows if P.xkey(x) == b])
+        JK = np.array([r for _, _, r in self.J]) if self.J else None
+        assert JK is None or reduce_rows(R, self.K, JK).all(), "J not inside K"
+
+    def dense(self, xs):
+        X = np.zeros((len(xs), len(self.cols)), dtype=np.int64)
+        D = self.P.R.D
+        for i, x in enumerate(xs):
+            for m, c in x.items():
+                X[i, self.cidx[m]] = c % D
+        return X
+
+    def preimage(self, xs):
+        """Howell form (Lyndon coordinates) of {l : psi(l) in span xs + p^E T}, by one Howell form
+        of [psi(b) | e_b ; X | 0] with the T-columns first."""
+        P = self.P
+        X = P.reduce_span(self.dense(xs)) if xs else np.zeros((0, len(self.cols)), dtype=np.int64)
+        nT, nB = len(self.cols), len(self.lj)
+        if nB == 0:
+            return []
+        top = np.hstack([self.dense([P.basis[j] for j in self.lj]), np.eye(nB, dtype=np.int64)])
+        A = top if X.size == 0 else np.vstack([top, np.hstack([X, np.zeros((len(X), nB), dtype=np.int64)])])
+        H = howell(P.R, A)
+        return [(c - nT, v, row[nT:]) for c, v, row in H if c >= nT]
 
 
 def order_mod(R, H, x):
@@ -212,37 +257,52 @@ def order_mod(R, H, x):
     return R.E + 1
 
 
-def analyse(P, tests=None, verbose=True):
-    """Return (log_p|K/J| restricted to torsion below p^(E-2), list of orders, test results)."""
-    R = P.R
-    I = P.ideal_rows()
-    J = P.lie_ideal_rows()
-    K = P.preimage(I)
-    HJ = P.preimage(J)
-    # sanity: J inside K
-    JK = np.array([r for _, _, r in HJ]) if HJ else np.zeros((0, len(P.basis)), dtype=np.int64)
-    assert JK.size == 0 or reduce_rows(R, K, JK).all(), "J not inside K"
-    orders = []
-    for c, v, row in K:
-        t = order_mod(R, HJ, row)
-        if t:
-            orders.append((t, P.lyndon[c]))
-    # invariants: S_t = log_p |(p^t K + J)/J|; a free summand adds E - t, torsion p^m adds max(0, m - t)
+def invariants(R, K, J):
+    """(free rank, log_p torsion, orders of the K rows mod J) of K/J.
+    S_t = log_p |(p^t K + J)/J|: a free summand adds E - t, a torsion summand p^m adds max(0, m - t)."""
     def S(t):
-        Kt = [((R.ppow[t] * r) % R.D) for _, _, r in K] + [r for _, _, r in HJ]
+        Kt = [((R.ppow[t] * r) % R.D) for _, _, r in K] + [r for _, _, r in J]
         Ht = howell(R, np.array(Kt)) if Kt else []
-        return sum(R.E - v for _, v, _ in Ht) - sum(R.E - v for _, v, _ in HJ)
-    tf = R.E - 3
-    free = S(tf) // 3
-    tors = S(0) - free * R.E
-    P.inv = dict(free=free, tors=tors, exp=max([t for t, _ in orders if t <= tf] or [0]))
+        return sum(R.E - v for _, v, _ in Ht) - sum(R.E - v for _, v, _ in J)
+    free = S(R.E - 3) // 3
+    orders = [order_mod(R, J, row) for _, _, row in K]
+    return free, S(0) - free * R.E, orders
+
+
+def analyse(P, tests=None, verbose=True, blocks=None):
+    """delta_n/gamma_n of P, block by block; 'blocks' restricts to those word lengths (only when the
+    relators are length-homogeneous).  Sets P.inv = {free, tors, exp}; returns (witnesses, tests)."""
+    R = P.R
+    P.key(())                                      # fixes P._homog
+    want = set(blocks) if (blocks is not None and P._homog) else None
+    Irows, Jrows = P.ideal_dicts(want), P.lie_ideal_dicts(want)
+    keys = sorted({P.key(m) for m in P.monos})
+    if want is not None:
+        keys = [b for b in keys if b in want]
+    free = tors = exp = 0
+    witnesses, B = [], {}
+    for b in keys:
+        blk = B[b] = Block(P, b, Irows, Jrows)
+        f, t, orders = invariants(R, blk.K, blk.J)
+        free, tors = free + f, tors + t
+        for (c, _, _), o in zip(blk.K, orders):
+            if 0 < o <= R.E - 3:
+                exp = max(exp, o)
+                witnesses.append((o, P.lyndon[blk.lj[c]]))
+    P.inv = dict(free=free, tors=tors, exp=exp)
     res = {}
     for name, x in (tests or {}).items():
         cx = P.coords(x)
-        res[name] = dict(delta=bool(reduce_rows(R, K, cx[None, :])[0]), gamma_order=order_mod(R, HJ, cx))
+        delta, order = True, 0
+        for b, blk in B.items():
+            v = cx[blk.lj]
+            if v.any():
+                delta &= bool(reduce_rows(R, blk.K, v[None, :])[0])
+                order = max(order, order_mod(R, blk.J, v))
+        res[name] = dict(delta=delta, gamma_order=order)
     if verbose:
-        print("n=%d gens=%d T=%d Lyndon=%d I=%d J=%d | delta/gamma: free rank %d, torsion p^%d, exponent p^%d"
-              % (P.n, P.k, len(P.monos), len(P.basis), len(I), len(J), free, tors, P.inv["exp"]), flush=True)
+        print("n=%d gens=%d T=%d Lyndon=%d blocks=%s I=%d J=%d | delta/gamma: free rank %d, torsion p^%d, exponent p^%d"
+              % (P.n, P.k, len(P.monos), len(P.basis), keys, len(Irows), len(Jrows), free, tors, exp), flush=True)
         for name, r in res.items():
-            print("  %-10s in delta_%d: %s ; order mod gamma_%d: p^%s" % (name, P.n, r["delta"], P.n, r["gamma_order"]))
-    return orders, res
+            print("  %-12s in delta_%d: %s ; order mod gamma_%d: p^%s" % (name, P.n, r["delta"], P.n, r["gamma_order"]))
+    return witnesses, res
