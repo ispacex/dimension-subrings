@@ -393,6 +393,11 @@ walk exactly the tree of one process. Three details matter for larger ranks:
   every machine — before the split and writes `Cin/split.json` (the seed and each piece's lines
   and hash). The stat counters are sums over vertices and every candidate belongs to the parent it
   was found on, so the result does not depend on how the vertices are grouped.
+* **Parallel stage L** (`LJOBS`, default `PARALLEL`): `magnus_pres.py --jobs N` analyses the
+  candidates in N worker processes, with at most 4N lines in flight, and prints the answers in the
+  input's order, so `b2048.jsonl` is the same as from one process except the timings in `stats`
+  (checked on every 17th of the 52 568 rank-4 candidates: 3 093 lines identical, 967 CPU-s in
+  246 s of wall time on 4 processes).
 
 `run_r8.sh`: rank 8, whose first step from $2^8$ runs out of memory in `PqDescendants`, starts
 instead from the groups of rank 8 of order 512 in SmallGroups (exactly the step-1 descendants of
