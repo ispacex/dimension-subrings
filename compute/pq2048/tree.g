@@ -18,6 +18,14 @@
 #     here as usual but not expanded: a line {"order":..,"code":..} goes to DUMPFILE instead;
 #   STARTFILE — the walk starts from the vertices of such a file instead of 2^D (they are not
 #     counted again: the run that wrote them counted them).
+#   DEFERFILE — with DUMPLEVEL: a step s of a vertex of order 2^k with k + s > DUMPLEVEL is not
+#     taken here (its list of descendants would be built whole in one process: stage A of rank 4
+#     ran out of memory that way); a line {"order":..,"code":..,"steps":[s]} goes to DEFERFILE instead, and a run
+#     with that line in its STARTFILE takes exactly those steps of that vertex.
+#   TRACE — print each vertex (order, CodePcGroup) before it is expanded, to name the one that fails.
+#   COMPACT := true — OUTFILE gets only what identifies a candidate,
+#     {"order":..,"id":..,"rank":..,"code":<CodePcGroup>,"n":<exponents of the involution>},
+#     about 150 bytes instead of about 4 KB; expand_compact.g rebuilds the full lines from it.
 # Each vertex has one place in the tree (its parent is G/P_last(G)), so the pieces of a split
 # together walk exactly the tree of the run without it.
 Read("../pq1024/lib.g");
@@ -31,7 +39,7 @@ if not IsBound(CMAX) then CMAX := 4096; fi;
 TR_Add := function(t, k, x) if not IsBound(t[k]) then t[k] := 0; fi; t[k] := t[k] + x; end;;
 TR_List := t -> List([1..Length(t)], i -> function() if IsBound(t[i]) then return t[i]; fi; return 0; end());;
 TR_Run := function()
-  local dump, dlev, S, stack, covers, G, k, s, H, c, t, r, cs, x, n, out, line, nm, j, st, steps;
+  local dump, dlev, defer, fixed, S, stack, covers, G, k, s, H, c, t, r, cs, x, n, out, line, nm, j, st, steps;
   S := rec(vert := [], cut := [], par := [], cand := [], fallback := [], ms_desc := [], ms_cover := [],
            ms_steps := [], calls := [], skipped := [], noexp := []);
   if IsBound(OUTFILE) then out := OutputTextFile(OUTFILE, false); SetPrintFormattingStatus(out, false); fi;
@@ -42,13 +50,18 @@ TR_Run := function()
       line := ReadLine(nm);
       if line = fail then break; fi;
       if Length(line) > 2 then
-        line := EvalString(ReplacedString(ReplacedString(ReplacedString(line, "{\"order\":", "["), ",\"code\":", ","), "}", "]"));
-        Add(stack, PcGroupCode(line[2], line[1]));
+        line := EvalString(ReplacedString(ReplacedString(ReplacedString(ReplacedString(line,
+          "{\"order\":", "["), ",\"code\":", ","), ",\"steps\":", ","), "}", "]"));
+        if Length(line) = 3 then
+          Add(stack, [PcGroupCode(line[2], line[1]), line[3]]);
+        else
+          Add(stack, [PcGroupCode(line[2], line[1]), fail]);
+        fi;
       fi;
     od;
     CloseStream(nm);
   else
-    stack := [ElementaryAbelianGroup(2 ^ D)];
+    stack := [[ElementaryAbelianGroup(2 ^ D), fail]];
     TR_Add(S.vert, D, 1);
   fi;
   dlev := infinity;
@@ -56,20 +69,38 @@ TR_Run := function()
     dlev := ValueGlobal("DUMPLEVEL");
     dump := OutputTextFile(ValueGlobal("DUMPFILE"), false); SetPrintFormattingStatus(dump, false);
   fi;
+  defer := fail;
+  if IsBound(DEFERFILE) then
+    defer := OutputTextFile(ValueGlobal("DEFERFILE"), false); SetPrintFormattingStatus(defer, false);
+  fi;
   j := 0;
   while stack <> [] do
     G := Remove(stack);
+    fixed := G[2]; G := G[1];
     k := Log(Size(G), 2);
-    if STEPRULES then
+    if IsBound(TRACE) then Print("vertex ", Size(G), " ", CodePcGroup(G), "\n"); fi;
+    if fixed <> fail then
+      # a deferred step of a vertex counted by the run that wrote it
+      steps := fixed;
+    elif STEPRULES then
       st := TS_Steps(G, NMAX, LOGQ);
       steps := st.steps;
       TR_Add(S.ms_steps, k, st.ms);
     else
       steps := [1 .. NMAX - k];
     fi;
-    TR_Add(S.calls, k, Length(steps));
-    TR_Add(S.skipped, k, NMAX - k - Length(steps));
-    if steps = [] then TR_Add(S.noexp, k, 1); fi;
+    if fixed = fail then
+      TR_Add(S.calls, k, Length(steps));
+      TR_Add(S.skipped, k, NMAX - k - Length(steps));
+      if steps = [] then TR_Add(S.noexp, k, 1); fi;
+    fi;
+    if defer <> fail then
+      for s in Filtered(steps, s -> k + s > dlev) do
+        WriteAll(defer, Concatenation("{\"order\":", String(Size(G)), ",\"code\":", String(CodePcGroup(G)),
+          ",\"steps\":[", String(s), "]}\n"));
+      od;
+      steps := Filtered(steps, s -> k + s <= dlev);
+    fi;
     t := TS_Cpu();
     covers := [];
     for s in steps do
@@ -83,7 +114,7 @@ TR_Run := function()
           if k + s >= dlev then
             WriteAll(dump, Concatenation("{\"order\":", String(Size(H)), ",\"code\":", String(CodePcGroup(H)), "}\n"));
           else
-            Add(stack, H);
+            Add(stack, [H, fail]);
           fi;
         fi;
         if c >= 2 and MS_PClass(H) >= 3 then
@@ -116,6 +147,12 @@ TR_Run := function()
         if IsBound(OUTFILE) then
           for x in cs do
             j := j + 1;
+            if IsBound(COMPACT) and COMPACT = true then
+              WriteAll(out, Concatenation("{\"order\":", String(2 * Size(H)), ",\"id\":", String(j),
+                ",\"rank\":", String(D), ",\"code\":", String(CodePcGroup(x.Q)),
+                ",\"n\":", ReplacedString(String(ExponentsOfPcElement(Pcgs(x.Q), x.n)), " ", ""), "}\n"));
+              continue;
+            fi;
             line := CP_Line(2 * Size(H), j, x.Q, 5, [x.n]);
             WriteAll(out, Concatenation(line{[1 .. Length(line) - 2]}, ",\"rank\":", String(D),
               ",\"code\":", String(CodePcGroup(x.Q)),
@@ -128,6 +165,7 @@ TR_Run := function()
   od;
   if IsBound(OUTFILE) then CloseStream(out); fi;
   if dlev < infinity then CloseStream(dump); fi;
+  if defer <> fail then CloseStream(defer); fi;
   out := OutputTextFile(STATFILE, false); SetPrintFormattingStatus(out, false);
   WriteAll(out, Concatenation("{\"rank\":", String(D), ",\"nmax\":", String(NMAX), ",\"logq\":", String(LOGQ),
     ",\"covermax\":", String(COVERMAX)));

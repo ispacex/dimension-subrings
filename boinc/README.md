@@ -10,11 +10,11 @@ one input file in, one output file out, the same bytes on every host.
 |---|---|
 | `Dockerfile` | the image: GAP 4.15.1 and ANUPQ 3.3.2, the search code copied in at build time |
 | `run_piece.sh` | the entry point inside the image: a piece file → a result file |
-| `buda/Dockerfile`, `buda/main.sh` | the BUDA variant: the Dockerfile and the main program BUDA runs |
+| `buda/Dockerfile.intel`, `buda/Dockerfile.arm`, `buda/main.sh` | the BUDA variants `intel_cpu` and `arm_cpu`: their Dockerfiles (the published image by digest) and the main program BUDA runs |
 | `buda/desc.json` | the BUDA science app as the "Add science app" form records it |
-| `make_batch.sh` | split files of `run_rank.sh` → a BUDA batch directory (one job per piece and replica) |
-| `collect.sh` | the batch's output files → compared replicas → the layout of a `run_rank.sh` run |
-| `boinc-image.yml` | a GitHub Actions workflow (to be placed in `.github/workflows/`): builds the image for x86_64 and aarch64 and pushes it to the GitHub registry |
+| `make_batch.sh` | split files of `run_rank.sh` → a BUDA batch directory (one job per piece and replica) and its manifest |
+| `collect.sh` | the batch's output files → compared replicas, checked against the manifest → the layout of a `run_rank.sh` run |
+| `../.github/workflows/boinc-image.yml` | builds the image for x86_64 and aarch64 on a `boinc-v*` tag and pushes it to the GitHub registry |
 
 ## A piece is a job
 
@@ -36,14 +36,24 @@ piece.txt  ──►  run_piece.sh  ──►  result.txt
 writes them (each vertex is its order and its `CodePcGroup` code):
 
 ```
-# piece v1 name=c_0236 rank=4 nmax=10 logq=11 covermax=10 steprules=true
+# piece v1 name=c_0236 rank=4 nmax=10 logq=11 covermax=10 steprules=true compact=true
 {"order":512,"code":2545205939215099486623156405135}
 ...
 ```
 
 A B piece adds `dumplevel=9` (`L_2`): its vertices of order $\ge 2^9$ are returned, not
-expanded, and become the input of C pieces. `run_piece.sh` accepts only vertex lines of exactly
-this shape (they are evaluated by GAP) and only numbers in the header.
+expanded, and become the input of C pieces. A B piece made from a step that stage A deferred
+(`B/in_dNNNNN`, see `../compute/pq2048/README.md`, "One rank in pieces") has one line
+`{"order":..,"code":..,"steps":[s]}`: only that step of that vertex is taken. `run_piece.sh`
+accepts only vertex lines of exactly these shapes (they are evaluated by GAP) and only numbers
+in the header.
+
+`compact=true` (what `make_batch.sh` writes) makes the candidates `tree.g`'s compact lines,
+`{"order":2048,"id":..,"rank":..,"code":..,"n":[..]}`: the pc code of the candidate and the
+exponents of its involution, ≈ 160 bytes instead of ≈ 4 KB. `../compute/pq2048/expand_compact.g`
+rebuilds the full lines (presentation and tests for the lattice) from them, byte for byte the
+lines `tree.g` writes without `compact` (pilot below); `run_rank.sh` with `COMPACT=true` does it
+in stage L. Without `compact` the piece writes the full lines.
 
 **Output** (`result.txt`):
 
@@ -54,7 +64,7 @@ this shape (they are evaluated by GAP) and only numbers in the header.
 # code <commit of the search code in the image>
 # stat {"rank":4,…,"vert":[…],"cut":[…],"par":[…],"cand":[…],…}
 # candidates 17
-{"order":2048,"id":1,…}          ← tree.g's OUTFILE: candidates of order 2^11, one per line
+{"order":2048,"id":1,…}          ← tree.g's OUTFILE: candidates of order 2^11, one per line (compact or full)
 ...
 # dump 0
 ...                                ← tree.g's DUMPFILE (B pieces): vertices for stage C
@@ -73,9 +83,22 @@ that a host returns. `make_batch.sh` therefore puts every piece into the batch t
 only when the two results are identical; a piece with a mismatch or a missing replica is
 resubmitted.
 
-**Back into a run.** `collect.sh` writes the agreed results as `C/<name>.json`, `C/<name>.jsonl`
-(and `B/…`, `B/dump_<id>.jsonl`), the files `rank_sum.py` and the next stage read, so stage C is
-split from B's dumps and stage L runs as for a local run.
+**Back into a run.** `make_batch.sh` writes a manifest beside the batch directory
+(`batch_c.manifest`): the parameters, the shuffle of stage C (below) and each piece's name with the
+sha256 of its `piece.txt`. `collect.sh` matches every result to its piece by the name and the
+input hash in the result's header — the order of jobs and files does not matter — lists pieces
+with no or disagreeing results and results for no piece of the manifest, and writes the agreed
+ones as `C/<name>.json`, `C/<name>.jsonl` (and `B/…`, `B/dump_<id>.jsonl`), the files
+`rank_sum.py` and the next stage read, so stage C is split from B's dumps and stage L runs as for
+a local run.
+
+**Shuffled stage C.** The dump of stages A and B lists the children of a vertex together, and
+neighbours cost about the same, so split in order a few pieces take most of the time.
+`run_rank.sh` with `CSEED=N` (or `../compute/pq2048/shuffle_split.py` directly) orders the
+vertices by `sha256(seed, line)` before the split — the same order on every machine — and records
+the seed and every piece in `Cin/split.json`, which `make_batch.sh` copies into the manifest. The
+stat counters are sums over vertices and every candidate belongs to the parent it was found on, so
+the grouping does not change the result.
 
 ## The image
 
@@ -113,26 +136,34 @@ the `-arm64` image; the workflow builds both on native runners.
 
 BUDA builds the variant's Dockerfile on the volunteer's host and runs it with the job's directory
 (the app files and the input file) mounted at `/app`. Building GAP on every host would take
-minutes and download 580 MB, so `buda/Dockerfile` only names the prebuilt image **by digest**
-and resets its entry point; `buda/main.sh` (an app file) calls `run_piece.sh piece.txt
+minutes and download 580 MB, so `buda/Dockerfile.intel` and `.arm` only name the prebuilt image **by digest**
+and reset its entry point; `buda/main.sh` (an app file) calls `run_piece.sh piece.txt
 result.txt`.
 
-1. **Publish the image.** With `boinc-image.yml` in `.github/workflows/`, push a tag `boinc-vN`: the workflow builds
-   `ghcr.io/ispacex/dimension-subrings-boinc:boinc-vN-amd64` and `-arm64` and writes their
-   digests into the job summary. Put the digest into `buda/Dockerfile` (`IMAGE_DIGEST`). The
-   package must be public in the registry's settings.
+1. **Publish the image.** Push a tag `boinc-vN`: the workflow `.github/workflows/boinc-image.yml`
+   builds `ghcr.io/ispacex/dimension-subrings-boinc:boinc-vN-amd64` and `-arm64` and writes their
+   digests into the job summary. Put them into `buda/Dockerfile.intel` and `buda/Dockerfile.arm`.
+   The package must be public in the registry's settings.
+
+   | tag | code | amd64 (`intel_cpu`) | arm64 (`arm_cpu`) |
+   |---|---|---|---|
+   | `boinc-v1` | `71b4842` | `sha256:68a7a3854b7cac4cf213eb610eaed5fd73d713790109cd3c3c18fa6284c22e4f` | `sha256:5a033a08d31a87e85f6738788e58be68cbb7b8ea8d2dd3d6d5b796a2ab5c7819` |
+
+   `boinc-v1` does not read deferred-step lines and ignores `compact=true` (it writes the full
+   lines). The changes of `tree.g` after it (deferred steps, compact candidates) need an image
+   `boinc-v2` and the two variants updated with its digests.
 2. **Science app** ("Manage BUDA apps" → "Add science app"), the fields of `buda/desc.json`:
    input file names `piece.txt`, output file names `result.txt`, max output size 64 MB, gzip
    output on, max delay 7 days.
-3. **Variant** ("Add variant"): CPU type Intel, plan class empty (one CPU), Dockerfile
-   `buda/Dockerfile`, app files `main.sh` (uploaded to the file sandbox first). An ARM variant
-   is the same with the `-arm64` digest.
+3. **Variants** ("Add variant"): CPU type Intel, plan class empty (one CPU), Dockerfile
+   `buda/Dockerfile.intel`, app files `main.sh` (uploaded to the file sandbox first); CPU type
+   ARM the same with `buda/Dockerfile.arm`.
 4. **Batch.** From the split files of `run_rank.sh` (stage B: `OUTDIR/B/in_*` with `-d 9`;
    stage C: `OUTDIR/Cin/c_*`):
 
    ```bash
-   boinc/make_batch.sh -d 9 5 batch_b OUT/B/in_[0-9]*     # stage B of rank 5, 2 replicas
-   boinc/make_batch.sh 5 batch_c OUT/Cin/c_*               # stage C
+   boinc/make_batch.sh -d 9 5 batch_b OUT/B/in_*          # stage B of rank 5, 2 replicas
+   boinc/make_batch.sh 5 batch_c OUT/Cin/c_*              # stage C (run_rank.sh with CSEED)
    (cd batch_c && zip -qr ../batch_c.zip .)
    ```
 
@@ -141,7 +172,7 @@ result.txt`.
 5. **Collect.** Download the batch's output zip, unpack it, and
 
    ```bash
-   boinc/collect.sh batch_c_out/ OUT      # writes OUT/C/*; lists "mismatch"/"missing" pieces
+   boinc/collect.sh batch_c_out/ OUT batch_c.manifest   # writes OUT/C/*; lists the pieces to resubmit
    ```
 
 ## Pilot: rank 4 through the container
@@ -186,7 +217,42 @@ CPU is user + system time of GAP and the pq process, as BOINC would count it; th
   memory bound, so B is better run on our own machines (for rank 5 it is a small part of the
   time, see below) and only C sent out.
 * The largest result is 8 MB (`c_0294`: 2064 candidates; a candidate line carries its
-  presentation, ≈ 4 KB). With gzip on, BOINC uploads it compressed.
+  presentation, ≈ 4 KB), 330 KB with compact candidates (next section). With gzip on, BOINC
+  uploads it compressed.
+
+### Compact candidates, deferred steps, shuffle
+
+The same pieces with the later `tree.g` (`compact=true`), together with five pieces of stage B made
+from steps deferred by stage A (`b_d…`, the heaviest of them and every one with candidates or
+dumps among the 289), on the same machine:
+
+| piece | identical | candidates | dumped | compact, bytes | full, bytes | CPU, s | peak memory, MB |
+|---|---|---|---|---|---|---|---|
+| c_0236 | yes | 17 | – | 2 595 | 64 572 | 6 | 139 |
+| c_0309 | yes | 518 | – | 82 359 | 1 748 861 | 72 | 170 |
+| c_0297 | yes | 210 | – | 32 184 | 681 284 | 98 | 161 |
+| c_0287 | yes | 345 | – | 51 397 | 1 058 799 | 248 | 165 |
+| c_0289 | yes | 1674 | – | 267 533 | 5 342 357 | 229 | 193 |
+| c_0294 | yes | 2064 | – | 334 114 | 8 120 975 | 231 | 182 |
+| b_0023 | yes | 59 | 150 | 8 182 | 163 507 | 73 | 291 |
+| b_0004 | yes | 35 | 282 | 4 735 | 129 907 | 396 | 2 574 |
+| b_d00007 | yes | 0 | 0 | 0 | 0 | 8 | 358 |
+| b_d00282 | yes | 33 | 0 | 4 720 | 96 489 | 21 | 156 |
+| b_d00283 | yes | 16 | 562 | 1 901 | 40 170 | 27 | 175 |
+| b_d00284 | yes | 322 | 0 | 48 980 | 1 050 250 | 309 | 2 144 |
+| b_d00149 | yes | 0 | 0 | 0 | 0 | 453 | 11 991 |
+
+"Identical": the stat counters and the dump as in the reference run, and the compact candidates
+expanded by `expand_compact.g` byte for byte the reference's full lines (5 293 candidates). The
+compact lines are 22 times smaller, ≈ 160 bytes per candidate. The deferred step of `b_d00149`
+(one vertex of order 128, three steps at once) needs 12 GB — one more reason to keep stage B
+local.
+
+The nine C pieces of the first pilot (336 vertices) shuffled with seed 7 into nine new pieces of
+40, each sent as two replicas, went through `collect.sh` with the manifest: all agreed, the
+summed counters and the 4828 candidates (as a set, the ids aside) are those of the original
+pieces, and the CPU per piece became 48–175 s instead of 1–280 s (maximum / median 1.7 instead of
+4.1).
 
 ## Rank 5 at $2^{11}$: how many jobs
 
@@ -205,29 +271,25 @@ The levels above 512 (≈ 26 thousand vertices of rank 5 of orders 64–256) are
   BOINC job length: **≈ 1 200 pieces, ≈ 2 400 jobs with the two replicas**, ≈ 2 000 CPU-hours
   on the volunteers' side (1 000–6 000). The input of a piece is ≈ 250 KB.
 * **Duration.** Typical ≈ 1 hour; in rank 4 the heaviest pieces of 40 vertices took 40 times
-  the median, and `run_rank.sh` splits the dump in the order the walk wrote it, so neighbouring
-  vertices (similar cost) land in one piece. Shuffling the dump before the split evens the pieces;
-  with it, a maximum of ≈ 10 hours is a safe run-time bound for the submit form (expected 1 h,
-  maximum 10 h).
+  the median, because the dump was split in the order the walk wrote it. Shuffled (`CSEED`) the
+  pieces even out (maximum / median 1.7 on the pilot); a maximum of ≈ 10 hours is a safe
+  run-time bound for the submit form (expected 1 h, maximum 10 h).
 * **Memory.** Stage C stayed under 200 MB in rank 4; for rank 5 expect well under 1 GB, with
   GAP's workspace capped at 4 GB by default. The exception is the fallback of `tree.g` (a cover
   with `k > KMAX`, done by `PqDescendants`), which can be heavy; it occurred for 230 parents in
   rank 4 and finished in all pieces.
 * **Output.** In rank 4 there was about one candidate per parent of order $2^{10}$ (52 568 for
-  52 181). If rank 5 is similar, that is up to $10^7$ candidates, tens of GB in the present line
-  format (≈ 4 KB per line, ≈ 30 MB per piece before gzip). Writing only the code and the
-  involution of a candidate (≈ 100 bytes; the presentation is recomputed from the code for the
-  lattice) would make it ≈ 1 GB; this needs a flag in `tree.g`.
+  52 181). If rank 5 is similar, that is up to $10^7$ candidates: tens of GB as full lines
+  (≈ 4 KB each), **≈ 1.6 GB as compact lines** (≈ 160 bytes; ≈ 1.4 MB per piece of 5000
+  vertices before gzip), uploaded twice for the replicas. Expanding them for the lattice is
+  local work (`expand_compact.g`, part of stage L).
 * **Stages A and B** stay local: A is one process, and B for rank 5 is hours of CPU plus about a
   day to generate the 5.87 million vertices of order 512, with up to a few GB per process.
 
 ## Limits
 
-* `buda/Dockerfile` names the image by digest; until the image is published (the workflow moved
-  into `.github/workflows/`, a `boinc-vN` tag, the package made public) the variant cannot be
-  created.
-* A version of `tree.g` that defers the large steps of stage A to stage B (input lines with a
-  `"steps"` field) is not in this repository yet; `run_piece.sh` refuses such lines rather than
-  misreading them.
+* The variants name the image by digest, and the package has to be public for volunteers' hosts
+  to pull it. Every change of the code in the image is a new tag `boinc-vN` and new digests in
+  both variants.
 * BUDA has no replication of its own and no memory requirement per job; both are handled here by
   two replicas per piece and by keeping stage B local.

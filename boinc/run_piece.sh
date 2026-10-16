@@ -4,16 +4,19 @@
 #
 # IN: a header line, then vertex lines exactly as run_rank.sh writes them (A/dump.jsonl, B/in_*,
 # Cin/c_*):
-#   # piece v1 name=c_0000 rank=4 nmax=10 logq=11 covermax=10 steprules=true [dumplevel=9]
+#   # piece v1 name=c_0000 rank=4 nmax=10 logq=11 covermax=10 steprules=true [dumplevel=9] [compact=true]
 #   {"order":512,"code":2545205939215099486623156405135}
+#   {"order":256,"code":77523550526317933098992015,"steps":[2]}   ← a step deferred by stage A
 #   ...
+# compact=true: the candidates are tree.g's compact lines (code and involution, ≈ 150 bytes each;
+# ../compute/pq2048/expand_compact.g gives the full lines back); without it the full lines.
 # OUT: plain text, the same bytes on every host for the same IN and the same image:
 #   # dimension-subrings piece result v1
 #   # name c_0000
 #   # input-sha256 <sha256 of IN>
 #   # code <commit of the search code in the image>
 #   # stat <tree.g's STATFILE without the ms_* timings>
-#   # candidates N        then N lines: tree.g's OUTFILE (candidates of order 2^11)
+#   # candidates N        then N lines: tree.g's OUTFILE (candidates of order 2^11, compact or full)
 #   # dump M              then M lines: tree.g's DUMPFILE (only with dumplevel)
 #   # end
 # Timings and peak memory go to stderr (BOINC returns it as stderr.txt), never into OUT.
@@ -43,6 +46,8 @@ case $name in ''|*[!A-Za-z0-9_.-]*) fail 2 "header field name must be [A-Za-z0-9
 rank=$(num rank); nmax=$(num nmax 10); logq=$(num logq 11); covermax=$(num covermax 10)
 steprules=$(field steprules); [ -n "$steprules" ] || steprules=true
 case $steprules in true|false) ;; *) fail 2 "steprules must be true or false" ;; esac
+compact=$(field compact); [ -n "$compact" ] || compact=false
+case $compact in true|false) ;; *) fail 2 "compact must be true or false" ;; esac
 dumplevel=$(field dumplevel)
 [ -z "$dumplevel" ] || dumplevel=$(num dumplevel)
 
@@ -54,11 +59,8 @@ tail -n +2 "$in" | grep -v '^[[:space:]]*$' > "$work/start.jsonl" || true
 if grep -Evq '^\{"order":[0-9]+,"code":[0-9]+(,"steps":\[[0-9]+(,[0-9]+)*\])?\}$' "$work/start.jsonl"; then
   fail 2 "a vertex line is not {\"order\":N,\"code\":N}"
 fi
-if grep -q '"steps"' "$work/start.jsonl" && ! grep -q DEFERFILE "$code/tree.g"; then
-  fail 2 "the input has deferred steps and this tree.g does not read them"
-fi
 
-params="D:=$rank;; STEPRULES:=$steprules;; NMAX:=$nmax;; LOGQ:=$logq;; COVERMAX:=$covermax;;"
+params="D:=$rank;; STEPRULES:=$steprules;; COMPACT:=$compact;; NMAX:=$nmax;; LOGQ:=$logq;; COVERMAX:=$covermax;;"
 params="$params STARTFILE:=\"$work/start.jsonl\";; STATFILE:=\"$work/stat.json\";; OUTFILE:=\"$work/cand.jsonl\";;"
 [ -z "$dumplevel" ] || params="$params DUMPLEVEL:=$dumplevel;; DUMPFILE:=\"$work/dump.jsonl\";;"
 
