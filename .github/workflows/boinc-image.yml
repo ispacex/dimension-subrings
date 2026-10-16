@@ -1,0 +1,32 @@
+# Builds the volunteer-computing image (boinc/Dockerfile) for x86_64 and aarch64 on native runners
+# and pushes it to ghcr.io/<owner>/dimension-subrings-boinc:<tag>-amd64 / -arm64.  The digests are
+# written to the job summary: boinc/buda/Dockerfile names the image by digest.
+name: boinc image
+on:
+  workflow_dispatch:
+  push:
+    tags: ['boinc-v*']
+permissions:
+  contents: read
+  packages: write
+jobs:
+  image:
+    strategy:
+      matrix:
+        include:
+          - { arch: amd64, runner: ubuntu-24.04 }
+          - { arch: arm64, runner: ubuntu-24.04-arm }
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: build and push
+        run: |
+          tag="ghcr.io/${GITHUB_REPOSITORY,,}-boinc:${GITHUB_REF_NAME}-${{ matrix.arch }}"
+          docker build -f boinc/Dockerfile --build-arg CODE_COMMIT="$GITHUB_SHA" -t "$tag" .
+          docker push "$tag"
+          echo "$tag → $(docker inspect --format '{{index .RepoDigests 0}}' "$tag")" >> "$GITHUB_STEP_SUMMARY"
