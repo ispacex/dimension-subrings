@@ -1,0 +1,6 @@
+d=2: groups 15, D4=1 15, D5=1 15, Dn!=gamma_n 0, lattice 0.02 h
+d=3: groups 301, D4=1 301, D5=1 301, Dn!=gamma_n 0, lattice 1.06 h
+d=4: groups 2756, D4=1 2756, D5=1 2756, Dn!=gamma_n 0, lattice 16.93 h
+d=5: groups 319, D4=1 319, D5=1 319, Dn!=gamma_n 0, lattice 3.27 h
+d=6: groups 9, D4=1 9, D5=1 9, Dn!=gamma_n 0, lattice 0.07 h
+total 3400

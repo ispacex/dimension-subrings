@@ -1,0 +1,2 @@
+# Python packages for jobs on the remote box (remote/py-env.sh): what compute/*.py import.
+numpy==2.5.4
