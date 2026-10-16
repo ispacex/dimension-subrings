@@ -13,7 +13,9 @@
 #   2-class 2 (exactly the immediate descendants of step s of V); else fail.  PqDescendants on V is
 #   slow there because Aut(V) = GL(d,2) is insoluble and pq has GAP compute the stabilisers.
 #   On when LIBROOT, default the environment variable PQ2048_LIBROOT (1 = on).  For order 512 the
-#   ids of a (rank, 2-class) block come from the library's own table (SmallGroupsInformation).
+#   ids of a (rank, 2-class) block come from the library's own table (SmallGroupsInformation);
+#   there CH_IDS (set by tree.g from a deferred line's "ids":[a,b]) narrows them to [a .. b], and
+#   the groups come one at a time from an iterator (millions of them: not a list in memory).
 if not IsBound(CH_KMAX) then CH_KMAX := 22; fi;
 if not IsBound(OWNDESC) then
   OWNDESC := IsBound(GAPInfo.SystemEnvironment.PQ2048_OWNDESC)
@@ -71,6 +73,13 @@ CH_Step1 := function(V)
 end;;
 
 if not IsBound(CH_LIBMAX) then CH_LIBMAX := 9; fi;
+if not IsBound(CH_DEFERCHUNK) then
+  CH_DEFERCHUNK := 50000;
+  if IsBound(GAPInfo.SystemEnvironment.PQ2048_DEFERCHUNK) then
+    CH_DEFERCHUNK := Int(GAPInfo.SystemEnvironment.PQ2048_DEFERCHUNK);
+  fi;
+fi;
+CH_IDS := fail;
 if not IsBound(LIBROOT) then
   LIBROOT := IsBound(GAPInfo.SystemEnvironment.PQ2048_LIBROOT)
              and GAPInfo.SystemEnvironment.PQ2048_LIBROOT = "1";
@@ -84,10 +93,18 @@ CH_LibRoot := function(V, s)
   d := Log(Size(V), 2); n := Size(V) * 2 ^ s;
   if n > 2 ^ CH_LIBMAX then return fail; fi;
   if n = 512 then
-    ids := CH_RANGE512.(d); ids := [ids[1] .. ids[2]];
-  else
-    ids := [1 .. NrSmallGroups(n)];
+    ids := CH_RANGE512.(d);
+    if IsBound(CH_IDS) and CH_IDS <> fail then
+      ids := [Maximum(ids[1], CH_IDS[1]) .. Minimum(ids[2], CH_IDS[2])];
+    else
+      ids := [ids[1] .. ids[2]];
+    fi;
+    return IteratorByFunctions(rec(pos := 0, ids := ids, n := n,
+      IsDoneIterator := it -> it.pos >= Length(it.ids),
+      NextIterator := function(it) it.pos := it.pos + 1; return SmallGroup(it.n, it.ids[it.pos]); end,
+      ShallowCopy := it -> rec(pos := it.pos, ids := it.ids, n := it.n)));
   fi;
+  ids := [1 .. NrSmallGroups(n)];
   res := [];
   for i in ids do
     G := SmallGroup(n, i);

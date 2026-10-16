@@ -23,6 +23,8 @@
 #     taken here (its list of descendants would be built whole in one process: stage A of rank 4
 #     ran out of memory that way); a line {"order":..,"code":..,"steps":[s]} goes to DEFERFILE instead, and a run
 #     with that line in its STARTFILE takes exactly those steps of that vertex.
+#     With LIBROOT (children.g) a deferred step of the root to order 512 is written as one line per
+#     CH_DEFERCHUNK (default 50000) library ids, {..,"steps":[s],"ids":[a,b]}: the pieces of stage B.
 #   TRACE — print each vertex (order, CodePcGroup) before it is expanded, to name the one that fails.
 #   PROFILE (environment PQ2048_PROFILE=FILE) — per vertex, appended to FILE (flushed line by line):
 #     {"start":k,"code":..} before it is expanded, then {"k":..,"code":..,"steps":[..],"ms_steps":..,
@@ -48,7 +50,7 @@ TR_Rt := function() local r; r := Runtimes();
 TR_Live := function() local g; g := GasmanStatistics();
   if IsBound(g.full) and IsBound(g.full.livekb) then return g.full.livekb; fi; return -1; end;;
 TR_Run := function()
-  local prof, pv, ps, r0, r1, t1, nrej, nkept, ncut, ds, mc, dump, dlev, defer, fixed, S, stack, covers, G, k, s, H, c, t, r, cs, x, n, out, line, nm, j, st, steps;
+  local nd, prof, pv, ps, r0, r1, t1, nrej, nkept, ncut, ds, mc, dump, dlev, defer, fixed, S, stack, covers, G, k, s, H, c, t, r, cs, x, n, out, line, nm, j, st, steps;
   S := rec(vert := [], cut := [], par := [], cand := [], fallback := [], ms_desc := [], ms_cover := [],
            ms_steps := [], calls := [], skipped := [], noexp := []);
   if IsBound(OUTFILE) then out := OutputTextFile(OUTFILE, false); SetPrintFormattingStatus(out, false); fi;
@@ -59,18 +61,20 @@ TR_Run := function()
       line := ReadLine(nm);
       if line = fail then break; fi;
       if Length(line) > 2 then
-        line := EvalString(ReplacedString(ReplacedString(ReplacedString(ReplacedString(line,
-          "{\"order\":", "["), ",\"code\":", ","), ",\"steps\":", ","), "}", "]"));
-        if Length(line) = 3 then
-          Add(stack, [PcGroupCode(line[2], line[1]), line[3]]);
+        line := EvalString(ReplacedString(ReplacedString(ReplacedString(ReplacedString(ReplacedString(line,
+          "{\"order\":", "["), ",\"code\":", ","), ",\"steps\":", ","), ",\"ids\":", ","), "}", "]"));
+        if Length(line) = 4 then
+          Add(stack, [PcGroupCode(line[2], line[1]), line[3], line[4]]);
+        elif Length(line) = 3 then
+          Add(stack, [PcGroupCode(line[2], line[1]), line[3], fail]);
         else
-          Add(stack, [PcGroupCode(line[2], line[1]), fail]);
+          Add(stack, [PcGroupCode(line[2], line[1]), fail, fail]);
         fi;
       fi;
     od;
     CloseStream(nm);
   else
-    stack := [[ElementaryAbelianGroup(2 ^ D), fail]];
+    stack := [[ElementaryAbelianGroup(2 ^ D), fail, fail]];
     TR_Add(S.vert, D, 1);
   fi;
   prof := fail;
@@ -87,7 +91,7 @@ TR_Run := function()
   j := 0;
   while stack <> [] do
     G := Remove(stack);
-    fixed := G[2]; G := G[1];
+    fixed := G[2]; CH_IDS := G[3]; G := G[1];
     k := Log(Size(G), 2);
     if IsBound(TRACE) then Print("vertex ", Size(G), " ", CodePcGroup(G), "\n"); fi;
     if prof <> fail then
@@ -112,8 +116,17 @@ TR_Run := function()
     fi;
     if defer <> fail then
       for s in Filtered(steps, s -> k + s > dlev) do
-        WriteAll(defer, Concatenation("{\"order\":", String(Size(G)), ",\"code\":", String(CodePcGroup(G)),
-          ",\"steps\":[", String(s), "]}\n"));
+        if LIBROOT and IsElementaryAbelian(G) and k + s = 9 then
+          # CH_LibRoot takes this step from SmallGroups(512): one line per CH_DEFERCHUNK ids
+          r := CH_RANGE512.(Log(Size(G), 2));
+          for n in [r[1], r[1] + CH_DEFERCHUNK .. r[2]] do
+            WriteAll(defer, Concatenation("{\"order\":", String(Size(G)), ",\"code\":", String(CodePcGroup(G)),
+              ",\"steps\":[", String(s), "],\"ids\":[", String(n), ",", String(Minimum(r[2], n + CH_DEFERCHUNK - 1)), "]}\n"));
+          od;
+        else
+          WriteAll(defer, Concatenation("{\"order\":", String(Size(G)), ",\"code\":", String(CodePcGroup(G)),
+            ",\"steps\":[", String(s), "]}\n"));
+        fi;
       od;
       steps := Filtered(steps, s -> k + s <= dlev);
     fi;
@@ -122,8 +135,9 @@ TR_Run := function()
     for s in steps do
       r0 := TR_Rt();
       ds := CH_Desc(G, s);
-      r1 := TR_Rt(); t1 := TS_Cpu(); nrej := 0; nkept := 0; ncut := 0;
+      r1 := TR_Rt(); t1 := TS_Cpu(); nrej := 0; nkept := 0; ncut := 0; nd := 0;
       for H in ds do
+        nd := nd + 1;
         c := NilpotencyClassOfGroup(H);
         if c > 3 then nrej := nrej + 1; continue; fi;
         if c = 3 and not IsCyclic(LowerCentralSeriesOfGroup(H)[3]) then nrej := nrej + 1; continue; fi;
@@ -134,7 +148,7 @@ TR_Run := function()
           if k + s >= dlev then
             WriteAll(dump, Concatenation("{\"order\":", String(Size(H)), ",\"code\":", String(CodePcGroup(H)), "}\n"));
           else
-            Add(stack, [H, fail]);
+            Add(stack, [H, fail, fail]);
           fi;
         fi;
         if c >= 2 and MS_PClass(H) >= 3 then
@@ -145,7 +159,7 @@ TR_Run := function()
         fi;
       od;
       if prof <> fail then
-        Add(pv.by_step, Concatenation("{\"s\":", String(s), ",\"n\":", String(Length(ds)),
+        Add(pv.by_step, Concatenation("{\"s\":", String(s), ",\"n\":", String(nd),
           ",\"gap\":", String(r1[1] - r0[1]), ",\"pq\":", String(r1[2] - r0[2]),
           ",\"filter\":", String(TS_Cpu() - t1), ",\"kept\":", String(nkept), ",\"cut\":", String(ncut),
           ",\"rej\":", String(nrej), "}"));
