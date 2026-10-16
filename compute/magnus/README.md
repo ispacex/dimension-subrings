@@ -19,7 +19,8 @@ and an improved sieve for 3-torsion in $D_5/\gamma_5$ on 3-groups of class 4. Ru
 | `liedim.py` | Lie rings (MATH-42): $\delta_n(L)/\gamma_n(L)$ for a finitely presented Lie ring with weighted generators, as $K/J$ inside $U(L)/\varpi^n = T_{<n}/I$ in the Lyndon basis, modulo $p^E$; prints the free rank, $\log_p$ of the torsion and its exponent |
 | `lie_bm2.py`, `lie_bm2_honest.py` | check: BM §9.1 2-torsion Lie ring, $\delta_4/\gamma_4 \cong \mathbb Z/2$, with a degree-2 generator as one weighted letter and as $[z, z']$ of fresh generators (both give $\mathbb Z/2$) |
 | `lie_bm2_n5.py` | positive control at $n = 5$: the same ring with $y_{0j}$ of degree 3, $\delta_5/\gamma_5 \cong \mathbb Z/2$ |
-| `lie_search5.py` | random search for 3-torsion in $\delta_5/\gamma_5$ over BM (9.1)-type rings: `python lie_search5.py SEED COUNT [E\|-] [wide]`, one JSON line per ring |
+| `lie_search5.py` | random search for 3-torsion in $\delta_5/\gamma_5$ over BM (9.1)-type rings: `python lie_search5.py SEED COUNT [E\|-] [wide\|212]`, one JSON line per ring |
+| `lie_search5.jsonl` | its output: seeds 1–6 × 400 (base), 201–202 × 150 (`wide`), 301–302 × 25 (`212`), $E = 19$; all 2750 rings have $\delta_5 = \gamma_5$ |
 
 The `*.log` files named above are not kept in git (`../.gitignore`); rerunning the scripts writes them.
 
