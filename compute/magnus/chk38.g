@@ -1,7 +1,10 @@
 # MATH-120: check the presentations written by c38.g (set CHKIN to a c38 *.jsonl file first).
 # For every survivor line: the 3-quotient of <x_1..x_k | rels> (ANUPQ, p-class <= 30) has order
 # 3^8 and class 4, and the image of z is central of order 3 and lies in Q''.
-LoadPackage("anupq"); LoadPackage("json");
+LoadPackage("anupq");
+# a c38 JSON line is a flat object without strings: turn it into a GAP record
+J2R := line -> EvalString(ReplacedString(ReplacedString(ReplacedString(ReplacedString(
+  line, "{\"", "rec("), "\":", ":="), ",\"", ","), "}", ")"));
 CHK38 := function(path)
   local str, n, bad, line, r, F, rels, Fp, epi, P, z, ok;
   str := InputTextFile(path); n := 0; bad := 0;
@@ -9,7 +12,7 @@ CHK38 := function(path)
   while true do
     line := ReadLine(str);
     if line = fail or line = "" then break; fi;
-    r := JsonStringToGap(line);
+    r := J2R(Chomp(line));
     F := FreeGroup(r.k);
     rels := List(r.rels, e -> ObjByExtRep(FamilyObj(One(F)), e));
     Fp := F / rels;
