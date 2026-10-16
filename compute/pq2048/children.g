@@ -8,6 +8,12 @@
 #   PqDescendants.
 # CH_Desc(V, s) -> CH_Step1(V) when OWNDESC and s = 1 and it does not fail, else MS_Desc(V, s).
 #   OWNDESC defaults to the environment variable PQ2048_OWNDESC (1 = on).
+# CH_LibRoot(V, s) -> for V elementary abelian of rank d and |V| 2^s <= 2^CH_LIBMAX (default 9): the
+#   step-s descendants of V from the SmallGroups library, i.e. the groups of order |V| 2^s, rank d and
+#   2-class 2 (exactly the immediate descendants of step s of V); else fail.  PqDescendants on V is
+#   slow there because Aut(V) = GL(d,2) is insoluble and pq has GAP compute the stabilisers.
+#   On when LIBROOT, default the environment variable PQ2048_LIBROOT (1 = on).  For order 512 the
+#   ids of a (rank, 2-class) block come from the library's own table (SmallGroupsInformation).
 if not IsBound(CH_KMAX) then CH_KMAX := 22; fi;
 if not IsBound(OWNDESC) then
   OWNDESC := IsBound(GAPInfo.SystemEnvironment.PQ2048_OWNDESC)
@@ -64,8 +70,38 @@ CH_Step1 := function(V)
   return res;
 end;;
 
+if not IsBound(CH_LIBMAX) then CH_LIBMAX := 9; fi;
+if not IsBound(LIBROOT) then
+  LIBROOT := IsBound(GAPInfo.SystemEnvironment.PQ2048_LIBROOT)
+             and GAPInfo.SystemEnvironment.PQ2048_LIBROOT = "1";
+fi;
+# the id range of the groups of order 512 with rank d and 2-class 2 (SmallGroupsInformation(512))
+CH_RANGE512 := rec(2 := [11, 10], 3 := [2045, 2045], 4 := [60904, 67612], 5 := [420515, 6249623],
+  6 := [7532393, 10481221], 7 := [10493062, 10494173], 8 := [10494201, 10494212]);;
+CH_LibRoot := function(V, s)
+  local d, n, ids, res, i, G;
+  if not IsElementaryAbelian(V) then return fail; fi;
+  d := Log(Size(V), 2); n := Size(V) * 2 ^ s;
+  if n > 2 ^ CH_LIBMAX then return fail; fi;
+  if n = 512 then
+    ids := CH_RANGE512.(d); ids := [ids[1] .. ids[2]];
+  else
+    ids := [1 .. NrSmallGroups(n)];
+  fi;
+  res := [];
+  for i in ids do
+    G := SmallGroup(n, i);
+    if RankPGroup(G) = d and PClassPGroup(G) = 2 then Add(res, G); fi;
+  od;
+  return res;
+end;;
+
 CH_Desc := function(V, s)
   local res;
+  if LIBROOT then
+    res := CH_LibRoot(V, s);
+    if res <> fail then return res; fi;
+  fi;
   if OWNDESC and s = 1 then
     res := CH_Step1(V);
     if res <> fail then return res; fi;
