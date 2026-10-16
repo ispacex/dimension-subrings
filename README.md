@@ -64,6 +64,7 @@ $\le 3^6$, a sample of order $3^7$), $D_5/\gamma_5$ has no 3-torsion for any fin
 | [`notes/`](notes/formalization-audit.md) | an audit of the Lie-ring formalization against the paper |
 | [`scripts/`](scripts/build-audit.sh) | `build-audit.sh`: build the authors' formalization and print its axioms |
 | [`remote/`](remote/README.md) | running long jobs on a remote Linux box |
+| [`boinc/`](boinc/README.md) | the $2^{11}$ search as volunteer-computing jobs: a Docker image (GAP + ANUPQ), one piece → one result, BUDA files |
 | `upstream/lie-algebras` | the authors' formalization (submodule, pinned to the audited commit `ed3d9fb`) |
 
 The READMEs also exist in Russian (`*.ru.md`), the language the work was done in.
