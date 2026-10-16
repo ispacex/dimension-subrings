@@ -10,7 +10,8 @@
 #   C  the vertices of order 2^L2 .. 2^9 (A's and B's), CHUNK (default 40) per piece: their subtrees
 #      (for L2 = 9: step 1 to the parents of order 2^10 and the cover search on them);
 #   L  the candidates of order 2^11 renumbered into OUTDIR/c2048.jsonl, the lattice (variant B,
-#      ../pq1024/latb/magnus_pres.py) into OUTDIR/b2048.jsonl, the sums into OUTDIR/summary.json.
+#      ../pq1024/latb/magnus_pres.py, LJOBS processes, default PARALLEL; the lines keep their order)
+#      into OUTDIR/b2048.jsonl, the sums into OUTDIR/summary.json.
 # A piece whose stat file exists is not run again, so the script can be restarted after a stop.
 # Batches: STOP_AFTER_A=1 stops after A and the split of B; LIMIT=N runs at most N pieces
 # not yet done (B first, then C) and stops with exit 3 while pieces remain; OUTDIR then lives
@@ -107,7 +108,7 @@ if [ "$COMPACT" = true ]; then
   [ -s "$cfull" ] || ( cd "$here" && printf '%s\n' "INFILE:=\"$out/c2048.jsonl\";; OUTFILE:=\"$cfull\";;" \
     | cat - expand_compact.g | "$GAP" -q -b -o "$GAPMEM" --quitonbreak ) || { log "expand failed"; exit 1; }
 fi
-( cd "$here/../pq1024/latb" && "$PY" magnus_pres.py < "$cfull" > "$out/b2048.jsonl" 2> "$out/lat.log" ) || { log "lattice failed"; exit 1; }
+( cd "$here/../pq1024/latb" && OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 "$PY" magnus_pres.py --jobs "${LJOBS:-$par}" < "$cfull" > "$out/b2048.jsonl" 2> "$out/lat.log" ) || { log "lattice failed"; exit 1; }
 "$PY" "$here/rank_sum.py" "$out" > "$out/summary.json" || exit 1
 [ -n "${JOB_ROOT:-}" ] && echo "$((1 + nb + nc))/$((1 + nb + nc))" > "$JOB_ROOT/progress"
 cat "$out/summary.json"

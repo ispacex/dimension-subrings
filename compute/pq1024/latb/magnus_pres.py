@@ -11,7 +11,9 @@ J_nmax считается один раз (столбцы по возраста�
 
 Ключи: --exact — HNF над Z через python-flint (fmpz_mat), без модуля и сертификата;
 иначе Хауэлл по модулю p^E, как в dimsub.py.  Вывод — по строке на группу: уровни с
-|D_n ∩ T| (T — проверенные элементы), |γ_n ∩ T|, лишние элементы (номера в T), индекс."""
+|D_n ∩ T| (T — проверенные элементы), |γ_n ∩ T|, лишние элементы (номера в T), индекс.
+
+--jobs N: N worker processes; the output lines keep the input's order (see main)."""
 import json
 import sys
 import time
@@ -257,12 +259,33 @@ def analyse(rec, exact=False, E=None, kernel=False):
     return res
 
 
+def _one(line, exact, kernel):
+    return json.dumps(analyse(json.loads(line), exact=exact, kernel=kernel))
+
+
 def main():
+    """--jobs N: the groups are spread over N worker processes; the answers are still printed one
+    line per input line, in the input's order, so the output is the same as with one process (up
+    to the timings in "stats").  At most 4N lines are in flight, so memory does not grow with the
+    input."""
     exact = "--exact" in sys.argv
     kernel = "--kernel" in sys.argv
-    for line in sys.stdin:
-        if line.strip():
-            print(json.dumps(analyse(json.loads(line), exact=exact, kernel=kernel)), flush=True)
+    jobs = int(sys.argv[sys.argv.index("--jobs") + 1]) if "--jobs" in sys.argv else 1
+    lines = (line for line in sys.stdin if line.strip())
+    if jobs <= 1:
+        for line in lines:
+            print(_one(line, exact, kernel), flush=True)
+        return
+    from collections import deque
+    from concurrent.futures import ProcessPoolExecutor
+    from itertools import islice
+    with ProcessPoolExecutor(jobs) as pool:
+        window = deque(pool.submit(_one, line, exact, kernel) for line in islice(lines, 4 * jobs))
+        while window:
+            out = window.popleft().result()
+            for line in islice(lines, 1):
+                window.append(pool.submit(_one, line, exact, kernel))
+            print(out, flush=True)
 
 
 if __name__ == "__main__":
