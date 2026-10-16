@@ -15,6 +15,7 @@
 #           >= 3), so for c = 1 the step NMAX - k is dropped.
 # TS_Steps(V, nmax, logq) -> rec(steps, nuc, nu4, nu, ms); ms is CPU with the pq process.
 Read("pcover.g");
+Read("children.g");
 TS_Cpu := function() local r; r := Runtimes();
   return r.user_time + r.system_time + r.user_time_children + r.system_time_children; end;;
 TS_Dim := function(rows) if rows = [] then return 0; fi; return RankMat(rows); end;;

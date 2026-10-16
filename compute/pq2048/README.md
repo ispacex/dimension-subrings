@@ -196,6 +196,7 @@ non-trivial $\gamma_3$ at large rank (Corollary 1), and on the parent itself it 
 | `tree.g`, `run_tree.sh`, `run_trees.sh` | search of one rank by walking the tree from $2^d$ with pruning by (Г$_N$) and the $p$-cover search on every parent |
 | `sample_desc.g`, `run_estimate.sh` | sample for the $2^{11}$ estimate: descendants of vertices of orders 64–512 up to order $2^{10}$, how many pass (Г$_{11}$), time |
 | `pcover.g`, `verify_pcover.g`, `run_verify_pcover.sh`, `run_cmp_flag.sh`, `run_cmp_piece.sh`, `mkstart.g`, `cmpcands.g`, `prof_vertex.g`, `prof_expand.g`, `probe_children.g`, `run_prof.sh` | the $p$-cover without `pq` (flag `OWNCOVER`, environment `PQ2048_OWNCOVER=1`), its checks against `PqPCover`, the walks with and without it, profiles (section "The p-cover without pq") |
+| `children.g`, `verify_children.g`, `run_verify_children.sh`, `probe_r8.g`, `probe_r8b.g` | step-1 children without `pq` (flag `OWNDESC`, environment `PQ2048_OWNDESC=1`), the check against `PqDescendants`, rank-8 probes (section "Step-1 children without pq") |
 | `steps.g`, `verify_steps.g`, `run_verify.sh` | the step rules: which steps of a vertex can give the descendants we need, from its $p$-cover; check against full `PqDescendants` (section "Vertices without descendants") |
 | `run_check1024.sh`, `chunks1024.txt` | the check on $2^{10}$: `../pq1024/desc1c.g` with `PFILTER` = (Г$_{10}$) over the 858 chunks of the $2^{10}$ run |
 | `cmp37.sh`, `cmp37.g`, `cmp37.py` | the check on $2^{10}$: comparison with `../pq1024/results/candidates.csv` parent by parent (the same pc code, otherwise the ANUPQ standard presentation) |
@@ -677,6 +678,59 @@ vertex of order 256, `prof_vertex.g`), so caching Aut gains nothing measurable. 
 generating the children themselves: step-1 children as $V^*/U$ from orbits of $\mathrm{Aut}(V)$
 on the hyperplanes of $M$ (as `cover.g` does for the candidates, `MC_OrbitReps`, `MC_Quotient`),
 built as pc quotients without the fp round trip — the next step.
+
+## Step-1 children without pq
+
+`children.g` (`CH_Step1`, flag `OWNDESC`, environment `PQ2048_OWNDESC=1`) builds the step-1
+children of a vertex $V$ without `PqDescendants`: from the $p$-cover $V^*$ (`PC_Cover`), the
+multiplicator $M$, the nucleus $N$ and $G_4 = \gamma_4(V^*)$,
+
+* the functionals $f$ on $M$ that vanish on $G_4$ and not on $N$ — exactly the allowable
+  hyperplanes $U = \ker f$ whose quotient $V^*/U$ has class $\le 3$ (Statement 4 and rule 1 of
+  "Vertices without descendants"; the walk discards every child of class $\ge 4$ uncounted, so
+  nothing it counts is lost);
+* their orbits under the action of $\mathrm{Aut}(V)$ lifted to $V^*$ (`MC_AutMats` of
+  `../pq1024/cover.g`, the same as for the candidates); by O'Brien's theorem on the standard
+  algorithm two allowable hyperplanes give isomorphic descendants iff they lie in one orbit;
+* one child $V^*/U$ per orbit, as a pc quotient of $V^*$ (`MC_Quotient`) — no fp presentation and
+  no `pq` process.
+
+The functionals are enumerated as vectors of $\mathbb F_2^k$, $k = \dim M - \dim G_4$, with a bit
+list of the ones already met, stopping when the orbits found cover all $2^k - 2^{k - \mathrm{rk}}$
+allowable ones. For $k > 22$ (`CH_KMAX`) `CH_Step1` returns `fail` and `CH_Desc` calls
+`PqDescendants`; steps $\ge 2$ always go to `PqDescendants`. `tree.g` calls `CH_Desc` instead of
+`MS_Desc` (one word changed; without the flag it is `MS_Desc`).
+
+**Checks.** `verify_children.g` compares, vertex by vertex, the children of class $\le 3$ from
+`PqDescendants` with `CH_Step1`: the same number and the same standard presentations (cheap
+invariants instead when there are more than 200). Walks with both flags against the old code
+(`run_cmp_flag.sh`, `run_cmp_piece.sh` with `FLAGENV="PQ2048_OWNCOVER=1 PQ2048_OWNDESC=1"`):
+
+| vertices (all kept, step 1) | count | children of class ≤ 3 | differences | ms per vertex: `PqDescendants` → `CH_Step1` |
+|---|---|---|---|---|
+| orders 8, 16, 32, 64 | 5 + 14 + 48 + 235 | 10 + 31 + 144 + 1011 | **0** | 113 → 48 (order 64: 127 → 56) |
+<!-- VCMORE -->
+
+| run | CPU s, old → own cover → own cover + own children | counters | candidates |
+|---|---|---|---|
+| rank 2 to 256 | 11.5 → 7.7 → 5.9 | same | 40 = 40 |
+| rank 3 to 256 | 74.5 → 59.9 → 54.2 | same | 178 = 178 |
+| rank 4 to 256 | 142.6 → 103.4 → 88.0 | same | 159 = 159 |
+| rank-6 piece (211 vertices of order 512) | 232.4 → 171.7 → **93.4** | same (2 240 parents) | 0 = 0 |
+
+In the rank-6 piece the expansion of the one vertex with 2 240 children drops from 147.5 to
+54.6 s (≈ 66 → 24 ms per child, of which ≈ 11 ms is `PR_Data` on the child). What is left is the
+cover search on the 2 240 parents (36 s, ≈ 16 ms each) and `PR_Data`.
+
+**Rank 8.** Of the 12 rank-8 groups of order 512, `steps.g` drops 11 (nucleus 0, or $\nu = 0$);
+the twelfth, $\mathbb Z/4 \times (\mathbb Z/2)^7$, has a one-dimensional nucleus and $k = 36$
+(`probe_r8.g`). `PqDescendants` on it is OOM-killed at 8 GB, also with `SpaceEfficient` (6 GB,
+`probe_r8b.g`), and `CH_Step1` falls back to `PqDescendants` there ($2^{35}$ allowable functionals
+cannot be listed). So the own children do not help rank 8 as they stand: that one vertex needs
+either an orbit algorithm that does not list the functionals (a stabiliser chain over a ladder of
+subspaces, as in the standard algorithm) or a direct argument for groups of order $2^{11}$ and
+rank 8, where $|\Phi(Q)| = 8$ and every layer of the lower exponent-2 central series below
+$\Phi(Q)$ has order 2.
 
 ## Not proved
 

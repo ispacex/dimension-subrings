@@ -5,7 +5,8 @@
 # >= 3) of order <= 2^COVERMAX run the p-cover search of ../pq1024/cover.g (as desc1c.g, DEDUP):
 # candidates of order 2|R| up to isomorphism.  Vertices of order 2^NMAX are not expanded.
 # Input: D, NMAX, LOGQ, COVERMAX, STATFILE [, OUTFILE: candidates as desc1c.g FORMAT "pres",
-# STEPRULES := true: call PqDescendants only for the steps steps.g allows (the step rules)].
+# STEPRULES := true: call PqDescendants only for the steps steps.g allows (the step rules); OWNDESC
+# (environment PQ2048_OWNDESC=1): step-1 children from children.g instead of PqDescendants].
 # STATFILE, by log2 of the order k = D..NMAX:
 #   vert[k]   vertices kept;  cut[k]  descendants of class <= 3 with cyclic gamma_3 cut by (Г_N);
 #   par[k]    parents among the kept;  cand[k+1] candidates of order 2^(k+1) (classes);
@@ -104,7 +105,7 @@ TR_Run := function()
     t := TS_Cpu();
     covers := [];
     for s in steps do
-      for H in MS_Desc(G, s) do
+      for H in CH_Desc(G, s) do
         c := NilpotencyClassOfGroup(H);
         if c > 3 then continue; fi;
         if c = 3 and not IsCyclic(LowerCentralSeriesOfGroup(H)[3]) then continue; fi;

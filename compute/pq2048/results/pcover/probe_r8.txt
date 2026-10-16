@@ -1,0 +1,12 @@
+R8 d=8 cls=1 pc=2 m=36 nuc=1 nu4=1 nu=1 steps=[ 1 ] k4=36 k=36
+R8 d=8 cls=2 pc=2 m=36 nuc=1 nu4=1 nu=0 steps=[  ] k4=36 k=35
+R8 d=8 cls=2 pc=2 m=35 nuc=0 nu4=0 nu=0 steps=[  ] k4=35 k=35
+R8 d=8 cls=2 pc=2 m=35 nuc=0 nu4=0 nu=0 steps=[  ] k4=35 k=35
+R8 d=8 cls=2 pc=2 m=35 nuc=0 nu4=0 nu=0 steps=[  ] k4=35 k=35
+R8 d=8 cls=2 pc=2 m=35 nuc=0 nu4=0 nu=0 steps=[  ] k4=35 k=35
+R8 d=8 cls=2 pc=2 m=35 nuc=0 nu4=0 nu=0 steps=[  ] k4=35 k=35
+R8 d=8 cls=2 pc=2 m=35 nuc=0 nu4=0 nu=0 steps=[  ] k4=35 k=35
+R8 d=8 cls=2 pc=2 m=35 nuc=0 nu4=0 nu=0 steps=[  ] k4=35 k=35
+R8 d=8 cls=2 pc=2 m=35 nuc=0 nu4=0 nu=0 steps=[  ] k4=35 k=35
+R8 d=8 cls=2 pc=2 m=35 nuc=0 nu4=0 nu=0 steps=[  ] k4=35 k=35
+R8 d=8 cls=2 pc=2 m=35 nuc=0 nu4=0 nu=0 steps=[  ] k4=35 k=35
