@@ -21,19 +21,50 @@ from magnus import Trunc, Ring, howell
 from dimsub import reduce_rows
 
 
-def word(T, ext):
-    out = T.one()
-    for i in range(0, len(ext), 2):
-        out = T.mul(out, T.power(T.gen(ext[i] - 1), ext[i + 1]))
-    return out
+def shifts(T):
+    """sh[i][a] = index of monomial a + (i,) (right multiplication by X_i), or -1 if too long."""
+    return [np.array([T.idx.get(m + (i,), -1) for m in T.monos]) for i in range(T.k)]
+
+
+def word_vec(T, R, ext, sh=None):
+    """The image of a word (GAP ext. rep.) in T_{<n}, as a dense vector modulo 3^E."""
+    sh = sh or shifts(T)
+    a = np.zeros(len(T.monos), dtype=np.int64)
+    a[0] = 1
+    for p in range(0, len(ext), 2):
+        g, e = ext[p] - 1, ext[p + 1]
+        ok = sh[g] >= 0
+        for _ in range(abs(e)):
+            if e > 0:                       # a (1 + X_g)
+                b = a.copy()
+                np.add.at(b, sh[g][ok], a[ok])
+            else:                           # a (1 + X_g)^(-1) = a sum_j (-X_g)^j
+                b, t = a.copy(), a.copy()
+                for _ in range(1, T.n):
+                    u = np.zeros_like(t)
+                    np.add.at(u, sh[g][ok], -t[ok])
+                    t = u % R.D
+                    b += t
+            a = b % R.D
+    return a
+
+
+def to_dict(T, v):
+    return {T.monos[j]: int(c) for j, c in enumerate(v) if c}
 
 
 def member(T, R, rels, ws):
     """For each word in ws: is w - 1 in I_n (mod 3^E)?  Also returns the certificate flag."""
-    A = T.ideal_rows([word(T, r) for r in rels], R)
+    sh = shifts(T)
+    A = T.ideal_rows([to_dict(T, word_vec(T, R, r, sh)) for r in rels], R)
     H = howell(R, A)
     m = len(T.monos)
-    V = np.array([T.vec(word(T, w), R) for w in ws])
+    V = []
+    for w in ws:
+        v = word_vec(T, R, w, sh)
+        v[0] = (v[0] - 1) % R.D
+        V.append(v)
+    V = np.array(V)
     ok = reduce_rows(R, H, V)
     probe = np.zeros((m - 1, m), dtype=np.int64)
     probe[:, 1:] = R.ppow[R.E - 1] * np.eye(m - 1, dtype=np.int64)
