@@ -1,0 +1,1 @@
+{"order":32,"from":1,"stride":1,"logq":11,"diff":0,"vert":[1,16,24,6,1],"parents":[0,13,8],"withU":[0,2],"cands":[0,3],"steps_pq":[18,275,416,99,12],"steps_own":[3,55,77,14,3],"data_pq":[0,243,144],"data_own":[0,58,32]}
