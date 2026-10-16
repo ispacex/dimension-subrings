@@ -27,6 +27,9 @@
 #     CH_DEFERCHUNK (default 50000) library ids, {..,"steps":[s],"ids":[a,b]}: the pieces of stage B.
 #   THMA (environment PQ2048_THMA=1) — Theorem A of README: a kept-to-be vertex of order 2^(LOGQ-2),
 #     2-class 2, with elementary abelianization is dropped before (G_N) (counted in thmA[k]).
+#   THMB (environment PQ2048_THMB=1) — Theorem B of README: for a vertex of order 2^(LOGQ-2), 2-class 2,
+#     whose abelianization has fewer than two invariants >= 4, step 1 builds only the children of
+#     class <= 2 (CH_StepC(V, 3)), counted in thmB[k]; fallback to CH_Desc when CH_StepC fails.
 #   TRACE — print each vertex (order, CodePcGroup) before it is expanded, to name the one that fails.
 #   PROFILE (environment PQ2048_PROFILE=FILE) — per vertex, appended to FILE (flushed line by line):
 #     {"start":k,"code":..} before it is expanded, then {"k":..,"code":..,"steps":[..],"ms_steps":..,
@@ -49,13 +52,14 @@ TR_Add := function(t, k, x) if not IsBound(t[k]) then t[k] := 0; fi; t[k] := t[k
 TR_List := t -> List([1..Length(t)], i -> function() if IsBound(t[i]) then return t[i]; fi; return 0; end());;
 TR_Rt := function() local r; r := Runtimes();
   return [r.user_time + r.system_time, r.user_time_children + r.system_time_children]; end;;
+THMB := IsBound(GAPInfo.SystemEnvironment.PQ2048_THMB) and GAPInfo.SystemEnvironment.PQ2048_THMB = "1";;
 THMA := IsBound(GAPInfo.SystemEnvironment.PQ2048_THMA) and GAPInfo.SystemEnvironment.PQ2048_THMA = "1";;
 TR_Live := function() local g; g := GasmanStatistics();
   if IsBound(g.full) and IsBound(g.full.livekb) then return g.full.livekb; fi; return -1; end;;
 TR_Run := function()
   local nd, prof, pv, ps, r0, r1, t1, nrej, nkept, ncut, ds, mc, dump, dlev, defer, fixed, S, stack, covers, G, k, s, H, c, t, r, cs, x, n, out, line, nm, j, st, steps;
   S := rec(vert := [], cut := [], par := [], cand := [], fallback := [], ms_desc := [], ms_cover := [],
-           ms_steps := [], calls := [], skipped := [], noexp := [], thmA := []);
+           ms_steps := [], calls := [], skipped := [], noexp := [], thmA := [], thmB := []);
   if IsBound(OUTFILE) then out := OutputTextFile(OUTFILE, false); SetPrintFormattingStatus(out, false); fi;
   if IsBound(STARTFILE) then
     stack := [];
@@ -140,7 +144,15 @@ TR_Run := function()
     covers := [];
     for s in steps do
       r0 := TR_Rt();
-      ds := CH_Desc(G, s);
+      ds := fail;
+      # Theorem B (README): order 2^(LOGQ-2), 2-class 2, fewer than two invariants >= 4 in G_ab =>
+      # every step-1 descendant passing (G_LOGQ) has class <= 2: only those are built.
+      if THMB and s = 1 and k = LOGQ - 2 and MS_PClass(G) = 2
+         and Number(AbelianInvariants(G), x -> x >= 4) < 2 then
+        ds := CH_StepC(G, 3);
+        if ds <> fail then TR_Add(S.thmB, k, 1); fi;
+      fi;
+      if ds = fail then ds := CH_Desc(G, s); fi;
       r1 := TR_Rt(); t1 := TS_Cpu(); nrej := 0; nkept := 0; ncut := 0; nd := 0;
       for H in ds do
         nd := nd + 1;

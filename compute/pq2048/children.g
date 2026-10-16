@@ -22,7 +22,11 @@ if not IsBound(OWNDESC) then
              and GAPInfo.SystemEnvironment.PQ2048_OWNDESC = "1";
 fi;
 
-CH_Step1 := function(V)
+CH_Step1 := V -> CH_StepC(V, 4);;
+
+# CH_StepC(V, j): the step-1 children of class < j (j = 4: CH_Step1; j = 3: class <= 2 only, the
+# allowable hyperplanes containing gamma_3(V*) ∩ M), one per isomorphism class, or fail (k > CH_KMAX).
+CH_StepC := function(V, j)
   local Rs, pcs, n, m, M, c, N, G4, Y, k, P, r, mats, A, gens, seen, res, x, a, orb, b, f, tot,
         need, done;
   Rs := PC_Cover(V);
@@ -34,7 +38,7 @@ CH_Step1 := function(V)
   c := MS_PClass(V);
   N := MC_Vecs(pcs, n, m, PCentralSeries(Rs, 2)[c + 1]);
   if N = [] then return []; fi;                         # terminal: no descendants at all
-  G4 := MC_Vecs(pcs, n, m, MC_Gamma(Rs, 4));
+  G4 := MC_Vecs(pcs, n, m, MC_Gamma(Rs, j));
   if G4 = [] then Y := IdentityMat(m, GF(2));
   else Y := NullspaceMat(TransposedMat(G4)); fi;       # basis of the functionals vanishing on G4
   k := Length(Y);
