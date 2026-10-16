@@ -1,0 +1,110 @@
+{
+ "order": 1024,
+ "by_rank": {
+  "2": {
+   "chunks": 2,
+   "parents": 119,
+   "skipped_gamma3": 89,
+   "descendants": 283,
+   "class3": 173,
+   "cyclic_centre": 15,
+   "candidates": 15,
+   "gap_ms": 19425,
+   "lattice": {
+    "groups": 15,
+    "D4_trivial": 15,
+    "D5_trivial": 15,
+    "Dn_eq_gamma_n": 15,
+    "seconds": 87.38
+   }
+  },
+  "3": {
+   "chunks": 30,
+   "parents": 4399,
+   "skipped_gamma3": 26474,
+   "descendants": 38323,
+   "class3": 21368,
+   "cyclic_centre": 301,
+   "candidates": 301,
+   "gap_ms": 850321,
+   "lattice": {
+    "groups": 301,
+    "D4_trivial": 301,
+    "D5_trivial": 301,
+    "Dn_eq_gamma_n": 301,
+    "seconds": 3802.7
+   }
+  },
+  "4": {
+   "chunks": 177,
+   "parents": 150668,
+   "skipped_gamma3": 171530,
+   "descendants": 443796,
+   "class3": 60127,
+   "cyclic_centre": 2756,
+   "candidates": 2756,
+   "gap_ms": 21151150,
+   "lattice": {
+    "groups": 2756,
+    "D4_trivial": 2756,
+    "D5_trivial": 2756,
+    "Dn_eq_gamma_n": 2756,
+    "seconds": 60947.09
+   }
+  },
+  "5": {
+   "chunks": 642,
+   "parents": 1255829,
+   "skipped_gamma3": 24406,
+   "descendants": 1325171,
+   "class3": 7104,
+   "cyclic_centre": 319,
+   "candidates": 319,
+   "gap_ms": 200663527,
+   "lattice": {
+    "groups": 319,
+    "D4_trivial": 319,
+    "D5_trivial": 319,
+    "Dn_eq_gamma_n": 319,
+    "seconds": 11759.67
+   }
+  },
+  "6": {
+   "chunks": 6,
+   "parents": 11821,
+   "skipped_gamma3": 0,
+   "descendants": 12082,
+   "class3": 37,
+   "cyclic_centre": 9,
+   "candidates": 9,
+   "gap_ms": 3601514,
+   "lattice": {
+    "groups": 9,
+    "D4_trivial": 9,
+    "D5_trivial": 9,
+    "Dn_eq_gamma_n": 9,
+    "seconds": 258.38
+   }
+  },
+  "7": {
+   "chunks": 1,
+   "parents": 26,
+   "skipped_gamma3": 0,
+   "descendants": 20,
+   "class3": 0,
+   "cyclic_centre": 0,
+   "candidates": 0,
+   "gap_ms": 16229
+  }
+ },
+ "total": {
+  "chunks": 858,
+  "parents": 1422862,
+  "skipped_gamma3": 222499,
+  "descendants": 1819675,
+  "class3": 88809,
+  "cyclic_centre": 3400,
+  "candidates": 3400,
+  "gap_ms": 226302166
+ }
+}

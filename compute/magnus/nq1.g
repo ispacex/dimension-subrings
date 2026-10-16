@@ -1,0 +1,10 @@
+LoadPackage("nq");
+F := FreeGroup("e0","e1","e2","z");; e0:=F.1;; e1:=F.2;; e2:=F.3;; z:=F.4;;
+G := F / [ e0^4 / (Comm(z,e1)*Comm(z,e2)^2), e1^16 / (Comm(z,e0)^-1*Comm(z,e2)^4), e2^64 / (Comm(z,e0)^-2*Comm(z,e1)^-4) ];;
+Q := NilpotentQuotient(G, 3);;
+L := LowerCentralSeriesOfGroup(Q);;
+Print("G/g2: ", AbelianInvariants(Q), "\n");
+Print("g2/g3: ", AbelianInvariants(L[2]/L[3]), "\n");
+Print("g3: ", AbelianInvariants(L[3]), "\n");
+T3 := TorsionSubgroup(L[3]);; Print("torsion of g3: ", AbelianInvariants(T3), "\n");
+QUIT;

@@ -1,0 +1,3 @@
+[submodule "upstream/lie-algebras"]
+	path = upstream/lie-algebras
+	url = https://github.com/TimmPeterson/lie-algebras.git

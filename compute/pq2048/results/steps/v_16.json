@@ -1,0 +1,1 @@
+{"order":16,"from":1,"to":100000000,"stride":1,"nmax":9,"logq":11,"maxstep":2,"last":14,"viol":0,"vert":[1,8,4,1],"terminal":[0,3,2],"tried":[2,16,8,1],"skipped":[1,9,6],"noexp":[0,4,2],"ch_skipped":[0,3,0],"ch3_skipped":[0,0,0],"kept_skipped":[0,0,0],"kept":[1,23,9,6],"ms_desc_skipped":[26,338,257],"ms_desc_kept":[36,440,125,77],"ms_steps":[16,123,63,13]}

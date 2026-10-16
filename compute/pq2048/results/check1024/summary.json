@@ -1,0 +1,55 @@
+{
+ "desc1c": {
+  "parents": 59208,
+  "skipped_gamma3": 222499,
+  "pfiltered": 1363654,
+  "parents_with_U": 3970,
+  "admissible_U": 6602053,
+  "fallback_parents": 103,
+  "cand_U": 422968,
+  "cand_orbits": 3400,
+  "gap_ms": 17675664,
+  "cpu_ms": 18833589,
+  "wall_ms": 19966814,
+  "chunks": 858
+ },
+ "candidates_by_rank": {
+  "1": {
+   "new": 0
+  },
+  "2": {
+   "new": 15,
+   "ref": 15
+  },
+  "3": {
+   "new": 301,
+   "ref": 301
+  },
+  "4": {
+   "new": 2756,
+   "ref": 2756
+  },
+  "5": {
+   "new": 319,
+   "ref": 319
+  },
+  "6": {
+   "new": 9,
+   "ref": 9
+  }
+ },
+ "parents_with_candidates": {
+  "ref": 1646,
+  "new": 1646,
+  "only_ref": [],
+  "only_new": []
+ },
+ "compared": 1646,
+ "not_compared": [],
+ "different": [],
+ "direct": 3195,
+ "iso": 205,
+ "ref_ok": true,
+ "cmp_gap_ms": 2490268,
+ "same": true
+}

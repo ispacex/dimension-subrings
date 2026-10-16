@@ -1,0 +1,1 @@
+{"order":128,"from":1,"to":100000,"prune":true,"dedup":true,"parents":138,"skipped_gamma3":7,"pfiltered":0,"parents_with_U":11,"admissible_U":124,"max_k":7,"fallback_parents":0,"cand_U":76,"cand_orbits":11,"candidates_by_rank":[ 0, 4, 7 ],"gap_ms":1684,"cpu_ms":3398,"wall_ms":3868}

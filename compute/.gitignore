@@ -1,0 +1,8 @@
+env/
+data/
+out/
+sieve/
+chk/
+tst/
+__pycache__/
+*.log
