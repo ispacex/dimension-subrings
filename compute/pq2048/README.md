@@ -195,6 +195,7 @@ non-trivial $\gamma_3$ at large rank (Corollary 1), and on the parent itself it 
 | `run_small.sh` | everything about orders 32–512: `count.g`, `check_cands.g`, `../pq1024/desc1c.g` without pruning and with `PFILTER` = (Г$_N$), line-by-line comparison of candidates |
 | `tree.g`, `run_tree.sh`, `run_trees.sh` | search of one rank by walking the tree from $2^d$ with pruning by (Г$_N$) and the $p$-cover search on every parent |
 | `sample_desc.g`, `run_estimate.sh` | sample for the $2^{11}$ estimate: descendants of vertices of orders 64–512 up to order $2^{10}$, how many pass (Г$_{11}$), time |
+| `pcover.g`, `verify_pcover.g`, `run_verify_pcover.sh`, `run_cmp_flag.sh`, `run_cmp_piece.sh`, `mkstart.g`, `cmpcands.g`, `prof_vertex.g`, `prof_expand.g`, `probe_children.g`, `run_prof.sh` | the $p$-cover without `pq` (flag `OWNCOVER`, environment `PQ2048_OWNCOVER=1`), its checks against `PqPCover`, the walks with and without it, profiles (section "The p-cover without pq") |
 | `steps.g`, `verify_steps.g`, `run_verify.sh` | the step rules: which steps of a vertex can give the descendants we need, from its $p$-cover; check against full `PqDescendants` (section "Vertices without descendants") |
 | `run_check1024.sh`, `chunks1024.txt` | the check on $2^{10}$: `../pq1024/desc1c.g` with `PFILTER` = (Г$_{10}$) over the 858 chunks of the $2^{10}$ run |
 | `cmp37.sh`, `cmp37.g`, `cmp37.py` | the check on $2^{10}$: comparison with `../pq1024/results/candidates.csv` parent by parent (the same pc code, otherwise the ANUPQ standard presentation) |
@@ -574,6 +575,74 @@ of rank 5: 919 terminal (discarded in 25 ms instead of 0.15 s), 254 expanded (1.
 3028 from 40 vertices): the $p$-class of the expanded vertices is not recorded here, and if some
 of them have $p$-class 2, the observation is false. This is not yet checked, nor is the estimate
 for rank 5 recomputed.
+
+## The p-cover without pq
+
+`PqPCover` (ANUPQ) costs ≈ 22–28 ms per group of order 512, and it is called once per vertex by
+`steps.g` and once per parent by the cover search (`../pq1024/cover.g`, `MC_Data`). A profile of
+rank-6 vertices of order 512 (`prof_vertex.g`): 15 ms of it is the GAP side of ANUPQ (writing the
+presentation, reading the result file back and rebuilding the group), 7 ms the `pq` process. So
+one `pq` session per piece instead of a process per call would save at most ≈ 7 ms; replacing
+`PqPCover` altogether saves all of it. `pcover.g` does that with GAP's two-cohomology.
+
+**Statement 5.** Let $G$ be a finite 2-group, $r = \dim H^2(G, \mathbb F_2)$, $c_1, \dots, c_r$
+2-cocycles $G \times G \to \mathbb F_2$ whose classes form a basis of $H^2(G, \mathbb F_2)$, and
+$E$ the extension of $G$ by the trivial module $V = \mathbb F_2^r$ with cocycle $(c_1, \dots, c_r)$.
+Then $E \cong G^* = F/[K,F]K^2$ by an isomorphism over $G$ (so that $V$ goes to the multiplicator
+$M = K/[K,F]K^2$).
+
+*Proof.* Write $G = F/K$ with $F$ free of rank $d = d(G)$, so $K \le \Phi(F)$. In the five-term
+sequence for $1 \to K \to F \to G \to 1$ with coefficients $\mathbb F_2$, the restriction
+$H^1(F) \to H^1(K)^F$ is zero (every homomorphism $F \to \mathbb F_2$ kills $K \le \Phi(F)$), and
+$H^2(F) = 0$; hence the transgression is an isomorphism
+$\mathrm{Hom}_F(K, \mathbb F_2) = \mathrm{Hom}(M, \mathbb F_2) \cong H^2(G, \mathbb F_2)$, the class of
+the extension $1 \to M/U \to F/U \to G \to 1$ corresponding to the functional with kernel $U$.
+So the extension $G^*$ of $G$ by $M$ has a class in $H^2(G, M)$ whose image under each functional
+$\lambda \in \mathrm{Hom}(M, \mathbb F_2)$ is the transgression of $\lambda$; with the basis of
+$M$ dual to $c_1, \dots, c_r$ that class is $(c_1, \dots, c_r)$ up to coboundaries. Extensions with
+cohomologous cocycles are equivalent, so $E \cong G^*$ over $G$. $\square$
+
+GAP's `Extension(G, V, c)` returns $E$ as a pc group whose pcgs is that of $G$ followed by the $r$
+module generators; so, as with `PqPCover`, the multiplicator is spanned by the last $r$ pcgs
+elements, and `steps.g` and `cover.g` read it the same way. `PC_Cover` chooses: `PqPCover` by
+default, `PC_PCover` when `OWNCOVER` is true (environment `PQ2048_OWNCOVER=1`, so that
+`run_rank.sh` and its pieces need no new argument).
+
+**Checks** (`verify_pcover.g`, `run_verify_pcover.sh`): on every vertex the walk keeps, of orders
+8–128, on every vertex of order 256 (both halves), and on two samples of order 512 (every 5000th
+id; every 20 001st id in 6.26M–10.48M; rank $\le 7$): the same order of the cover, the same
+`steps.g` decision (steps, nucleus rank, $\nu_4$, $\nu$), for each parent the same number of
+admissible hyperplanes and the same $k$, and the same candidates up to isomorphism (standard
+presentations). **0 differences** on 39 846 vertices and 6 916 parents (659 with admissible
+hyperplanes, 377 candidates compared).
+
+| vertices | count | `steps.g`, ms per vertex: pq → own | `MC_Data`, ms per parent: pq → own |
+|---|---|---|---|
+| orders 8–128, all | 2 185 | 20.9 → 5.2 | 22.9 → 6.6 |
+| 256, all | 35 744 | 23.6 → 8.4 | 26.2 → 9.1 |
+| 512, two samples | 1 917 | 24.7 → 10.1 | 28.9 → 10.1 |
+
+**Walks with and without the flag** (`run_cmp_flag.sh`, `run_cmp_piece.sh`): ranks 2, 3, 4 up to
+order 256 ($N = 9$) — every counter the same, candidates the same up to isomorphism (40, 178, 159);
+a rank-6 piece of stage C (211 kept vertices of order 512, `mkstart.g`) — counters the same
+(2 240 parents of order 1024), 0 candidates both ways.
+
+| run | CPU s, old → own cover |
+|---|---|
+| rank 2 to 256 | 11.1 → 7.7 |
+| rank 3 to 256 | 70.8 → 59.9 |
+| rank 4 to 256 | 137.6 → 103.4 |
+| rank-6 piece (211 vertices of order 512) | 219.6 → 171.7: `steps.g` 5.5 → 2.5, covers 76.5 → 34.2, expansion 137.6 → 135.1 |
+
+**Where the rest goes.** In the rank-6 piece one vertex of the 211 is expanded and has 2 240
+children of order 1024 (all kept); `prof_expand.g` splits that expansion: `PqDescendants` 110 s, of
+which 90 s on the GAP side (≈ 40 ms per child: the descendants come back as fp presentations
+and are rebuilt with `PcGroupFpGroupNC`) and 20 s in `pq`; class and $\gamma_3$ 0.6 s; `PR_Data`
+25.6 s (11 ms per child). The automorphism group is cheap by comparison (≈ 60 ms per expanded
+vertex of order 256, `prof_vertex.g`), so caching Aut gains nothing measurable. What remains is
+generating the children themselves: step-1 children as $V^*/U$ from orbits of $\mathrm{Aut}(V)$
+on the hyperplanes of $M$ (as `cover.g` does for the candidates, `MC_OrbitReps`, `MC_Quotient`),
+built as pc quotients without the fp round trip — the next step.
 
 ## Not proved
 

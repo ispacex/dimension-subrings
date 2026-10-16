@@ -1,6 +1,8 @@
 # Which step sizes of a vertex can give useful children, read off its p-cover, without
 # PqDescendants and without Aut.  See README.ru.md, «Вершины без потомков».
-# Needs ../pq1024/lib.g (MS_PClass), ../pq1024/cover.g (MC_Gamma, MC_Vecs).
+# Needs ../pq1024/lib.g (MS_PClass), ../pq1024/cover.g (MC_Gamma, MC_Vecs).  Reads pcover.g: the
+# cover is PqPCover, or the own one (README, "The p-cover without pq") when OWNCOVER
+# (environment PQ2048_OWNCOVER=1).
 #
 # V of 2-class c, V* = PqPCover(V), M = the multiplicator (last m pcgs elements of V*),
 # N = P_{c+1}(V*) the nucleus.  A child of step s is V*/U, U <= M of codimension s with U + N = M.
@@ -12,6 +14,7 @@
 #   rule 3: a child of order 2^NMAX is a leaf of the walk and only matters as a parent (2-class
 #           >= 3), so for c = 1 the step NMAX - k is dropped.
 # TS_Steps(V, nmax, logq) -> rec(steps, nuc, nu4, nu, ms); ms is CPU with the pq process.
+Read("pcover.g");
 TS_Cpu := function() local r; r := Runtimes();
   return r.user_time + r.system_time + r.user_time_children + r.system_time_children; end;;
 TS_Dim := function(rows) if rows = [] then return 0; fi; return RankMat(rows); end;;
@@ -23,7 +26,7 @@ TS_Steps := function(V, nmax, logq)
   c := MS_PClass(V);
   d := RankPGroup(V);
   e := Log(Size(MC_Gamma(V, 3)), 2);
-  Rs := PqPCover(V);
+  Rs := PC_Cover(V);
   pcs := Pcgs(Rs);
   n := Length(Pcgs(V));
   m := Length(pcs) - n;

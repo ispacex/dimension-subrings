@@ -47,7 +47,8 @@ MC_Data := function(R)
   local t, Rs, pcs, n, m, M, c, G4, A, B, N, Y, PA, PB, PN, k, rec_, tm;
   tm := rec();
   t := Runtime();
-  Rs := PqPCover(R);
+  # ../pq2048/pcover.g, when read, may replace pq (PC_Cover); otherwise as before
+  if IsBound(PC_Cover) then Rs := ValueGlobal("PC_Cover")(R); else Rs := PqPCover(R); fi;
   tm.cover := Runtime() - t; t := Runtime();
   pcs := Pcgs(Rs);
   n := Length(Pcgs(R));
