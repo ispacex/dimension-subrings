@@ -91,7 +91,7 @@ TR_Run := function()
     k := Log(Size(G), 2);
     if IsBound(TRACE) then Print("vertex ", Size(G), " ", CodePcGroup(G), "\n"); fi;
     if prof <> fail then
-      AppendTo(prof, "{\"start\":", k, ",\"code\":", String(CodePcGroup(G)), "}\n");
+      FileString(prof, Concatenation("{\"start\":", String(k), ",\"code\":", String(CodePcGroup(G)), "}\n"), true);
       pv := rec(steps := 0, by_step := []);
     fi;
     if fixed <> fail then
@@ -191,10 +191,10 @@ TR_Run := function()
       TR_Add(S.ms_cover, k, TS_Cpu() - t);
     od;
     if prof <> fail then
-      AppendTo(prof, "{\"k\":", Log(Size(G), 2), ",\"code\":", String(CodePcGroup(G)),
+      FileString(prof, Concatenation("{\"k\":", String(Log(Size(G), 2)), ",\"code\":", String(CodePcGroup(G)),
         ",\"steps\":", ReplacedString(String(steps), " ", ""), ",\"ms_steps\":", String(pv.steps),
         ",\"by_step\":[", JoinStringsWithSeparator(pv.by_step, ","), "],\"covers\":", String(Length(covers)),
-        ",\"ms_cover\":", String(TS_Cpu() - mc), ",\"livekb\":", String(TR_Live()), "}\n");
+        ",\"ms_cover\":", String(TS_Cpu() - mc), ",\"livekb\":", String(TR_Live()), "}\n"), true);
     fi;
   od;
   if IsBound(OUTFILE) then CloseStream(out); fi;
