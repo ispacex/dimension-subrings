@@ -92,3 +92,29 @@ PR_TreeParent := function(G)
   if Length(P) <= 2 then return fail; fi;
   return G / P[Length(P) - 1];
 end;;
+
+# PR_Tight2(H, logq): (G_N) for H of class <= 2 and order 2^(logq-1), the same answer as
+# PR_Data(H, logq).p5b, by the tightness lemma (README): there budget >= logq always, with equality
+# iff for some y in gamma_2 (y outside Phi(gamma_2) when rank gamma_2 > rmax) A = gamma_2/<y> is
+# nontrivial and H_ab dominates A (B = 1, e = 0; H_ab dominates (Z/2)^2 as rank H >= 2).  gamma_2 is
+# central, so all of it is computed in the abstract abelian group with the invariants of gamma_2.
+PR_Tight2 := function(H, logq)
+  local d, rmax, inv, r2, M, ab, F, y, q;
+  if Log(Size(H), 2) <> logq - 1 then Error("PR_Tight2: order"); fi;
+  d := RankPGroup(H);
+  if d < 2 then return false; fi;
+  rmax := Minimum(d, d * (d - 1) / 2);
+  inv := AbelianInvariants(DerivedSubgroup(H));
+  r2 := Length(inv);
+  if r2 = 0 or r2 > rmax + 1 then return false; fi;
+  ab := Reversed(SortedList(List(AbelianInvariants(H), x -> Log(x, 2))));
+  M := AbelianGroup(IsPcGroup, inv);
+  F := FrattiniSubgroup(M);
+  for y in M do
+    if r2 > rmax and y in F then continue; fi;
+    q := Reversed(SortedList(List(AbelianInvariants(M / Subgroup(M, [y])), x -> Log(x, 2))));
+    if q = [] then continue; fi;
+    if Length(q) <= Length(ab) and ForAll([1 .. Length(q)], i -> q[i] <= ab[i]) then return true; fi;
+  od;
+  return false;
+end;;
