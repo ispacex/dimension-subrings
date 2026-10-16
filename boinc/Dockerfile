@@ -57,7 +57,7 @@ RUN ln -s /opt/gap/gap /usr/local/bin/gap \
 # The search code: only the .g files the pieces read, not the results.
 COPY compute/pq1024/lib.g compute/pq1024/cover.g /opt/ds/compute/pq1024/
 COPY compute/pq1024/latb/export_pres.g /opt/ds/compute/pq1024/latb/
-COPY compute/pq2048/tree.g compute/pq2048/prune.g compute/pq2048/steps.g compute/pq2048/pcover.g /opt/ds/compute/pq2048/
+COPY compute/pq2048/tree.g compute/pq2048/prune.g compute/pq2048/steps.g compute/pq2048/pcover.g compute/pq2048/expand_compact.g /opt/ds/compute/pq2048/
 COPY boinc/run_piece.sh /opt/ds/boinc/run_piece.sh
 ARG CODE_COMMIT=unknown
 RUN echo "$CODE_COMMIT" > /opt/ds/COMMIT && chmod 755 /opt/ds/boinc/run_piece.sh

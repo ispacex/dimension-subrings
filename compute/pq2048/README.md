@@ -199,7 +199,8 @@ non-trivial $\gamma_3$ at large rank (Corollary 1), and on the parent itself it 
 | `steps.g`, `verify_steps.g`, `run_verify.sh` | the step rules: which steps of a vertex can give the descendants we need, from its $p$-cover; check against full `PqDescendants` (section "Vertices without descendants") |
 | `run_check1024.sh`, `chunks1024.txt` | the check on $2^{10}$: `../pq1024/desc1c.g` with `PFILTER` = (Г$_{10}$) over the 858 chunks of the $2^{10}$ run |
 | `cmp37.sh`, `cmp37.g`, `cmp37.py` | the check on $2^{10}$: comparison with `../pq1024/results/candidates.csv` parent by parent (the same pc code, otherwise the ANUPQ standard presentation) |
-| `run_rank.sh`, `rank_sum.py` | the runs by rank: `tree.g` for one rank up to $2^{11}$ in pieces A/B/C (`DUMPLEVEL`, `STARTFILE`, the `steps.g` rules) and the lattice by variant B; progress in `$JOB_ROOT/progress` |
+| `run_rank.sh`, `rank_sum.py` | the runs by rank: `tree.g` for one rank up to $2^{11}$ in pieces A/B/C (`DUMPLEVEL`, `STARTFILE`, `DEFERFILE`, the `steps.g` rules) and the lattice by variant B; batches, compact candidates, shuffled stage C (section "One rank in pieces"); progress in `$JOB_ROOT/progress` |
+| `expand_compact.g`, `shuffle_split.py`, `run_r8.sh` | compact candidate lines → full ones; the seeded shuffle and split of stage C; rank 8 from the groups of order 512 |
 | `results/` | stat files of the runs (`small/`, `s512/`, `est/`, `trees/`, `steps/`, `check1024/`) |
 
 `../pq1024/desc1c.g` has an optional parameter `PFILTER` (a function of the parent; `false` means
@@ -362,6 +363,39 @@ run (paper in preparation) — or $Q$ is a candidate (the lemma), and all candid
 on $2^{10}$ (rule 3) had not been done at the time; it has been done since (section "Check on
 $2^{10}$ against the $2^{10}$ run"). The pruning is proved, so this check by itself tests the
 code, not the arguments.
+
+### One rank in pieces
+
+From rank 4 on, one process is too long and too large, and `run_rank.sh` splits the walk into
+pieces A/B/C/L (see its header). Every vertex has one place in the tree, so the pieces together
+walk exactly the tree of one process. Three details matter for larger ranks:
+
+* **Deferred steps** (`tree.g` `DEFERFILE`). `PqDescendants` builds the list of descendants of one
+  step of a vertex whole, so a vertex of order 128 expanded by three steps at once can need many
+  GB; in rank 4 stage A ran out of memory that way. Stage A therefore takes only the steps that
+  stay below $2^{L_1}$ and writes every other (vertex, step) as a line
+  `{"order":..,"code":..,"steps":[s]}`; stage B runs each such line as its own piece (`PD` at a
+  time, GAP memory `GAPMEM_D`). A vertex read with `"steps"` is not counted again (the run that
+  wrote it counted it).
+* **Batches**: `STOP_AFTER_A=1`, `LIMIT=N` (at most N pieces per call, exit 3 while pieces remain),
+  so that a long rank runs as a sequence of jobs over one `OUTDIR`; `TRACE` makes `tree.g` name
+  each vertex before it is expanded.
+* **Compact candidates** (`COMPACT=true`): a candidate line carries its presentation and the tests
+  of `../pq1024/latb/export_pres.g`, ≈ 4 KB. With `COMPACT` `tree.g` writes only
+  `{"order","id","rank","code","n"}` — the pc code of $Q$ (`CodePcGroup`) and the exponents of
+  its involution $n$, ≈ 150 bytes — and `expand_compact.g` rebuilds the full line from it, the
+  same bytes as without `COMPACT` (checked on the pieces of `../../boinc/README.md`); stage L
+  does this before the lattice.
+* **Shuffled stage C** (`CSEED=N`): the dump lists the children of one vertex together, so split
+  in order a few pieces take most of the time (in rank 4 the heaviest piece of 40 vertices took
+  40 times the median). `shuffle_split.py` orders the lines by `sha256(seed, line)` — the same on
+  every machine — before the split and writes `Cin/split.json` (the seed and each piece's lines
+  and hash). The stat counters are sums over vertices and every candidate belongs to the parent it
+  was found on, so the result does not depend on how the vertices are grouped.
+
+`run_r8.sh`: rank 8, whose first step from $2^8$ runs out of memory in `PqDescendants`, starts
+instead from the groups of rank 8 of order 512 in SmallGroups (exactly the step-1 descendants of
+$2^8$).
 
 ## Estimate for $2^{11}$
 
