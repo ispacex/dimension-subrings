@@ -1,0 +1,12 @@
+{
+    "name": "dsubrings",
+    "long_name": "Dimension subgroups: the 2-group search of order 2^11",
+    "input_file_names": ["piece.txt"],
+    "output_file_names": ["result.txt"],
+    "max_nbytes_mb": 64,
+    "gzip_output": true,
+    "max_delay_days": 7,
+    "description": "Walks one piece of the 2-group generation tree with GAP and ANUPQ and lists the candidate groups of order 2^11 it finds (https://github.com/ispacex/dimension-subrings, boinc/README.md).",
+    "sci_kw": [],
+    "submitters": []
+}
