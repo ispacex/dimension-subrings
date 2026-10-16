@@ -100,9 +100,9 @@ CH_LibRoot := function(V, s)
       ids := [ids[1] .. ids[2]];
     fi;
     return IteratorByFunctions(rec(pos := 0, ids := ids, n := n,
-      IsDoneIterator := it -> it.pos >= Length(it.ids),
-      NextIterator := function(it) it.pos := it.pos + 1; return SmallGroup(it.n, it.ids[it.pos]); end,
-      ShallowCopy := it -> rec(pos := it.pos, ids := it.ids, n := it.n)));
+      IsDoneIterator := it -> it!.pos >= Length(it!.ids),
+      NextIterator := function(it) it!.pos := it!.pos + 1; return SmallGroup(it!.n, it!.ids[it!.pos]); end,
+      ShallowCopy := it -> rec(pos := it!.pos, ids := it!.ids, n := it!.n)));
   fi;
   ids := [1 .. NrSmallGroups(n)];
   res := [];
