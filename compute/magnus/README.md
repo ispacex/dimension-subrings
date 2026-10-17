@@ -35,6 +35,7 @@ and an improved sieve for 3-torsion in $D_5/\gamma_5$ on 3-groups of class 4. Ru
 | `v39.g` | checks `C39Pass` against `C39One` on `IDS` or on `NSAMPLE` random ids (seed `SEED`), wall-clock times of both |
 | `r5.g`, `run_r5.sh` | order $3^9$, part $d=5$: the parents of rank 5 and type $(5,2,1)$ (`SmallGroup(3^8, id)`, ids 1387558–1395381, 7824 groups) through `C39Pass`; none pass, as their nucleus is trivial (all terminal). `bash run_r5.sh` in a tm job |
 | `c39all.g`, `run_c39all.sh` | the full order-$3^9$ run, part $d \le 4$: every `SmallGroup(3^8, id)` of rank 3–4 and class 3–4 as a parent, through `C39Pass` and then `C39One` of `c39.g`, on `NSH` shards (`id mod NSH`); survivors go through a FIFO to `d5z.py` on the fly and are kept gzipped. `bash run_c39all.sh` in a tm job; `EXTRA='IDS:=[..];;'` for a test run |
+| `q2scan.g` | MATH-127 (2): over `SmallGroup(n, lo..hi)` of class $\ge 4$, checks Proposition 3 ($\lvert\gamma_3/\gamma_4\rvert = 3$ and $d(\gamma_2/\gamma_3) \le 2$ $\Rightarrow$ $[\gamma_2,\gamma_2] \le \gamma_5$) and counts groups by class, rank, lower central type and $r = d(\gamma_2/\gamma_3)$, with how many are non-metabelian: `Read("q2scan.g"); Q2Scan(3^8, 1, 700000);` |
 | `lie_search5.jsonl` | its output: seeds 1–6 × 400 (base), 201–202 × 150 (`wide`), 301–302 × 25 (`212`), $E = 19$; all 2750 rings have $\delta_5 = \gamma_5$ |
 
 The `*.log` files named above are not kept in git (`../.gitignore`); rerunning the scripts writes them.
