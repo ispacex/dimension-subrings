@@ -98,6 +98,17 @@ $\mathrm{rk}(\gamma_2(V)/K) \le \mathrm{rk}\,X \le r_{\max}(d)$ by Lemma A. $\sq
 *Corollaries* (checked without enumerating $K$): (Г3) $\mathrm{rk}\,\gamma_2(V) \le r_{\max} + 1$;
 (Г4) $\mathrm{rk}(\gamma_2(V)/(\gamma_2(V) \cap Z(V))) \le r_{\max}$.
 
+*(Г3) is sharp.* The bound $\mathrm{rk}\,\gamma_2(Q) \le r_{\max}$ without the "$+1$" is false:
+among the 308 candidates of order 512, $\mathrm{rk}\,\gamma_2(Q) = r_{\max} + 1$ holds for 14
+candidates with $d = 2$ (rank 2) and 4 with $d = 3$ (rank 4), always on $Q$ itself, not on its
+quotients $Q/P_j$ (`results/small/cands_512.json`, `r2_minus_d` is the maximum of
+$\mathrm{rk}\,\gamma_2 - d$ over them). For $d \ge 3$, $r_{\max} = d$; for $d = 2$ the bound
+$\mathrm{rk}\,\gamma_2 \le d$ does hold, since it is (Г3). Example:
+`PcGroupCode(11172193870820700773882966111295774648769475, 512)`, a descendant of
+SmallGroup(256, 4030), with $d = 3$, $Q_{ab} \cong [2,2,8]$, $\gamma_2(Q) \cong (\mathbb Z/2)^4$,
+$\gamma_3 = \gamma_2 \cap Z \cong \mathbb Z/2$, $X \cong (\mathbb Z/2)^3$: $\gamma_2$ is elementary,
+so $\gamma_2 \cong X \oplus (\gamma_2 \cap Z)$ and the cyclic $\gamma_2 \cap Z$ adds one summand.
+
 *Passing to quotients* (property (b)): if $V$ satisfies (Г) with the subgroup $K$ and
 $M \le \Phi(V)$, then $V/M$ satisfies (Г) with the subgroup $KM/M$ (the same argument: images of
 cyclic and central subgroups, the rank of a quotient is not larger). So the set of vertices with
@@ -758,10 +769,7 @@ Conditions that look true but are **not proved** and are not used for pruning:
    with extraspecial groups ($H \circ E$). If $D_5(H \circ E) = 1$ followed from $D_5(H) = 1$,
    ranks $\ge 5$ would drop out entirely. Functoriality gives only the inclusion of the image,
    $D_5(G) \twoheadrightarrow$ does not follow; the statement is not proved and was not checked.
-4. **$\mathrm{rk}\,\gamma_2(Q) \le d$** is false: on order 512
-   $\mathrm{rk}\,\gamma_2(Q) = d + 1$ occurs (`results/small/cands_512.json`, `r2_minus_d` = 1), so
-   the "$+1$" in (Г3) is needed.
-5. **Known results on $D_4$ for small class.** A counterexample must have $D_4(Q) \ne 1$. If it
+4. **Known results on $D_4$ for small class.** A counterexample must have $D_4(Q) \ne 1$. If it
    were proved that $D_4 = \gamma_4$ for 2-generated groups or under some condition on $Q_{ab}$
    (the Rips / Tahara / Losey / Hartley direction, survey by Mikhailov–Passi, LNM 1952), this would
    give pruning by rank or by the type of $Q_{ab}$ ($Q_{ab} = R_{ab}$ is visible on the parent).
