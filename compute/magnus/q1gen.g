@@ -1,6 +1,6 @@
 # MATH-127 (1): random 3-groups Q of class 4 with Q/gamma_2 of exponent 3, non-metabelian, as a test
 # of the theorem "D_5(Q) = 1 when Q/gamma_2(Q) has exponent 3" (wiki, child of 687).
-# Set SEED, NG (groups to try), KS (list of ranks), OUT (jsonl) before reading this file.
+# Set SEED, NG (groups to try), KS (list of ranks), MODE (1 or 2), OUT (jsonl) before reading this file.
 # Q = class-4 3-quotient (ANUPQ, p-class 4 = lower central class 4 here, since Q^3 <= gamma_2)
 # of <x_1..x_k | x_i^3 = W_i, extra relators>, W_i random in gamma_2.
 # Per group: identity checks used in the proof; S = Omega_1(Z) ∩ Q'' ∩ M_5 (D_5 <= S·... : a nontrivial
@@ -22,6 +22,11 @@ for it in [1..NG] do
   F := FreeGroup(k); g := GeneratorsOfGroup(F);
   rels := List([1..k], i -> g[i]^3 / Product(List([1..Random([0..2])], j -> RW(F, Random([2, 2, 3]))), One(F)));
   Append(rels, List([1..Random([0..k+2])], j -> Product(List([1..Random([1..2])], t -> RW(F, Random([2, 3, 3, 4]))), One(F))));
+  # MODE 2: force cubes of gamma_2 into Q'' (so that Q'' ∩ M_5 != 1) and cut gamma_4 down
+  if MODE = 2 then
+    Append(rels, List([1..Random([1..2])], j -> RW(F, 2)^3 / Comm(RW(F, 2), RW(F, 2))));
+    Append(rels, List([1..Random([2..2*k+4])], j -> RW(F, 4)));
+  fi;
   stats.tried := stats.tried + 1;
   Fp := F / rels;
   epi := EpimorphismPGroup(Fp, 3, 4);
