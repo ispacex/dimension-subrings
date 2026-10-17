@@ -1,12 +1,14 @@
-# MATH-120: check the presentations written by c38.g (set CHKIN to a c38 *.jsonl file first).
+# MATH-120: check the presentations written by c38.g or c39.g (set CHKIN to a *.jsonl file first;
+# CHKORDER, default 3^8, is the expected order; PROG, if bound, gets the count every 1000 lines).
 # For every survivor line: the 3-quotient of <x_1..x_k | rels> (ANUPQ, p-class <= 30) has order
-# 3^8 and class 4, and the image of z is central of order 3 and lies in Q''.
+# CHKORDER and class 4, and the image of z is central of order 3 and lies in Q'' ∩ M_5.
 LoadPackage("anupq");
-# a c38 JSON line is a flat object without strings: turn it into a GAP record
+# a c38/c39 JSON line is a flat object (strings only as values): turn it into a GAP record
 J2R := line -> EvalString(ReplacedString(ReplacedString(ReplacedString(ReplacedString(
   line, "{\"", "rec("), "\":", ":="), ",\"", ","), "}", ")"));
 CHK38 := function(path)
-  local str, n, bad, line, r, F, rels, Fp, epi, P, z, ok;
+  local str, n, bad, line, r, F, rels, Fp, epi, P, z, J, ok, ord;
+  if IsBound(CHKORDER) then ord := CHKORDER; else ord := 3^8; fi;
   str := InputTextFile(path); n := 0; bad := 0;
   if str = fail then Print("cannot open ", path, "\n"); return; fi;
   while true do
@@ -19,9 +21,12 @@ CHK38 := function(path)
     epi := EpimorphismPGroup(Fp, 3, 30);
     P := Image(epi);
     z := Image(epi, ElementOfFpGroup(FamilyObj(One(Fp)), ObjByExtRep(FamilyObj(One(F)), r.z)));
-    ok := Size(P) = 3^8 and NilpotencyClassOfGroup(P) = 4 and Order(z) = 3
-          and z in Centre(P) and z in DerivedSubgroup(DerivedSubgroup(P));
+    J := JenningsSeries(P);
+    ok := Size(P) = ord and NilpotencyClassOfGroup(P) = 4 and Order(z) = 3
+          and z in Centre(P) and z in DerivedSubgroup(DerivedSubgroup(P))
+          and Length(J) >= 5 and z in J[5];
     n := n + 1;
+    if IsBound(PROG) and n mod 1000 = 0 then PrintTo(PROG, n, "\n"); fi;
     if not ok then bad := bad + 1; Print("BAD ", r.id, "\n"); fi;
   od;
   Print("checked ", n, " presentations, bad = ", bad, "\n");
