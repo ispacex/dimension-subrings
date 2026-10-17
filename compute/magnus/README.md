@@ -31,6 +31,7 @@ and an improved sieve for 3-torsion in $D_5/\gamma_5$ on 3-groups of class 4. Ru
 | `c38_3e8.csv`, `d5z_3e8.csv` | results for order $3^8$: the 904 non-metabelian class-4 groups (id, $d$, $\log_3$ of the lower central factors, $\lvert Q''\rvert$, $\lvert Q''\cap M_5\rvert$, $\lvert Z\rvert$, cyclic, survivor) and `d5z.py` on the 699 survivors (all `z_in_D5 = False`, certified) |
 | `est39.g` | order $3^9$ estimate: `PqDescendants(P : StepSize := 1)` for random parents $P$ of order $3^8$ (set `RANGES`, `PER`), counts class-4 non-metabelian descendants with cyclic centre |
 | `c39.g` | order $3^9$: step-1 descendants of the parents in `PARENTS` through the `c38` sieve, presentations for `d5z.py` (ids `"parent.descendant"`) |
+| `c39all.g`, `run_c39all.sh` | the full order-$3^9$ run, part $d \le 4$: every `SmallGroup(3^8, id)` of rank 3–4 and class 3–4 as a parent, through `C39One` of `c39.g`, on `NSH` shards (`id mod NSH`); survivors go through a FIFO to `d5z.py` on the fly and are kept gzipped. `bash run_c39all.sh` in a tm job; `EXTRA='IDS:=[..];;'` for a test run |
 | `lie_search5.jsonl` | its output: seeds 1–6 × 400 (base), 201–202 × 150 (`wide`), 301–302 × 25 (`212`), $E = 19$; all 2750 rings have $\delta_5 = \gamma_5$ |
 
 The `*.log` files named above are not kept in git (`../.gitignore`); rerunning the scripts writes them.
