@@ -31,7 +31,7 @@ C39All := function(shard, nshard)
     fi;
   od;
   PrintTo(PROG, seen, "\n");
-  WriteAll(lg, Concatenation("shard ", String(shard), "/", String(nshard),  ids=", String(seen),
+  WriteAll(lg, Concatenation("shard ", String(shard), "/", String(nshard), " ids=", String(seen),
     " parents=", String(npar), " passed=", String(tot[1]), " descendants=", String(tot[2]), " cand=", String(tot[3]),
     " survivors=", String(tot[4]), " ms=", String(tot[5]), "\n"));
   CloseStream(js); CloseStream(lg);
