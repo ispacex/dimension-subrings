@@ -6,7 +6,7 @@
 # [y,x] = u^a v^b w^*; x^3 = v^alpha(x) w^beta(x).  Unknowns eta_1..eta_d, mu_u, mu_v, c; equations,
 # for all x in P/gamma_2 and y in a basis:
 #   alpha(x) eta(y) + c beta(x) f(y) + mu_u a + mu_v b + c f(x)^2 a = 0.
-# Output per id: id, logN, N1, N2, N3, E.
+# Output per id: id, logN, N1, N2, N3, E.  (The explicit family is checked by q3.g.)
 LoadPackage("sglppow"); LoadPackage("anupq");
 LogN := function(P)
   local S;
@@ -60,13 +60,5 @@ Q3E := function(shard, nshard)
   WriteAll(lg, Concatenation("shard ", String(shard), " done\n"));
   CloseStream(lg);
 end;
-Q3EExplicit := function()
-  local a, b, P;
-  for a in [7..10] do for b in [3, 4] do
-    P := Image(IsomorphismPcGroup(DirectProduct(SmallGroup(81, a), SmallGroup(27, b), CyclicGroup(3))));
-    Print("explicit [81,", a, "]x[27,", b, "]xC3 logN=", LogN(P), " N1N2N3E=", CondE(P), "\n");
-  od; od;
-end;
-if IsBound(EXPLICIT) then Q3EExplicit(); fi;
 if IsBound(SHARD) then Q3E(SHARD, NSHARD); fi;
 QUIT;
