@@ -3,6 +3,9 @@
 # Set SEED, NG (groups to try), KS (list of ranks k = s), MODE (1 or 2), EPS0 (probability of
 # forcing x_k^9 into gamma_3), OUT (jsonl) before reading this file; optional DS (list of orders
 # d(s) = 3^a of x_k mod gamma_2 to choose from, default [9]) and PQCLASS (default a + 4).
+# Optional EXTRAW (default [2, 3, 3, 4]): weights of the extra relators. EXTRAW := [3, 3, 4] (no
+# weight 2, with MODE 1) gives larger groups, in which [x_i^9, x_k] != 1 occurs in the subcase
+# x_k^9 in gamma_3 (review of MATH-135, wiki 694).
 #
 # G = <x_1..x_k | x_i^3 = W_i (i<k), x_k^d(s) = W_k, extra relators, all left-normed commutators of
 # weight 5 in the x_i>.  The weight-5 relators make G/N nilpotent of class <= 4 for every N with G/N
@@ -22,6 +25,7 @@ LoadPackage("anupq");
 HAVENQ := LoadPackage("nq") = true;
 Read("presgens.g");
 if not IsBound(DS) then DS := [9]; fi;
+if not IsBound(EXTRAW) then EXTRAW := [2, 3, 3, 4]; fi;
 Reset(GlobalMersenneTwister, SEED); Reset(GlobalRandomSource, SEED);
 RW := function(F, wt)   # random left-normed commutator of weight wt in the generators
   local g, c, i;
@@ -59,7 +63,7 @@ for it in [1..NG] do
   else
     Add(rels, g[k]^dk / Product(List([1..Random([1..2])], j -> RW(F, Random([2, 2, 3]))), One(F)));
   fi;
-  Append(rels, List([1..Random([0..k+2])], j -> Product(List([1..Random([1..2])], t -> RW(F, Random([2, 3, 3, 4]))), One(F))));
+  Append(rels, List([1..Random([0..k+2])], j -> Product(List([1..Random([1..2])], t -> RW(F, Random(EXTRAW))), One(F))));
   if MODE = 2 then   # cubes of gamma_2 into Q'' (Q'' ∩ M_5 != 1), gamma_4 cut down
     Append(rels, List([1..Random([1..2])], j -> RW(F, 2)^3 / Comm(RW(F, 2), RW(F, 2))));
     Append(rels, List([1..Random([2..2*k+4])], j -> RW(F, 4)));
