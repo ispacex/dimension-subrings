@@ -10,4 +10,13 @@ for s in 0 1 2 3; do
     | gap -q -b --quitonbreak -o 4g > "$OUT/q3_$s.gaplog" 2>&1 &
 done
 wait
-cat "$OUT"/q3_explicit.log; tail -n 1 "$OUT"/q3_?.csv
+{ cat "$OUT"/q3_explicit.log; tail -qn 1 "$OUT"/q3_?.csv
+  grep -h "Error" "$OUT"/q3_*.gaplog | head -3
+  echo "histogram: logZ,logZg2,pclass,logM,logN,classS,log g4S,log g5S,log S'' -> count"
+  grep -hv -e '^desc' -e '^shard' "$OUT"/q3_?.csv | cut -d, -f2- | sort | uniq -c
+  echo "logZg2 vs nucleus nontrivial:"
+  grep -hv -e '^desc' -e '^shard' "$OUT"/q3_?.csv | awk -F, '{k=$3" N>1="($6>0); c[k]++} END {for (k in c) print c[k], "Zg2=" k}'
+  grep -h '^desc' "$OUT"/q3_?.csv
+  echo "first ids with N>1:"; grep -hv -e '^desc' -e '^shard' "$OUT"/q3_?.csv | awk -F, '$6>0' | sort -n | head -5
+  echo "first ids with Zg2=2, N=1:"; grep -hv -e '^desc' -e '^shard' "$OUT"/q3_?.csv | awk -F, '$3==2 && $6==0' | sort -n | head -5
+} | tee "$OUT/summary.txt"
