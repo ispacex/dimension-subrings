@@ -10,7 +10,8 @@
 # gamma_3/gamma_4, gamma_4 of exponent 3, so exp Q | 3^5 and P_6 = prod gamma_j^(3^(6-j)) = 1), hence
 # PQCLASS = 6 gives the largest finite class-4 quotient Q = G/gamma_5(G).  We still pass to
 # P/gamma_5(P) and check class 4 and Q/gamma_2 = [3,..,3,9]; with nq loaded we also compare |Q| with
-# |NilpotentQuotient(G0, 4)| for G0 = G without the weight-5 relators.
+# |NilpotentQuotient(G0, 4)| for G0 = G without the weight-5 relators (nq_ok; null without nq), and
+# check that the 3-quotient of class PQCLASS+1 has the same order (pq_stable).
 #
 # Per group: the identities used in the proof on random elements (id_ok), eps = (x_k^9 in gamma_3),
 # m = rank of the cube map P on Omega = {x : x^3 in gamma_2} (mod gamma_2 -> gamma_2/gamma_3), and
@@ -43,7 +44,7 @@ RankMod3 := function(hom, A, vs)
 end;
 OUTS := OutputTextFile(OUT, false); SetPrintFormattingStatus(OUTS, false);
 stats := rec(tried := 0, ok := 0, nonmet := 0, eps0 := 0, eps0nonmet := 0, Snontriv := 0,
-             eps0S := 0, idfail := 0, nqfail := 0, skipS := 0);
+             eps0S := 0, idfail := 0, nqfail := 0, pqunstable := 0, skipS := 0);
 T0 := NanosecondsSinceEpoch();
 for it in [1..NG] do
   k := Random(KS);
@@ -72,6 +73,9 @@ for it in [1..NG] do
   if Length(L) - 1 <> 4 or SortedList(ab) <> Concatenation(List([1..k-1], i -> 3), [9]) then continue; fi;
   stats.ok := stats.ok + 1;
   gens := List(GeneratorsOfGroup(Fp), x -> Image(nat, Image(epi, x)));
+  # the 3-quotient of class PQCLASS+1 is no larger: P0 is the largest finite 3-quotient of Fp
+  pqstable := Size(Image(EpimorphismPGroup(Fp, 3, PQCLASS + 1))) = Size(P0);
+  if not pqstable then stats.pqunstable := stats.pqunstable + 1; fi;
   nqok := fail;
   if HAVENQ then
     nqok := Size(NilpotentQuotient(F / rels, 4)) = Size(P);
@@ -121,7 +125,7 @@ for it in [1..NG] do
     ",\"lcs\":", String(List([1..4], j -> Log(Index(L[j], L[j+1]), 3))),
     ",\"ab\":", String(ab), ",\"eps0\":", String(eps0), ",\"m\":", String(m),
     ",\"nonmet\":", String(nonmet), ",\"pclass\":", String(Length(PCentralSeries(P0, 3)) - 1),
-    ",\"nq_ok\":", JStr(nqok),
+    ",\"nq_ok\":", JStr(nqok), ",\"pq_stable\":", String(pqstable),
     ",\"dd\":", String(Log(Size(DD), 3)), ",\"S\":", String(Log(Size(S), 3)),
     ",\"id_ok\":", String(idok), "}\n"));
 od;

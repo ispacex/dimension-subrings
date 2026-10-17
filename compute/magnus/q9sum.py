@@ -12,7 +12,8 @@ def line(name, R):
     print(name, "groups", len(R), "| S>1", sum(r["S"] > 0 for r in R),
           "| z checked", sum(r["nz"] for r in R), "| any z in D5", sum(any(r["z_in_D5"]) for r in R),
           "| cert all", all(r["cert"] for r in R), "| ctrl D4 all", all(r["ctrl_z_in_D4"] for r in R),
-          "| id_ok all", all(r["id_ok"] for r in R), "| nq_ok", Counter(str(r.get("nq_ok")) for r in R))
+          "| id_ok all", all(r["id_ok"] for r in R), "| nq_ok", Counter(str(r.get("nq_ok")) for r in R),
+          "| pq_stable all", all(r.get("pq_stable", True) for r in R))
 
 
 line("all", L)
