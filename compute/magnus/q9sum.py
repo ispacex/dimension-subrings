@@ -24,6 +24,7 @@ for k in sorted(set(r["k"] for r in L)):
 line("non-met eps0 (x_s^9 in gamma_3)", [r for r in nm if r["eps0"]])
 line("non-met eps1", [r for r in nm if not r["eps0"]])
 line("non-met eps0, m>=1", [r for r in nm if r["eps0"] and r["m"] >= 1])
+line("non-met eps0, c9>0 ([x_i^9,x_s] != 1)", [r for r in nm if r["eps0"] and r.get("c9", 0) > 0])
 line("non-met eps0, some [x_i^9,x_s] != 1", [r for r in nm if r["eps0"] and r.get("c9", 0) > 0])
 line("non-met eps0, c9>0, S>1", [r for r in nm if r["eps0"] and r.get("c9", 0) > 0 and r["S"] > 0])
 print("ab", Counter(str(r["ab"]) for r in L))
