@@ -340,15 +340,18 @@ RESULTS = [  # (status, ru, en, ref)
      "$D_n(G)=\\gamma_n(G)$ for all $n$ and every finite group of order $<512$.", "Thm. 5.4(2)"),
     ("cp", "Нет $3$-кручения в $D_5(G)/\\gamma_5(G)$, если силовская $3$-подгруппа $G$ имеет порядок $\\le3^9$; $D_5=\\gamma_5$ для всех $3$-групп порядка $\\le3^9$.",
      "No $3$-torsion in $D_5(G)/\\gamma_5(G)$ when the Sylow $3$-subgroup of $G$ has order $\\le3^9$; $D_5=\\gamma_5$ for all $3$-groups of order $\\le3^9$.",
-     "Thm. 6.11"),
+     "Thm. 6.12"),
     ("p", "$D_5(G)=\\gamma_5(G)$, если $G/\\gamma_2(G)$ конечна и имеет экспоненту $3$ — при любом ранге и порядке.",
      "$D_5(G)=\\gamma_5(G)$ whenever $G/\\gamma_2(G)$ is finite of exponent $3$, of any rank and order.", "Thm. 6.6"),
+    ("p", "Более общо: $D_5(G)=\\gamma_5(G)$, если $G/\\gamma_2(G)\\cong C_{3^a}\\times C_3^{s-1}$, т.е. у неё не больше одного инварианта больше $3$ (в том числе $C_9\\times C_3^{s-1}$). Проверено независимой рецензией.",
+     "More generally: $D_5(G)=\\gamma_5(G)$ whenever $G/\\gamma_2(G)\\cong C_{3^a}\\times C_3^{s-1}$, i.e. it has at most one invariant larger than $3$ (including $C_9\\times C_3^{s-1}$). Checked by an independent review.",
+     "Thm. 6.8"),
     ("p", "$p$ нечётно, $|\\gamma_3/\\gamma_4|=p$, у $\\gamma_2/\\gamma_3$ не больше двух порождающих $\\Rightarrow$ $[\\gamma_2,\\gamma_2]\\subseteq\\gamma_5$. Отсюда: неметабелева $p$-группа ступени $4$ ранга $d$ имеет порядок $\\ge p^{d+5}$.",
      "$p$ odd, $|\\gamma_3/\\gamma_4|=p$, $\\gamma_2/\\gamma_3$ with at most two generators $\\Rightarrow$ $[\\gamma_2,\\gamma_2]\\subseteq\\gamma_5$. Hence a non-metabelian $p$-group of class $4$ and rank $d$ has order $\\ge p^{d+5}$.",
      "Lemma 6.3, Prop. 6.5"),
     ("p", "$p$ нечётно, $P$ ступени $3$ с $|\\gamma_2/\\gamma_3|=p^2$, $|\\gamma_3|=p$ $\\Rightarrow$ у $p$-накрывающей группы $P^{*\\prime\\prime}=1$: все шаг-$1$ потомки метабелевы.",
      "$p$ odd, $P$ of class $3$ with $|\\gamma_2/\\gamma_3|=p^2$, $|\\gamma_3|=p$ $\\Rightarrow$ the $p$-covering group has $P^{*\\prime\\prime}=1$: all step-$1$ descendants are metabelian.",
-     "Thm. 6.9"),
+     "Thm. 6.10"),
     ("c", "Факторы ступени $3$ групп рипсовского типа порядков $2^{40}$–$2^{107}$: везде $D_5=1$, в трёх из них $D_4\\ne1$ (с сертификатом точности).",
      "Class-$3$ quotients of Rips-type groups of orders $2^{40}$–$2^{107}$: $D_5=1$ in all, $D_4\\ne1$ in three of them (with the exactness certificate).",
      "§7, question 1"),
@@ -362,10 +365,10 @@ OPEN = [  # (ru, en)
      "Problem 20.84 itself: is $D_5(Q)=1$ for all finite $2$-groups of class $3$? A counterexample must have $D_4(Q)\\ne1$ and order $\\ge2^{11}$."),
     ("Порядок $2^{11}$, ранги $5$–$7$. Ранг $5$ — основная стоимость (по оценке около $100$ процессорных суток); на ранге $7$ штатный ANUPQ переполняется.",
      "Order $2^{11}$, ranks $5$–$7$. Rank $5$ is the bulk of the cost (about $100$ CPU-days by estimate); at rank $7$ the stock ANUPQ overflows."),
-    ("Бывает ли $3$-кручение в $D_5/\\gamma_5$ (достигается ли оценка Тахары $6$)? Минимальный пример — порядка $\\ge3^{10}$, ступени $4$, с циклическим центром и элементом порядка $9$ по модулю $\\gamma_2$.",
-     "Is there $3$-torsion in $D_5/\\gamma_5$, i.e. is Tahara's bound $6$ attained? A minimal example has order $\\ge3^{10}$, class $4$, cyclic centre and an element of order $9$ modulo $\\gamma_2$."),
-    ("Следующий случай после экспоненты $3$: $Q/\\gamma_2\\cong C_9\\times C_3^{s-1}$; открыт подслучай $x_s^9\\in\\gamma_3$.",
-     "The next case after exponent $3$: $Q/\\gamma_2\\cong C_9\\times C_3^{s-1}$; the subcase $x_s^9\\in\\gamma_3$ is open."),
+    ("Бывает ли $3$-кручение в $D_5/\\gamma_5$ (достигается ли оценка Тахары $6$)? Минимальный пример — порядка $\\ge3^{10}$, ступени $4$, с циклическим центром и не меньше чем двумя инвариантами $\\ge9$ у $Q/\\gamma_2$.",
+     "Is there $3$-torsion in $D_5/\\gamma_5$, i.e. is Tahara's bound $6$ attained? A minimal example has order $\\ge3^{10}$, class $4$, cyclic centre and at least two invariants $\\ge9$ in $Q/\\gamma_2$."),
+    ("Следующий случай: у $Q/\\gamma_2$ два инварианта $\\ge9$, например $C_9\\times C_9\\times C_3$. Там $\\gamma_2/\\gamma_3$ может иметь экспоненту $9$, и доказательство теоремы 6.8 не проходит.",
+     "The next case: $Q/\\gamma_2$ with two invariants $\\ge9$, e.g. $C_9\\times C_9\\times C_3$. There $\\gamma_2/\\gamma_3$ may have exponent $9$, and the proof of Theorem 6.8 does not go through."),
     ("Точный критерий нетерминальности групп типа $(d,2,1)$: при $3^8$ потомки есть у $190$ из $7\\,824$, известные необходимые условия выполнены ещё у $573$ терминальных.",
      "An exact criterion for nonterminality of groups of type $(d,2,1)$: at $3^8$, $190$ of the $7\\,824$ have descendants, and the known necessary conditions also hold for $573$ terminal ones."),
     ("Групповой аналог теоремы C: $D_{2c-1}(G)=1$ для метабелевых групп ступени $\\le c$? Открыто при $p=2$, $c\\ge3$ и при нечётном $p$, $c\\ge p+2$.",
@@ -391,7 +394,7 @@ FUNNELS = [
         ("ранг $3$ или $4$, ступень $4$", "rank $3$ or $4$, class $4$", 62257),
         ("неметабелевы (все ранга $3$)", "non-metabelian (all of rank $3$)", 904),
         ("$z\\in Q''\\cap M_5$", "$z\\in Q''\\cap M_5$", 699),
-        ("$z\\in D_5$", "$z\\in D_5$", 0)], "Thm. 6.11"),
+        ("$z\\in D_5$", "$z\\in D_5$", 0)], "Thm. 6.12"),
     ("f39", "Порядок $3^9$, ранги $3$–$4$", "Order $3^9$, ranks $3$–$4$", [
         ("все группы порядка $3^8$", "all groups of order $3^8$", 1396077),
         ("родители: ранг $3$–$4$, ступень $3$–$4$", "parents: rank $3$–$4$, class $3$–$4$", 771597),
@@ -399,7 +402,7 @@ FUNNELS = [
         ("шаг-$1$ потомки", "step-$1$ descendants", 305583),
         ("ступень $4$, $Q''\\ne1$, центр цикличен", "class $4$, $Q''\\ne1$, cyclic centre", 64362),
         ("кандидаты: $z\\in Q''\\cap M_5$", "candidates: $z\\in Q''\\cap M_5$", 62245),
-        ("$z\\in D_5$", "$z\\in D_5$", 0)], "Thm. 6.11"),
+        ("$z\\in D_5$", "$z\\in D_5$", 0)], "Thm. 6.12"),
 ]
 
 RUNS = [  # (what ru, what en, groups, result ru, result en, cost ru, cost en, code)
@@ -459,6 +462,11 @@ TIMELINE = [  # (iso date, [(ru, en)])
          "Order $3^9$: the $p$-cover filter, $62\\,245$ candidates, $D_5=1$ in all; rank $5$ excluded on paper."),
         ("На бумаге: $D_5=\\gamma_5$ при $Q/\\gamma_2$ экспоненты $3$; лемма о кольцах Ли; $P^{*\\prime\\prime}=1$. Две независимые построчные рецензии.",
          "On paper: $D_5=\\gamma_5$ for $Q/\\gamma_2$ of exponent $3$; the Lie-ring lemma; $P^{*\\prime\\prime}=1$. Two independent line-by-line reviews.")]),
+    ("2026-10-18", [
+        ("На бумаге: $D_5=\\gamma_5$, если у $Q/\\gamma_2$ не больше одного инварианта больше $3$ (в том числе $C_9\\times C_3^{s-1}$); независимая рецензия ошибок не нашла.",
+         "On paper: $D_5=\\gamma_5$ when $Q/\\gamma_2$ has at most one invariant larger than $3$ (including $C_9\\times C_3^{s-1}$); an independent review found no errors."),
+        ("Литература: что на самом деле анонсировал Тахара (с. 173) и поиск его отдельной работы.",
+         "References: what Tahara actually announced (p. 173), and the search for his separate paper.")]),
 ]
 
 
@@ -486,10 +494,10 @@ def cover3(n, d):
         # order >= 3^(d+5); for d = 2, gamma_2/gamma_3 is cyclic) and Gupta-Tahara applies
         return "p", "Prop. 6.5 + [GT85]"
     if n == 8:
-        return "cp", "Thm. 6.6, 6.11"
+        return "cp", "Thm. 6.6, 6.12"
     if n == 9:
-        return "c", "Thm. 6.11"
-    return "o", "Thm. 6.6"  # open; the part with Q/gamma_2 of exponent 3 is proved
+        return "c", "Thm. 6.12"
+    return "o", "Thm. 6.8"  # open; the part with at most one invariant > 3 in Q/gamma_2 is proved
 
 
 def grid(rows, cols, cover, p, lang, highlight=()):
@@ -517,7 +525,7 @@ def grid(rows, cols, cover, p, lang, highlight=()):
             kind = "x" if (k == "o" and p == 3) else k
             tip = f"{p}{str(n).translate(SUP)}, d = {d}: {STATUS[k][0 if lang == 'ru' else 1]}" + (f" ({ref(where, lang)})" if where else "")
             if kind == "x":
-                tip += t(" — случай $Q/\\gamma_2$ экспоненты $3$ доказан", " — the case $Q/\\gamma_2$ of exponent $3$ is proved").replace("$", "").replace("\\gamma_2", "γ₂")
+                tip += t(" — доказан случай, когда у $Q/\\gamma_2$ не больше одного инварианта $>3$", " — the case of $Q/\\gamma_2$ with at most one invariant $>3$ is proved").replace("$", "").replace("\\gamma_2", "γ₂")
             s.append(f'<rect class="cell k-{kind}" x="{x}" y="{y}" width="{cw}" height="{ch}" rx="3"><title>{html.escape(tip)}</title></rect>')
             lab = {"c": "C", "p": "P", "cp": "C+P", "o": "?", "x": "?"}[kind]
             s.append(f'<text class="ct" x="{x + cw / 2}" y="{y + ch / 2 + 4}" text-anchor="middle">{lab}</text>')
@@ -535,8 +543,8 @@ def legend(lang, three=False):
     if three:
         out = out.replace('<span class="tag o">?</span> ' + t("открыто", "open"),
                           '<span class="tag o" style="background:repeating-linear-gradient(45deg,var(--open) 0 4px,var(--ppr) 4px 7px)">?</span> '
-                          + t("открыто; случай $Q/\\gamma_2$ экспоненты $3$ доказан (теорема 6.6)",
-                              "open; the case $Q/\\gamma_2$ of exponent $3$ proved (Thm. 6.6)"))
+                          + t("открыто; доказан случай, когда у $Q/\\gamma_2$ не больше одного инварианта $>3$ (теорема 6.8)",
+                              "open; the case of $Q/\\gamma_2$ with at most one invariant $>3$ proved (Thm. 6.8)"))
     return f"<p><small>{out}. {t('Пустые клетки: таких групп нет.', 'Empty cells: no such groups.')}</small></p>"
 
 
@@ -711,7 +719,7 @@ $D_n(G)=G\\cap(1+\\Delta^n)$&nbsp;— размерные подгруппы, $\\
 <p>Порядок $2^{{11}}$: закрыты ранги $2$–$4$ и $\\ge8$, открыты $5$–$7$.</p></div>
 <div class="card"><h3>$3$-кручение: $D_5=\\gamma_5$</h3><div class="big">до $3^9$</div>
 <p>Нет $3$-кручения в $D_5/\\gamma_5$, если силовская $3$-подгруппа имеет порядок $\\le3^9$.</p>
-<p>На бумаге — для всех групп с $G/\\gamma_2$ экспоненты $3$, любого порядка.</p></div>
+<p>На бумаге — для всех групп, у которых $G/\\gamma_2$ имеет не больше одного инварианта больше $3$ (например, экспоненту $3$ или $C_9\\times C_3^{{s-1}}$), любого порядка.</p></div>
 <div class="card"><h3>Кольца Ли и Lean</h3><div class="big">доказано</div>
 <p>$D_5(L)\\subseteq\\gamma_4(L)$ для колец Ли; формализация проверена. Групповой вопрос и сведение к $2$-группам ступени $3$ сформулированы в Lean.</p></div>
 <div class="card"><h3>Контрпримеров</h3><div class="big">0</div>
@@ -732,7 +740,7 @@ and we have not solved it. This site shows what is proved, what is computed, and
 <p>Order $2^{{11}}$: ranks $2$–$4$ and $\\ge8$ closed, $5$–$7$ open.</p></div>
 <div class="card"><h3>$3$-torsion: $D_5=\\gamma_5$</h3><div class="big">up to $3^9$</div>
 <p>No $3$-torsion in $D_5/\\gamma_5$ when the Sylow $3$-subgroup has order $\\le3^9$.</p>
-<p>On paper for all groups with $G/\\gamma_2$ of exponent $3$, of any order.</p></div>
+<p>On paper for all groups whose $G/\\gamma_2$ has at most one invariant larger than $3$ (e.g. exponent $3$, or $C_9\\times C_3^{{s-1}}$), of any order.</p></div>
 <div class="card"><h3>Lie rings and Lean</h3><div class="big">proved</div>
 <p>$D_5(L)\\subseteq\\gamma_4(L)$ for Lie rings; the formalization audited. The group question and the reduction to $2$-groups of class $3$ are stated in Lean.</p></div>
 <div class="card"><h3>Counterexamples</h3><div class="big">0</div>
@@ -773,7 +781,7 @@ The open cells at order $2^{11}$, ranks $5$–$7$, are outlined.</p>""")
 <p>Это вопрос о $3$-кручении в $D_5/\\gamma_5$ (оценка Тахары: экспонента делит $6$). Клетки «на бумаге» закрыты так:
 если $Q/\\gamma_5$ метабелева, то $D_5=\\gamma_5$ по Гупте–Тахаре, а неметабелева группа ступени $4$ ранга $d$ имеет порядок
 $\\ge3^{d+5}$ (предложение 6.5); при $d=2$ фактор $\\gamma_2/\\gamma_3$ цикличен. Остальное&nbsp;— перебор до $3^9$.
-Открытые клетки заштрихованы: в них доказан случай $Q/\\gamma_2$ экспоненты $3$ (теорема 6.6).</p>""", """
+Открытые клетки заштрихованы: в них доказан случай, когда у $Q/\\gamma_2$ не больше одного инварианта $>3$ (теорема 6.8).</p>""", """
 <ul>
 <li>Up to $2^8$: the lattice $\\Delta^n$ for all groups; $2^9$: the Jennings sieve and the lattice.</li>
 <li>$2^{10}$: the minimal-counterexample lemma reduces to step-$1$ descendants of groups of order $2^9$ (ANUPQ), $3400$ candidates.</li>
@@ -783,7 +791,7 @@ $\\ge3^{d+5}$ (предложение 6.5); при $d=2$ фактор $\\gamma_2
 <p>This is the question of $3$-torsion in $D_5/\\gamma_5$ (Tahara: the exponent divides $6$). The “paper” cells are closed thus:
 if $Q/\\gamma_5$ is metabelian, then $D_5=\\gamma_5$ by Gupta–Tahara, and a non-metabelian group of class $4$ and rank $d$
 has order $\\ge3^{d+5}$ (Proposition 6.5); for $d=2$ the factor $\\gamma_2/\\gamma_3$ is cyclic. The rest is the search up to $3^9$.
-Open cells are hatched: there the case $Q/\\gamma_2$ of exponent $3$ is proved (Theorem 6.6).</p>""")
+Open cells are hatched: there the case of $Q/\\gamma_2$ with at most one invariant $>3$ is proved (Theorem 6.8).</p>""")
       + grid(range(4, 13), range(2, 9), cover3, 3, lang) + legend(lang, three=True))
 
     # ---------- results ----------
