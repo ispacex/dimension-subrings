@@ -33,6 +33,11 @@
 #     is correct too but slower than PqDescendants: Aut(V) and the orbits in GAP.)
 #   TIGHT (environment PQ2048_TIGHT=1) — (G_N) of a class-2 vertex of order 2^(LOGQ-1) by PR_Tight2
 #     (prune.g, the tightness lemma) instead of PR_Data.
+#   NOSTAB (environment PQ2048_NOSTAB=1) — the step 1 of a vertex G of order 512 = 2^(NMAX-1) (the children
+#     are leaves) with TR_OneStage(G) calls PqDescendants in one stage (RankInitialSegmentSubgroups := 100)
+#     and pq with PQ_NOSTAB set (ANUPQData.binary_nostab, pqrun.sh): no automorphism groups of the
+#     children.  The default stages compute stabilisers of the reduced p-covers, in GAP one by one
+#     when Aut(G) is insoluble: 3/4 of the time of a heavy vertex of order 512 (counted in onestage[k]).
 #   TRACE — print each vertex (order, CodePcGroup) before it is expanded, to name the one that fails.
 #   PROFILE (environment PQ2048_PROFILE=FILE) — per vertex, appended to FILE (flushed line by line):
 #     {"start":k,"code":..} before it is expanded, then {"k":..,"code":..,"steps":[..],"ms_steps":..,
@@ -57,13 +62,22 @@ TR_Rt := function() local r; r := Runtimes();
   return [r.user_time + r.system_time, r.user_time_children + r.system_time_children]; end;;
 TIGHT := IsBound(GAPInfo.SystemEnvironment.PQ2048_TIGHT) and GAPInfo.SystemEnvironment.PQ2048_TIGHT = "1";;
 THMB := IsBound(GAPInfo.SystemEnvironment.PQ2048_THMB) and GAPInfo.SystemEnvironment.PQ2048_THMB = "1";;
+# TR_OneStage(G): take the leaves of G in one stage?  Measured on order 512 (ranks 5, 6): one stage is
+# faster for p-multiplicator rank <= 19, and for rank 20 when |Aut(G)| <= 8.1e8 (hundreds of
+# children); slower, up to 20 times, for rank >= 21.
+TR_OneStage := function(G)
+  local m;
+  m := Log(Size(PqPCover(G)) / Size(G), 2);
+  return m <= 19 or (m = 20 and AutomorphismGroupPGroup(G).size <= 810000000);
+end;;
+NOSTAB := IsBound(GAPInfo.SystemEnvironment.PQ2048_NOSTAB) and GAPInfo.SystemEnvironment.PQ2048_NOSTAB = "1";;
 THMA := IsBound(GAPInfo.SystemEnvironment.PQ2048_THMA) and GAPInfo.SystemEnvironment.PQ2048_THMA = "1";;
 TR_Live := function() local g; g := GasmanStatistics();
   if IsBound(g.full) and IsBound(g.full.livekb) then return g.full.livekb; fi; return -1; end;;
 TR_Run := function()
-  local tb, nd, prof, pv, ps, r0, r1, t1, nrej, nkept, ncut, ds, mc, dump, dlev, defer, fixed, S, stack, covers, G, k, s, H, c, t, r, cs, x, n, out, line, nm, j, st, steps;
+  local tb, nd, prof, pv, ps, r0, r1, t1, nrej, nkept, ncut, ds, mc, dump, dlev, defer, fixed, S, stack, covers, G, k, s, H, c, t, r, cs, x, n, out, line, nm, j, st, steps, pqb;
   S := rec(vert := [], cut := [], par := [], cand := [], fallback := [], ms_desc := [], ms_cover := [],
-           ms_steps := [], calls := [], skipped := [], noexp := [], thmA := [], thmB := []);
+           ms_steps := [], calls := [], skipped := [], noexp := [], thmA := [], thmB := [], onestage := []);
   if IsBound(OUTFILE) then out := OutputTextFile(OUTFILE, false); SetPrintFormattingStatus(out, false); fi;
   if IsBound(STARTFILE) then
     stack := [];
@@ -152,7 +166,18 @@ TR_Run := function()
       # every step-1 descendant passing (G_LOGQ) has class <= 2: the others skip (G_N).
       tb := THMB and s = 1 and k = LOGQ - 2 and MS_PClass(G) = 2
             and Number(AbelianInvariants(G), x -> x >= 4) < 2;
-      ds := CH_Desc(G, s);
+      if k = 9 and s = 1 and k + s >= NMAX and NOSTAB and IsBound(ANUPQData.binary_nostab) and TR_OneStage(G) then
+        # the children are leaves: in one stage (no reduced p-covers, whose stabilisers GAP computes
+        # one by one when Aut(G) is insoluble) pq need not compute their automorphism groups (PQ_NOSTAB)
+        pqb := ANUPQData.binary; ANUPQData.binary := ANUPQData.binary_nostab;
+        PushOptions(rec(RankInitialSegmentSubgroups := 100));
+        ds := CH_Desc(G, s);
+        PopOptions();
+        ANUPQData.binary := pqb;
+        TR_Add(S.onestage, k, 1);
+      else
+        ds := CH_Desc(G, s);
+      fi;
       r1 := TR_Rt(); t1 := TS_Cpu(); nrej := 0; nkept := 0; ncut := 0; nd := 0;
       for H in ds do
         nd := nd + 1;
