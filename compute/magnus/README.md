@@ -32,6 +32,7 @@ and an improved sieve for 3-torsion in $D_5/\gamma_5$ on 3-groups of class 4. Ru
 | `est39.g` | order $3^9$ estimate: `PqDescendants(P : StepSize := 1)` for random parents $P$ of order $3^8$ (set `RANGES`, `PER`), counts class-4 non-metabelian descendants with cyclic centre |
 | `c39.g` | order $3^9$: step-1 descendants of the parents in `PARENTS` through the `c38` sieve, presentations for `d5z.py` (ids `"parent.descendant"`); `C39Pass(P)`: a test on the p-cover $P^*$ (multiplier $M$, nucleus $N$) — if $M \cap P^{*\prime\prime}$, $M \cap M_5(P^*)$ or $N$ lies in $\gamma_5(P^*)$, no step-1 descendant is a candidate |
 | `v39.g` | checks `C39Pass` against `C39One` on `IDS` or on `NSAMPLE` random ids (seed `SEED`), wall-clock times of both |
+| `r5.g`, `run_r5.sh` | order $3^9$, part $d=5$: the parents of rank 5 and type $(5,2,1)$ (`SmallGroup(3^8, id)`, ids 1387558–1395381, 7824 groups) through `C39Pass`; none pass, as their nucleus is trivial (all terminal). `bash run_r5.sh` in a tm job |
 | `c39all.g`, `run_c39all.sh` | the full order-$3^9$ run, part $d \le 4$: every `SmallGroup(3^8, id)` of rank 3–4 and class 3–4 as a parent, through `C39Pass` and then `C39One` of `c39.g`, on `NSH` shards (`id mod NSH`); survivors go through a FIFO to `d5z.py` on the fly and are kept gzipped. `bash run_c39all.sh` in a tm job; `EXTRA='IDS:=[..];;'` for a test run |
 | `lie_search5.jsonl` | its output: seeds 1–6 × 400 (base), 201–202 × 150 (`wide`), 301–302 × 25 (`212`), $E = 19$; all 2750 rings have $\delta_5 = \gamma_5$ |
 
