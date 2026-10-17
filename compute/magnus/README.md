@@ -25,6 +25,11 @@ and an improved sieve for 3-torsion in $D_5/\gamma_5$ on 3-groups of class 4. Ru
 | `lie_imp_l1.py`, `lie_imp_l1_*.jsonl` | the metabelian ring $L_1$ of IMP26 (sec. "Finite plateaux"): `python lie_imp_l1.py 2` gives $\delta_5 = \langle 2^5 u_3\rangle \cong \mathbb Z/2$; with 3 in place of 2 and with local perturbations (`... 3 search SEED COUNT local`) a metabelian search for 3-torsion |
 | `c38.g` | MATH-120: sieve over all 3-groups of order $3^8$ (`SmallGroup(3^8, i)`, package `sglppow`): rank 3–4, class 4, $Q'' \ne 1$, cyclic centre, $\Omega_1(Z) \subseteq Q'' \cap M_5$; writes a CSV line per non-metabelian class-4 group and, per survivor, a presentation on a minimal generating set (Tietze from the pc presentation) with the socle generator `z` as a word |
 | `d5z.py` | MATH-120: `python d5z.py [E] < c38_*.jsonl` — is `z` in $D_5$? Truncated Magnus algebra modulo $3^E$; non-membership exact, membership exact when the certificate $3^{E-1}\Delta \subseteq \Delta^5 + 3^E$ holds; controls `z` in $D_4$, generators not in $D_2$ |
+| `presgens.g` | `PresOnGens(G, gens)`: presentation of a pc group on given generators by Tietze from the pc presentation (no coset enumeration); read by `c38.g`, `c39.g` |
+| `chk38.g` | checks the presentations of a `c38`/`c39` JSON file with ANUPQ: 3-quotient of order $3^8$, class 4, `z` central of order 3 in $Q''$ (set `CHKIN`) |
+| `c38_3e8.csv`, `d5z_3e8.csv` | results for order $3^8$: the 904 non-metabelian class-4 groups (id, $d$, $\log_3$ of the lower central factors, $\lvert Q''\rvert$, $\lvert Q''\cap M_5\rvert$, $\lvert Z\rvert$, cyclic, survivor) and `d5z.py` on the 699 survivors (all `z_in_D5 = False`, certified) |
+| `est39.g` | order $3^9$ estimate: `PqDescendants(P : StepSize := 1)` for random parents $P$ of order $3^8$ (set `RANGES`, `PER`), counts class-4 non-metabelian descendants with cyclic centre |
+| `c39.g` | order $3^9$: step-1 descendants of the parents in `PARENTS` through the `c38` sieve, presentations for `d5z.py` (ids `"parent.descendant"`) |
 | `lie_search5.jsonl` | its output: seeds 1–6 × 400 (base), 201–202 × 150 (`wide`), 301–302 × 25 (`212`), $E = 19$; all 2750 rings have $\delta_5 = \gamma_5$ |
 
 The `*.log` files named above are not kept in git (`../.gitignore`); rerunning the scripts writes them.
