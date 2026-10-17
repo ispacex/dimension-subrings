@@ -34,6 +34,7 @@ W5 := function(F)        # all left-normed commutators of weight 5 in the genera
   for i in [2..5] do L := Concatenation(List(L, c -> List(g, y -> Comm(c, y)))); od;
   return Filtered(L, c -> c <> One(F));
 end;
+JStr := function(b) if b = fail then return "null"; fi; return String(b); end;
 RankMod3 := function(hom, A, vs)
   local M;
   M := List(vs, v -> ExponentsOfPcElement(Pcgs(A), Image(hom, v)) * One(GF(3)));
@@ -120,7 +121,7 @@ for it in [1..NG] do
     ",\"lcs\":", String(List([1..4], j -> Log(Index(L[j], L[j+1]), 3))),
     ",\"ab\":", String(ab), ",\"eps0\":", String(eps0), ",\"m\":", String(m),
     ",\"nonmet\":", String(nonmet), ",\"pclass\":", String(Length(PCentralSeries(P0, 3)) - 1),
-    ",\"nq_ok\":", String(nqok),
+    ",\"nq_ok\":", JStr(nqok),
     ",\"dd\":", String(Log(Size(DD), 3)), ",\"S\":", String(Log(Size(S), 3)),
     ",\"id_ok\":", String(idok), "}\n"));
 od;
