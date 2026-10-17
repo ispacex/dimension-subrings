@@ -9,8 +9,10 @@ TOTAL=1396077
 for k in $(seq 0 $((NSH - 1))); do
   f="$OUTD/fifo_$k"; rm -f "$f"; mkfifo "$f"
   (tee >(gzip > "$OUTD/cand_$k.jsonl.gz") < "$f" | python d5z.py > "$OUTD/d5z_$k.jsonl") &
-  (echo "SHARD:=$k;; NSHARD:=$NSH;; OUT:=\"$f\";; LOG:=\"$OUTD/c39_$k.log\";; PROG:=\"$OUTD/prog_$k\";; $EXTRA"
-   cat c39all.g) | $GAP -q -b -o 3g > "$OUTD/gap_$k.out" 2>&1 &
+  ((echo "SHARD:=$k;; NSHARD:=$NSH;; OUT:=\"$f\";; LOG:=\"$OUTD/c39_$k.log\";; PROG:=\"$OUTD/prog_$k\";; $EXTRA"
+   cat c39all.g) | $GAP -q -b --quitonbreak -o 3g > "$OUTD/gap_$k.out" 2>&1
+  # if GAP died before opening the FIFO, open it once so the reader does not wait forever
+  timeout 5 sh -c ": > '$f'" || true) &
 done
 while [ "$(jobs -r | wc -l)" -gt 0 ]; do
   [ -n "$JOB_ROOT" ] && echo "$(cat "$OUTD"/prog_* 2>/dev/null | awk '{s+=$1} END {print s+0}')/$TOTAL" > "$JOB_ROOT/progress"
@@ -18,7 +20,8 @@ while [ "$(jobs -r | wc -l)" -gt 0 ]; do
 done
 wait
 rm -f "$OUTD"/fifo_*
-{ tail -qn1 "$OUTD"/c39_*.log
+{ grep -H -m3 "Error" "$OUTD"/gap_*.out && echo "GAP ERROR: some shard did not finish"
+  tail -qn1 "$OUTD"/c39_*.log
   cat "$OUTD"/d5z_*.jsonl | python -c "
 import json, sys, collections
 r = [json.loads(l) for l in sys.stdin]

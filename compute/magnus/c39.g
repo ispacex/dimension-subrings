@@ -35,6 +35,27 @@ C39One := function(pid, js)
   od;
   return [nd, nc, nfin];
 end;
+# C39Pass(P): a test on the p-covering group S = P* with multiplier M (the tails of pq's presentation)
+# and nucleus N = P_{c+1}(S).  A step-1 descendant is Q = S/U, U of index 3 in M, N not in U, and
+# then <z> = M/U.  As D_n(S/U) = D_n(S)U/U, z in Q'' needs M ∩ S'' not in U, z in M_5(Q) needs
+# M ∩ M_5(S) not in U, class 4 needs gamma_5(S) <= U (and, if P has class 3, gamma_4(S) not in U).
+# So if one of M ∩ S'', M ∩ M_5(S), N (or gamma_4(S)) lies in gamma_5(S), no descendant is a candidate.
+C39Pass := function(P)
+  local S, n, M, N, L, W, J;
+  S := PqPCover(P); n := LogInt(Size(P), 3);
+  M := Subgroup(S, Pcgs(S){[n + 1 .. Length(Pcgs(S))]});
+  N := PCentralSeries(S, 3)[Length(PCentralSeries(P, 3))];
+  if Size(S) / Size(M) <> Size(P) or not IsElementaryAbelian(M) or not IsSubgroup(Centre(S), M)
+     or not IsSubgroup(M, N) then Error("C39Pass: unexpected p-cover"); fi;
+  L := LowerCentralSeriesOfGroup(S);
+  if Length(L) >= 5 then W := L[5]; else W := TrivialSubgroup(S); fi;
+  if not IsSubgroup(M, W) then Error("C39Pass: gamma_5(S) not in M"); fi;
+  J := JenningsSeries(S);
+  return not IsSubgroup(W, N)
+     and not IsSubgroup(W, Intersection(M, DerivedSubgroup(DerivedSubgroup(S))))
+     and Length(J) >= 5 and not IsSubgroup(W, Intersection(M, J[5]))
+     and (NilpotencyClassOfGroup(P) = 4 or (Length(L) >= 4 and not IsSubgroup(W, L[4])));
+end;
 C39 := function(parents, prefix)
   local js, pid, r, t;
   js := OutputTextFile(Concatenation(prefix, ".jsonl"), false); SetPrintFormattingStatus(js, false);
