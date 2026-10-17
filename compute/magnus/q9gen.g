@@ -46,7 +46,7 @@ RankMod3 := function(hom, A, vs)
 end;
 OUTS := OutputTextFile(OUT, false); SetPrintFormattingStatus(OUTS, false);
 stats := rec(tried := 0, ok := 0, nonmet := 0, eps0 := 0, eps0nonmet := 0, Snontriv := 0,
-             eps0S := 0, idfail := 0, nqfail := 0, pqunstable := 0, skipS := 0);
+             eps0S := 0, idfail := 0, nqfail := 0, pqunstable := 0, eps0c9 := 0, skipS := 0);
 T0 := NanosecondsSinceEpoch();
 for it in [1..NG] do
   k := Random(KS); dk := Random(DS);
@@ -115,6 +115,10 @@ for it in [1..NG] do
   end) and Exponent(L[4]) = 3 and Exponent(L[2] / L[3]) = 3 and Exponent(L[3] / L[4]) = 3
        and not xk^(dk/3) in L[2] and Index(P, Om) = dk / 3;
   if not idok then stats.idfail := stats.idfail + 1; fi;
+  # c9 = number of i < k with [x_i^9, x_k] != 1 (= [x_i,x_k]^9): in the subcase x_k^(3^a) in gamma_3,
+  # a = 2, these are the terms u_is [x_i^9, x_s] of g_A that the proof cancels (wiki, MATH-135, §3.4)
+  c9 := Number([1..k-1], i -> Comm(gens[i]^9, xk) <> One(P));
+  if eps0 and nonmet and c9 > 0 then stats.eps0c9 := stats.eps0c9 + 1; fi;
   J := JenningsSeries(P);
   if Length(J) >= 5 then M5 := J[5]; else M5 := TrivialSubgroup(P); fi;
   S := Intersection(Omega(Centre(P), 3, 1), DD, M5);
@@ -127,7 +131,7 @@ for it in [1..NG] do
     ",\"rels\":", String(List(pr.rels, ExtRepOfObj)), ",\"zs\":", String(zs),
     ",\"logord\":", String(Log(Size(P), 3)),
     ",\"lcs\":", String(List([1..4], j -> Log(Index(L[j], L[j+1]), 3))),
-    ",\"ab\":", String(ab), ",\"ds\":", String(dk), ",\"eps0\":", String(eps0), ",\"m\":", String(m),
+    ",\"ab\":", String(ab), ",\"ds\":", String(dk), ",\"eps0\":", String(eps0), ",\"m\":", String(m), ",\"c9\":", String(c9),
     ",\"nonmet\":", String(nonmet), ",\"pclass\":", String(Length(PCentralSeries(P0, 3)) - 1),
     ",\"nq_ok\":", JStr(nqok), ",\"pq_stable\":", String(pqstable),
     ",\"dd\":", String(Log(Size(DD), 3)), ",\"S\":", String(Log(Size(S), 3)),
