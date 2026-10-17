@@ -31,6 +31,10 @@
 #     whose abelianization has fewer than two invariants >= 4, its step-1 children of class 3 are
 #     dropped before (G_N) (counted in thmB[k+1]).  (Building only the class-2 children, CH_StepC(V, 3),
 #     is correct too but slower than PqDescendants: Aut(V) and the orbits in GAP.)
+#   TAH19 (environment PQ2048_TAH19=1) — a leaf of order 2^(LOGQ-1) = 2^NMAX whose abelianization has at
+#     most one invariant >= 4 is dropped before (G_N) and the cover search (counted in tah19[k]): a candidate Q
+#     over it has Q_ab = H_ab (n lies in gamma_2(Q)), so D_4(Q) = gamma_4(Q) = 1 by Tahara, J. Algebra 45
+#     (1977), Corollary 19 (Passi, LNM 715, Theorem 10.1), hence D_5(Q) = 1: Q is no counterexample.
 #   TIGHT (environment PQ2048_TIGHT=1) — (G_N) of a class-2 vertex of order 2^(LOGQ-1) by PR_Tight2
 #     (prune.g, the tightness lemma) instead of PR_Data.
 #   NOSTAB (environment PQ2048_NOSTAB=1) — the step 1 of a vertex G of order 512 = 2^(NMAX-1) (the children
@@ -72,12 +76,13 @@ TR_OneStage := function(G)
 end;;
 NOSTAB := IsBound(GAPInfo.SystemEnvironment.PQ2048_NOSTAB) and GAPInfo.SystemEnvironment.PQ2048_NOSTAB = "1";;
 THMA := IsBound(GAPInfo.SystemEnvironment.PQ2048_THMA) and GAPInfo.SystemEnvironment.PQ2048_THMA = "1";;
+TAH19 := IsBound(GAPInfo.SystemEnvironment.PQ2048_TAH19) and GAPInfo.SystemEnvironment.PQ2048_TAH19 = "1";;
 TR_Live := function() local g; g := GasmanStatistics();
   if IsBound(g.full) and IsBound(g.full.livekb) then return g.full.livekb; fi; return -1; end;;
 TR_Run := function()
   local tb, nd, prof, pv, ps, r0, r1, t1, nrej, nkept, ncut, ds, mc, dump, dlev, defer, fixed, S, stack, covers, G, k, s, H, c, t, r, cs, x, n, out, line, nm, j, st, steps, pqb;
   S := rec(vert := [], cut := [], par := [], cand := [], fallback := [], ms_desc := [], ms_cover := [],
-           ms_steps := [], calls := [], skipped := [], noexp := [], thmA := [], thmB := [], onestage := []);
+           ms_steps := [], calls := [], skipped := [], noexp := [], thmA := [], thmB := [], onestage := [], tah19 := []);
   if IsBound(OUTFILE) then out := OutputTextFile(OUTFILE, false); SetPrintFormattingStatus(out, false); fi;
   if IsBound(STARTFILE) then
     stack := [];
@@ -190,6 +195,11 @@ TR_Run := function()
         if THMA and k + s = LOGQ - 2 and NMAX = LOGQ - 1 and c <= 2 and MS_PClass(H) = 2
            and ForAll(AbelianInvariants(H), x -> x = 2) then
           TR_Add(S.thmA, k + s, 1); continue;
+        fi;
+        # Tahara 1977, Cor. 19: a leaf with at most one invariant >= 4 in H_ab has no counterexample above it.
+        if TAH19 and k + s = LOGQ - 1 and NMAX = LOGQ - 1
+           and Number(AbelianInvariants(H), x -> x >= 4) <= 1 then
+          TR_Add(S.tah19, k + s, 1); continue;
         fi;
         if TIGHT and c <= 2 and k + s = LOGQ - 1 then
           # the tightness lemma: the same answer as PR_Data(H, LOGQ).p5b, about 16 times faster
