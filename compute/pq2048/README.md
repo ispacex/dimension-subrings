@@ -27,8 +27,9 @@ an estimate for $2^{11}$ and a conclusion about the setup. **The result in short
   $p$-class 2, ranks 5 and 6) — ≈ 100 CPU-days by the sample (section "Estimate for $2^{11}$"), of
   which ≈ 85 % is rank 5 (rank 6 is underestimated there: without the step rules (`steps.g`) it
   would cost ≈ 240 days, with them about a day). The proposal is to close $2^{11}$ for ranks
-  $\ne 5$ (≈ 2–3 CPU-days with the step rules, ranks 2–4 a day), and rank 5 after proving
-  statement 1 of "Not proved" (section "Conclusion"). Ranks 2 and 3 are already done: 603
+  $\ne 5$ (≈ 2–3 CPU-days with the step rules, ranks 2–4 a day). Rank 5 has no shortcut: statement 1
+  of "Not proved" turned out false, so rank 5 is expanded in full, minus the vertices that
+  Theorem A of `tree.g` drops (section "Not proved"). Ranks 2 and 3 are already done: 603
   candidates of order $2^{11}$, all with $D_4 = D_5 = 1$.
 
 ## Notation
@@ -97,6 +98,17 @@ $\mathrm{rk}(\gamma_2(V)/K) \le \mathrm{rk}\,X \le r_{\max}(d)$ by Lemma A. $\sq
 
 *Corollaries* (checked without enumerating $K$): (Г3) $\mathrm{rk}\,\gamma_2(V) \le r_{\max} + 1$;
 (Г4) $\mathrm{rk}(\gamma_2(V)/(\gamma_2(V) \cap Z(V))) \le r_{\max}$.
+
+*(Г3) is sharp.* The bound $\mathrm{rk}\,\gamma_2(Q) \le r_{\max}$ without the "$+1$" is false:
+among the 308 candidates of order 512, $\mathrm{rk}\,\gamma_2(Q) = r_{\max} + 1$ holds for 14
+candidates with $d = 2$ (rank 2) and 4 with $d = 3$ (rank 4), always on $Q$ itself, not on its
+quotients $Q/P_j$ (`results/small/cands_512.json`, `r2_minus_d` is the maximum of
+$\mathrm{rk}\,\gamma_2 - d$ over them). For $d \ge 3$, $r_{\max} = d$; for $d = 2$ the bound
+$\mathrm{rk}\,\gamma_2 \le d$ does hold, since it is (Г3). Example:
+`PcGroupCode(11172193870820700773882966111295774648769475, 512)`, a descendant of
+SmallGroup(256, 4030), with $d = 3$, $Q_{ab} \cong [2,2,8]$, $\gamma_2(Q) \cong (\mathbb Z/2)^4$,
+$\gamma_3 = \gamma_2 \cap Z \cong \mathbb Z/2$, $X \cong (\mathbb Z/2)^3$: $\gamma_2$ is elementary,
+so $\gamma_2 \cong X \oplus (\gamma_2 \cap Z)$ and the cyclic $\gamma_2 \cap Z$ adds one summand.
 
 *Passing to quotients* (property (b)): if $V$ satisfies (Г) with the subgroup $K$ and
 $M \le \Phi(V)$, then $V/M$ satisfies (Г) with the subgroup $KM/M$ (the same argument: images of
@@ -478,9 +490,9 @@ pass over the parents alone, plus their generation.
      Rank 8 (then $|\Phi(Q)| = 2^3$, each layer of the lower $p$-series of order 2) was not
      estimated and needs a separate run from $2^8$; rank $\ge 9$ is impossible ($p$-class
      $\ge 4$ requires $|\Phi(Q)| \ge 2^3$).
-   * Rank 5 is open until statement 1 of section "Not proved" is proved (then rank 5 is ≈ 48
-     thousand vertices of $p$-class $\ge 3$, hours) or a two-level test on the cover of a vertex
-     is made (statement 2).
+   * Rank 5: statement 1 of section "Not proved" is false, and the test on the cover of a vertex
+     (statement 2) cuts nothing new on ranks 5–6; rank 5 is run in full, with Theorems A and B of
+     `tree.g` dropping the vertices with elementary $V_{ab}$ and the descendants of class 3.
    The result for ranks $\ne 5$ (including rank 8) would be "$D_5(Q) = 1$ for all 2-groups of
    class 3 of order $2^{11}$ and rank $\ne 5$". The lemma requires all groups of order $2^{10}$ to
    be closed; this is the result of the $2^{10}$ run (paper in preparation).
@@ -612,9 +624,8 @@ The rules speed up rank 5 only a little: for $d = 5$ Rule 2 acts only on vertice
 class 2, $5 + 4 + 2 = 11$ is not larger than $N$). In the uniform sample there are 1173 vertices
 of rank 5: 919 terminal (discarded in 25 ms instead of 0.15 s), 254 expanded (1.5 s each), giving
 **2008 descendants that pass (Г$_{11}$)**. This casts doubt on observation 1 of "Not proved" (0 of
-3028 from 40 vertices): the $p$-class of the expanded vertices is not recorded here, and if some
-of them have $p$-class 2, the observation is false. This is not yet checked, nor is the estimate
-for rank 5 recomputed.
+3028 from 40 vertices), and the observation is indeed false: descendants of class 2 of vertices of
+$p$-class 2 do pass (section "Not proved", statement 1).
 
 ## The p-cover without pq
 
@@ -739,33 +750,80 @@ $\Phi(Q)$ has order 2.
 
 ## Not proved
 
-Conditions that look true but are **not proved** and are not used for pruning:
+The statements that stood here were analysed in MATH-128 (17.10.2026): one is false, one gave a
+test that is sound but cuts nothing new on ranks 5–6, one is open, one turned out to be a remark
+on (Г3) (now after the corollary of Theorem 1), and for one the literature was found. None of
+them is used for pruning beyond what is said below.
 
-1. **Step-1 descendants of vertices of $p$-class 2, rank 5, order 512 do not pass (Г$_{11}$).**
-   In the sample: 0 of 3028 (40 vertices). *In doubt after the sample with the step rules*
-   (section "Vertices without descendants": 254 expanded vertices of rank 5 gave 2008 such
-   descendants; the $p$-class of these vertices is not recorded there). If this is a theorem (for
-   example, via Corollary 1: a parent of class 3 with $d = 5$ must have
-   $R_{ab} \cong \mathbb Z/4^2 \oplus \mathbb Z/2^3$, $|X| = 4$,
-   $\gamma_2 \cap Z = \gamma_3 \cong \mathbb Z/4$ — all rough bounds become equalities; a parent of
-   class 2 needs a separate argument), then rank 5 needs to be expanded only from vertices of
-   $p$-class $\ge 3$ (≈ 48 thousand instead of 5.9 million), and rank 5 costs hours, not months.
-   This is the main candidate for the next proof.
-2. **Prediction from the cover of a vertex.** Condition (Г$_{11}$) on a child $R = V^*/U$ is
-   checked only after `PqDescendants(V)`. A two-level linear test on the $p$-cover of $V$ (as in
-   the $p$-cover search for $Q = R^*/U$) could discard $V$ without $\mathrm{Aut}(V)$; not done.
-3. **A reduction for central products.** Large rank with cyclic centre comes from central products
-   with extraspecial groups ($H \circ E$). If $D_5(H \circ E) = 1$ followed from $D_5(H) = 1$,
-   ranks $\ge 5$ would drop out entirely. Functoriality gives only the inclusion of the image,
-   $D_5(G) \twoheadrightarrow$ does not follow; the statement is not proved and was not checked.
-4. **$\mathrm{rk}\,\gamma_2(Q) \le d$** is false: on order 512
-   $\mathrm{rk}\,\gamma_2(Q) = d + 1$ occurs (`results/small/cands_512.json`, `r2_minus_d` = 1), so
-   the "$+1$" in (Г3) is needed.
-5. **Known results on $D_4$ for small class.** A counterexample must have $D_4(Q) \ne 1$. If it
-   were proved that $D_4 = \gamma_4$ for 2-generated groups or under some condition on $Q_{ab}$
-   (the Rips / Tahara / Losey / Hartley direction, survey by Mikhailov–Passi, LNM 1952), this would
-   give pruning by rank or by the type of $Q_{ab}$ ($Q_{ab} = R_{ab}$ is visible on the parent).
-   We have **not checked** such statements in the sources †; the paper in preparation uses from
-   this area only $D_4^2 \subseteq \gamma_4$ (Passi), Tahara's bound and Gupta–Tahara for odd $p$.
+1. **Step-1 descendants of vertices of $p$-class 2, rank 5, order 512 do not pass (Г$_{11}$)** —
+   *false*; true for descendants of class 3.
+   * *Proved* (any $d$). Let $V$ have $p$-class 2 and order $2^{N-2}$, and let $R$ be a step-1
+     descendant. Then $\Phi(V)$ is elementary and $|P_3(R)| = 2$. If $R$ has class 3, then
+     $\gamma_3(R) = P_3(R)$, $e_R = 1$, and $\gamma_2(R)/\gamma_3(R) \cong \gamma_2(V)$ is
+     elementary, so $A = \gamma_2(R)/K$ is elementary for every $K \ge \gamma_3(R)$. Hence
+     $|A \vee B \vee E_1| \ge 2|A|$ ($E_1 = \mathbb Z/4$), $|A \vee R_{ab} \vee E_2| \ge |R_{ab}|$,
+     and the left-hand side of (Г$_N$) is at least $2|K| \cdot 2|A| \cdot |R_{ab}| = 4|R| = 2^{N+1}$:
+     **no descendant of class 3 passes**. This is Theorem B of `tree.g` (branch `tree-profile`, `PQ2048_THMB`, MATH-74)
+     without its condition on the invariants of $V_{ab}$.
+   * For $R$ of class 2 the same count gives only $\ge 2^N$, and such descendants do pass.
+     Counterexample: $V = H \times \mathbb Z/4$, where $d(H) = 4$, $|H| = 2^7$ and
+     $\gamma_2(H) = \Phi(H) \cong (\mathbb Z/2)^3$ (order 512, rank 5, $p$-class 2, invariants
+     $(2,2,2,2,4)$, `CodePcGroup` 4740885302129587258384). Its descendant $R = H \times \mathbb Z/8$
+     (class 2, code 158766414519742600441196185984) has `PR_Data(R, 11).p5b` = true; 10 of the 107
+     step-1 descendants of $V$ pass, all of class 2. In SmallGroup(512, 441667) and
+     SmallGroup(512, 490278) all 128 descendants of class 2 pass.
+   * There are real candidates below such vertices: the first piece of the rank-5 run (`d00000`,
+     2000 vertices) gave 2447 candidates of order $2^{11}$, and each of the 200 checked lies under a
+     vertex of $p$-class 2.
+   * So rank 5 cannot be reduced to the ≈ 48 thousand vertices of $p$-class $\ge 3$. Dropped are
+     the vertices with elementary $V_{ab}$ (Theorem A of `tree.g`, `PQ2048_THMA`, ≈ 98.3 % of the
+     rank-5 vertices of order 512) and all class-3 descendants; the rest (≈ 1.6 %, ≈ $9 \cdot 10^4$
+     vertices by a sample) is expanded in full.
+2. **Prediction from the cover of a vertex** — *a sound test exists, but on ranks 5 and 6 it cuts
+   nothing beyond Theorem A* (not used in the code). The functionals $f$ on $M$ with
+   $f|_{G_4} = 0$, $f|_N \ne 0$ split into classes by the largest $t$ with $f \ne 0$ on
+   $M \cap \mho_t(\gamma_2 V^*)G_4$, the largest $t$ with $f \ne 0$ on $M \cap \mho_t(V^*)\gamma_2 V^*$,
+   and whether $f \ne 0$ on $M \cap \gamma_3 V^*$. Within a class the types of $\gamma_2(R)$ and of
+   $R_{ab}$ and the order of $\gamma_3(R)$ are constant, so one child per class decides (Г$_N$); for
+   class 3 the check is relaxed (centrality of $K$ and cyclicity of $\gamma_3$ are not checked).
+   Theorems A and B are special cases. The test is sound, and exact for children of class $\le 2$.
+   But if $V$ has order $2^{N-2}$, $p$-class 2, non-elementary $V_{ab}$ and
+   $1 \le \mathrm{rk}\,\gamma_2(V) \le r_{\max} + 1$, then $V$ has a child of class 2 that passes
+   (Г$_N$): for $x$ of order 4 modulo $\gamma_2$ take $f$ vanishing on $M \cap \gamma_2 V^*$ with
+   $f(x^4) \ne 0$; then $\gamma_2(R) \cong \gamma_2(V)$, $R_{ab}$ is $V_{ab}$ with one $\mathbb Z/4$
+   raised to $\mathbb Z/8$, and the budget is exactly $2^N$. Checked: all vertices of orders 64 and
+   128 that the walk expands, 0 wrong cuts; 2917 rank-5 vertices of order 512 of $p$-class 2: 47
+   with non-elementary $V_{ab}$, all of type $(4,2,2,2,2)$ and all with passing children.
+3. **A reduction for central products** — *the premise is false; the statement is open.* Here
+   $Q = H \circ E$ with $E$ 2-generated of class 2, $E/Z(E) \cong (\mathbb Z/2)^2$ and $Z(E)$ cyclic,
+   amalgamated into $Z(H)$; the question is whether $D_5(H) = 1$ implies $D_5(H \circ E) = 1$.
+   * Many candidates are not such products. Decomposable are: of order 256, 5 of the 9 of rank 4;
+     of order 512, 7 of 150 of rank 4 and 8 of 9 of rank 5; of order 1024, 56 of 319 of rank 5 and
+     9 of 9 of rank 6; none of ranks 2–3. One rank-5 candidate of order 512 has no non-trivial
+     central decomposition at all (checked over all 864 normal subgroups). So ranks $\ge 5$ do not
+     drop out this way.
+   * *Proved:* for $E \in \{D_8, Q_8\}$, $Z(Q) = Z(H)$, $\gamma_3(Q) = \gamma_3(H)$ and
+     $M_5(Q) = M_5(H)$, so $Q$ is a candidate iff $H$ is; and
+     $D_5(H) \subseteq D_5(Q) \subseteq \gamma_3(H)$.
+   * *Computed:* $H \circ E$ for all 386 candidates $H$ of orders 64–512 and $E = D_8, Q_8, M_{16}$
+     (1544 groups): all are candidates and all have $D_4 = D_5 = 1$. With the lemma of
+     `../pq1024/README.md` and the previous point this gives $D_5 = 1$ for every group of order
+     $2^{11}$ of the form $H \circ D_8$ or $H \circ Q_8$.
+4. **Known results on $D_4$ for small class** — *found*. Since a candidate has class 3,
+   $D_4(Q) = \gamma_4(Q) = 1$ implies $D_5(Q) = 1$. K. Tahara, Nagoya Math. J. 69 (1978) 1–7,
+   for a 2-group $G$ of class 3 with $\beta_1 \ge \beta_2 \ge \dots$ the orders of the cyclic factors
+   of $G_{ab}$:
+   * Cor. 1 (resting on Tahara, J. Algebra 45 (1977) 102–131 †): if $\mathrm{rk}\,G_{ab} \le 3$, then
+     $D_4(G) = \gamma_4(G)$ — in agreement with ranks 2 and 3 above;
+   * Cor. 7, rank 4: $D_4 = \gamma_4$ if $\beta_1 \ge \beta_2 = \beta_3 = \beta_4$, or
+     $\beta_1 = \beta_2 > \beta_3 = \beta_4$, or $\beta_1 = \beta_2 = \beta_3 > \beta_4$ (the second
+     case is proved in detail, the others are said to be "very similar"). At $2^{11}$
+     ($|Q_{ab}| \le 2^9$, $Q_{ab} = R_{ab}$) this leaves 7 types of rank 4 uncovered: 8·4·2·2,
+     16·4·2·2, 32·4·2·2, 16·8·2·2, 8·4·4·2, 16·4·4·2, 8·8·4·2;
+   * Cor. 2, rank $n \ge 4$: $D_4 = \gamma_4$ under a condition on commutators, for example if
+     $\beta_{n-2}$ is at least every invariant of $\gamma_2(G)$.
+   Hartl–Mikhailov–Passi (arXiv:0803.3290, Cor. 7.2) need cyclic primary parts of $G_{ab}$, which
+   never holds here. Not yet used for pruning: before cutting rank 4 by Cor. 7 it should be
+   checked on a sample.
 
 † — not checked against the source.

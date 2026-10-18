@@ -65,6 +65,7 @@ $\le 3^6$, a sample of order $3^7$), $D_5/\gamma_5$ has no 3-torsion for any fin
 | [`scripts/`](scripts/build-audit.sh) | `build-audit.sh`: build the authors' formalization and print its axioms |
 | [`remote/`](remote/README.md) | running long jobs on a remote Linux box |
 | [`boinc/`](boinc/README.md) | the $2^{11}$ search as volunteer-computing jobs: a Docker image (GAP + ANUPQ), one piece → one result, BUDA files |
+| [`site/`](site/build_site.py) | the generator of the progress site <https://ispacex.github.io/d5/> (published from [ispacex/d5](https://github.com/ispacex/d5)): `python3 site/build_site.py --paper PAPER_DIR OUT`, then `site/two_tier.sh OUT` |
 | `upstream/lie-algebras` | the authors' formalization (submodule, pinned to the audited commit `ed3d9fb`) |
 
 The READMEs also exist in Russian (`*.ru.md`), the language the work was done in.
@@ -102,6 +103,7 @@ can go to a remote machine through [`remote/`](remote/README.md).
   spheres*, [arXiv:1805.10894](https://arxiv.org/abs/1805.10894) (used in `compute/magnus`).
 * R. Mikhailov, I. B. S. Passi, *Lower central and dimension series of groups*, LNM 1952,
   Springer, 2009.
+* Progress on this question, with the paper draft: <https://ispacex.github.io/d5/>.
 * Metalibrary: <https://ispacex.github.io/metalibrary/>.
 * cflint-fast-core: <https://gitlab.com/ispacex/cflint-fast-core>.
 
