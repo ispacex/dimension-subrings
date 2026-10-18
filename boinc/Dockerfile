@@ -1,8 +1,8 @@
 # The image for the volunteer-computing pieces of the 2^11 search (boinc/README.md).
 #
 # GAP 4.15.1 from the release tarball (sha256 pinned), IO compiled from that tarball, ANUPQ from
-# our fork ispacex/anupq at a pinned commit (sha256 pinned): branch uf-nostab = the
-# correctness fixes proposed upstream (gap-packages/anupq #96-#117), the union-find orbits of
+# our fork ispacex/anupq at a pinned commit (sha256 pinned): branch uf-nostab-v4 = the
+# correctness fixes proposed upstream (gap-packages/anupq #96-#121), the union-find orbits of
 # insoluble automorphism groups (MATH-187) and the PQ_NOSTAB switch.
 # Every other package left out unless GAP loads it on start-up or with ANUPQ (the set of
 # loaded packages is what can change a computation; it is kept exactly).  The search code of
@@ -30,8 +30,8 @@ WORKDIR /opt/gap
 RUN ./configure --with-gmp=system --with-zlib=system && make -j"$(nproc)"
 # ANUPQ (the pq standalone) from the fork, in place of the release's 3.3.2, and IO: the two
 # compiled packages of the reference runs.
-ARG ANUPQ_COMMIT=ecdf1a721ac370059d71eeef2bd0aae7937040d1
-ARG ANUPQ_SHA256=262e68ce9a361ad6c7521f07facde22c00fc0361392828665b995c20259c82a0
+ARG ANUPQ_COMMIT=c05b729b0bc0c084601bedae7d57dcd26d14783e
+ARG ANUPQ_SHA256=f413e90d1151714cce0984232449eb72e4938ccdd8c31b62aa5db7929605aec1
 RUN rm -rf pkg/anupq && curl -fsSL -o anupq.tar.gz \
       "https://codeload.github.com/ispacex/anupq/tar.gz/${ANUPQ_COMMIT}" \
     && echo "${ANUPQ_SHA256}  anupq.tar.gz" | sha256sum -c - \
