@@ -315,7 +315,6 @@ theorem sqrt_hc (g : S.H)
   rw [_root_.map_sub, _root_.map_one, mapDomainRingHom_of] at this
   rw [sqrt_c]
   convert this using 3
-  exact (map_pow S.φ.toMonoidHom _ _).symm
 
 set_option synthInstance.maxHeartbeats 200000 in
 set_option maxHeartbeats 1000000 in
