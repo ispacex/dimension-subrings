@@ -5,6 +5,7 @@
 # IN: a header line, then vertex lines exactly as run_rank.sh writes them (A/dump.jsonl, B/in_*,
 # Cin/c_*):
 #   # piece v1 name=c_0000 rank=4 nmax=10 logq=11 covermax=10 steprules=true [dumplevel=9] [compact=true]
+#     [flags=TAH19,NOSTAB,...]
 #   {"order":512,"code":2545205939215099486623156405135}
 #   {"order":256,"code":77523550526317933098992015,"steps":[2]}   ← a step deferred by stage A
 #   ...
@@ -48,11 +49,27 @@ steprules=$(field steprules); [ -n "$steprules" ] || steprules=true
 case $steprules in true|false) ;; *) fail 2 "steprules must be true or false" ;; esac
 compact=$(field compact); [ -n "$compact" ] || compact=false
 case $compact in true|false) ;; *) fail 2 "compact must be true or false" ;; esac
+# flags: the search switches of tree.g that run_rank.sh takes from the environment (PQ2048_<FLAG>=1),
+# only these.  NOSTAB uses pq with PQ_NOSTAB set (ANUPQData.binary_nostab, as remote pqrun.sh does).
+flags=$(field flags)
+pre=""
+for f in $(printf '%s\n' "$flags" | tr ',' ' '); do
+  case $f in
+    TAH19|NOSTAB|TIGHT|THMA|THMB|LIBROOT|OWNCOVER|OWNDESC) export "PQ2048_$f=1" ;;
+    *) fail 2 "unknown flag '$f'" ;;
+  esac
+done
 dumplevel=$(field dumplevel)
 [ -z "$dumplevel" ] || dumplevel=$(num dumplevel)
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
+if [ "${PQ2048_NOSTAB:-}" = 1 ]; then
+  pq=$(ls "$root"/../gap/pkg/anupq/bin/*/pq /opt/gap/pkg/anupq/bin/*/pq 2>/dev/null | head -n 1)
+  [ -n "$pq" ] || fail 1 "NOSTAB: no pq binary found"
+  printf '#!/bin/sh\nPQ_NOSTAB=1 exec "%s" "$@"\n' "$pq" > "$work/pq-nostab"; chmod +x "$work/pq-nostab"
+  pre="LoadPackage(\"anupq\");; ANUPQData.binary_nostab := \"$work/pq-nostab\";;"
+fi
 # The vertex lines are evaluated by GAP: accept nothing but the exact shape run_rank.sh writes.
 tail -n +2 "$in" | grep -v '^[[:space:]]*$' > "$work/start.jsonl" || true
 [ -s "$work/start.jsonl" ] || fail 2 "no vertex lines"
@@ -60,7 +77,7 @@ if grep -Evq '^\{"order":[0-9]+,"code":[0-9]+(,"steps":\[[0-9]+(,[0-9]+)*\])?\}$
   fail 2 "a vertex line is not {\"order\":N,\"code\":N}"
 fi
 
-params="D:=$rank;; STEPRULES:=$steprules;; COMPACT:=$compact;; NMAX:=$nmax;; LOGQ:=$logq;; COVERMAX:=$covermax;;"
+params="$pre D:=$rank;; STEPRULES:=$steprules;; COMPACT:=$compact;; NMAX:=$nmax;; LOGQ:=$logq;; COVERMAX:=$covermax;;"
 params="$params STARTFILE:=\"$work/start.jsonl\";; STATFILE:=\"$work/stat.json\";; OUTFILE:=\"$work/cand.jsonl\";;"
 [ -z "$dumplevel" ] || params="$params DUMPLEVEL:=$dumplevel;; DUMPFILE:=\"$work/dump.jsonl\";;"
 
