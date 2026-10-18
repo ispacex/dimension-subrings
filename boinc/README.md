@@ -171,7 +171,7 @@ result.txt`.
    ```
 
    Submit the zip on "Submit jobs" → BUDA → the app, with the expected and the maximum run time
-   (below). The job's command line may set GAP's workspace limit (`6g`; the default is `4g`).
+   (below). The job's command line may set GAP's workspace limit (`6g`; the default is `16g`).
 5. **Collect.** Download the batch's output zip, unpack it, and
 
    ```bash
