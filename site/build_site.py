@@ -16,7 +16,7 @@ Pages; the code that makes it is this file and the page of the PDF viewer, site/
 
 Links into the paper. The drafts are compiled with hyperref's `destlabel`, so every \\label is a named
 destination of the PDF under its own name (`thm:small`, `prop:reduction`, `sec:three`); sections
-without a label keep hyperref's name (`section.7`). The viewer, viewer.html (EN, d5.pdf) and
+without a label keep hyperref's name (`section.N`); all sections of the drafts now have one. The viewer, viewer.html (EN, d5.pdf) and
 ru/viewer.html (RU, d5-ru.pdf), pdf.js from cdnjs, opens at
 
     viewer.html#nameddest=thm:small        the statement with that label
@@ -474,10 +474,10 @@ RESULTS = [  # (status, ru, en, ref): ref is a str or (ru, en); [[label]] is a l
      "[[thm:pcover]]"),
     ("c", "Факторы ступени $3$ групп рипсовского типа порядков $2^{40}$–$2^{107}$: везде $D_5=1$, в трёх из них $D_4\\ne1$ (" + gh("compute/magnus/README.md", "с сертификатом точности") + ").",
      "Class-$3$ quotients of Rips-type groups of orders $2^{40}$–$2^{107}$: $D_5=1$ in all, $D_4\\ne1$ in three of them (" + gh("compute/magnus/README.md", "with the exactness certificate") + ").",
-     ("[[section.7]], вопрос 1", "[[section.7]], question 1")),
+     ("[[sec:open]], вопрос [[oq:main|#]]", "[[sec:open]], question [[oq:main|#]]")),
     ("c", "Групповой аналог теоремы C при $c=4$: у группы плато $D_6\\ne1$, но $D_7=1$, так что $2c-2$ достигается и аналог, если верен, точен (<a href=\"open.html#q-theoremc\">открытый вопрос</a>).",
      "The group analogue of Theorem C at $c=4$: the plateau group has $D_6\\ne1$ but $D_7=1$, so $2c-2$ is attained and the analogue, if true, is sharp (<a href=\"open.html#q-theoremc\">an open question</a>).",
-     ("[[section.7]], вопрос 3", "[[section.7]], question 3")),
+     ("[[sec:open]], вопрос [[oq:theoremc|#]]", "[[sec:open]], question [[oq:theoremc|#]]")),
 ]
 
 OPEN = [  # (id, ru, en): the id is the anchor on open.html
@@ -787,7 +787,8 @@ def groups(s, k=None):
 KINDS = {"thm": ("Теорема", "Теор.", "Theorem", "Thm."), "prop": ("Предложение", "Предл.", "Proposition", "Prop."),
          "lem": ("Лемма", "Лемма", "Lemma", "Lemma"), "rem": ("Замечание", "Зам.", "Remark", "Rem."),
          "q": ("Вопрос", "Вопрос", "Question", "Question"), "sec": ("Раздел", "§", "Section", "§"),
-         "section": ("Раздел", "§", "Section", "§")}
+         "section": ("Раздел", "§", "Section", "§"),
+         "oq": ("Открытый вопрос", "вопрос", "Open question", "question")}
 
 
 def read_aux(aux, tex):
