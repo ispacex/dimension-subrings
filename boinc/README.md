@@ -8,7 +8,7 @@ one input file in, one output file out, the same bytes on every host.
 
 | File | What it is |
 |---|---|
-| `Dockerfile` | the image: GAP 4.15.1 and ANUPQ 3.3.2, the search code copied in at build time |
+| `Dockerfile` | the image: GAP 4.15.1 and ANUPQ from our fork (correctness fixes + PQ_NOSTAB, pinned commit), the search code copied in at build time |
 | `run_piece.sh` | the entry point inside the image: a piece file → a result file |
 | `buda/Dockerfile.intel`, `buda/Dockerfile.arm`, `buda/main.sh` | the BUDA variants `intel_cpu` and `arm_cpu`: their Dockerfiles (the published image by digest) and the main program BUDA runs |
 | `buda/desc.json` | the BUDA science app as the "Add science app" form records it |
@@ -109,7 +109,7 @@ docker build -f boinc/Dockerfile --build-arg CODE_COMMIT=$(git rev-parse HEAD) -
 ```
 
 * Debian 12 (pinned by digest), GAP 4.15.1 from the release tarball (pinned by SHA-256), built
-  with the system GMP; **ANUPQ 3.3.2** and IO compiled from the same tarball.
+  with the system GMP; IO compiled from the same tarball; **ANUPQ** from our fork ispacex/anupq at a pinned commit (branch `correctness-nostab`: the correctness fixes proposed upstream, gap-packages/anupq #96–#117, plus the `PQ_NOSTAB` switch), replacing the release's 3.3.2 — the fixes change `PqDescendants` output for input groups not in pq's own pcp and for 127 or more automorphisms (#96, #99).
 * Of the 160-odd packages in the tarball only those GAP loads are kept: its start-up set plus
   `LoadPackage("anupq")` (29 packages, listed in `/opt/gap/loaded-packages.txt`). The set of
   loaded packages is what can change method selection and so the bytes of a result; it is the set

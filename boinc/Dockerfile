@@ -1,7 +1,9 @@
 # The image for the volunteer-computing pieces of the 2^11 search (boinc/README.md).
 #
-# GAP 4.15.1 from the release tarball (sha256 pinned), ANUPQ 3.3.2 and IO compiled from that
-# tarball, every other package left out unless GAP loads it on start-up or with ANUPQ (the set of
+# GAP 4.15.1 from the release tarball (sha256 pinned), IO compiled from that tarball, ANUPQ from
+# our fork ispacex/anupq at a pinned commit (sha256 pinned): branch correctness-nostab = the
+# correctness fixes proposed upstream (gap-packages/anupq #96-#117) plus the PQ_NOSTAB switch.
+# Every other package left out unless GAP loads it on start-up or with ANUPQ (the set of
 # loaded packages is what can change a computation; it is kept exactly).  The search code of
 # compute/pq1024 and compute/pq2048 is copied in at build time, so one image = one version of
 # the code.  Build from the repository root:
@@ -16,7 +18,7 @@ FROM ${DEBIAN} AS gap
 ARG GAP_VERSION=4.15.1
 ARG GAP_SHA256=6049d53e99b12e25c2d848db21ac4a06380a46fe4c4157243d556fe06930042c
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      ca-certificates curl build-essential autoconf libgmp-dev zlib1g-dev \
+      ca-certificates curl build-essential autoconf automake libgmp-dev zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /opt
 RUN curl -fsSL -o gap.tar.gz \
@@ -25,9 +27,17 @@ RUN curl -fsSL -o gap.tar.gz \
     && tar xzf gap.tar.gz && rm gap.tar.gz && mv gap-${GAP_VERSION} gap
 WORKDIR /opt/gap
 RUN ./configure --with-gmp=system --with-zlib=system && make -j"$(nproc)"
-# ANUPQ (the pq standalone) and IO: the two compiled packages of the reference runs.
-RUN cd pkg/anupq && grep -q 'Version     := "3.3.2"' PackageInfo.g \
-    && ./configure --with-gaproot=/opt/gap && make -j"$(nproc)" \
+# ANUPQ (the pq standalone) from the fork, in place of the release's 3.3.2, and IO: the two
+# compiled packages of the reference runs.
+ARG ANUPQ_COMMIT=d9163c2267b755823fa1dac0ac4fe64903ef9722
+ARG ANUPQ_SHA256=4b8be624a07d78d142bcc2ab235bdd9ac31fd52326299d68140688b8d0095cfd
+RUN rm -rf pkg/anupq && curl -fsSL -o anupq.tar.gz \
+      "https://codeload.github.com/ispacex/anupq/tar.gz/${ANUPQ_COMMIT}" \
+    && echo "${ANUPQ_SHA256}  anupq.tar.gz" | sha256sum -c - \
+    && tar xzf anupq.tar.gz && rm anupq.tar.gz && mv anupq-${ANUPQ_COMMIT} pkg/anupq \
+    && echo "${ANUPQ_COMMIT}" > pkg/anupq/COMMIT \
+    && cd pkg/anupq && grep -q 'Version     := "3.3.3dev"' PackageInfo.g \
+    && ./autogen.sh && ./configure --with-gaproot=/opt/gap && make -j"$(nproc)" \
     && cd ../io && ./configure --with-gaproot=/opt/gap && make -j"$(nproc)"
 # Keep only the packages that are loaded: GAP's own start-up set plus LoadPackage("anupq").
 # GAPInfo.PackagesLoaded.(name)[1] is the directory each one was loaded from.
@@ -53,11 +63,11 @@ RUN ln -s /opt/gap/gap /usr/local/bin/gap \
       'LoadPackage("anupq");;' \
       'Print(GAPInfo.Version, " anupq ", GAPInfo.PackagesInfo.anupq[1].Version, " packages ", Length(RecNames(GAPInfo.PackagesLoaded)), "\n");' \
       'QUIT;' > /tmp/v.g && gap -q -b /tmp/v.g | tee /tmp/v \
-    && grep -qx "4.15.1 anupq 3.3.2 packages $(wc -l < /opt/gap/loaded-packages.txt)" /tmp/v && rm /tmp/v.g /tmp/v
+    && grep -qx "4.15.1 anupq 3.3.3dev packages $(wc -l < /opt/gap/loaded-packages.txt)" /tmp/v && rm /tmp/v.g /tmp/v
 # The search code: only the .g files the pieces read, not the results.
 COPY compute/pq1024/lib.g compute/pq1024/cover.g /opt/ds/compute/pq1024/
 COPY compute/pq1024/latb/export_pres.g /opt/ds/compute/pq1024/latb/
-COPY compute/pq2048/tree.g compute/pq2048/prune.g compute/pq2048/steps.g compute/pq2048/pcover.g compute/pq2048/expand_compact.g /opt/ds/compute/pq2048/
+COPY compute/pq2048/tree.g compute/pq2048/prune.g compute/pq2048/steps.g compute/pq2048/pcover.g compute/pq2048/children.g compute/pq2048/expand_compact.g /opt/ds/compute/pq2048/
 COPY boinc/run_piece.sh /opt/ds/boinc/run_piece.sh
 ARG CODE_COMMIT=unknown
 RUN echo "$CODE_COMMIT" > /opt/ds/COMMIT && chmod 755 /opt/ds/boinc/run_piece.sh
