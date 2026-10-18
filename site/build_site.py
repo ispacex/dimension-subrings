@@ -164,10 +164,12 @@ def palette(lang):
 FOOTER = {
     "ru": """Ход работы над задачей 20.84 Коуровской тетради: верно ли $D_5(G)\\subseteq\\gamma_4(G)$ для всякой группы.
 Состояние на {date}. Код и данные — <a href="{repo}">ispacex/dimension-subrings</a>.
-Распределённые вычислительные мощности щедро предоставлены <a href="https://boinc.berkeley.edu/">BOINC</a>.""",
+Распределённые вычислительные мощности щедро предоставлены <a href="https://boinc.berkeley.edu/">BOINC</a>.<br>
+Раздел <a href="https://ispacex.github.io/ru/math/">«Математика»</a> на ispacex.github.io.""",
     "en": """Progress on Problem 20.84 of the Kourovka notebook: is $D_5(G)\\subseteq\\gamma_4(G)$ for every group?
 As of {date}. Code and data: <a href="{repo}">ispacex/dimension-subrings</a>.
-Distributed computing power generously provided by <a href="https://boinc.berkeley.edu/">BOINC</a>.""",
+Distributed computing power generously provided by <a href="https://boinc.berkeley.edu/">BOINC</a>.<br>
+Part of <a href="https://ispacex.github.io/math/">Mathematics</a> at ispacex.github.io.""",
 }
 CONTACT = {"ru": 'Связаться с нами: <a href="https://vissi.su">vissi.su</a>',
            "en": 'Contact: <a href="https://vissi.su">vissi.su</a>'}
