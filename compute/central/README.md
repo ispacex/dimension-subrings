@@ -27,7 +27,7 @@ The proofs are on the wiki; everything here is a check of them.
 | `zcent.g` | centres of the 386 candidates of orders 64–512 (wiki 699 §6; job `kimmy/tm/20261018-075032-m183-zcent2-11bce88`) |
 | `gsearch.g` | the condition of Theorem C on the 95 candidates with Z(H) ≅ C4 (wiki 702 §4; job `kimmy/tm/20261018-092230-m184-gsearch-11bce88`: 95 of 95 pass) |
 | `referee183.g` | referee check for MATH-183: ring equality and D_n(Q) = D_n(H) for Q = H∘E, all H of small order; parameters by a header, e.g. `ORDERS := [32];; SMALLALL := 0;; SMALLM := 32;; NMAX := o -> 5;;` (jobs `kimmy/tm/20261018-080659-m183-referee-A16c-nogit`, `…081117-m183-referee-A32b-nogit`; the second also restricted M16 to `s^2 in LCS[2]`) |
-| `decomp.g` | MATH-186: all splittings Q = H'∘E of the 386 candidates, and which of Theorems A, C or Lemma R covers each; sanity groups 32#49, 32#50, 16#13 and D8∘_⟨c⟩M16 first (job `kimmy/tm/20261018-104443-m186-decomp-926dda0`: 20 candidates split, all covered by A or C) |
+| `decomp.g` | MATH-186: all splittings Q = H'∘E of the 386 candidates, and which of Theorems A, C or Lemma R covers each; sanity groups 32#49, 32#50, 16#13 and D8∘_⟨c⟩M16 first (job `kimmy/tm/20261018-111804-m186-decomp-5e5ef77`: 20 candidates split, all covered by A or C; referee recount by another method `kimmy/tm/20261018-105958-m186-referee-609ff71` agrees) |
 
 Run from the repository root, e.g.
 
