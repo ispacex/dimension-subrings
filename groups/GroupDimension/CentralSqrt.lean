@@ -111,13 +111,14 @@ theorem mul_h {k : K} (hk : k ∈ S.H) (x : K) :
 theorem gg_tau : of ℤ S.H S.g * of ℤ S.H S.g * S.τ =
     of ℤ S.H S.s - of ℤ S.H S.g * of ℤ S.H S.g := by
   have e : S.g * S.g * S.c = S.s := by simp only [c]; group
-  rw [τ, mul_sub, mul_one, ← _root_.map_mul, ← _root_.map_mul, ← _root_.map_mul, e]
+  rw [τ, mul_sub, mul_one, ← _root_.map_mul, ← _root_.map_mul, e]
 
 theorem mul_r (x : K) :
     S.xv (S.r * x) = S.xv x * of ℤ S.H S.g + S.yv x * (of ℤ S.H S.g * of ℤ S.H S.g * S.τ) ∧
       S.yv (S.r * x) = S.xv x - S.yv x * of ℤ S.H S.g := by
   obtain ⟨h, hh, hx | hx⟩ := S.gen x <;> subst x
-  · rw [S.central h, xv_hr hh, xv_h hh, yv_hr hh, yv_h hh, zero_mul, add_zero, sub_zero]
+  · rw [S.central h, xv_hr hh, xv_h hh, yv_hr hh, yv_h hh]
+    simp only [zero_mul, add_zero, sub_zero]
     exact ⟨rfl, rfl⟩
   · have hs : h * (S.r * S.r) ∈ S.H := S.H.mul_mem hh S.sq_mem
     have e : S.r * (h * S.r) = h * (S.r * S.r) := by rw [← mul_assoc, S.central h, mul_assoc]
@@ -164,7 +165,7 @@ theorem X_mul_r (y : MonoidAlgebra ℤ K) :
     (f₂ := (AddMonoidHom.mulRight (of ℤ S.H S.g)).comp S.X +
       (AddMonoidHom.mulRight (of ℤ S.H S.g * of ℤ S.H S.g * S.τ)).comp S.Y) (fun x => ?_) y
   simp only [AddMonoidHom.comp_apply, AddMonoidHom.coe_mulLeft, AddMonoidHom.coe_mulRight,
-    AddMonoidHom.add_apply, ← _root_.map_mul, X_of, Y_of]
+    AddMonoidHom.add_apply, ← map_mul (of ℤ K), X_of, Y_of]
   exact (mul_r x).1
 
 theorem Y_mul_r (y : MonoidAlgebra ℤ K) :
@@ -172,7 +173,7 @@ theorem Y_mul_r (y : MonoidAlgebra ℤ K) :
   refine DihedralData.ext_of (f₁ := (S.Y).comp (AddMonoidHom.mulLeft (of ℤ K S.r)))
     (f₂ := S.X - (AddMonoidHom.mulRight (of ℤ S.H S.g)).comp S.Y) (fun x => ?_) y
   simp only [AddMonoidHom.comp_apply, AddMonoidHom.coe_mulLeft, AddMonoidHom.coe_mulRight,
-    AddMonoidHom.sub_apply, ← _root_.map_mul, X_of, Y_of]
+    AddMonoidHom.sub_apply, ← map_mul (of ℤ K), X_of, Y_of]
   exact (mul_r x).2
 
 theorem X_iota (x : MonoidAlgebra ℤ S.H) : S.X (mapDomainRingHom ℤ S.H.subtype x) = x := by
@@ -201,7 +202,7 @@ theorem two_pow_smul_c
     have e : (2 ^ (m + 1) : ℕ) • (of ℤ S.H (S.c ^ 2 ^ j) - 1) =
         (2 ^ m : ℕ) • (of ℤ S.H (S.c ^ 2 ^ (j + 1)) - 1) -
           ((2 ^ m : ℕ) • (of ℤ S.H (S.c ^ 2 ^ j) - 1)) * (of ℤ S.H (S.c ^ 2 ^ j) - 1) := by
-      rw [hsq, smul_mul_assoc, ← smul_sub, pow_succ, mul_comm, mul_smul]
+      rw [hsq, smul_mul_assoc, ← smul_sub, pow_succ, mul_smul]
       congr 1
       rw [two_smul]; noncomm_ring
     rw [e]
