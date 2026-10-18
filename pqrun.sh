@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
-# MATH-72/74: build pq from ispacex/anupq master (anupq-src/, the MATH-98 fix), then run "$@" with
+# MATH-72/74: build pq from ispacex/anupq master with PQ_NOSTAB (the MATH-98 fix), then run "$@" with
 # GAP = a wrapper that reads pqbin.g (ANUPQData.binary := the patched pq) before its stdin.
 set -u
 top=$(pwd)
-s=$JOB_ROOT/pqfork; rm -rf "$s"; cp -r "$top/anupq-src" "$s"; cd "$s"
+# anupq-src/ (a local copy) if present, else ispacex/anupq branch nostab (master + PQ_NOSTAB, 3ea52b4)
+s=$JOB_ROOT/pqfork; rm -rf "$s"
+if [ -d "$top/anupq-src" ]; then cp -r "$top/anupq-src" "$s"
+else git clone -q -b nostab https://github.com/ispacex/anupq "$s" || exit 1; fi
+cd "$s"
 ( ./autogen.sh && ./configure --with-gaproot="$JOB_CACHE/gap" && make -j2 ) > "$JOB_OUT/build.log" 2>&1 || { tail -30 "$JOB_OUT/build.log"; exit 1; }
 pq=$(ls "$s"/bin/*/pq | head -1); echo "pq: $pq"
 # pq-nostab: the same pq with PQ_NOSTAB set (no automorphisms of the descendants; tree.g, leaves)
