@@ -313,10 +313,9 @@ theorem sqrt_hc (g : S.H)
     of ℤ S.fK.range ((S.sqrt g).c ^ 2 ^ j) - 1 ∈ augIdeal S.fK.range ^ (j + 2) := by
   have := mapDomain_mem_augIdeal_pow S.φ.toMonoidHom (j + 2) (hc j)
   rw [_root_.map_sub, _root_.map_one, mapDomainRingHom_of] at this
-  have e : S.φ (g⁻¹ * g⁻¹ * S.s) ^ 2 ^ j = S.φ.toMonoidHom ((g⁻¹ * g⁻¹ * S.s) ^ 2 ^ j) :=
-    (map_pow S.φ.toMonoidHom _ _).symm
-  rw [sqrt_c, e]
-  exact this
+  rw [sqrt_c]
+  convert this using 3
+  exact (map_pow S.φ.toMonoidHom _ _).symm
 
 set_option synthInstance.maxHeartbeats 200000 in
 set_option maxHeartbeats 1000000 in
