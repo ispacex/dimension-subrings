@@ -201,6 +201,38 @@ def url(lang, fn):
     return BASE + ("ru/" if lang == "ru" else "") + ("" if fn == "index.html" else fn)
 
 
+# Link previews (Telegram and the like): Open Graph tags on every page. The image is one card per
+# language, site/og-<lang>.png, drawn by site/og_card.py (run it again when the title changes); the
+# description is the page's first paragraph when it has no formulas, else the site's.
+SITE_DESC = {"ru": "Коуровская тетрадь, задача 20.84: размерные подгруппы и нижний центральный ряд. "
+                   "Вычисления, доказательства, черновик статьи.",
+             "en": "Kourovka notebook, Problem 20.84: dimension subgroups and the lower central series. "
+                   "Computations, proofs and a paper draft."}
+
+
+def blurb(lang, body):
+    m = re.search(r"<p>(.*?)</p>", body, re.S)
+    text = html.unescape(re.sub(r"<[^>]+>", "", m.group(1))) if m else ""
+    text = " ".join(text.split())
+    if len(text) < 60 or "$" in text or "\\" in text:
+        return SITE_DESC[lang]
+    return text if len(text) <= 200 else text[:200].rsplit(" ", 1)[0] + "…"
+
+
+def og_tags(lang, fn, title, desc):
+    d = html.escape(desc)
+    return (f'\n<meta name="description" content="{d}">'
+            f'\n<meta property="og:type" content="website">'
+            f'\n<meta property="og:site_name" content="{html.escape(plain(SITE_TITLE[lang]))}">'
+            f'\n<meta property="og:title" content="{html.escape(title)}">'
+            f'\n<meta property="og:description" content="{d}">'
+            f'\n<meta property="og:url" content="{ORIGIN}{url(lang, fn)}">'
+            f'\n<meta property="og:locale" content="{"ru_RU" if lang == "ru" else "en_US"}">'
+            f'\n<meta property="og:image" content="{ORIGIN}{BASE}og-{lang}.png">'
+            f'\n<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">'
+            f'\n<meta name="twitter:card" content="summary_large_image">')
+
+
 PLACEHOLDER = {"ru": "Куда идём? например: 3^9, Тахара, ранг 5", "en": "Where to? for example: 3^9, Tahara, rank 5"}
 
 
@@ -269,7 +301,7 @@ def page(lang, fn, title, body, date, contact=False):
     doc = f"""<!doctype html>
 <html lang="{lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 {THEME_HEAD}
-<title>{html.escape(plain(title))} — {html.escape(plain(SITE_TITLE[lang]))}</title>{alt}
+<title>{html.escape(plain(title))} — {html.escape(plain(SITE_TITLE[lang]))}</title>{alt}{og_tags(lang, fn, plain(title) if fn == "index.html" else f"{plain(title)} — {plain(SITE_TITLE[lang])}", blurb(lang, body))}
 <style>{CSS}</style>{KATEX}</head>
 <body><header><div class="wrap"><div class="top"><a class="title" href="index.html">{SITE_TITLE[lang]}</a>
 <div class="tools"><span class="pal"></span>{theme_switch(lang)}{switch}</div></div>
@@ -319,7 +351,7 @@ def viewer(lang):
               + (here + there if lang == "en" else there + here) + "</span>")
     paper_dir = "paper/" if lang == "en" else "../paper/"
     title = ("Черновик статьи" if lang == "ru" else "Paper draft") + " — " + plain(SITE_TITLE[lang])
-    fill = {"LANG": lang, "TITLE": html.escape(title), "ALT": alt, "THEME_HEAD": THEME_HEAD, "THEME_BODY": THEME_BODY,
+    fill = {"LANG": lang, "TITLE": html.escape(title), "ALT": alt + og_tags(lang, "viewer.html", title, SITE_DESC[lang]), "THEME_HEAD": THEME_HEAD, "THEME_BODY": THEME_BODY,
             "TOKENS": CSS.split("* { box-sizing")[0], "THEME_SWITCH": theme_switch(lang), "LANG_SWITCH": switch,
             "SITE": html.escape(plain(SITE_TITLE[lang])), "PAPER": "Черновик" if lang == "ru" else "Paper",
             "BACK_TITLE": "К странице статьи" if lang == "ru" else "Back to the paper page",
@@ -956,6 +988,8 @@ def main():
         viewer(lang)
     nblocks = write_search({h: i for i, (h, _, _) in enumerate(NAV)})
     print("search index:", sum(1 for p in PAGES if p[1] != "search.html"), "pages,", nblocks, "blocks")
+    for lang in LANGS:
+        shutil.copy(HERE / f"og-{lang}.png", OUT / f"og-{lang}.png")
     (OUT / ".nojekyll").write_text("")
     print("site written to", OUT, "| paper of", pdate, "| pages:", pdfs, "| paper links:", len(USED), "labels",
           "| code at", PIN[:7])
