@@ -44,7 +44,7 @@ open GroupDimension
 #print axioms GroupDimension.CentralRoot.q_iota
 #print axioms GroupDimension.CentralRoot.of_r_mem_center
 #print axioms GroupDimension.CentralRoot.of_zpow_mem_center
-#print axioms GroupDimension.CentralRoot.zpow_sub_one
+#print axioms GroupDimension.CentralRoot.of_zpow_sub_one_eq
 #print axioms GroupDimension.CentralRoot.gen_mem_W
 #print axioms GroupDimension.CentralRoot.sub_one_mem_center
 #print axioms GroupDimension.CentralRoot.augIdeal_induction

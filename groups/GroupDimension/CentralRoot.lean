@@ -58,11 +58,12 @@ theorem decomp (k : K) : ∃ h ∈ S.H, ∃ l : ℤ, k = h * S.r ^ l := by
   obtain ⟨l, hl⟩ := S.gen k
   exact ⟨_, hl, l, by rw [mul_assoc, ← zpow_add, neg_add_cancel, zpow_zero, mul_one]⟩
 
-/-- The retraction `h r^l ↦ h g^l` on elements. -/
+/-- An exponent `l` with `k r^(-l) ∈ H`, chosen once and for all. -/
 noncomputable def ell (k : K) : ℤ := Classical.choose (S.gen k)
 
 theorem ell_spec (k : K) : k * S.r ^ (-S.ell k) ∈ S.H := Classical.choose_spec (S.gen k)
 
+/-- The retraction `h r^l ↦ h g^l` on elements (well defined by `retr_spec`). -/
 noncomputable def retr (k : K) : S.H :=
   ⟨k * S.r ^ (-S.ell k), S.ell_spec k⟩ * S.g ^ S.ell k
 
@@ -185,7 +186,7 @@ theorem of_zpow_mem_center (l : ℤ) :
   | hadd y z hy hz => rw [add_mul, hy, hz, mul_add]
 
 /-- `r^l - 1 = u (r - 1)` with `u` central. -/
-theorem zpow_sub_one (l : ℤ) : ∃ u ∈ Subring.center (MonoidAlgebra ℤ K),
+theorem of_zpow_sub_one_eq (l : ℤ) : ∃ u ∈ Subring.center (MonoidAlgebra ℤ K),
     of ℤ K (S.r ^ l) - 1 = u * (of ℤ K S.r - 1) := by
   have hr := S.of_r_mem_center
   have hri := S.of_zpow_mem_center (-1)
@@ -212,7 +213,6 @@ theorem zpow_sub_one (l : ℤ) : ∃ u ∈ Subring.center (MonoidAlgebra ℤ K),
     noncomm_ring
 
 /-! ## The filtration -/
-
 
 /-- The left ideal of `ℤ[K]` spanned by the `x (r - 1)^i`, `x ∈ Δ(H)^(n-i)`, `i ≤ n`. -/
 noncomputable def W (n : ℕ) : Ideal (MonoidAlgebra ℤ K) :=
@@ -253,7 +253,7 @@ theorem W_mul_augIdeal (n : ℕ) {a b : MonoidAlgebra ℤ K} (ha : a ∈ S.W n)
       (fun y z hy hz => by simpa [mul_add] using add_mem hy hz)
     intro k
     obtain ⟨h, hh, l, rfl⟩ := S.decomp k
-    obtain ⟨u, hu, hul⟩ := S.zpow_sub_one l
+    obtain ⟨u, hu, hul⟩ := S.of_zpow_sub_one_eq l
     have hc := S.sub_one_mem_center
     have hcpow : (of ℤ K S.r - 1) ^ i ∈ Subring.center (MonoidAlgebra ℤ K) :=
       Subring.pow_mem _ hc i
@@ -382,7 +382,9 @@ end CentralRoot
 
 /-- **Lemma 5.9 as stated in the paper.** `K = H⟨r⟩` with `r` central, `|K : H| = m`
 (i.e. `r^d ∈ H ↔ m ∣ d`; only `→` is needed), and `r^m = g^m` for some `g ∈ H`, not necessarily
-central. Then `ℤ[H] ∩ Δ(K)^n = Δ(H)^n` for all `n` and `D_n(K) = D_n(H)` for `n ≥ 2`. -/
+central. Then `ℤ[H] ∩ Δ(K)^n = Δ(H)^n` for all `n` and `D_n(K) = D_n(H)` for `n ≥ 2`.
+The other direction of `|K : H| = m` (`m ∣ d → r^d ∈ H`) follows from `root`; `m = 0` is allowed
+and covers `K ≅ H × ℤ`. -/
 theorem D_n_eq_of_index {K : Type*} [Group K] (H : Subgroup K) (r : K) (g : H) (m : ℕ)
     (central : ∀ x : K, r * x = x * r) (gen : ∀ k : K, ∃ l : ℤ, k * r ^ (-l) ∈ H)
     (index : ∀ d : ℤ, r ^ d ∈ H → (m : ℤ) ∣ d) (root : r ^ m = (g : K) ^ m) :
