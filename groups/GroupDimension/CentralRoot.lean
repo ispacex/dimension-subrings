@@ -267,9 +267,9 @@ theorem W_mul_augIdeal (n : ℕ) {a b : MonoidAlgebra ℤ K} (ha : a ∈ S.W n)
     · -- x (r-1)^i (h-1) r^l = r^l · [x (h-1)] (r-1)^i
       have e : S.ι x * (of ℤ K S.r - 1) ^ i * (S.ι (of ℤ S.H ⟨h, hh⟩ - 1) * of ℤ K (S.r ^ l)) =
           of ℤ K (S.r ^ l) * (S.ι (x * (of ℤ S.H ⟨h, hh⟩ - 1)) * (of ℤ K S.r - 1) ^ i) := by
-        rw [_root_.map_mul, mul_assoc, ← mul_assoc ((of ℤ K S.r - 1) ^ i),
-          ← center_comm hcpow, mul_assoc, center_comm (S.of_zpow_mem_center l)]
-        noncomm_ring
+        rw [_root_.map_mul, ← center_comm (S.of_zpow_mem_center l), mul_assoc,
+          ← mul_assoc ((of ℤ K S.r - 1) ^ i), ← center_comm hcpow]
+        simp only [mul_assoc]
       rw [e]
       refine Ideal.mul_mem_left _ _ (S.gen_mem_W (by omega) ?_)
       have := mul_mem_augIdeal_pow hx
@@ -299,8 +299,9 @@ theorem augIdeal_pow_le_W (n : ℕ) : augIdeal K ^ n ≤ S.W n := by
   induction n with
   | zero =>
     rw [Submodule.pow_zero, Ideal.one_eq_top, top_le_iff, Ideal.eq_top_iff_one]
-    have := S.gen_mem_W (n := 0) (i := 0) le_rfl (x := 1) (by simp [Submodule.pow_zero, Ideal.one_eq_top])
-    simpa using this
+    have := S.gen_mem_W (n := 0) (i := 0) le_rfl (x := 1)
+      (by rw [Submodule.pow_zero, Ideal.one_eq_top]; exact Submodule.mem_top)
+    rwa [_root_.map_one, pow_zero, mul_one] at this
   | succ n ih =>
     rw [Submodule.pow_succ, Ideal.mul_le]
     intro a ha b hb
@@ -372,6 +373,7 @@ theorem D_eq (n : ℕ) (hn : 2 ≤ n) : D n K = (D n S.H).map S.H.subtype := by
     rw [D_two, lowerCentralSeries_one] at this
     exact S.commutator_le this
   refine ⟨⟨k, hk2⟩, ?_, rfl⟩
+  show (⟨k, hk2⟩ : S.H) ∈ D n S.H
   rw [mem_D, ← S.iota_mem_augIdeal_pow_iff, _root_.map_sub, _root_.map_one, mapDomainRingHom_of]
   exact hk
 
