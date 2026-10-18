@@ -466,7 +466,11 @@ TIMELINE = [  # (iso date, [(ru, en)])
         ("На бумаге: $D_5=\\gamma_5$, если у $Q/\\gamma_2$ не больше одного инварианта больше $3$ (в том числе $C_9\\times C_3^{s-1}$); независимая рецензия ошибок не нашла.",
          "On paper: $D_5=\\gamma_5$ when $Q/\\gamma_2$ has at most one invariant larger than $3$ (including $C_9\\times C_3^{s-1}$); an independent review found no errors."),
         ("Литература: что на самом деле анонсировал Тахара (с. 173) и поиск его отдельной работы.",
-         "References: what Tahara actually announced (p. 173), and the search for his separate paper.")]),
+         "References: what Tahara actually announced (p. 173), and the search for his separate paper."),
+        ("Проверка вычислением для $C_9\\times C_3^{s-1}$ и $C_{27},C_{81}\\times C_3^{s-1}$: $2\\,057$ групп, $4\\,537$ элементов $z$, ни один не лежит в $D_5$.",
+         "Computer check for $C_9\\times C_3^{s-1}$ and $C_{27},C_{81}\\times C_3^{s-1}$: $2\\,057$ groups, $4\\,537$ elements $z$, none in $D_5$."),
+        ("Аудит ANUPQ (<a href=\"https://ispacex.github.io/gap/\">ispacex.github.io/gap</a>): шаг порождения для $3^9$ повторён на исправленной версии, результат совпал побайтно.",
+         "ANUPQ audit (<a href=\"https://ispacex.github.io/gap/\">ispacex.github.io/gap</a>): the $3^9$ descendant step was repeated with the fixed version, and the result is byte-identical.")]),
 ]
 
 
