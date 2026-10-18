@@ -5,7 +5,8 @@ import GroupDimension.CentralRoot
 
 Let `Q` be a group, `H ≤ Q`, and `a, b ∈ Q` involutions commuting with every element of `H`,
 with `t = [a, b] ∈ H`, `Q = H ⊔ Ha ⊔ Hb ⊔ Hab` (that is, `Q = H·⟨a, b⟩` and `a, b, ab ∉ H`).
-This is `Q = H ∘ D₈`, glued along `Z(D₈) = ⟨t⟩`. If `t ∈ γ₂(H)`, then
+This is `Q = H ∘ D₈`, glued along `Z(D₈) = ⟨t⟩` (for `t = 1` it is `H × C₂²`, also
+covered). If `t ∈ γ₂(H)`, then
 
   `ℤ[H] ∩ Δ(Q)^n = Δ(H)^n` for all `n`, and `D_n(Q) = D_n(H)` for `n ≥ 2`.
 
@@ -14,8 +15,9 @@ The proof is the paper's. The module `N = ℤ[Q/⟨b⟩]` is free over `ℤ[H]` 
 `X(h e) = h` and `Y(h e) = h` or `0` according as `e ∈ {a, ab}` or `e ∈ {1, b}`. Left
 multiplication acts by `a : (x, y) ↦ (x, x - y)` and `b : (x, y) ↦ (x + yτ, yt)`,
 `τ = t - 1`. With `B_n` the left ideal spanned by the `2^(n-1-i) x`, `x ∈ Δ(H)^i`, the set
-`{u | X u ∈ Δ(H)^n, Y u ∈ B_n}` is a left ideal containing `Δ(Q)^n`; the key input is
-`2^k τ ∈ Δ(H)^(2k+2)`, from `τ² = -2τ` and `τ ∈ Δ(H)^2`.
+`{u | X u ∈ Δ(H)^n, Y u ∈ B_n}` is a left ideal containing `Δ(Q)^n`; the input is
+`2^k τ ∈ Δ(H)^(k+2)`, which holds with room to spare (`2^k τ ∈ Δ(H)^(2k+2)`, from `τ² = -2τ` and
+`τ ∈ Δ(H)^2`).
 
 MATH-206; the paper's statement is `D_n_eq_of_dihedral`.
 -/
@@ -53,7 +55,8 @@ variable {G : Type*} [Group G]
 
 variable (G) in
 /-- The left ideal `B_n` of `ℤ[G]` spanned by the `2^(n-1-i) x` with `x ∈ Δ(G)^i`, `i ≤ n`.
-It contains `Δ(G)^n` and `2^(n-1) ℤ[G]`. -/
+It contains `Δ(G)^(n-1)` (the terms `i = n - 1, n` both have coefficient `1`) and
+`2^(n-1) ℤ[G]`. -/
 noncomputable def Bfilt (n : ℕ) : Ideal (MonoidAlgebra ℤ G) :=
   Ideal.span {y | ∃ i ≤ n, ∃ x ∈ augIdeal G ^ i, y = (2 ^ (n - 1 - i) : ℕ) • x}
 
@@ -292,25 +295,25 @@ theorem rho_mem (g : Q) : S.rho g ∈ S.H := by
 
 variable (S) in
 /-- The retraction `Q → H`. -/
-noncomputable def r (g : Q) : S.H := ⟨S.rho g, rho_mem g⟩
+noncomputable def ret (g : Q) : S.H := ⟨S.rho g, rho_mem g⟩
 
 open Classical in
 variable (S) in
 /-- The second coordinate of `g e₀`: `h` for `g = ha, hab`, and `0` for `g = h, hb`. -/
-noncomputable def yv (g : Q) : MonoidAlgebra ℤ S.H := if S.IsA g then of ℤ S.H (S.r g) else 0
+noncomputable def yv (g : Q) : MonoidAlgebra ℤ S.H := if S.IsA g then of ℤ S.H (S.ret g) else 0
 
-theorem r_h {h : Q} (hh : h ∈ S.H) : S.r h = ⟨h, hh⟩ := Subtype.ext (rho_h hh)
-theorem r_ha {h : Q} (hh : h ∈ S.H) : S.r (h * S.a) = ⟨h, hh⟩ := Subtype.ext (rho_ha hh)
-theorem r_hb {h : Q} (hh : h ∈ S.H) : S.r (h * S.b) = ⟨h, hh⟩ := Subtype.ext (rho_hb hh)
-theorem r_hab {h : Q} (hh : h ∈ S.H) : S.r (h * (S.a * S.b)) = ⟨h, hh⟩ :=
+theorem ret_h {h : Q} (hh : h ∈ S.H) : S.ret h = ⟨h, hh⟩ := Subtype.ext (rho_h hh)
+theorem ret_ha {h : Q} (hh : h ∈ S.H) : S.ret (h * S.a) = ⟨h, hh⟩ := Subtype.ext (rho_ha hh)
+theorem ret_hb {h : Q} (hh : h ∈ S.H) : S.ret (h * S.b) = ⟨h, hh⟩ := Subtype.ext (rho_hb hh)
+theorem ret_hab {h : Q} (hh : h ∈ S.H) : S.ret (h * (S.a * S.b)) = ⟨h, hh⟩ :=
   Subtype.ext (rho_hab hh)
 
 theorem yv_h {h : Q} (hh : h ∈ S.H) : S.yv h = 0 := by simp [yv, isA_h hh]
 theorem yv_ha {h : Q} (hh : h ∈ S.H) : S.yv (h * S.a) = of ℤ S.H ⟨h, hh⟩ := by
-  simp [yv, isA_ha hh, r_ha hh]
+  simp [yv, isA_ha hh, ret_ha hh]
 theorem yv_hb {h : Q} (hh : h ∈ S.H) : S.yv (h * S.b) = 0 := by simp [yv, isA_hb hh]
 theorem yv_hab {h : Q} (hh : h ∈ S.H) : S.yv (h * (S.a * S.b)) = of ℤ S.H ⟨h, hh⟩ := by
-  simp [yv, isA_hab hh, r_hab hh]
+  simp [yv, isA_hab hh, ret_hab hh]
 
 /-! ## How left multiplication by `h`, `a`, `b` acts on `(r, yv)` -/
 
@@ -318,58 +321,59 @@ theorem of_mk_mul {h k : Q} (hh : h ∈ S.H) (hk : k ∈ S.H) :
     of ℤ S.H ⟨k, hk⟩ * of ℤ S.H ⟨h, hh⟩ = of ℤ S.H ⟨k * h, S.H.mul_mem hk hh⟩ := by
   rw [← _root_.map_mul]; rfl
 
-theorem r_mul_h {k : Q} (hk : k ∈ S.H) (g : Q) :
-    of ℤ S.H (S.r (k * g)) = of ℤ S.H ⟨k, hk⟩ * of ℤ S.H (S.r g) ∧
+theorem ret_mul_h {k : Q} (hk : k ∈ S.H) (g : Q) :
+    of ℤ S.H (S.ret (k * g)) = of ℤ S.H ⟨k, hk⟩ * of ℤ S.H (S.ret g) ∧
       S.yv (k * g) = of ℤ S.H ⟨k, hk⟩ * S.yv g := by
   have hkh : ∀ {h}, h ∈ S.H → k * h ∈ S.H := fun hh => S.H.mul_mem hk hh
   obtain ⟨h, hh, hg | hg | hg | hg⟩ := S.gen g <;> subst g
-  · rw [r_h (hkh hh), r_h hh, yv_h (hkh hh), yv_h hh, of_mk_mul hh hk, mul_zero]
+  · rw [ret_h (hkh hh), ret_h hh, yv_h (hkh hh), yv_h hh, of_mk_mul hh hk, mul_zero]
     exact ⟨rfl, rfl⟩
-  · rw [← mul_assoc, r_ha (hkh hh), r_ha hh, yv_ha (hkh hh), yv_ha hh, of_mk_mul hh hk]
+  · rw [← mul_assoc, ret_ha (hkh hh), ret_ha hh, yv_ha (hkh hh), yv_ha hh, of_mk_mul hh hk]
     exact ⟨rfl, rfl⟩
-  · rw [← mul_assoc, r_hb (hkh hh), r_hb hh, yv_hb (hkh hh), yv_hb hh, of_mk_mul hh hk, mul_zero]
+  · rw [← mul_assoc, ret_hb (hkh hh), ret_hb hh, yv_hb (hkh hh), yv_hb hh, of_mk_mul hh hk,
+      mul_zero]
     exact ⟨rfl, rfl⟩
-  · rw [← mul_assoc, r_hab (hkh hh), r_hab hh, yv_hab (hkh hh), yv_hab hh, of_mk_mul hh hk]
+  · rw [← mul_assoc, ret_hab (hkh hh), ret_hab hh, yv_hab (hkh hh), yv_hab hh, of_mk_mul hh hk]
     exact ⟨rfl, rfl⟩
 
-theorem r_mul_a (g : Q) :
-    S.r (S.a * g) = S.r g ∧ S.yv (S.a * g) = of ℤ S.H (S.r g) - S.yv g := by
+theorem ret_mul_a (g : Q) :
+    S.ret (S.a * g) = S.ret g ∧ S.yv (S.a * g) = of ℤ S.H (S.ret g) - S.yv g := by
   obtain ⟨h, hh, hg | hg | hg | hg⟩ := S.gen g <;> subst g
-  · rw [S.comm_a h hh, r_ha hh, r_h hh, yv_ha hh, yv_h hh, sub_zero]
+  · rw [S.comm_a h hh, ret_ha hh, ret_h hh, yv_ha hh, yv_h hh, sub_zero]
     exact ⟨rfl, rfl⟩
   · have e : S.a * (h * S.a) = h := by
       rw [← mul_assoc, S.comm_a h hh, mul_assoc, S.ha, mul_one]
-    rw [e, r_h hh, r_ha hh, yv_h hh, yv_ha hh, sub_self]
+    rw [e, ret_h hh, ret_ha hh, yv_h hh, yv_ha hh, sub_self]
     exact ⟨rfl, rfl⟩
   · have e : S.a * (h * S.b) = h * (S.a * S.b) := by rw [← mul_assoc, S.comm_a h hh, mul_assoc]
-    rw [e, r_hab hh, r_hb hh, yv_hab hh, yv_hb hh, sub_zero]
+    rw [e, ret_hab hh, ret_hb hh, yv_hab hh, yv_hb hh, sub_zero]
     exact ⟨rfl, rfl⟩
   · have e : S.a * (h * (S.a * S.b)) = h * S.b := by
       rw [← mul_assoc, S.comm_a h hh, mul_assoc, ← mul_assoc S.a, S.ha, one_mul]
-    rw [e, r_hb hh, r_hab hh, yv_hb hh, yv_hab hh, sub_self]
+    rw [e, ret_hb hh, ret_hab hh, yv_hb hh, yv_hab hh, sub_self]
     exact ⟨rfl, rfl⟩
 
-theorem r_mul_b (g : Q) :
-    of ℤ S.H (S.r (S.b * g)) = of ℤ S.H (S.r g) + S.yv g * S.τ ∧
+theorem ret_mul_b (g : Q) :
+    of ℤ S.H (S.ret (S.b * g)) = of ℤ S.H (S.ret g) + S.yv g * S.τ ∧
       S.yv (S.b * g) = S.yv g * of ℤ S.H S.t := by
   have ht : ∀ {h}, (hh : h ∈ S.H) → of ℤ S.H ⟨h, hh⟩ * of ℤ S.H S.t =
       of ℤ S.H ⟨h * S.t, S.H.mul_mem hh S.t.2⟩ := fun hh => by rw [← _root_.map_mul]; rfl
   obtain ⟨h, hh, hg | hg | hg | hg⟩ := S.gen g <;> subst g
-  · rw [S.comm_b h hh, r_hb hh, r_h hh, yv_hb hh, yv_h hh, zero_mul, zero_mul, add_zero]
+  · rw [S.comm_b h hh, ret_hb hh, ret_h hh, yv_hb hh, yv_h hh, zero_mul, zero_mul, add_zero]
     exact ⟨rfl, rfl⟩
   · have hht : h * S.t ∈ S.H := S.H.mul_mem hh S.t.2
     have e : S.b * (h * S.a) = (h * S.t) * (S.a * S.b) := by
       rw [← mul_assoc, S.comm_b h hh, mul_assoc, S.ba, ← mul_assoc]
-    rw [e, r_hab hht, r_ha hh, yv_hab hht, yv_ha hh, ht hh, τ, mul_sub, mul_one, ht hh]
+    rw [e, ret_hab hht, ret_ha hh, yv_hab hht, yv_ha hh, ht hh, τ, mul_sub, mul_one, ht hh]
     exact ⟨by abel, rfl⟩
   · have e : S.b * (h * S.b) = h := by
       rw [← mul_assoc, S.comm_b h hh, mul_assoc, S.hb, mul_one]
-    rw [e, r_h hh, r_hb hh, yv_h hh, yv_hb hh, zero_mul, zero_mul, add_zero]
+    rw [e, ret_h hh, ret_hb hh, yv_h hh, yv_hb hh, zero_mul, zero_mul, add_zero]
     exact ⟨rfl, rfl⟩
   · have hht : h * S.t ∈ S.H := S.H.mul_mem hh S.t.2
     have e : S.b * (h * (S.a * S.b)) = (h * S.t) * S.a := by
       rw [← mul_assoc, S.comm_b h hh, mul_assoc, S.bab, ← mul_assoc]
-    rw [e, r_ha hht, r_hab hh, yv_ha hht, yv_hab hh, ht hh, τ, mul_sub, mul_one, ht hh]
+    rw [e, ret_ha hht, ret_hab hh, yv_ha hht, yv_hab hh, ht hh, τ, mul_sub, mul_one, ht hh]
     exact ⟨by abel, rfl⟩
 
 /-! ## The coordinates `X, Y : ℤ[Q] → ℤ[H]` -/
@@ -378,13 +382,13 @@ variable (S)
 
 /-- `X(h e) = h`. -/
 noncomputable def X : MonoidAlgebra ℤ Q →+ MonoidAlgebra ℤ S.H :=
-  MonoidAlgebra.liftNC (Int.castAddHom _) (fun g => of ℤ S.H (S.r g))
+  MonoidAlgebra.liftNC (Int.castAddHom _) (fun g => of ℤ S.H (S.ret g))
 
 /-- `Y(h e) = h` for `e ∈ {a, ab}`, `0` for `e ∈ {1, b}`. -/
 noncomputable def Y : MonoidAlgebra ℤ Q →+ MonoidAlgebra ℤ S.H :=
   MonoidAlgebra.liftNC (Int.castAddHom _) S.yv
 
-theorem X_of (g : Q) : S.X (of ℤ Q g) = of ℤ S.H (S.r g) := by
+theorem X_of (g : Q) : S.X (of ℤ Q g) = of ℤ S.H (S.ret g) := by
   simp [X, MonoidAlgebra.of_apply, MonoidAlgebra.liftNC_single]
 
 theorem Y_of (g : Q) : S.Y (of ℤ Q g) = S.yv g := by
@@ -404,27 +408,27 @@ theorem X_mul_h {k : Q} (hk : k ∈ S.H) (y : MonoidAlgebra ℤ Q) :
   refine ext_of (f₁ := (S.X).comp (AddMonoidHom.mulLeft (of ℤ Q k)))
     (f₂ := (AddMonoidHom.mulLeft (of ℤ S.H ⟨k, hk⟩)).comp S.X) (fun g => ?_) y
   simp only [AddMonoidHom.comp_apply, AddMonoidHom.coe_mulLeft, ← _root_.map_mul, X_of]
-  exact (r_mul_h hk g).1.trans (_root_.map_mul _ _ _).symm
+  exact (ret_mul_h hk g).1.trans (_root_.map_mul _ _ _).symm
 
 theorem Y_mul_h {k : Q} (hk : k ∈ S.H) (y : MonoidAlgebra ℤ Q) :
     S.Y (of ℤ Q k * y) = of ℤ S.H ⟨k, hk⟩ * S.Y y := by
   refine ext_of (f₁ := (S.Y).comp (AddMonoidHom.mulLeft (of ℤ Q k)))
     (f₂ := (AddMonoidHom.mulLeft (of ℤ S.H ⟨k, hk⟩)).comp S.Y) (fun g => ?_) y
   simp only [AddMonoidHom.comp_apply, AddMonoidHom.coe_mulLeft, ← _root_.map_mul, Y_of]
-  exact (r_mul_h hk g).2
+  exact (ret_mul_h hk g).2
 
 theorem X_mul_a (y : MonoidAlgebra ℤ Q) : S.X (of ℤ Q S.a * y) = S.X y := by
   refine ext_of (f₁ := (S.X).comp (AddMonoidHom.mulLeft (of ℤ Q S.a))) (f₂ := S.X)
     (fun g => ?_) y
   simp only [AddMonoidHom.comp_apply, AddMonoidHom.coe_mulLeft, ← _root_.map_mul, X_of,
-    (r_mul_a g).1]
+    (ret_mul_a g).1]
 
 theorem Y_mul_a (y : MonoidAlgebra ℤ Q) : S.Y (of ℤ Q S.a * y) = S.X y - S.Y y := by
   refine ext_of (f₁ := (S.Y).comp (AddMonoidHom.mulLeft (of ℤ Q S.a))) (f₂ := S.X - S.Y)
     (fun g => ?_) y
   simp only [AddMonoidHom.comp_apply, AddMonoidHom.coe_mulLeft, ← _root_.map_mul, Y_of, X_of,
     AddMonoidHom.sub_apply]
-  exact (r_mul_a g).2
+  exact (ret_mul_a g).2
 
 theorem X_mul_b (y : MonoidAlgebra ℤ Q) :
     S.X (of ℤ Q S.b * y) = S.X y + S.Y y * S.τ := by
@@ -432,7 +436,7 @@ theorem X_mul_b (y : MonoidAlgebra ℤ Q) :
     (f₂ := S.X + (AddMonoidHom.mulRight S.τ).comp S.Y) (fun g => ?_) y
   simp only [AddMonoidHom.comp_apply, AddMonoidHom.coe_mulLeft, AddMonoidHom.coe_mulRight,
     AddMonoidHom.add_apply, ← _root_.map_mul, Y_of, X_of]
-  exact (r_mul_b g).1
+  exact (ret_mul_b g).1
 
 theorem Y_mul_b (y : MonoidAlgebra ℤ Q) :
     S.Y (of ℤ Q S.b * y) = S.Y y * of ℤ S.H S.t := by
@@ -440,7 +444,7 @@ theorem Y_mul_b (y : MonoidAlgebra ℤ Q) :
     (f₂ := (AddMonoidHom.mulRight (of ℤ S.H S.t)).comp S.Y) (fun g => ?_) y
   simp only [AddMonoidHom.comp_apply, AddMonoidHom.coe_mulLeft, AddMonoidHom.coe_mulRight,
     ← _root_.map_mul, Y_of]
-  exact (r_mul_b g).2
+  exact (ret_mul_b g).2
 
 theorem X_iota (x : MonoidAlgebra ℤ S.H) : S.X (mapDomainRingHom ℤ S.H.subtype x) = x := by
   induction x using CentralRoot.induction_of with

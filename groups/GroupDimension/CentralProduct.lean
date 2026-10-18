@@ -7,14 +7,17 @@ Let `Q` be a group, `H ≤ Q`, and `α, β ∈ Q` commuting with every element o
 `Q = H ⊔ Hα ⊔ Hβ ⊔ Hαβ`, `s = α² ∈ H`, `β² = s^e` and `t = [α, β] ∈ γ₂(H)`. This covers
 `H ∘ D₈` (`s = 1`), `H ∘ Q₈` (`s = t`, `e = 1`) and `H ∘ M_{2^{k+2}}` (`α = a`, `β = b`,
 `s = a²`, `e = 0`). If for some `g ∈ H` the element `c = g⁻² s` has
-`c^(2^j) - 1 ∈ Δ(H)^(j+2)` for all `j`, then `D_n(Q) = D_n(H)` for `n ≥ 2`.
+`c^(2^j) - 1 ∈ Δ(H)^(j+2)` for all `j`, then `ℤ[H] ∩ Δ(Q)^n = Δ(H)^n` for all `n` and
+`D_n(Q) = D_n(H)` for `n ≥ 2`. (Getting from `(H × E)/{(φ(z), z⁻¹)}` to this normal form uses
+`H ∩ E = Z(E)` and is not formalized.)
 
 The proof is the paper's, with one overgroup for all cases. In
 `G = (Q × ℤ) / ⟨(s, -2)⟩` let `ζ` be the image of `(1, 1)`, so `ζ² = s` and `ζ` is central.
 Then `a' = α ζ⁻¹` and `b' = β ζ^(-e)` are involutions commuting with `H'' = H⟨ζ⟩`, with
 `[a', b'] = t`, and `G = H'' ∘ D₈`. So `ℤ[H''] ∩ Δ(G)^n = Δ(H'')^n` (`CentralD8`), and
-`ℤ[H] ∩ Δ(H'')^n = Δ(H)^n` (`CentralSqrt`, with `r = ζ`). As `Q ↪ G`, an element of `D_n(Q)`
-lies in `H` and in `D_n(H)`.
+`ℤ[H] ∩ Δ(H'')^n = Δ(H)^n` (`CentralSqrt`, with `r = ζ`). As `Q ↪ G`, `Δ(Q)^n` maps into
+`Δ(G)^n`, which gives `ℤ[H] ∩ Δ(Q)^n = Δ(H)^n`; and `[Q, Q]` maps into `[G, G] ≤ H''`, so
+`[Q, Q] ≤ H`.
 
 MATH-206; the statements are `D_n_eq_of_central_product` and its corollaries.
 -/
@@ -22,15 +25,6 @@ MATH-206; the statements are `D_n_eq_of_central_product` and its corollaries.
 namespace GroupDimension
 
 open MonoidAlgebra
-
-theorem mapDomainRingHom_comp_apply {A B C : Type*} [Group A] [Group B] [Group C]
-    (f : B →* C) (g : A →* B) (x : MonoidAlgebra ℤ A) :
-    mapDomainRingHom ℤ f (mapDomainRingHom ℤ g x) = mapDomainRingHom ℤ (f.comp g) x := by
-  induction x using CentralRoot.induction_of with
-  | h0 => simp
-  | hof a => simp
-  | hneg y hy => rw [_root_.map_neg, _root_.map_neg, hy, _root_.map_neg]
-  | hadd y z hy hz => rw [_root_.map_add, _root_.map_add, hy, hz, _root_.map_add]
 
 /-- The data of Proposition 5.8: `Q = H ∘ E` with `E = ⟨α, β⟩`, `E/Z(E) ≅ (ℤ/2)²`. -/
 structure CentralProductData (Q : Type*) [Group Q] where
@@ -206,25 +200,20 @@ def dihedral : DihedralData S.G where
     rw [a', b', ← _root_.map_mul, Prod.mk_mul_mk]
     exact S.nmem_H2 S.αβ_nmem _
 
+/-- `H → H''`, `h ↦ π(h, 1)`. -/
+def fK : S.H →* S.H2 :=
+  (S.π.comp ((MonoidHom.inl Q (Multiplicative ℤ)).comp S.H.subtype)).codRestrict S.H2
+    (fun h => S.π_mem_H2 h.2 1)
+
 theorem dihedral_htc (htc : S.t ∈ commutator S.H) :
     S.dihedral.t ∈ commutator S.dihedral.H := by
-  let f : S.H →* S.H2 :=
-    (S.π.comp ((MonoidHom.inl Q (Multiplicative ℤ)).comp S.H.subtype)).codRestrict S.H2
-      (fun h => S.π_mem_H2 h.2 1)
-  have h1 : f S.t ∈ (commutator S.H).map f := Subgroup.mem_map_of_mem f htc
+  have h1 : S.fK S.t ∈ (commutator S.H).map S.fK := Subgroup.mem_map_of_mem S.fK htc
   rw [commutator_def, Subgroup.map_commutator] at h1
   have h2 := Subgroup.commutator_mono le_top le_top h1
   rw [← commutator_def] at h2
   exact h2
 
 /-! ## `H'' = H⟨ζ⟩` with `ζ² = s` -/
-
-/-- `H → H''`, `h ↦ π(h, 1)`. -/
-def fK : S.H →* S.H2 :=
-  (S.π.comp ((MonoidHom.inl Q (Multiplicative ℤ)).comp S.H.subtype)).codRestrict S.H2
-    (fun h => S.π_mem_H2 h.2 1)
-
-theorem coe_fK (h : S.H) : (S.fK h : S.G) = S.π ((h : Q), 1) := rfl
 
 theorem fK_injective : Function.Injective S.fK := by
   intro h h' he
@@ -257,8 +246,6 @@ theorem ζζ : S.ζ * S.ζ = S.π ((S.s : Q), 1) := by
 
 /-- `H → H_K`, an isomorphism (`φ`). -/
 noncomputable def φ : S.H ≃* S.fK.range := MonoidHom.ofInjective S.fK_injective
-
-theorem coe_φ (h : S.H) : ((S.φ h : S.H2) : S.G) = S.π ((h : Q), 1) := rfl
 
 /-- The data for `CentralSqrt`: `K = H''`, base `H`, `r = ζ`, and `g`. -/
 noncomputable def sqrt (g : S.H) : SqrtData S.H2 where
@@ -316,46 +303,66 @@ theorem sqrt_hc (g : S.H)
   rw [sqrt_c]
   convert this using 3
 
+/-- `Q → G`, `q ↦ π(q, 0)`; injective by `mem_of_π_eq`. -/
+def ιQ : Q →* S.G := S.π.comp (MonoidHom.inl Q _)
+
+/-- `[Q, Q] ≤ H`: the image of `[Q, Q]` lies in `[G, G] ≤ H''`, whose preimage is `H`. -/
+theorem commutator_le : commutator Q ≤ S.H := by
+  intro q hq
+  have h1 : S.ιQ q ∈ (commutator Q).map S.ιQ := Subgroup.mem_map_of_mem S.ιQ hq
+  rw [commutator_def, Subgroup.map_commutator] at h1
+  have h2 := S.dihedral.commutator_le
+    (by rw [commutator_def]; exact Subgroup.commutator_mono le_top le_top h1)
+  obtain ⟨h, hh, m, he⟩ := S.mem_H2.mp h2
+  exact S.mem_of_π_eq (q := q) (m := 1) hh he
+
+-- `ℤ[H_K]` for a subgroup of a subgroup of a quotient: instance search needs more room, and the
+-- elaboration of the three `mapDomain`s below more time.
 set_option synthInstance.maxHeartbeats 200000 in
 set_option maxHeartbeats 1000000 in
-/-- **Proposition 5.8**, general form. -/
-theorem D_eq (htc : S.t ∈ commutator S.H) (g : S.H)
+/-- `ℤ[H] ∩ Δ(Q)^n ⊆ Δ(H)^n`, through `ℤ[H] → ℤ[H''] → ℤ[G]`. -/
+theorem mem_pow_of_iota (htc : S.t ∈ commutator S.H) (g : S.H)
     (hc : ∀ j : ℕ, of ℤ S.H ((g⁻¹ * g⁻¹ * S.s) ^ 2 ^ j) - 1 ∈ augIdeal S.H ^ (j + 2))
-    (n : ℕ) (hn : 2 ≤ n) : D n Q = (D n S.H).map S.H.subtype := by
-  refine le_antisymm ?_ (map_D_le _ n)
-  intro q hq
-  let ιQ : Q →* S.G := S.π.comp (MonoidHom.inl Q _)
-  have hqG : ιQ q ∈ D n S.G := map_mem_D ιQ hq
-  -- `ιQ q ∈ H''`, so `q ∈ H`
-  have hq2 : ιQ q ∈ S.H2 := by
-    obtain ⟨y, _, hy⟩ := (S.dihedral.D_eq (S.dihedral_htc htc) n hn).le hqG
-    rw [← hy]; exact y.2
-  have hqH : q ∈ S.H := by
-    obtain ⟨h, hh, m, he⟩ := S.mem_H2.mp hq2
-    exact S.mem_of_π_eq hh he
-  refine ⟨⟨q, hqH⟩, ?_, rfl⟩
-  -- the ring statement, through `ℤ[H] → ℤ[H''] → ℤ[G]`
-  have hx : mapDomainRingHom ℤ S.H.subtype (of ℤ S.H ⟨q, hqH⟩ - 1) ∈ augIdeal Q ^ n := by
-    rw [_root_.map_sub, _root_.map_one, mapDomainRingHom_of]; exact hq
+    (n : ℕ) (x : MonoidAlgebra ℤ S.H)
+    (hx : mapDomainRingHom ℤ S.H.subtype x ∈ augIdeal Q ^ n) : x ∈ augIdeal S.H ^ n := by
   have key : ∀ x : MonoidAlgebra ℤ S.H, mapDomainRingHom ℤ S.H2.subtype
       (mapDomainRingHom ℤ S.fK.range.subtype (mapDomainRingHom ℤ S.φ.toMonoidHom x)) =
-        mapDomainRingHom ℤ ιQ (mapDomainRingHom ℤ S.H.subtype x) := by
+        mapDomainRingHom ℤ S.ιQ (mapDomainRingHom ℤ S.H.subtype x) := by
     intro x
     induction x using CentralRoot.induction_of with
     | h0 => simp only [_root_.map_zero]
     | hof h => simp only [mapDomainRingHom_of]; rfl
     | hneg y hy => simp only [_root_.map_neg, hy]
     | hadd y z hy hz => simp only [_root_.map_add, hy, hz]
+  have back : ∀ x : MonoidAlgebra ℤ S.H,
+      mapDomainRingHom ℤ S.φ.symm.toMonoidHom (mapDomainRingHom ℤ S.φ.toMonoidHom x) = x := by
+    intro x
+    induction x using CentralRoot.induction_of with
+    | h0 => simp only [_root_.map_zero]
+    | hof h => simp [mapDomainRingHom_of]
+    | hneg y hy => simp only [_root_.map_neg, hy]
+    | hadd y z hy hz => simp only [_root_.map_add, hy, hz]
   have hx1 : mapDomainRingHom ℤ S.H2.subtype (mapDomainRingHom ℤ S.fK.range.subtype
-      (mapDomainRingHom ℤ S.φ.toMonoidHom (of ℤ S.H ⟨q, hqH⟩ - 1))) ∈ augIdeal S.G ^ n := by
+      (mapDomainRingHom ℤ S.φ.toMonoidHom x)) ∈ augIdeal S.G ^ n := by
     rw [key]
-    exact mapDomain_mem_augIdeal_pow ιQ n hx
+    exact mapDomain_mem_augIdeal_pow S.ιQ n hx
   have hx2 := (S.dihedral.iota_mem_augIdeal_pow_iff (S.dihedral_htc htc) n _).mp hx1
   have hx3 := ((S.sqrt g).iota_mem_augIdeal_pow_iff (S.sqrt_hc g hc) n _).mp hx2
-  rw [_root_.map_sub, _root_.map_one, mapDomainRingHom_of] at hx3
-  have h4 : S.φ ⟨q, hqH⟩ ∈ D n S.fK.range := mem_D.mpr hx3
-  have h5 := map_mem_D S.φ.symm.toMonoidHom h4
-  simpa using h5
+  rw [← back x]
+  exact mapDomain_mem_augIdeal_pow S.φ.symm.toMonoidHom n hx3
+
+/-- **Proposition 5.8**, general form, ring statement: `ℤ[H] ∩ Δ(Q)^n = Δ(H)^n`. -/
+theorem iota_mem_augIdeal_pow_iff (htc : S.t ∈ commutator S.H) (g : S.H)
+    (hc : ∀ j : ℕ, of ℤ S.H ((g⁻¹ * g⁻¹ * S.s) ^ 2 ^ j) - 1 ∈ augIdeal S.H ^ (j + 2))
+    (n : ℕ) (x : MonoidAlgebra ℤ S.H) :
+    mapDomainRingHom ℤ S.H.subtype x ∈ augIdeal Q ^ n ↔ x ∈ augIdeal S.H ^ n :=
+  ⟨S.mem_pow_of_iota htc g hc n x, mapDomain_mem_augIdeal_pow S.H.subtype n⟩
+
+/-- **Proposition 5.8**, general form: `D_n(Q) = D_n(H)` for `n ≥ 2`. -/
+theorem D_eq (htc : S.t ∈ commutator S.H) (g : S.H)
+    (hc : ∀ j : ℕ, of ℤ S.H ((g⁻¹ * g⁻¹ * S.s) ^ 2 ^ j) - 1 ∈ augIdeal S.H ^ (j + 2))
+    (n : ℕ) (hn : 2 ≤ n) : D n Q = (D n S.H).map S.H.subtype :=
+  D_eq_of_mem_pow S.H S.commutator_le (S.mem_pow_of_iota htc g hc) n hn
 
 end CentralProductData
 
@@ -369,7 +376,7 @@ theorem augIdeal_of_commutator {H : Type*} [Group H] {t : H} (htc : t ∈ commut
 /-- **Proposition 5.8, general form.** `H ≤ Q`, `α, β ∈ Q` commuting with `H`,
 `Q = H ⊔ Hα ⊔ Hβ ⊔ Hαβ`, `s = α² ∈ H`, `β² = s^e`, `t = [α, β] ∈ γ₂(H)`, and for some `g ∈ H`
 the element `c = g⁻² s` has `c^(2^j) - 1 ∈ Δ(H)^(j+2)` for all `j ≥ 0`. Then
-`D_n(Q) = D_n(H)` for `n ≥ 2`. -/
+`ℤ[H] ∩ Δ(Q)^n = Δ(H)^n` for all `n` and `D_n(Q) = D_n(H)` for `n ≥ 2`. -/
 theorem D_n_eq_of_central_product {Q : Type*} [Group Q] (H : Subgroup Q) (α β : Q)
     (s t g : H) (e : ℤ) (comm_α : ∀ h ∈ H, α * h = h * α) (comm_β : ∀ h ∈ H, β * h = h * β)
     (hα : α * α = s) (hβ : β * β = (s : Q) ^ e) (ht : (t : Q) = α * β * α⁻¹ * β⁻¹)
@@ -377,10 +384,12 @@ theorem D_n_eq_of_central_product {Q : Type*} [Group Q] (H : Subgroup Q) (α β 
     (gen : ∀ q : Q, ∃ h ∈ H, q = h ∨ q = h * α ∨ q = h * β ∨ q = h * (α * β))
     (α_nmem : α ∉ H) (β_nmem : β ∉ H) (αβ_nmem : α * β ∉ H)
     (hc : ∀ j : ℕ, of ℤ H ((g⁻¹ * g⁻¹ * s) ^ 2 ^ j) - 1 ∈ augIdeal H ^ (j + 2))
-    (n : ℕ) (hn : 2 ≤ n) : D n Q = (D n H).map H.subtype :=
+    (∀ (n : ℕ) (x : MonoidAlgebra ℤ H),
+        mapDomainRingHom ℤ H.subtype x ∈ augIdeal Q ^ n ↔ x ∈ augIdeal H ^ n) ∧
+      ∀ n, 2 ≤ n → D n Q = (D n H).map H.subtype :=
   let S : CentralProductData Q :=
     ⟨H, α, β, s, t, e, comm_α, comm_β, hα, hβ, ht, gen, α_nmem, β_nmem, αβ_nmem⟩
-  S.D_eq htc g hc n hn
+  ⟨S.iota_mem_augIdeal_pow_iff htc g hc, S.D_eq htc g hc⟩
 
 /-- **Proposition 5.8(1), `E = Q₈`.** `α² = β² = [α, β] = t ∈ γ₂(H)`. -/
 theorem D_n_eq_of_quaternion {Q : Type*} [Group Q] (H : Subgroup Q) (α β : Q) (t : H)
@@ -389,7 +398,9 @@ theorem D_n_eq_of_quaternion {Q : Type*} [Group Q] (H : Subgroup Q) (α β : Q) 
     (htc : t ∈ commutator H)
     (gen : ∀ q : Q, ∃ h ∈ H, q = h ∨ q = h * α ∨ q = h * β ∨ q = h * (α * β))
     (α_nmem : α ∉ H) (β_nmem : β ∉ H) (αβ_nmem : α * β ∉ H)
-    (n : ℕ) (hn : 2 ≤ n) : D n Q = (D n H).map H.subtype := by
+    (∀ (n : ℕ) (x : MonoidAlgebra ℤ H),
+        mapDomainRingHom ℤ H.subtype x ∈ augIdeal Q ^ n ↔ x ∈ augIdeal H ^ n) ∧
+      ∀ n, 2 ≤ n → D n Q = (D n H).map H.subtype := by
   -- `t² = 1`: `β t β⁻¹ = (β α β⁻¹)² = (t⁻¹ α)² = t⁻¹`
   have h1 : β * α * β⁻¹ = (t : Q)⁻¹ * α := by rw [ht]; group
   have hct : α * (t : Q)⁻¹ = (t : Q)⁻¹ * α := comm_α _ (H.inv_mem t.2)
@@ -402,7 +413,7 @@ theorem D_n_eq_of_quaternion {Q : Type*} [Group Q] (H : Subgroup Q) (α β : Q) 
   have ht2 : t ^ 2 = 1 := Subtype.ext (by
     rw [Subgroup.coe_pow, pow_two, Subgroup.coe_one, mul_eq_one_iff_eq_inv]; exact htt)
   refine D_n_eq_of_central_product H α β t t 1 1 comm_α comm_β hα (by rw [zpow_one]; exact hβ)
-    ht htc gen α_nmem β_nmem αβ_nmem ?_ n hn
+    ht htc gen α_nmem β_nmem αβ_nmem ?_
   intro j
   rw [inv_one, one_mul, one_mul]
   rcases j with _ | j
@@ -417,9 +428,11 @@ theorem D_n_eq_of_modular_sq {Q : Type*} [Group Q] (H : Subgroup Q) (α β : Q) 
     (htc : t ∈ commutator H)
     (gen : ∀ q : Q, ∃ h ∈ H, q = h ∨ q = h * α ∨ q = h * β ∨ q = h * (α * β))
     (α_nmem : α ∉ H) (β_nmem : β ∉ H) (αβ_nmem : α * β ∉ H)
-    (n : ℕ) (hn : 2 ≤ n) : D n Q = (D n H).map H.subtype := by
+    (∀ (n : ℕ) (x : MonoidAlgebra ℤ H),
+        mapDomainRingHom ℤ H.subtype x ∈ augIdeal Q ^ n ↔ x ∈ augIdeal H ^ n) ∧
+      ∀ n, 2 ≤ n → D n Q = (D n H).map H.subtype := by
   refine D_n_eq_of_central_product H α β (g * g) t g 0 comm_α comm_β hα
-    (by rw [zpow_zero]; exact hβ) ht htc gen α_nmem β_nmem αβ_nmem ?_ n hn
+    (by rw [zpow_zero]; exact hβ) ht htc gen α_nmem β_nmem αβ_nmem ?_
   intro j
   rw [show g⁻¹ * g⁻¹ * (g * g) = 1 by group, one_pow, _root_.map_one, sub_self]
   exact zero_mem _
@@ -433,9 +446,11 @@ theorem D_n_eq_of_modular_comm {Q : Type*} [Group Q] (H : Subgroup Q) (α β : Q
     (hs4 : s ^ 4 = 1)
     (gen : ∀ q : Q, ∃ h ∈ H, q = h ∨ q = h * α ∨ q = h * β ∨ q = h * (α * β))
     (α_nmem : α ∉ H) (β_nmem : β ∉ H) (αβ_nmem : α * β ∉ H)
-    (n : ℕ) (hn : 2 ≤ n) : D n Q = (D n H).map H.subtype := by
+    (∀ (n : ℕ) (x : MonoidAlgebra ℤ H),
+        mapDomainRingHom ℤ H.subtype x ∈ augIdeal Q ^ n ↔ x ∈ augIdeal H ^ n) ∧
+      ∀ n, 2 ≤ n → D n Q = (D n H).map H.subtype := by
   refine D_n_eq_of_central_product H α β s t 1 0 comm_α comm_β hα
-    (by rw [zpow_zero]; exact hβ) ht htc gen α_nmem β_nmem αβ_nmem ?_ n hn
+    (by rw [zpow_zero]; exact hβ) ht htc gen α_nmem β_nmem αβ_nmem ?_
   intro j
   rw [inv_one, one_mul, one_mul]
   rcases j with _ | _ | j
@@ -444,5 +459,20 @@ theorem D_n_eq_of_modular_comm {Q : Type*} [Group Q] (H : Subgroup Q) (α β : Q
     exact mem_D.mp (lowerCentralSeries_le_D H 2 hs2)
   · rw [show 2 ^ (j + 2) = 4 * 2 ^ j by ring, pow_mul, hs4, one_pow, _root_.map_one, sub_self]
     exact zero_mem _
+
+/-- **Proposition 5.8(2), "for instance"**: `c = g⁻² s` with `c^(2^j) ∈ γ_{j+2}(H)` for all `j`
+(`lowerCentralSeries H (j + 1) = γ_{j+2}(H)`). -/
+theorem D_n_eq_of_central_product_of_gamma {Q : Type*} [Group Q] (H : Subgroup Q) (α β : Q)
+    (s t g : H) (e : ℤ) (comm_α : ∀ h ∈ H, α * h = h * α) (comm_β : ∀ h ∈ H, β * h = h * β)
+    (hα : α * α = s) (hβ : β * β = (s : Q) ^ e) (ht : (t : Q) = α * β * α⁻¹ * β⁻¹)
+    (htc : t ∈ commutator H)
+    (gen : ∀ q : Q, ∃ h ∈ H, q = h ∨ q = h * α ∨ q = h * β ∨ q = h * (α * β))
+    (α_nmem : α ∉ H) (β_nmem : β ∉ H) (αβ_nmem : α * β ∉ H)
+    (hγ : ∀ j : ℕ, (g⁻¹ * g⁻¹ * s) ^ 2 ^ j ∈ lowerCentralSeries H (j + 1)) :
+    (∀ (n : ℕ) (x : MonoidAlgebra ℤ H),
+        mapDomainRingHom ℤ H.subtype x ∈ augIdeal Q ^ n ↔ x ∈ augIdeal H ^ n) ∧
+      ∀ n, 2 ≤ n → D n Q = (D n H).map H.subtype :=
+  D_n_eq_of_central_product H α β s t g e comm_α comm_β hα hβ ht htc gen α_nmem β_nmem αβ_nmem
+    (fun j => mem_D.mp (lowerCentralSeries_le_D H (j + 1) (hγ j)))
 
 end GroupDimension
