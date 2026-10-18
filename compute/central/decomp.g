@@ -58,13 +58,13 @@ Show := function(label, info)
 
 ## sanity: known groups, no candidate filter
 Print("sanity\n");
-Show("32#49 (D8∘D8: E0 in {D8, Q8}, cover A)", Analyse(SmallGroup(32, 49)));
+Show("32#49 (D8∘D8: 20 E, cover A)", Analyse(SmallGroup(32, 49)));
 Show("32#50 (D8∘Q8: E0 in {D8, Q8}, cover A)", Analyse(SmallGroup(32, 50)));
-Show("16#13 (D8∘C4: H' = Z, E0 in {D8, Q8})", Analyse(SmallGroup(16, 13)));
+Show("16#13 (D8∘C4: H' = Z = C4, t not in gamma_2(H'), negative control)", Analyse(SmallGroup(16, 13)));
 Print("D8 x M16 / <(z, a^4)> = D8 o_<c> M16: expect an M16 case with s not in Phi\n");
-dd := DirectProduct(DihedralGroup(8), SmallGroup(16, 6));
-x := Image(Embedding(dd, 1), MinimalGeneratingSet(Centre(DihedralGroup(8)))[1])
-   * Image(Embedding(dd, 2), MinimalGeneratingSet(Centre(SmallGroup(16, 6)))[1])^2;
+d8 := DihedralGroup(8);; m16 := SmallGroup(16, 6);; dd := DirectProduct(d8, m16);
+x := Image(Embedding(dd, 1), MinimalGeneratingSet(Centre(d8))[1])
+   * Image(Embedding(dd, 2), MinimalGeneratingSet(Centre(m16))[1])^2;
 gl := Image(NaturalHomomorphismByNormalSubgroup(dd, Subgroup(dd, [x])));
 Print("  order ", Size(gl), " id ", IdGroup(gl), " centre ", IdGroup(Centre(gl)), "\n");
 Show("  D8 o_<c> M16", Analyse(gl));
