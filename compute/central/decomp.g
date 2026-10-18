@@ -9,7 +9,8 @@
 ##     "none" otherwise.
 ## A case is [IdGroup(E0), t in gamma_2(H'), (for M: s in Phi(H')), cover].  A candidate is
 ## covered when one of its E has a case with t in gamma_2(H') and cover <> "none".
-## Names are lower case: Z, E, EQ, I ... are bound in GAP.
+## Each candidate line gives the order, the parent id, the line in pairs_pruned_<order>.txt and |Z(Q)|.
+## Names are lower case: Z, E, EQ are bound in GAP.
 Read(Concatenation(ROOT, "/compute/central/common.g"));
 Good := function(c, L) local k, x; x := c; k := 0;
   while x <> One(c) do if k + 2 > Length(L) or not x in L[k+2] then return false; fi; x := x^2; k := k + 1; od;
@@ -71,7 +72,9 @@ Show("  D8 o_<c> M16", Analyse(gl));
 
 tally := rec();
 for o in [64, 128, 256, 512] do
-  for pr in Candidates(o) do
+  cands := Candidates(o);
+  for line in [1 .. Length(cands)] do
+    pr := cands[line];
     q := PcGroupCode(pr[2], o);
     if MS_MonoInvolution(q) = fail then Bump(tally, "not_candidate"); continue; fi;
     info := Analyse(q);
@@ -88,7 +91,7 @@ for o in [64, 128, 256, 512] do
     Bump(tally, Concatenation("o", String(o), "_splits_covered_", String(ForAny(info, inf -> inf.covered)),
       "_byAC_", String(ForAny(info, inf -> inf.coveredAC)),
       "_properglue_", String(ForAny(info, inf -> ForAny(inf.cases, c -> Length(c) = 4 and not c[3])))));
-    Show(Concatenation(String(o), " ", String(pr[1]), " |Z|=", String(Size(Centre(q)))), info);
+    Show(Concatenation(String(o), " ", String(pr[1]), " line ", String(line), " |Z|=", String(Size(Centre(q)))), info);
   od;
 od;
 for k in SortedList(RecNames(tally)) do Print(k, " ", tally.(k), "\n"); od;

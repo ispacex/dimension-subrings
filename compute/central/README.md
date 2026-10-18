@@ -35,4 +35,4 @@ Run from the repository root, e.g.
 
 (in tm jobs also `export TMPDIR=$JOB_ROOT/tmp`, needed by `lib.g`'s packages, and
 `export PATH=$JOB_CACHE/bin:$PATH` with `JOB_CACHE=/home/leancheck/mikh-jobs/cache` for `gap`).
-Keep global names lower case: `Z`, `E`, `EQ`, `I` are bound in GAP.
+Keep global names lower case: `Z`, `E`, `EQ` are bound in GAP.
