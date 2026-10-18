@@ -118,8 +118,7 @@ theorem mul_r (x : K) :
       S.yv (S.r * x) = S.xv x - S.yv x * of ℤ S.H S.g := by
   obtain ⟨h, hh, hx | hx⟩ := S.gen x <;> subst x
   · rw [S.central h, xv_hr hh, xv_h hh, yv_hr hh, yv_h hh]
-    simp only [zero_mul, add_zero, sub_zero]
-    exact ⟨rfl, rfl⟩
+    constructor <;> simp
   · have hs : h * (S.r * S.r) ∈ S.H := S.H.mul_mem hh S.sq_mem
     have e : S.r * (h * S.r) = h * (S.r * S.r) := by rw [← mul_assoc, S.central h, mul_assoc]
     have e' : of ℤ S.H ⟨h * (S.r * S.r), hs⟩ = of ℤ S.H ⟨h, hh⟩ * of ℤ S.H S.s := by
