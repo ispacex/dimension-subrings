@@ -102,7 +102,7 @@ theorem Bfilt_mul_left {n : ℕ} {y : MonoidAlgebra ℤ G} (hy : y ∈ Bfilt G n
 theorem Bfilt_mul_right {n : ℕ} {y : MonoidAlgebra ℤ G} (hy : y ∈ Bfilt G n)
     (z : MonoidAlgebra ℤ G) : y * z ∈ Bfilt G n := by
   refine Bfilt_induction (p := fun y => y * z ∈ Bfilt G n) hy ?_
-    (by rw [zero_mul]; exact zero_mem _) ?_ ?_
+    (by simp) ?_ ?_
   · intro i hi x hx
     rw [smul_mul_assoc]
     exact gen_mem_Bfilt hi (Ideal.mul_mem_right _ _ hx)
@@ -115,7 +115,7 @@ theorem Bfilt_mul_right {n : ℕ} {y : MonoidAlgebra ℤ G} (hy : y ∈ Bfilt G 
 theorem Bfilt_mul_aug {n : ℕ} {y : MonoidAlgebra ℤ G} (hy : y ∈ Bfilt G n)
     {δ : MonoidAlgebra ℤ G} (hδ : δ ∈ augIdeal G) : y * δ ∈ Bfilt G (n + 1) := by
   refine Bfilt_induction (p := fun y => y * δ ∈ Bfilt G (n + 1)) hy ?_
-    (by rw [zero_mul]; exact zero_mem _) ?_ ?_
+    (by simp) ?_ ?_
   · intro i hi x hx
     rw [smul_mul_assoc]
     have := gen_mem_Bfilt (n := n + 1) (by omega)
@@ -130,7 +130,7 @@ theorem Bfilt_mul_aug {n : ℕ} {y : MonoidAlgebra ℤ G} (hy : y ∈ Bfilt G n)
 theorem Bfilt_add_self {n : ℕ} {y : MonoidAlgebra ℤ G} (hy : y ∈ Bfilt G n) :
     y + y ∈ Bfilt G (n + 1) := by
   refine Bfilt_induction (p := fun y => y + y ∈ Bfilt G (n + 1)) hy ?_
-    (by rw [add_zero]; exact zero_mem _) ?_ ?_
+    (by simp) ?_ ?_
   · intro i hi x hx
     rcases Nat.lt_or_ge i n with h | h
     · have := gen_mem_Bfilt (n := n + 1) (by omega) hx
@@ -150,7 +150,7 @@ theorem Bfilt_mul_tau {τ : MonoidAlgebra ℤ G}
     (hτ : ∀ k : ℕ, (2 ^ k : ℕ) • τ ∈ augIdeal G ^ (k + 2)) {n : ℕ} {y : MonoidAlgebra ℤ G}
     (hy : y ∈ Bfilt G n) : y * τ ∈ augIdeal G ^ (n + 1) := by
   refine Bfilt_induction (p := fun y => y * τ ∈ augIdeal G ^ (n + 1)) hy ?_
-    (by rw [zero_mul]; exact zero_mem _) ?_ ?_
+    (by simp) ?_ ?_
   · intro i hi x hx
     rw [smul_mul_assoc, ← mul_smul_comm]
     exact Ideal.pow_le_pow_right (by omega) (mul_mem_augIdeal_pow hx (hτ (n - 1 - i)))
@@ -163,7 +163,7 @@ theorem Bfilt_mul_tau {τ : MonoidAlgebra ℤ G}
 theorem augIdeal_pow_succ' (n : ℕ) : augIdeal G ^ (n + 1) = augIdeal G * augIdeal G ^ n := by
   rcases n with _ | n
   · rw [Submodule.pow_zero, Ideal.one_eq_top, zero_add, Submodule.pow_one, Ideal.mul_top]
-  · exact Submodule.pow_succ' (by omega)
+  · exact Submodule.pow_succ' (Nat.succ_ne_zero n)
 
 end Filtration
 
@@ -404,7 +404,7 @@ theorem X_mul_h {k : Q} (hk : k ∈ S.H) (y : MonoidAlgebra ℤ Q) :
   refine ext_of (f₁ := (S.X).comp (AddMonoidHom.mulLeft (of ℤ Q k)))
     (f₂ := (AddMonoidHom.mulLeft (of ℤ S.H ⟨k, hk⟩)).comp S.X) (fun g => ?_) y
   simp only [AddMonoidHom.comp_apply, AddMonoidHom.coe_mulLeft, ← _root_.map_mul, X_of]
-  exact (r_mul_h hk g).1
+  exact (r_mul_h hk g).1.trans (_root_.map_mul _ _ _).symm
 
 theorem Y_mul_h {k : Q} (hk : k ∈ S.H) (y : MonoidAlgebra ℤ Q) :
     S.Y (of ℤ Q k * y) = of ℤ S.H ⟨k, hk⟩ * S.Y y := by
@@ -592,8 +592,8 @@ theorem augIdeal_pow_le_P (htc : S.t ∈ commutator S.H) (n : ℕ) :
     intro x hx u hu
     refine CentralRoot.augIdeal_induction (p := fun x => x * u ∈ S.P htc (n + 1)) hx
       (by simp) (fun g => sub_one_mul_mem_P htc (ih hu) g)
-      (fun y hy => by rw [neg_mul]; exact neg_mem hy)
-      (fun y z hy hz => by rw [add_mul]; exact add_mem hy hz)
+      (fun y hy => by show (-y) * u ∈ _; rw [neg_mul]; exact neg_mem hy)
+      (fun y z hy hz => by show (y + z) * u ∈ _; rw [add_mul]; exact add_mem hy hz)
 
 /-! ## The proposition -/
 
