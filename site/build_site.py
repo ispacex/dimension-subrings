@@ -338,9 +338,9 @@ RESULTS = [  # (status, ru, en, ref)
     ("cp", "Порядок $2^{11}$, ступень $3$: $D_5=1$ при рангах $2$, $3$, $4$ и $\\ge8$; ранги $5$–$7$ открыты.",
      "Order $2^{11}$, class $3$: $D_5=1$ for ranks $2$, $3$, $4$ and $\\ge8$; ranks $5$–$7$ open.",
      "Prop. 5.7, §5"),
-    ("p", "Центральные произведения: $D_n(H\\circ E)=D_n(H)$ при $E\\in\\{D_8,Q_8\\}$ и $t\\in\\gamma_2(H)$, а для $E=M_{2^{k+2}}$ — при условии на $g^{-2}s$ (например, $s=g^2$). Все $386$ кандидатов порядков $2^6$–$2^9$ ему удовлетворяют, так что разложимость $H\\circ E$ с $E\\in\\{D_8,Q_8,M_{16}\\}$ контрпримера не даёт. Проверено независимой рецензией.",
-     "Central products: $D_n(H\\circ E)=D_n(H)$ for $E\\in\\{D_8,Q_8\\}$ and $t\\in\\gamma_2(H)$, and for $E=M_{2^{k+2}}$ under a condition on $g^{-2}s$ (e.g. $s=g^2$). All $386$ candidates of orders $2^6$–$2^9$ satisfy it, so splitting off $E\\in\\{D_8,Q_8,M_{16}\\}$ gives no counterexample. Checked by an independent review.",
-     "Prop. 5.8"),
+    ("p", "Центральные произведения: $D_n(H\\circ E)=D_n(H)$ при $E\\in\\{D_8,Q_8\\}$ и $t\\in\\gamma_2(H)$, а для $E=M_{2^{k+2}}$ — при условии на $g^{-2}s$ (например, $s=g^2$). Все $386$ кандидатов порядков $2^6$–$2^9$ ему удовлетворяют, так что разложимость $H\\circ E$ с $E\\in\\{D_8,Q_8,M_{16}\\}$ контрпримера не даёт. Склейка по собственной подгруппе $Z(E)$ закрыта при $\\sigma=g^{2^{j+1}}$ (центральный корень любой степени); у каждого из $20$ раскладывающихся кандидатов есть разложение, покрытое предложением 5.8. Проверено независимыми рецензиями.",
+     "Central products: $D_n(H\\circ E)=D_n(H)$ for $E\\in\\{D_8,Q_8\\}$ and $t\\in\\gamma_2(H)$, and for $E=M_{2^{k+2}}$ under a condition on $g^{-2}s$ (e.g. $s=g^2$). All $386$ candidates of orders $2^6$–$2^9$ satisfy it, so splitting off $E\\in\\{D_8,Q_8,M_{16}\\}$ gives no counterexample. Gluing along a proper subgroup of $Z(E)$ is closed when $\\sigma=g^{2^{j+1}}$ (a central root of any degree); each of the $20$ split candidates has a splitting covered by Prop. 5.8. Checked by independent reviews.",
+     "Prop. 5.8, Lemma 5.9"),
     ("c", "$D_n(G)=\\gamma_n(G)$ при всех $n$ для всякой конечной группы порядка $<512$.",
      "$D_n(G)=\\gamma_n(G)$ for all $n$ and every finite group of order $<512$.", "Thm. 5.4(2)"),
     ("cp", "Нет $3$-кручения в $D_5(G)/\\gamma_5(G)$, если силовская $3$-подгруппа $G$ имеет порядок $\\le3^9$; $D_5=\\gamma_5$ для всех $3$-групп порядка $\\le3^9$.",
@@ -378,6 +378,8 @@ OPEN = [  # (ru, en)
      "An exact criterion for nonterminality of groups of type $(d,2,1)$: at $3^8$, $190$ of the $7\\,824$ have descendants, and the known necessary conditions also hold for $573$ terminal ones."),
     ("Групповой аналог теоремы C: $D_{2c-1}(G)=1$ для метабелевых групп ступени $\\le c$? Открыто при $p=2$, $c\\ge3$ и при нечётном $p$, $c\\ge p+2$.",
      "The group analogue of Theorem C: $D_{2c-1}(G)=1$ for metabelian groups of class $\\le c$? Open for $p=2$, $c\\ge3$ and for odd $p$, $c\\ge p+2$."),
+    ("Центральные произведения со склейкой по собственной подгруппе, когда $\\sigma$ не является $2^{j+1}$-й степенью: $12$ из $212$ разложений кандидатов порядков $2^8$–$2^9$ ничем не покрыты. Проекцией на $H$ это в общем случае не сделать: у $D_8\\circ_{\\langle t\\rangle}M_{16}$ кольцевое равенство нарушено при $n=4,5$.",
+     "Central products glued along a proper subgroup when $\\sigma$ is not a $2^{j+1}$-th power: $12$ of the $212$ splittings of candidates of orders $2^8$–$2^9$ are covered by nothing. A projection to $H$ cannot do it in general: for $D_8\\circ_{\\langle t\\rangle}M_{16}$ the ring equality fails at $n=4,5$."),
 ]
 
 # Funnels of the searches: (id, ru title, en title, [(ru, en, n)], ref). The last step is the number
@@ -477,7 +479,9 @@ TIMELINE = [  # (iso date, [(ru, en)])
         ("Аудит ANUPQ (<a href=\"https://ispacex.github.io/gap/\">ispacex.github.io/gap</a>): шаг порождения для $3^9$ повторён на исправленной версии, результат совпал побайтно.",
          "ANUPQ audit (<a href=\"https://ispacex.github.io/gap/\">ispacex.github.io/gap</a>): the $3^9$ descendant step was repeated with the fixed version, and the result is byte-identical."),
         ("На бумаге: $D_n(H\\circ E)=D_n(H)$ для центральных произведений с $D_8$, $Q_8$ и $M_{2^{k+2}}$ (присоединение центрального квадратного корня); у всех $386$ кандидатов порядков $2^6$–$2^9$ условия выполнены. Две независимые рецензии.",
-         "On paper: $D_n(H\\circ E)=D_n(H)$ for central products with $D_8$, $Q_8$ and $M_{2^{k+2}}$ (adjoining a central square root); all $386$ candidates of orders $2^6$–$2^9$ satisfy the conditions. Two independent reviews.")]),
+         "On paper: $D_n(H\\circ E)=D_n(H)$ for central products with $D_8$, $Q_8$ and $M_{2^{k+2}}$ (adjoining a central square root); all $386$ candidates of orders $2^6$–$2^9$ satisfy the conditions. Two independent reviews."),
+        ("На бумаге: склейка по собственной подгруппе $Z(E)$ — лемма о центральном корне любой степени (лемма 5.9). Перебор разложений $386$ кандидатов: $20$ раскладываются, у каждого есть разложение, покрытое предложением 5.8. Независимая рецензия и пересчёт другим методом.",
+         "On paper: gluing along a proper subgroup of $Z(E)$ — a lemma on central roots of any degree (Lemma 5.9). The splittings of the $386$ candidates: $20$ split, each has a splitting covered by Prop. 5.8. An independent review and a recount by another method.")]),
 ]
 
 
