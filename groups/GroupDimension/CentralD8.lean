@@ -163,7 +163,7 @@ theorem Bfilt_mul_tau {τ : MonoidAlgebra ℤ G}
 theorem augIdeal_pow_succ' (n : ℕ) : augIdeal G ^ (n + 1) = augIdeal G * augIdeal G ^ n := by
   rcases n with _ | n
   · rw [Submodule.pow_zero, Ideal.one_eq_top, zero_add, Submodule.pow_one, Ideal.mul_top]
-  · exact Submodule.pow_succ' (Nat.succ_ne_zero n)
+  · exact Submodule.pow_succ' _ (Nat.succ_ne_zero n)
 
 end Filtration
 
