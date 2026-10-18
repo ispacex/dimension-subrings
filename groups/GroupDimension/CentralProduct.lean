@@ -162,7 +162,7 @@ def b' : S.G := S.π (S.β, z⁻¹ ^ S.e)
 def ζ : S.G := S.π (1, z)
 
 /-- The data for `CentralD8`. -/
-def dihedral (htc : S.t ∈ commutator S.H) : DihedralData S.G where
+def dihedral : DihedralData S.G where
   H := S.H2
   a := S.a'
   b := S.b'
@@ -207,7 +207,7 @@ def dihedral (htc : S.t ∈ commutator S.H) : DihedralData S.G where
     exact S.nmem_H2 S.αβ_nmem _
 
 theorem dihedral_htc (htc : S.t ∈ commutator S.H) :
-    (S.dihedral htc).t ∈ commutator (S.dihedral htc).H := by
+    S.dihedral.t ∈ commutator S.dihedral.H := by
   let f : S.H →* S.H2 :=
     (S.π.comp ((MonoidHom.inl Q (Multiplicative ℤ)).comp S.H.subtype)).codRestrict S.H2
       (fun h => S.π_mem_H2 h.2 1)
@@ -313,11 +313,14 @@ theorem sqrt_hc (g : S.H)
     of ℤ S.fK.range ((S.sqrt g).c ^ 2 ^ j) - 1 ∈ augIdeal S.fK.range ^ (j + 2) := by
   have := mapDomain_mem_augIdeal_pow S.φ.toMonoidHom (j + 2) (hc j)
   rw [_root_.map_sub, _root_.map_one, mapDomainRingHom_of] at this
-  rw [sqrt_c, ← _root_.map_pow]
+  have e : S.φ (g⁻¹ * g⁻¹ * S.s) ^ 2 ^ j = S.φ.toMonoidHom ((g⁻¹ * g⁻¹ * S.s) ^ 2 ^ j) :=
+    (map_pow S.φ.toMonoidHom _ _).symm
+  rw [sqrt_c, e]
   exact this
 
-/-- **Proposition 5.8**, general form. -/
 set_option synthInstance.maxHeartbeats 200000 in
+set_option maxHeartbeats 1000000 in
+/-- **Proposition 5.8**, general form. -/
 theorem D_eq (htc : S.t ∈ commutator S.H) (g : S.H)
     (hc : ∀ j : ℕ, of ℤ S.H ((g⁻¹ * g⁻¹ * S.s) ^ 2 ^ j) - 1 ∈ augIdeal S.H ^ (j + 2))
     (n : ℕ) (hn : 2 ≤ n) : D n Q = (D n S.H).map S.H.subtype := by
@@ -327,7 +330,7 @@ theorem D_eq (htc : S.t ∈ commutator S.H) (g : S.H)
   have hqG : ιQ q ∈ D n S.G := map_mem_D ιQ hq
   -- `ιQ q ∈ H''`, so `q ∈ H`
   have hq2 : ιQ q ∈ S.H2 := by
-    obtain ⟨y, _, hy⟩ := ((S.dihedral htc).D_eq (S.dihedral_htc htc) n hn).le hqG
+    obtain ⟨y, _, hy⟩ := (S.dihedral.D_eq (S.dihedral_htc htc) n hn).le hqG
     rw [← hy]; exact y.2
   have hqH : q ∈ S.H := by
     obtain ⟨h, hh, m, he⟩ := S.mem_H2.mp hq2
@@ -349,7 +352,7 @@ theorem D_eq (htc : S.t ∈ commutator S.H) (g : S.H)
       (mapDomainRingHom ℤ S.φ.toMonoidHom (of ℤ S.H ⟨q, hqH⟩ - 1))) ∈ augIdeal S.G ^ n := by
     rw [key]
     exact mapDomain_mem_augIdeal_pow ιQ n hx
-  have hx2 := ((S.dihedral htc).iota_mem_augIdeal_pow_iff (S.dihedral_htc htc) n _).mp hx1
+  have hx2 := (S.dihedral.iota_mem_augIdeal_pow_iff (S.dihedral_htc htc) n _).mp hx1
   have hx3 := ((S.sqrt g).iota_mem_augIdeal_pow_iff (S.sqrt_hc g hc) n _).mp hx2
   rw [_root_.map_sub, _root_.map_one, mapDomainRingHom_of] at hx3
   have h4 : S.φ ⟨q, hqH⟩ ∈ D n S.fK.range := mem_D.mpr hx3
