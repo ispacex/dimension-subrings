@@ -432,10 +432,10 @@ STATUS = {"c": ("компьютер", "computer"), "p": ("на бумаге", "p
 RESULTS = [  # (status, ru, en, ref): ref is a str or (ru, en); [[label]] is a link to the statement
     # in the paper, the other links go to what backs a number: a funnel or table of computations.html,
     # the code and data at PIN, the Lean file, open.html or timeline.html. One link per claim.
-    ("p", "Сведение: $D_5(G)\\subseteq\\gamma_4(G)$ для всех групп $\\iff$ $D_5(Q)=1$ для всех конечных $2$-групп ступени $3$. Для конечных $G$ порядок не растёт: достаточно $2$-групп порядка не больше $2$-части $|G|$.",
-     "Reduction: $D_5(G)\\subseteq\\gamma_4(G)$ for all groups $\\iff$ $D_5(Q)=1$ for all finite $2$-groups of class $3$. For finite $G$ the order does not grow: $2$-groups up to the $2$-part of $|G|$ suffice.",
-     ("[[prop:reduction]], [[rem:bounded]]; " + gh("groups/GroupDimension/Reduction.lean", "первый шаг — в Lean", "dimensionQuestion5_iff"),
-      "[[prop:reduction]], [[rem:bounded]]; " + gh("groups/GroupDimension/Reduction.lean", "first step in Lean", "dimensionQuestion5_iff"))),
+    ("p", "Сведение: $D_5(G)\\subseteq\\gamma_4(G)$ для всех групп $\\iff$ $D_5(Q)=1$ для всех конечных $2$-групп ступени $3$. Для конечных $G$ порядок не растёт: достаточно $2$-групп порядка не больше $2$-части $|G|$. В Lean доказано при явных гипотезах: теоремы Пасси ($D_4^2\\subseteq\\gamma_4$), Грюнберга и $D_3=\\gamma_3$ (для конечных $G$ теорема Грюнберга не нужна).",
+     "Reduction: $D_5(G)\\subseteq\\gamma_4(G)$ for all groups $\\iff$ $D_5(Q)=1$ for all finite $2$-groups of class $3$. For finite $G$ the order does not grow: $2$-groups up to the $2$-part of $|G|$ suffice. Proved in Lean with explicit hypotheses: the theorems of Passi ($D_4^2\\subseteq\\gamma_4$) and Gruenberg and $D_3=\\gamma_3$ (for finite $G$ Gruenberg's theorem is not needed).",
+     ("[[prop:reduction]], [[rem:bounded]]; " + gh("groups/GroupDimension/FiniteReduction.lean", "в Lean при гипотезах", "dimensionQuestion5_iff_class_three"),
+      "[[prop:reduction]], [[rem:bounded]]; " + gh("groups/GroupDimension/FiniteReduction.lean", "in Lean with hypotheses", "dimensionQuestion5_iff_class_three"))),
     ("l", "Для колец Ли $D_5(L)\\subseteq\\gamma_4(L)$ (<a href=\"https://arxiv.org/abs/2610.02042\">Ионин, Михайлов, Петров, 2026</a>); "
           + gh("notes/formalization-audit.ru.md", "формализация проверена") + ", групповой вопрос "
           + gh("groups/GroupDimension/Statements.lean", "сформулирован в Lean", "DimensionQuestion5") + " рядом.",
@@ -600,7 +600,9 @@ TIMELINE = [  # (iso date, [(ru, en)])
         ("Lean: лемма 5.9 (центральный корень любой степени) доказана в Lean, без <code>sorry</code>, только стандартные аксиомы; начата формализация остальных результатов «на бумаге».",
          "Lean: Lemma 5.9 (a central root of any degree) is proved in Lean, with no <code>sorry</code> and only the standard axioms; formalizing the other paper results has started."),
         ("Lean: предложение 5.8 доказано в Lean во всех случаях ($D_8$, $Q_8$, $M_{2^{k+2}}$), вместе с кольцевым утверждением $\\mathbb Z[H]\\cap\\Delta(Q)^n=\\Delta(H)^n$; $Q_8$ и $M_{2^{k+2}}$ сводятся к $D_8$ через одну надгруппу $(Q\\times\\mathbb Z)/\\langle(s,-2)\\rangle$.",
-         "Lean: Prop. 5.8 is proved in Lean in all cases ($D_8$, $Q_8$, $M_{2^{k+2}}$), with the ring statement $\\mathbb Z[H]\\cap\\Delta(Q)^n=\\Delta(H)^n$; $Q_8$ and $M_{2^{k+2}}$ reduce to $D_8$ through one overgroup $(Q\\times\\mathbb Z)/\\langle(s,-2)\\rangle$.")]),
+         "Lean: Prop. 5.8 is proved in Lean in all cases ($D_8$, $Q_8$, $M_{2^{k+2}}$), with the ring statement $\\mathbb Z[H]\\cap\\Delta(Q)^n=\\Delta(H)^n$; $Q_8$ and $M_{2^{k+2}}$ reduce to $D_8$ through one overgroup $(Q\\times\\mathbb Z)/\\langle(s,-2)\\rangle$."),
+        ("Lean: сведение (предложение 2.1, замечание 2.3) доказано по модулю явных гипотез — теорем Пасси, Грюнберга и $D_3=\\gamma_3$: от ступени $\\le3$ к конечно порождённым группам и к конечным $2$-группам ступени $3$; для конечных групп теорема Грюнберга не нужна.",
+         "Lean: the reduction (Prop. 2.1, Remark 2.3) is proved modulo explicit hypotheses — the theorems of Passi and Gruenberg and $D_3=\\gamma_3$: from class $\\le3$ to finitely generated groups and to finite $2$-groups of class $3$; for finite groups Gruenberg's theorem is not needed.")]),
 ]
 
 
