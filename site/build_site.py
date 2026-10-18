@@ -449,12 +449,12 @@ RESULTS = [  # (status, ru, en, ref): ref is a str or (ru, en); [[label]] is a l
     ("cp", "Порядок $2^{11}$, ступень $3$: $D_5=1$ при <a href=\"computations.html#f211\">рангах $2$, $3$, $4$</a> и $\\ge8$; <a href=\"open.html#q-2048\">ранги $5$–$7$ открыты</a>.",
      "Order $2^{11}$, class $3$: $D_5=1$ for <a href=\"computations.html#f211\">ranks $2$, $3$, $4$</a> and $\\ge8$; <a href=\"open.html#q-2048\">ranks $5$–$7$ open</a>.",
      "[[prop:rank8]], [[sec:computations]]"),
-    ("p", "Центральные произведения: $D_n(H\\circ E)=D_n(H)$ при $E\\in\\{D_8,Q_8\\}$ и $t\\in\\gamma_2(H)$, а для $E=M_{2^{k+2}}$ — при условии на $g^{-2}s$ (например, $s=g^2$). "
+    ("l", "Центральные произведения: $D_n(H\\circ E)=D_n(H)$ при $E\\in\\{D_8,Q_8\\}$ и $t\\in\\gamma_2(H)$, а для $E=M_{2^{k+2}}$ — при условии на $g^{-2}s$ (например, $s=g^2$). "
           + gh("compute/central", "Все $386$ кандидатов") + " порядков $2^6$–$2^9$ ему удовлетворяют, так что разложимость $H\\circ E$ с $E\\in\\{D_8,Q_8,M_{16}\\}$ контрпримера не даёт. "
-          "Склейка по собственной подгруппе $Z(E)$ закрыта при $\\sigma=g^{2^{j+1}}$ (центральный корень любой степени; <a href=\"open.html#q-central\">остальное открыто</a>); у каждого из $20$ раскладывающихся кандидатов есть разложение, покрытое предложением [[prop:central|#]]. Проверено независимыми рецензиями; " + gh("groups/GroupDimension/CentralRoot.lean", "лемма [[lem:root|##]] доказана в Lean", "D_n_eq_of_index") + ".",
+          "Склейка по собственной подгруппе $Z(E)$ закрыта при $\\sigma=g^{2^{j+1}}$ (центральный корень любой степени; <a href=\"open.html#q-central\">остальное открыто</a>); у каждого из $20$ раскладывающихся кандидатов есть разложение, покрытое предложением [[prop:central|#]]. " + gh("groups/GroupDimension/CentralProduct.lean", "Предложение [[prop:central|##]]", "D_n_eq_of_central_product") + " и " + gh("groups/GroupDimension/CentralRoot.lean", "лемма [[lem:root|##]]", "D_n_eq_of_index") + " доказаны в Lean; проверка кандидатов — вычислением.",
      "Central products: $D_n(H\\circ E)=D_n(H)$ for $E\\in\\{D_8,Q_8\\}$ and $t\\in\\gamma_2(H)$, and for $E=M_{2^{k+2}}$ under a condition on $g^{-2}s$ (e.g. $s=g^2$). "
           + gh("compute/central", "All $386$ candidates") + " of orders $2^6$–$2^9$ satisfy it, so splitting off $E\\in\\{D_8,Q_8,M_{16}\\}$ gives no counterexample. "
-          "Gluing along a proper subgroup of $Z(E)$ is closed when $\\sigma=g^{2^{j+1}}$ (a central root of any degree; <a href=\"open.html#q-central\">the rest is open</a>); each of the $20$ split candidates has a splitting covered by Prop. [[prop:central|#]]. Checked by independent reviews; " + gh("groups/GroupDimension/CentralRoot.lean", "Lemma [[lem:root|##]] is proved in Lean", "D_n_eq_of_index") + ".",
+          "Gluing along a proper subgroup of $Z(E)$ is closed when $\\sigma=g^{2^{j+1}}$ (a central root of any degree; <a href=\"open.html#q-central\">the rest is open</a>); each of the $20$ split candidates has a splitting covered by Prop. [[prop:central|#]]. " + gh("groups/GroupDimension/CentralProduct.lean", "Prop. [[prop:central|##]]", "D_n_eq_of_central_product") + " and " + gh("groups/GroupDimension/CentralRoot.lean", "Lemma [[lem:root|##]]", "D_n_eq_of_index") + " are proved in Lean; the check of the candidates is by computer.",
      "[[prop:central]], [[lem:root]]"),
     ("c", "$D_n(G)=\\gamma_n(G)$ при всех $n$ для всякой конечной группы <a href=\"computations.html#runs\">порядка $<512$</a>.",
      "$D_n(G)=\\gamma_n(G)$ for all $n$ and every finite group <a href=\"computations.html#runs\">of order $<512$</a>.", "[[thm:small]](2)"),
@@ -598,7 +598,9 @@ TIMELINE = [  # (iso date, [(ru, en)])
         ("На бумаге: склейка по собственной подгруппе $Z(E)$ — лемма о центральном корне любой степени (лемма 5.9). Перебор разложений $386$ кандидатов: $20$ раскладываются, у каждого есть разложение, покрытое предложением 5.8. Независимая рецензия и пересчёт другим методом.",
          "On paper: gluing along a proper subgroup of $Z(E)$ — a lemma on central roots of any degree (Lemma 5.9). The splittings of the $386$ candidates: $20$ split, each has a splitting covered by Prop. 5.8. An independent review and a recount by another method."),
         ("Lean: лемма 5.9 (центральный корень любой степени) доказана в Lean, без <code>sorry</code>, только стандартные аксиомы; начата формализация остальных результатов «на бумаге».",
-         "Lean: Lemma 5.9 (a central root of any degree) is proved in Lean, with no <code>sorry</code> and only the standard axioms; formalizing the other paper results has started.")]),
+         "Lean: Lemma 5.9 (a central root of any degree) is proved in Lean, with no <code>sorry</code> and only the standard axioms; formalizing the other paper results has started."),
+        ("Lean: предложение 5.8 доказано в Lean во всех случаях ($D_8$, $Q_8$, $M_{2^{k+2}}$), вместе с кольцевым утверждением $\\mathbb Z[H]\\cap\\Delta(Q)^n=\\Delta(H)^n$; $Q_8$ и $M_{2^{k+2}}$ сводятся к $D_8$ через одну надгруппу $(Q\\times\\mathbb Z)/\\langle(s,-2)\\rangle$.",
+         "Lean: Prop. 5.8 is proved in Lean in all cases ($D_8$, $Q_8$, $M_{2^{k+2}}$), with the ring statement $\\mathbb Z[H]\\cap\\Delta(Q)^n=\\Delta(H)^n$; $Q_8$ and $M_{2^{k+2}}$ reduce to $D_8$ through one overgroup $(Q\\times\\mathbb Z)/\\langle(s,-2)\\rangle$.")]),
 ]
 
 
