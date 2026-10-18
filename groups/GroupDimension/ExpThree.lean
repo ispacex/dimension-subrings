@@ -4,7 +4,24 @@ import GroupDimension.ClassFour
 /-!
 # `D₅ = γ₅` when `G/γ₂(G)` has exponent `3` (Theorem 6.6), modulo Tahara's Theorem 6.1
 
-*Draft: the lemmas.*
+**Theorem 6.6** of the paper: if `G/γ₂(G)` is finite of exponent `3`, then `D₅(G) = γ₅(G)`
+(`D_five_eq_gamma_five`). The proof takes Tahara's Theorem 6.1 (`TaharaFiveOne`,
+`Tahara.lean`) as an explicit hypothesis and follows the wiki page 690 (MATH-127) and the paper:
+
+* reduction to a finite group `Q = G/γ₅(G)` of class `≤ 4` (`finite_quotient_lcs`,
+  `D_five_eq_bot_of_class_four`);
+* the identities of Lemma 2 there in Tahara's convention `[y, x] = y⁻¹x⁻¹yx`:
+  `[Y, x³] = [Y, x]³`, `[a³, x] = [a, x]³` and `[x³, a] = 1` when `a³ ∈ γ₄`
+  (`tc_pow_three_right`, `tc_pow_three_left`, `tc_cube_eq_one`);
+* a uniqueness basis adapted to the cube map `Q/γ₂ → γ₂/γ₃`, built from bases of
+  `𝔽₃`-spaces adapted to a linear map (`exists_adapted_bases`, `cubeMap`,
+  `isLayerBasis_of_basis`);
+* the computation: for this basis every generator of Tahara's theorem is trivial
+  (`Setup.gen_eq_one`, steps 1–6 of the paper). Elements of `γ₃` and `γ₄` are compared through
+  `𝔽₃`-valued maps additive on a layer (`exists_F_mod`, `mem_of_forall_F`), so the
+  bookkeeping becomes arithmetic in `ZMod 3`.
+
+Indexing: Mathlib's `lowerCentralSeries G k` is `γ_{k+1}(G)`; Tahara's `H_i` is `γ_i`.
 -/
 
 namespace GroupDimension
@@ -1161,7 +1178,7 @@ theorem cube_mul_mod (h2 : ∀ a ∈ lowerCentralSeries G 1, a ^ 3 ∈ lowerCent
   have h3 : π (tc y x) ^ 3 = 1 := by
     rw [← map_pow, QuotientGroup.mk'_apply, QuotientGroup.eq_one_iff]; exact h2 _ hc
   rw [h3, mul_one] at key
-  simp only [← map_pow, ← map_mul, hπ] at key
+  simp only [hπ] at key
   exact key.symm
 
 variable (G) in
