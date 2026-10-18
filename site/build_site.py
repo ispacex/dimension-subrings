@@ -338,6 +338,9 @@ RESULTS = [  # (status, ru, en, ref)
     ("cp", "Порядок $2^{11}$, ступень $3$: $D_5=1$ при рангах $2$, $3$, $4$ и $\\ge8$; ранги $5$–$7$ открыты.",
      "Order $2^{11}$, class $3$: $D_5=1$ for ranks $2$, $3$, $4$ and $\\ge8$; ranks $5$–$7$ open.",
      "Prop. 5.7, §5"),
+    ("p", "Центральные произведения: $D_n(H\\circ E)=D_n(H)$ при $E\\in\\{D_8,Q_8\\}$ и $t\\in\\gamma_2(H)$, а для $E=M_{2^{k+2}}$ — при условии на $g^{-2}s$ (например, $s=g^2$). Все $386$ кандидатов порядков $2^6$–$2^9$ ему удовлетворяют, так что разложимость $H\\circ E$ с $E\\in\\{D_8,Q_8,M_{16}\\}$ контрпримера не даёт. Проверено независимой рецензией.",
+     "Central products: $D_n(H\\circ E)=D_n(H)$ for $E\\in\\{D_8,Q_8\\}$ and $t\\in\\gamma_2(H)$, and for $E=M_{2^{k+2}}$ under a condition on $g^{-2}s$ (e.g. $s=g^2$). All $386$ candidates of orders $2^6$–$2^9$ satisfy it, so splitting off $E\\in\\{D_8,Q_8,M_{16}\\}$ gives no counterexample. Checked by an independent review.",
+     "Prop. 5.8"),
     ("c", "$D_n(G)=\\gamma_n(G)$ при всех $n$ для всякой конечной группы порядка $<512$.",
      "$D_n(G)=\\gamma_n(G)$ for all $n$ and every finite group of order $<512$.", "Thm. 5.4(2)"),
     ("cp", "Нет $3$-кручения в $D_5(G)/\\gamma_5(G)$, если силовская $3$-подгруппа $G$ имеет порядок $\\le3^9$; $D_5=\\gamma_5$ для всех $3$-групп порядка $\\le3^9$.",
@@ -472,7 +475,9 @@ TIMELINE = [  # (iso date, [(ru, en)])
         ("Проверка вычислением для $C_9\\times C_3^{s-1}$ и $C_{27},C_{81}\\times C_3^{s-1}$: $2\\,057$ групп, $4\\,537$ элементов $z$, ни один не лежит в $D_5$.",
          "Computer check for $C_9\\times C_3^{s-1}$ and $C_{27},C_{81}\\times C_3^{s-1}$: $2\\,057$ groups, $4\\,537$ elements $z$, none in $D_5$."),
         ("Аудит ANUPQ (<a href=\"https://ispacex.github.io/gap/\">ispacex.github.io/gap</a>): шаг порождения для $3^9$ повторён на исправленной версии, результат совпал побайтно.",
-         "ANUPQ audit (<a href=\"https://ispacex.github.io/gap/\">ispacex.github.io/gap</a>): the $3^9$ descendant step was repeated with the fixed version, and the result is byte-identical.")]),
+         "ANUPQ audit (<a href=\"https://ispacex.github.io/gap/\">ispacex.github.io/gap</a>): the $3^9$ descendant step was repeated with the fixed version, and the result is byte-identical."),
+        ("На бумаге: $D_n(H\\circ E)=D_n(H)$ для центральных произведений с $D_8$, $Q_8$ и $M_{2^{k+2}}$ (присоединение центрального квадратного корня); у всех $386$ кандидатов порядков $2^6$–$2^9$ условия выполнены. Две независимые рецензии.",
+         "On paper: $D_n(H\\circ E)=D_n(H)$ for central products with $D_8$, $Q_8$ and $M_{2^{k+2}}$ (adjoining a central square root); all $386$ candidates of orders $2^6$–$2^9$ satisfy the conditions. Two independent reviews.")]),
 ]
 
 
