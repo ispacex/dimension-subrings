@@ -31,7 +31,8 @@ structure CentralRoot (K : Type*) [Group K] where
   gen : ∀ k : K, ∃ l : ℤ, k * r ^ (-l) ∈ H
   pow : ∀ d : ℤ, r ^ d ∈ H → r ^ d = (g : K) ^ d
 
-theorem center_comm {R : Type*} [Ring R] {u : R} (hu : u ∈ Subring.center R) (y : R) : y * u = u * y :=
+theorem center_comm {R : Type*} [Ring R] {u : R} (hu : u ∈ Subring.center R) (y : R) :
+    y * u = u * y :=
   Subring.mem_center_iff.mp hu y
 
 /-- `⁅a c, b d⁆ = ⁅a, b⁆` for central `c`, `d`. -/
