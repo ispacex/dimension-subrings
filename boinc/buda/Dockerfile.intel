@@ -1,7 +1,7 @@
-# The BUDA variant intel_cpu's Dockerfile (image tag boinc-v1) (boinc/README.md, "BUDA"). BUDA builds it on the volunteer's host,
+# The BUDA variant intel_cpu's Dockerfile (image tag boinc-v3) (boinc/README.md, "BUDA"). BUDA builds it on the volunteer's host,
 # so it only names the prebuilt image (by digest: the image is the version of the code) and runs
 # main.sh, which BUDA copies with the input file into the job's directory, mounted at /app.
-FROM ghcr.io/ispacex/dimension-subrings-boinc@sha256:a4e169d844d19a5a971d44737dbcc2ba630fe473be7781ef2bc8819c81628e1c
+FROM ghcr.io/ispacex/dimension-subrings-boinc@sha256:49b169a9a396087ac3542506d80bfce2ecb1d57fffa093e0624b7594fe8ef5dc
 ENTRYPOINT []
 WORKDIR /app
 ENV ARGS=""
