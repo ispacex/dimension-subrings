@@ -73,6 +73,6 @@ COPY boinc/run_piece.sh /opt/ds/boinc/run_piece.sh
 ARG CODE_COMMIT=unknown
 RUN echo "$CODE_COMMIT" > /opt/ds/COMMIT && chmod 755 /opt/ds/boinc/run_piece.sh
 # One GAP process per job, single-threaded: BOINC's "cpu" variant.
-ENV GAPMEM=4g
+ENV GAPMEM=16g
 WORKDIR /app
 ENTRYPOINT ["/opt/ds/boinc/run_piece.sh"]
