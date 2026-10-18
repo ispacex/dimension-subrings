@@ -486,8 +486,8 @@ TIMELINE = [  # (iso date, [(ru, en)])
          "On paper: gluing along a proper subgroup of $Z(E)$ — a lemma on central roots of any degree (Lemma 5.9). The splittings of the $386$ candidates: $20$ split, each has a splitting covered by Prop. 5.8. An independent review and a recount by another method."),
         ("Lean: лемма 5.9 (центральный корень любой степени) доказана в Lean, без <code>sorry</code>, только стандартные аксиомы; начата формализация остальных результатов «на бумаге».",
          "Lean: Lemma 5.9 (a central root of any degree) is proved in Lean, with no <code>sorry</code> and only the standard axioms; formalizing the other paper results has started."),
-        ("Lean: предложение 5.8 доказано в Lean во всех случаях ($D_8$, $Q_8$, $M_{2^{k+2}}$), с кольцевым утверждением для $D_8$ и шагом с квадратным корнем; $Q_8$ и $M_{2^{k+2}}$ сводятся к $D_8$ через одну надгруппу $(Q\\times\\mathbb Z)/\\langle(s,-2)\\rangle$.",
-         "Lean: Prop. 5.8 is proved in Lean in all cases ($D_8$, $Q_8$, $M_{2^{k+2}}$), with the ring statement for $D_8$ and the square-root step; $Q_8$ and $M_{2^{k+2}}$ reduce to $D_8$ through one overgroup $(Q\\times\\mathbb Z)/\\langle(s,-2)\\rangle$.")]),
+        ("Lean: предложение 5.8 доказано в Lean во всех случаях ($D_8$, $Q_8$, $M_{2^{k+2}}$), вместе с кольцевым утверждением $\\mathbb Z[H]\\cap\\Delta(Q)^n=\\Delta(H)^n$; $Q_8$ и $M_{2^{k+2}}$ сводятся к $D_8$ через одну надгруппу $(Q\\times\\mathbb Z)/\\langle(s,-2)\\rangle$.",
+         "Lean: Prop. 5.8 is proved in Lean in all cases ($D_8$, $Q_8$, $M_{2^{k+2}}$), with the ring statement $\\mathbb Z[H]\\cap\\Delta(Q)^n=\\Delta(H)^n$; $Q_8$ and $M_{2^{k+2}}$ reduce to $D_8$ through one overgroup $(Q\\times\\mathbb Z)/\\langle(s,-2)\\rangle$.")]),
 ]
 
 
