@@ -206,8 +206,6 @@ def dihedral (htc : S.t ∈ commutator S.H) : DihedralData S.G where
     rw [a', b', ← _root_.map_mul, Prod.mk_mul_mk]
     exact S.nmem_H2 S.αβ_nmem _
 
-theorem dihedral_H (htc : S.t ∈ commutator S.H) : (S.dihedral htc).H = S.H2 := rfl
-
 theorem dihedral_htc (htc : S.t ∈ commutator S.H) :
     (S.dihedral htc).t ∈ commutator (S.dihedral htc).H := by
   let f : S.H →* S.H2 :=
@@ -308,6 +306,8 @@ theorem sqrt_c (g : S.H) : (S.sqrt g).c = S.φ (g⁻¹ * g⁻¹ * S.s) := by
   rw [SqrtData.c, hs, _root_.map_mul, _root_.map_mul, _root_.map_inv]
   rfl
 
+-- `ℤ[H_K]` for a subgroup of a subgroup of a quotient: instance search needs more room.
+set_option synthInstance.maxHeartbeats 200000 in
 theorem sqrt_hc (g : S.H)
     (hc : ∀ j : ℕ, of ℤ S.H ((g⁻¹ * g⁻¹ * S.s) ^ 2 ^ j) - 1 ∈ augIdeal S.H ^ (j + 2)) (j : ℕ) :
     of ℤ S.fK.range ((S.sqrt g).c ^ 2 ^ j) - 1 ∈ augIdeal S.fK.range ^ (j + 2) := by
@@ -317,6 +317,7 @@ theorem sqrt_hc (g : S.H)
   exact this
 
 /-- **Proposition 5.8**, general form. -/
+set_option synthInstance.maxHeartbeats 200000 in
 theorem D_eq (htc : S.t ∈ commutator S.H) (g : S.H)
     (hc : ∀ j : ℕ, of ℤ S.H ((g⁻¹ * g⁻¹ * S.s) ^ 2 ^ j) - 1 ∈ augIdeal S.H ^ (j + 2))
     (n : ℕ) (hn : 2 ≤ n) : D n Q = (D n S.H).map S.H.subtype := by
