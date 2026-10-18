@@ -17,24 +17,24 @@ for o in [64, 128, 256, 512] do
   for pr in Candidates(o) do
     Q := PcGroupCode(pr[2], o);
     if MS_MonoInvolution(Q) = fail then Bump(tally, "not_candidate"); continue; fi;
-    Z := Centre(Q);
-    T := Filtered(List(RightTransversal(Q, Z), x -> x),
-      x -> not x in Z and x^2 in Z and Size(ConjugacyClass(Q, x)) = 2);
+    ZQ := Centre(Q);
+    T := Filtered(List(RightTransversal(Q, ZQ), x -> x),
+      x -> not x in ZQ and x^2 in ZQ and Size(ConjugacyClass(Q, x)) = 2);
     Es := []; info := [];
     for a in T do for b in T do
       if Comm(a, b) = One(Q) then continue; fi;
-      E := ClosureGroup(Z, [a, b]);
+      E := ClosureGroup(ZQ, [a, b]);
       i := Position(Es, E);
       if i = fail then
         Add(Es, E); i := Length(Es);
         Hp := Centralizer(Q, E);
         Add(info, rec(Hp := Hp, L := LowerCentralSeriesOfGroup(Hp), Phi := FrattiniSubgroup(Hp),
-          split := Size(Hp) * Size(E) / Size(Z) = Size(Q), cases := []));
+          split := Size(Hp) * Size(E) / Size(ZQ) = Size(Q), cases := []));
       fi;
       I := info[i];
       t := Comm(a, b);
       E0 := Subgroup(Q, [a, b]); ZE0 := Centre(E0);
-      if not (t in Z and Order(t) = 2 and IsCyclic(ZE0)) then Add(I.cases, "bad"); continue; fi;
+      if not (t in ZQ and Order(t) = 2 and IsCyclic(ZE0)) then Add(I.cases, "bad"); continue; fi;
       if Size(ZE0) = 2 then
         case := [IdGroup(E0), t in I.L[2], "A"];
       else
@@ -58,7 +58,7 @@ for o in [64, 128, 256, 512] do
         and c[2]))));
     od;
     Bump(tally, Concatenation("o", String(o), "_splits"));
-    Print(o, " ", pr[1], " ", Size(Z), " ", List(info, I -> [Size(I.Hp), I.split, I.cases]), "\n");
+    Print(o, " ", pr[1], " ", Size(ZQ), " ", List(info, I -> [Size(I.Hp), I.split, I.cases]), "\n");
   od;
 od;
 for k in SortedList(RecNames(tally)) do Print(k, " ", tally.(k), "\n"); od;
