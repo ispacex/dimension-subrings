@@ -12,7 +12,25 @@ TIMELINE below: they are the paper's numbers, and a change in the paper means a 
 coverage maps are computed from the rules in cover2() and cover3(), which say which theorem or run
 settles each (order, rank); nothing is computed anew. The output is a static site (HTML, inline
 SVG, KaTeX from jsDelivr, the two PDFs) published from the public repository ispacex/d5 via GitHub
-Pages; the code that makes it is this file.
+Pages; the code that makes it is this file and the page of the PDF viewer, site/viewer.html.
+
+Links into the paper. The drafts are compiled with hyperref's `destlabel`, so every \\label is a named
+destination of the PDF under its own name (`thm:small`, `prop:reduction`, `sec:three`); sections
+without a label keep hyperref's name (`section.N`); all sections of the drafts now have one. The viewer, viewer.html (EN, d5.pdf) and
+ru/viewer.html (RU, d5-ru.pdf), pdf.js from cdnjs, opens at
+
+    viewer.html#nameddest=thm:small        the statement with that label
+    viewer.html#page=6                     a page
+    viewer.html?file=d5-ru#nameddest=...   another PDF of paper/ (default: the page's language)
+
+and the plain PDF takes the same fragments (paper/d5.pdf#nameddest=thm:small). In page texts a
+reference is written [[label]] ("Thm. 5.4", linked to the viewer at the statement), [[label|#]]
+(the number alone, "5.4", for prose: "теоремы [[thm:exp3plus|#]]"), [[label|text]] or [[label|##]] (the
+number, not linked: inside another link); in code,
+paper_link(label, lang, text). Numbers and pages come from the .aux of the build, never from this
+file, and the build stops if a label is not in both drafts. Links to the code and data go to a
+pinned commit of this repository through gh(path, text, symbol), which stops the build if the file
+(or the declaration) is not there.
 
 Two languages from one source, as in the site of the metalibrary (ispacex/meta-rapacious,
 site/build_site.py, whose page shell this is): every text is written twice, side by side, as
@@ -44,7 +62,35 @@ OUT = pathlib.Path(args[0]) if args else HERE / "out"
 LANGS = ("ru", "en")
 SITE_TITLE = {"ru": "Задача о $D_5$", "en": "The $D_5$ problem"}
 REPO = "https://github.com/ispacex/dimension-subrings"
-CODE = REPO + "/tree/main/compute"
+PDF = {"en": "d5", "ru": "d5-ru"}  # paper/<name>.pdf of each language
+
+
+def git(*a):
+    return subprocess.run(["git", "-C", str(ROOT), *a], capture_output=True, text=True)
+
+
+# Links to the code and data name a commit, so that what a number rests on stays where it was: the
+# last commit that touched the code, the data or the Lean files (a commit of main when the site is
+# built from main).
+PIN = git("log", "-1", "--format=%H", "--", "compute", "groups", "notes", "scripts").stdout.strip()
+
+
+def gh(path, text, symbol=None):
+    """A link to path (a file or a directory) of this repository at PIN; with symbol, to the line of
+    the first `def symbol`/`theorem symbol`/... in the file. Stops the build if either is missing."""
+    kind = git("cat-file", "-t", f"{PIN}:{path}").stdout.strip()
+    if kind not in ("blob", "tree"):
+        sys.exit(f"gh(): {path} is not in {REPO} at {PIN[:7]}")
+    href = f"{REPO}/{'blob' if kind == 'blob' else 'tree'}/{PIN}/{path}"
+    if symbol:
+        lines = git("show", f"{PIN}:{path}").stdout.splitlines()
+        pat = re.compile(r"^\s*(?:@\[[^\]]*\]\s*)?(?:private\s+|noncomputable\s+|protected\s+)*"
+                         r"(?:theorem|lemma|def|abbrev|instance|structure|class)\s+" + re.escape(symbol) + r"\b")
+        at = [k for k, ln in enumerate(lines, 1) if pat.match(ln)]
+        if not at:
+            sys.exit(f"gh(): no declaration {symbol} in {path} at {PIN[:7]}")
+        href += f"#L{at[0]}"
+    return f'<a href="{href}">{text}</a>'
 
 NAV = [("index.html", "Сводка", "Summary"), ("coverage.html", "Карта покрытия", "Coverage map"),
        ("results.html", "Результаты", "Results"), ("computations.html", "Вычисления", "Computations"),
@@ -125,6 +171,9 @@ ol.tl { list-style:none; padding:0; border-left:2px solid var(--line); margin-le
 ol.tl li { position:relative; padding:0 0 .9rem 1.1rem; }
 ol.tl li::before { content:""; position:absolute; left:-.42rem; top:.45rem; width:.7rem; height:.7rem; border-radius:50%;
        background:var(--acc); border:2px solid var(--bg); }
+ol.toc { list-style:none; padding-left:0; } ol.toc > li { margin:.55rem 0; } ol.toc ul { margin:.2rem 0 0; padding-left:1.4rem; }
+ol.toc .stm { font-size:.88rem; margin:.15rem 0 0 1.4rem; } ol.toc .stm > span { white-space:nowrap; }
+ol.toc .stm > span .muted { white-space:normal; }
 ol.tl .d { font-weight:600; } ol.tl ul { margin:.2rem 0 0; padding-left:1.1rem; }
 """
 
@@ -203,6 +252,7 @@ def theme_switch(lang):
 
 
 def page(lang, fn, title, body, date, contact=False):
+    body = expand_refs(body, lang)
     PAGES.append((lang, fn, title, body))
     li = 1 if lang == "ru" else 2
     nav = "".join(f'<a href="{n[0]}"{" class=cur aria-current=page" if n[0] == fn else ""}>{n[li]}</a>' for n in NAV)
@@ -233,6 +283,57 @@ def page(lang, fn, title, body, date, contact=False):
     d = OUT if lang == "en" else OUT / "ru"
     d.mkdir(parents=True, exist_ok=True)
     (d / fn).write_text(doc, encoding="utf-8")
+
+
+PDFJS = "4.9.155"  # pdf.js on cdnjs, the version of the ship viewer of ispacex.github.io
+VIEWER_TEXT = {  # (ru, en)
+    "S_TOC": ("Содержание", "Contents"), "S_SEARCH": ("Поиск", "Search"), "S_PREV": ("Предыдущая страница", "Previous page"),
+    "S_NEXT": ("Следующая страница", "Next page"), "S_PAGE": ("Страница", "Page"), "S_ZOUT": ("Мельче", "Zoom out"),
+    "S_ZIN": ("Крупнее", "Zoom in"), "S_FIT": ("По ширине", "Fit width"), "S_DOWNLOAD": ("Скачать PDF", "Download the PDF"),
+    "S_PANEL": ("Содержание и поиск", "Contents and search"), "S_SEARCH_PH": ("Поиск по тексту…", "Search the text…"),
+    "S_SPREV": ("Предыдущее совпадение", "Previous match"), "S_SNEXT": ("Следующее совпадение", "Next match"),
+    "S_LOADING": ("Загрузка PDF…", "Loading the PDF…"),
+}
+VIEWER_JS = {  # (ru, en), for the script
+    "failed": ("Страница {n} не нарисовалась. Измените масштаб или прокрутите мимо и обратно.",
+               "Page {n} did not render. Change the zoom, or scroll away and back."),
+    "nodest": ("В этом PDF нет места «{d}».", "This PDF has no destination “{d}”."),
+    "notoc": ("Оглавления нет", "No contents"), "searching": ("Поиск…", "Searching…"),
+    "found": ("Найдено: {n}", "{n} matches"), "nothing": ("Ничего не найдено", "Nothing found"),
+    "pageN": ("С. {n}", "P. {n}"),
+    "loadfail": ('Не удалось открыть PDF. Скачать: <a href="{url}">{url}</a>', 'Could not open the PDF. Download it: <a href="{url}">{url}</a>'),
+}
+
+
+def viewer(lang):
+    """viewer.html of a language: the template site/viewer.html with the texts, the theme and the PDF
+    of that language filled in. Not in the search index (it has no text of its own)."""
+    li = 0 if lang == "ru" else 1
+    other = "en" if lang == "ru" else "ru"
+    twin = {"en": "ru/viewer.html", "ru": "../viewer.html"}[lang]
+    alt = "".join(f'\n<link rel="alternate" hreflang="{h}" href="{ORIGIN}{url(l, "viewer.html")}">'
+                  for h, l in (("en", "en"), ("ru", "ru"), ("x-default", "en")))
+    here = f'<strong lang="{lang}" aria-current="true">{lang.upper()}</strong>'
+    there = f'<a href="{twin}" hreflang="{other}" lang="{other}">{other.upper()}</a>'
+    switch = (f'<span class="lang" role="group" aria-label="{"Язык" if lang == "ru" else "Language"}">'
+              + (here + there if lang == "en" else there + here) + "</span>")
+    paper_dir = "paper/" if lang == "en" else "../paper/"
+    title = ("Черновик статьи" if lang == "ru" else "Paper draft") + " — " + plain(SITE_TITLE[lang])
+    fill = {"LANG": lang, "TITLE": html.escape(title), "ALT": alt, "THEME_HEAD": THEME_HEAD, "THEME_BODY": THEME_BODY,
+            "TOKENS": CSS.split("* { box-sizing")[0], "THEME_SWITCH": theme_switch(lang), "LANG_SWITCH": switch,
+            "SITE": html.escape(plain(SITE_TITLE[lang])), "PAPER": "Черновик" if lang == "ru" else "Paper",
+            "BACK_TITLE": "К странице статьи" if lang == "ru" else "Back to the paper page",
+            "PDF_HREF": paper_dir + PDF[lang] + ".pdf", "PAPER_DIR": paper_dir, "DEFAULT_FILE": PDF[lang], "PDFJS": PDFJS,
+            "STRINGS": json.dumps({k: v[li] for k, v in VIEWER_JS.items()}, ensure_ascii=False)}
+    fill.update({k: v[li] for k, v in VIEWER_TEXT.items()})
+    doc = (HERE / "viewer.html").read_text(encoding="utf-8")
+    doc = re.sub(r"__([A-Z_]+?)__", lambda m: fill[m.group(1)] if m.group(1) in fill else m.group(0), doc)
+    left = re.findall(r"__[A-Z_]+__", doc)
+    if left:
+        sys.exit(f"site/viewer.html: unfilled {sorted(set(left))}")
+    d = OUT if lang == "en" else OUT / "ru"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "viewer.html").write_text(doc, encoding="utf-8")
 
 
 def tex_text(s):
@@ -305,13 +406,14 @@ def write_search(order):
     return sum(len(p["blocks"]) for p in pages)
 
 
-def table(head, rows):
+def table(head, rows, ids=None):
     def cell(tag, c):
         if isinstance(c, tuple):
             return f'<{tag} class="{c[1]}">{c[0]}</{tag}>'
         return f"<{tag}>{c}</{tag}>"
     th = "".join(cell("th", h) for h in head)
-    body = "".join("<tr>" + "".join(cell("td", c) for c in r) + "</tr>" for r in rows)
+    body = "".join((f'<tr id="{ids[k]}">' if ids else "<tr>") + "".join(cell("td", c) for c in r) + "</tr>"
+                   for k, r in enumerate(rows))
     return f'<div class="tw"><table><thead><tr>{th}</tr></thead><tbody>{body}</tbody></table></div>'
 
 
@@ -327,60 +429,71 @@ def num(n, lang):
 STATUS = {"c": ("компьютер", "computer"), "p": ("на бумаге", "paper"), "cp": ("компьютер + бумага", "computer + paper"),
           "o": ("открыто", "open"), "l": ("Lean", "Lean")}
 
-RESULTS = [  # (status, ru, en, ref)
+RESULTS = [  # (status, ru, en, ref): ref is a str or (ru, en); [[label]] is a link to the statement
+    # in the paper, the other links go to what backs a number: a funnel or table of computations.html,
+    # the code and data at PIN, the Lean file, open.html or timeline.html. One link per claim.
     ("p", "Сведение: $D_5(G)\\subseteq\\gamma_4(G)$ для всех групп $\\iff$ $D_5(Q)=1$ для всех конечных $2$-групп ступени $3$. Для конечных $G$ порядок не растёт: достаточно $2$-групп порядка не больше $2$-части $|G|$.",
      "Reduction: $D_5(G)\\subseteq\\gamma_4(G)$ for all groups $\\iff$ $D_5(Q)=1$ for all finite $2$-groups of class $3$. For finite $G$ the order does not grow: $2$-groups up to the $2$-part of $|G|$ suffice.",
-     "Prop. 2.1, Rem. 2.3; first step in Lean"),
-    ("l", "Для колец Ли $D_5(L)\\subseteq\\gamma_4(L)$ (Ионин, Михайлов, Петров, 2026); формализация проверена, групповой вопрос сформулирован в Lean рядом.",
-     "For Lie rings $D_5(L)\\subseteq\\gamma_4(L)$ (Ionin, Mikhailov, Petrov, 2026); the formalization audited, the group question stated in Lean next to it.",
-     "§3, §4"),
-    ("cp", "$D_5(G)\\subseteq\\gamma_4(G)$ для всякой конечной $G$ с силовской $2$-подгруппой порядка $\\le2^{10}$, в частности для всех групп порядка $<2048$.",
-     "$D_5(G)\\subseteq\\gamma_4(G)$ for every finite $G$ with Sylow $2$-subgroup of order $\\le2^{10}$, in particular for all groups of order $<2048$.",
-     "Thm. 5.4(1)"),
-    ("cp", "Порядок $2^{11}$, ступень $3$: $D_5=1$ при рангах $2$, $3$, $4$ и $\\ge8$; ранги $5$–$7$ открыты.",
-     "Order $2^{11}$, class $3$: $D_5=1$ for ranks $2$, $3$, $4$ and $\\ge8$; ranks $5$–$7$ open.",
-     "Prop. 5.7, §5"),
-    ("l", "Центральные произведения: $D_n(H\\circ E)=D_n(H)$ при $E\\in\\{D_8,Q_8\\}$ и $t\\in\\gamma_2(H)$, а для $E=M_{2^{k+2}}$ — при условии на $g^{-2}s$ (например, $s=g^2$). Все $386$ кандидатов порядков $2^6$–$2^9$ ему удовлетворяют, так что разложимость $H\\circ E$ с $E\\in\\{D_8,Q_8,M_{16}\\}$ контрпримера не даёт. Склейка по собственной подгруппе $Z(E)$ закрыта при $\\sigma=g^{2^{j+1}}$ (центральный корень любой степени); у каждого из $20$ раскладывающихся кандидатов есть разложение, покрытое предложением 5.8. Предложение 5.8 и лемма 5.9 доказаны в Lean; проверка кандидатов — вычислением.",
-     "Central products: $D_n(H\\circ E)=D_n(H)$ for $E\\in\\{D_8,Q_8\\}$ and $t\\in\\gamma_2(H)$, and for $E=M_{2^{k+2}}$ under a condition on $g^{-2}s$ (e.g. $s=g^2$). All $386$ candidates of orders $2^6$–$2^9$ satisfy it, so splitting off $E\\in\\{D_8,Q_8,M_{16}\\}$ gives no counterexample. Gluing along a proper subgroup of $Z(E)$ is closed when $\\sigma=g^{2^{j+1}}$ (a central root of any degree); each of the $20$ split candidates has a splitting covered by Prop. 5.8. Prop. 5.8 and Lemma 5.9 are proved in Lean; the check of the candidates is by computer.",
-     "Prop. 5.8, Lemma 5.9"),
-    ("c", "$D_n(G)=\\gamma_n(G)$ при всех $n$ для всякой конечной группы порядка $<512$.",
-     "$D_n(G)=\\gamma_n(G)$ for all $n$ and every finite group of order $<512$.", "Thm. 5.4(2)"),
-    ("cp", "Нет $3$-кручения в $D_5(G)/\\gamma_5(G)$, если силовская $3$-подгруппа $G$ имеет порядок $\\le3^9$; $D_5=\\gamma_5$ для всех $3$-групп порядка $\\le3^9$.",
-     "No $3$-torsion in $D_5(G)/\\gamma_5(G)$ when the Sylow $3$-subgroup of $G$ has order $\\le3^9$; $D_5=\\gamma_5$ for all $3$-groups of order $\\le3^9$.",
-     "Thm. 6.12"),
+     ("[[prop:reduction]], [[rem:bounded]]; " + gh("groups/GroupDimension/Reduction.lean", "первый шаг — в Lean", "dimensionQuestion5_iff"),
+      "[[prop:reduction]], [[rem:bounded]]; " + gh("groups/GroupDimension/Reduction.lean", "first step in Lean", "dimensionQuestion5_iff"))),
+    ("l", "Для колец Ли $D_5(L)\\subseteq\\gamma_4(L)$ (<a href=\"https://arxiv.org/abs/2610.02042\">Ионин, Михайлов, Петров, 2026</a>); "
+          + gh("notes/formalization-audit.ru.md", "формализация проверена") + ", групповой вопрос "
+          + gh("groups/GroupDimension/Statements.lean", "сформулирован в Lean", "DimensionQuestion5") + " рядом.",
+     "For Lie rings $D_5(L)\\subseteq\\gamma_4(L)$ (<a href=\"https://arxiv.org/abs/2610.02042\">Ionin, Mikhailov, Petrov, 2026</a>); "
+          + gh("notes/formalization-audit.md", "the formalization audited") + ", the group question "
+          + gh("groups/GroupDimension/Statements.lean", "stated in Lean", "DimensionQuestion5") + " next to it.",
+     "[[sec:lie]], [[sec:lean]]"),
+    ("cp", "$D_5(G)\\subseteq\\gamma_4(G)$ для всякой конечной $G$ с силовской $2$-подгруппой <a href=\"computations.html#f210\">порядка $\\le2^{10}$</a>, в частности для всех групп порядка $<2048$.",
+     "$D_5(G)\\subseteq\\gamma_4(G)$ for every finite $G$ with Sylow $2$-subgroup <a href=\"computations.html#f210\">of order $\\le2^{10}$</a>, in particular for all groups of order $<2048$.",
+     "[[thm:small]](1)"),
+    ("cp", "Порядок $2^{11}$, ступень $3$: $D_5=1$ при <a href=\"computations.html#f211\">рангах $2$, $3$, $4$</a> и $\\ge8$; <a href=\"open.html#q-2048\">ранги $5$–$7$ открыты</a>.",
+     "Order $2^{11}$, class $3$: $D_5=1$ for <a href=\"computations.html#f211\">ranks $2$, $3$, $4$</a> and $\\ge8$; <a href=\"open.html#q-2048\">ranks $5$–$7$ open</a>.",
+     "[[prop:rank8]], [[sec:computations]]"),
+    ("l", "Центральные произведения: $D_n(H\\circ E)=D_n(H)$ при $E\\in\\{D_8,Q_8\\}$ и $t\\in\\gamma_2(H)$, а для $E=M_{2^{k+2}}$ — при условии на $g^{-2}s$ (например, $s=g^2$). "
+          + gh("compute/central", "Все $386$ кандидатов") + " порядков $2^6$–$2^9$ ему удовлетворяют, так что разложимость $H\\circ E$ с $E\\in\\{D_8,Q_8,M_{16}\\}$ контрпримера не даёт. "
+          "Склейка по собственной подгруппе $Z(E)$ закрыта при $\\sigma=g^{2^{j+1}}$ (центральный корень любой степени; <a href=\"open.html#q-central\">остальное открыто</a>); у каждого из $20$ раскладывающихся кандидатов есть разложение, покрытое предложением [[prop:central|#]]. Проверено независимыми рецензиями; " + gh("groups/GroupDimension/CentralRoot.lean", "лемма [[lem:root|##]] доказана в Lean", "D_n_eq_of_index") + ".",
+     "Central products: $D_n(H\\circ E)=D_n(H)$ for $E\\in\\{D_8,Q_8\\}$ and $t\\in\\gamma_2(H)$, and for $E=M_{2^{k+2}}$ under a condition on $g^{-2}s$ (e.g. $s=g^2$). "
+          + gh("compute/central", "All $386$ candidates") + " of orders $2^6$–$2^9$ satisfy it, so splitting off $E\\in\\{D_8,Q_8,M_{16}\\}$ gives no counterexample. "
+          "Gluing along a proper subgroup of $Z(E)$ is closed when $\\sigma=g^{2^{j+1}}$ (a central root of any degree; <a href=\"open.html#q-central\">the rest is open</a>); each of the $20$ split candidates has a splitting covered by Prop. [[prop:central|#]]. Checked by independent reviews; " + gh("groups/GroupDimension/CentralRoot.lean", "Lemma [[lem:root|##]] is proved in Lean", "D_n_eq_of_index") + ".",
+     "[[prop:central]], [[lem:root]]"),
+    ("c", "$D_n(G)=\\gamma_n(G)$ при всех $n$ для всякой конечной группы <a href=\"computations.html#runs\">порядка $<512$</a>.",
+     "$D_n(G)=\\gamma_n(G)$ for all $n$ and every finite group <a href=\"computations.html#runs\">of order $<512$</a>.", "[[thm:small]](2)"),
+    ("cp", "Нет $3$-кручения в $D_5(G)/\\gamma_5(G)$, если силовская $3$-подгруппа $G$ имеет порядок $\\le3^9$; $D_5=\\gamma_5$ для <a href=\"computations.html#f39\">всех $3$-групп порядка $\\le3^9$</a>.",
+     "No $3$-torsion in $D_5(G)/\\gamma_5(G)$ when the Sylow $3$-subgroup of $G$ has order $\\le3^9$; $D_5=\\gamma_5$ for <a href=\"computations.html#f39\">all $3$-groups of order $\\le3^9$</a>.",
+     "[[thm:3e9]]"),
     ("p", "$D_5(G)=\\gamma_5(G)$, если $G/\\gamma_2(G)$ конечна и имеет экспоненту $3$ — при любом ранге и порядке.",
-     "$D_5(G)=\\gamma_5(G)$ whenever $G/\\gamma_2(G)$ is finite of exponent $3$, of any rank and order.", "Thm. 6.6"),
-    ("p", "Более общо: $D_5(G)=\\gamma_5(G)$, если $G/\\gamma_2(G)\\cong C_{3^a}\\times C_3^{s-1}$, т.е. у неё не больше одного инварианта больше $3$ (в том числе $C_9\\times C_3^{s-1}$). Проверено независимой рецензией.",
-     "More generally: $D_5(G)=\\gamma_5(G)$ whenever $G/\\gamma_2(G)\\cong C_{3^a}\\times C_3^{s-1}$, i.e. it has at most one invariant larger than $3$ (including $C_9\\times C_3^{s-1}$). Checked by an independent review.",
-     "Thm. 6.8"),
+     "$D_5(G)=\\gamma_5(G)$ whenever $G/\\gamma_2(G)$ is finite of exponent $3$, of any rank and order.", "[[thm:exp3]]"),
+    ("p", "Более общо: $D_5(G)=\\gamma_5(G)$, если $G/\\gamma_2(G)\\cong C_{3^a}\\times C_3^{s-1}$, т.е. у неё не больше одного инварианта больше $3$ (в том числе $C_9\\times C_3^{s-1}$). <a href=\"timeline.html#d2026-10-18\">Проверено независимой рецензией</a>.",
+     "More generally: $D_5(G)=\\gamma_5(G)$ whenever $G/\\gamma_2(G)\\cong C_{3^a}\\times C_3^{s-1}$, i.e. it has at most one invariant larger than $3$ (including $C_9\\times C_3^{s-1}$). <a href=\"timeline.html#d2026-10-18\">Checked by an independent review</a>.",
+     "[[thm:exp3plus]]"),
     ("p", "$p$ нечётно, $|\\gamma_3/\\gamma_4|=p$, у $\\gamma_2/\\gamma_3$ не больше двух порождающих $\\Rightarrow$ $[\\gamma_2,\\gamma_2]\\subseteq\\gamma_5$. Отсюда: неметабелева $p$-группа ступени $4$ ранга $d$ имеет порядок $\\ge p^{d+5}$.",
      "$p$ odd, $|\\gamma_3/\\gamma_4|=p$, $\\gamma_2/\\gamma_3$ with at most two generators $\\Rightarrow$ $[\\gamma_2,\\gamma_2]\\subseteq\\gamma_5$. Hence a non-metabelian $p$-group of class $4$ and rank $d$ has order $\\ge p^{d+5}$.",
-     "Lemma 6.3, Prop. 6.5"),
+     "[[lem:lie]], [[prop:metab]]"),
     ("p", "$p$ нечётно, $P$ ступени $3$ с $|\\gamma_2/\\gamma_3|=p^2$, $|\\gamma_3|=p$ $\\Rightarrow$ у $p$-накрывающей группы $P^{*\\prime\\prime}=1$: все шаг-$1$ потомки метабелевы.",
      "$p$ odd, $P$ of class $3$ with $|\\gamma_2/\\gamma_3|=p^2$, $|\\gamma_3|=p$ $\\Rightarrow$ the $p$-covering group has $P^{*\\prime\\prime}=1$: all step-$1$ descendants are metabelian.",
-     "Thm. 6.10"),
-    ("c", "Факторы ступени $3$ групп рипсовского типа порядков $2^{40}$–$2^{107}$: везде $D_5=1$, в трёх из них $D_4\\ne1$ (с сертификатом точности).",
-     "Class-$3$ quotients of Rips-type groups of orders $2^{40}$–$2^{107}$: $D_5=1$ in all, $D_4\\ne1$ in three of them (with the exactness certificate).",
-     "§7, question 1"),
-    ("c", "Групповой аналог теоремы C при $c=4$: у группы плато $D_6\\ne1$, но $D_7=1$, так что $2c-2$ достигается и аналог, если верен, точен.",
-     "The group analogue of Theorem C at $c=4$: the plateau group has $D_6\\ne1$ but $D_7=1$, so $2c-2$ is attained and the analogue, if true, is sharp.",
-     "§7, question 3"),
+     "[[thm:pcover]]"),
+    ("c", "Факторы ступени $3$ групп рипсовского типа порядков $2^{40}$–$2^{107}$: везде $D_5=1$, в трёх из них $D_4\\ne1$ (" + gh("compute/magnus/README.md", "с сертификатом точности") + ").",
+     "Class-$3$ quotients of Rips-type groups of orders $2^{40}$–$2^{107}$: $D_5=1$ in all, $D_4\\ne1$ in three of them (" + gh("compute/magnus/README.md", "with the exactness certificate") + ").",
+     ("[[sec:open]], вопрос [[oq:main|#]]", "[[sec:open]], question [[oq:main|#]]")),
+    ("c", "Групповой аналог теоремы C при $c=4$: у группы плато $D_6\\ne1$, но $D_7=1$, так что $2c-2$ достигается и аналог, если верен, точен (<a href=\"open.html#q-theoremc\">открытый вопрос</a>).",
+     "The group analogue of Theorem C at $c=4$: the plateau group has $D_6\\ne1$ but $D_7=1$, so $2c-2$ is attained and the analogue, if true, is sharp (<a href=\"open.html#q-theoremc\">an open question</a>).",
+     ("[[sec:open]], вопрос [[oq:theoremc|#]]", "[[sec:open]], question [[oq:theoremc|#]]")),
 ]
 
-OPEN = [  # (ru, en)
-    ("Сам вопрос 20.84: $D_5(Q)=1$ для всех конечных $2$-групп ступени $3$? Контрпример обязан иметь $D_4(Q)\\ne1$ и порядок $\\ge2^{11}$.",
+OPEN = [  # (id, ru, en): the id is the anchor on open.html
+    ("q-main", "Сам вопрос 20.84: $D_5(Q)=1$ для всех конечных $2$-групп ступени $3$? Контрпример обязан иметь $D_4(Q)\\ne1$ и порядок $\\ge2^{11}$.",
      "Problem 20.84 itself: is $D_5(Q)=1$ for all finite $2$-groups of class $3$? A counterexample must have $D_4(Q)\\ne1$ and order $\\ge2^{11}$."),
-    ("Порядок $2^{11}$, ранги $5$–$7$. Ранг $5$ — основная стоимость (по оценке около $100$ процессорных суток); на ранге $7$ штатный ANUPQ переполняется.",
+    ("q-2048", "Порядок $2^{11}$, ранги $5$–$7$. Ранг $5$ — основная стоимость (по оценке около $100$ процессорных суток); на ранге $7$ штатный ANUPQ переполняется.",
      "Order $2^{11}$, ranks $5$–$7$. Rank $5$ is the bulk of the cost (about $100$ CPU-days by estimate); at rank $7$ the stock ANUPQ overflows."),
-    ("Бывает ли $3$-кручение в $D_5/\\gamma_5$ (достигается ли оценка Тахары $6$)? Минимальный пример — порядка $\\ge3^{10}$, ступени $4$, с циклическим центром и не меньше чем двумя инвариантами $\\ge9$ у $Q/\\gamma_2$.",
+    ("q-tahara", "Бывает ли $3$-кручение в $D_5/\\gamma_5$ (достигается ли оценка Тахары $6$)? Минимальный пример — порядка $\\ge3^{10}$, ступени $4$, с циклическим центром и не меньше чем двумя инвариантами $\\ge9$ у $Q/\\gamma_2$.",
      "Is there $3$-torsion in $D_5/\\gamma_5$, i.e. is Tahara's bound $6$ attained? A minimal example has order $\\ge3^{10}$, class $4$, cyclic centre and at least two invariants $\\ge9$ in $Q/\\gamma_2$."),
-    ("Следующий случай: у $Q/\\gamma_2$ два инварианта $\\ge9$, например $C_9\\times C_9\\times C_3$. Там $\\gamma_2/\\gamma_3$ может иметь экспоненту $9$, и доказательство теоремы 6.8 не проходит.",
-     "The next case: $Q/\\gamma_2$ with two invariants $\\ge9$, e.g. $C_9\\times C_9\\times C_3$. There $\\gamma_2/\\gamma_3$ may have exponent $9$, and the proof of Theorem 6.8 does not go through."),
-    ("Точный критерий нетерминальности групп типа $(d,2,1)$: при $3^8$ потомки есть у $190$ из $7\\,824$, известные необходимые условия выполнены ещё у $573$ терминальных.",
+    ("q-c9c9", "Следующий случай: у $Q/\\gamma_2$ два инварианта $\\ge9$, например $C_9\\times C_9\\times C_3$. Там $\\gamma_2/\\gamma_3$ может иметь экспоненту $9$, и доказательство теоремы [[thm:exp3plus|#]] не проходит.",
+     "The next case: $Q/\\gamma_2$ with two invariants $\\ge9$, e.g. $C_9\\times C_9\\times C_3$. There $\\gamma_2/\\gamma_3$ may have exponent $9$, and the proof of Theorem [[thm:exp3plus|#]] does not go through."),
+    ("q-nonterminal", "Точный критерий нетерминальности групп типа $(d,2,1)$: при $3^8$ потомки есть у $190$ из $7\\,824$, известные необходимые условия выполнены ещё у $573$ терминальных.",
      "An exact criterion for nonterminality of groups of type $(d,2,1)$: at $3^8$, $190$ of the $7\\,824$ have descendants, and the known necessary conditions also hold for $573$ terminal ones."),
-    ("Групповой аналог теоремы C: $D_{2c-1}(G)=1$ для метабелевых групп ступени $\\le c$? Открыто при $p=2$, $c\\ge3$ и при нечётном $p$, $c\\ge p+2$.",
+    ("q-theoremc", "Групповой аналог теоремы C: $D_{2c-1}(G)=1$ для метабелевых групп ступени $\\le c$? Открыто при $p=2$, $c\\ge3$ и при нечётном $p$, $c\\ge p+2$.",
      "The group analogue of Theorem C: $D_{2c-1}(G)=1$ for metabelian groups of class $\\le c$? Open for $p=2$, $c\\ge3$ and for odd $p$, $c\\ge p+2$."),
-    ("Центральные произведения со склейкой по собственной подгруппе, когда $\\sigma$ не является $2^{j+1}$-й степенью: $12$ из $212$ разложений кандидатов порядков $2^8$–$2^9$ ничем не покрыты. Проекцией на $H$ это в общем случае не сделать: у $D_8\\circ_{\\langle t\\rangle}M_{16}$ кольцевое равенство нарушено при $n=4,5$.",
+    ("q-central", "Центральные произведения со склейкой по собственной подгруппе, когда $\\sigma$ не является $2^{j+1}$-й степенью: $12$ из $212$ разложений кандидатов порядков $2^8$–$2^9$ ничем не покрыты. Проекцией на $H$ это в общем случае не сделать: у $D_8\\circ_{\\langle t\\rangle}M_{16}$ кольцевое равенство нарушено при $n=4,5$.",
      "Central products glued along a proper subgroup when $\\sigma$ is not a $2^{j+1}$-th power: $12$ of the $212$ splittings of candidates of orders $2^8$–$2^9$ are covered by nothing. A projection to $H$ cannot do it in general: for $D_8\\circ_{\\langle t\\rangle}M_{16}$ the ring equality fails at $n=4,5$."),
 ]
 
@@ -392,18 +505,18 @@ FUNNELS = [
         ("шаг-$1$ потомки (ANUPQ)", "step-$1$ descendants (ANUPQ)", 1819675),
         ("ступени $3$", "of class $3$", 88809),
         ("кандидаты: центр цикличен, $n\\in\\gamma_3\\cap M_5$", "candidates: cyclic centre, $n\\in\\gamma_3\\cap M_5$", 3400),
-        ("$D_5\\ne1$", "$D_5\\ne1$", 0)], "Prop. 5.3"),
+        ("$D_5\\ne1$", "$D_5\\ne1$", 0)], "[[prop:1024]]"),
     ("f211", "Порядок $2^{11}$, ранг $4$", "Order $2^{11}$, rank $4$", [
         ("вершины порядка $2^{10}$, ранг $4$", "vertices of order $2^{10}$, rank $4$", 946663 + 52181),
         ("оставлены отсечением как родители", "kept by the pruning as parents", 52181),
         ("кандидаты порядка $2^{11}$", "candidates of order $2^{11}$", 52568),
-        ("$D_5\\ne1$", "$D_5\\ne1$", 0)], "§5, “Next”"),
+        ("$D_5\\ne1$", "$D_5\\ne1$", 0)], ("[[sec:computations]], «Дальнейшее»", "[[sec:computations]], “Next”")),
     ("f38", "Порядок $3^8$", "Order $3^8$", [
         ("все группы порядка $3^8$", "all groups of order $3^8$", 1396077),
         ("ранг $3$ или $4$, ступень $4$", "rank $3$ or $4$, class $4$", 62257),
         ("неметабелевы (все ранга $3$)", "non-metabelian (all of rank $3$)", 904),
         ("$z\\in Q''\\cap M_5$", "$z\\in Q''\\cap M_5$", 699),
-        ("$z\\in D_5$", "$z\\in D_5$", 0)], "Thm. 6.12"),
+        ("$z\\in D_5$", "$z\\in D_5$", 0)], "[[thm:3e9]]"),
     ("f39", "Порядок $3^9$, ранги $3$–$4$", "Order $3^9$, ranks $3$–$4$", [
         ("все группы порядка $3^8$", "all groups of order $3^8$", 1396077),
         ("родители: ранг $3$–$4$, ступень $3$–$4$", "parents: rank $3$–$4$, class $3$–$4$", 771597),
@@ -411,7 +524,7 @@ FUNNELS = [
         ("шаг-$1$ потомки", "step-$1$ descendants", 305583),
         ("ступень $4$, $Q''\\ne1$, центр цикличен", "class $4$, $Q''\\ne1$, cyclic centre", 64362),
         ("кандидаты: $z\\in Q''\\cap M_5$", "candidates: $z\\in Q''\\cap M_5$", 62245),
-        ("$z\\in D_5$", "$z\\in D_5$", 0)], "Thm. 6.12"),
+        ("$z\\in D_5$", "$z\\in D_5$", 0)], "[[thm:3e9]]"),
 ]
 
 RUNS = [  # (what ru, what en, groups, result ru, result en, cost ru, cost en, code)
@@ -435,9 +548,9 @@ RUNS = [  # (what ru, what en, groups, result ru, result en, cost ru, cost en, c
      "$z\\notin D_5$ у всех; копредставления перепроверены ANUPQ", "$z\\notin D_5$ in all; presentations rechecked with ANUPQ",
      "$3$ ч $21$ мин на $4$ ядрах", "$3$ h $21$ min on $4$ cores", "compute/magnus"),
     ("случайные группы с $Q/\\gamma_2$ экспоненты $3$, $3^{10}$–$3^{79}$", "random groups with $Q/\\gamma_2$ of exponent $3$, $3^{10}$–$3^{79}$", 169,
-     "$D_5=1$ у всех (проверка теоремы 6.6)", "$D_5=1$ in all (a check of Thm. 6.6)", "$5$ мин", "$5$ min", "compute/magnus"),
+     "$D_5=1$ у всех (проверка теоремы [[thm:exp3|#]])", "$D_5=1$ in all (a check of Thm. [[thm:exp3|#]])", "$5$ мин", "$5$ min", "compute/magnus"),
     ("факторы групп рипсовского типа, $2^{40}$–$2^{107}$", "quotients of Rips-type groups, $2^{40}$–$2^{107}$", 14,
-     "$D_5=1$; $D_4\\ne1$ в трёх", "$D_5=1$; $D_4\\ne1$ in three", "", "", None),
+     "$D_5=1$; $D_4\\ne1$ в трёх", "$D_5=1$; $D_4\\ne1$ in three", "", "", "compute/magnus"),
 ]
 
 TIMELINE = [  # (iso date, [(ru, en)])
@@ -496,13 +609,13 @@ def cover2(n, d):
     if d > n - 2:  # class 3 needs |gamma_2/gamma_3|, |gamma_3| >= 2
         return None
     if n <= 9:
-        return "c", "Prop. 5.1"
+        return "c", "[[prop:computer]]"
     if n == 10:
-        return "cp", "Prop. 5.3"
+        return "cp", "[[prop:1024]]"
     if d in (2, 3, 4, 8):
-        return "cp", "Prop. 5.7" if d == 8 else "§5"
+        return "cp", "[[prop:rank8]]" if d == 8 else "[[sec:computations]]"
     if d == 9:
-        return "p", "Prop. 5.7"
+        return "p", "[[prop:rank8]]"
     return "o", None
 
 
@@ -513,12 +626,12 @@ def cover3(n, d):
     if d == 1 or n <= 7 or d == 2 or n < d + 5:
         # cyclic; or Q/gamma_5 of class <= 4 is metabelian (Prop. 6.5: non-metabelian needs
         # order >= 3^(d+5); for d = 2, gamma_2/gamma_3 is cyclic) and Gupta-Tahara applies
-        return "p", "Prop. 6.5 + [GT85]"
+        return "p", "[[prop:metab]] + [GT85]"
     if n == 8:
-        return "cp", "Thm. 6.6, 6.12"
+        return "cp", "[[thm:exp3]], [[thm:3e9]]"
     if n == 9:
-        return "c", "Thm. 6.12"
-    return "o", "Thm. 6.8"  # open; the part with at most one invariant > 3 in Q/gamma_2 is proved
+        return "c", "[[thm:3e9]]"
+    return "o", "[[thm:exp3plus]]"  # open; the part with at most one invariant > 3 in Q/gamma_2 is proved
 
 
 def grid(rows, cols, cover, p, lang, highlight=()):
@@ -527,8 +640,9 @@ def grid(rows, cols, cover, p, lang, highlight=()):
     cw, ch, left, top = 46, 30, 64, 34
     w, h = left + cw * len(cols) + 8, top + ch * len(rows) + 8
     s = [f'<svg viewBox="0 0 {w} {h}" width="{w}" height="{h}" role="img" aria-label="{t("Карта покрытия", "Coverage map")}">',
-         '<defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">'
-         '<rect width="6" height="6" style="fill:var(--open)"/><line x1="0" y1="0" x2="0" y2="6" style="stroke:var(--ppr);stroke-width:3"/></pattern></defs>',
+         ('<defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">'
+          '<rect width="6" height="6" style="fill:var(--open)"/><line x1="0" y1="0" x2="0" y2="6" style="stroke:var(--ppr);stroke-width:3"/></pattern></defs>'
+          if p == 3 else ""),  # one pattern per page: only the 3-group map is hatched
          f'<text x="{left + cw * len(cols) / 2}" y="12" text-anchor="middle" class="muted">{t("ранг", "rank")} $d$</text>'.replace("$d$", "d"),
          f'<text x="6" y="{top - 8}" class="muted">{t("порядок", "order")}</text>']
     for j, d in enumerate(cols):
@@ -544,12 +658,16 @@ def grid(rows, cols, cover, p, lang, highlight=()):
                 continue
             k, where = c
             kind = "x" if (k == "o" and p == 3) else k
-            tip = f"{p}{str(n).translate(SUP)}, d = {d}: {STATUS[k][0 if lang == 'ru' else 1]}" + (f" ({ref(where, lang)})" if where else "")
+            tip = f"{p}{str(n).translate(SUP)}, d = {d}: {STATUS[k][0 if lang == 'ru' else 1]}" + (f" ({refs_plain(where, lang)})" if where else "")
             if kind == "x":
                 tip += t(" — доказан случай, когда у $Q/\\gamma_2$ не больше одного инварианта $>3$", " — the case of $Q/\\gamma_2$ with at most one invariant $>3$ is proved").replace("$", "").replace("\\gamma_2", "γ₂")
-            s.append(f'<rect class="cell k-{kind}" x="{x}" y="{y}" width="{cw}" height="{ch}" rx="3"><title>{html.escape(tip)}</title></rect>')
             lab = {"c": "C", "p": "P", "cp": "C+P", "o": "?", "x": "?"}[kind]
-            s.append(f'<text class="ct" x="{x + cw / 2}" y="{y + ch / 2 + 4}" text-anchor="middle">{lab}</text>')
+            cell = (f'<rect class="cell k-{kind}" x="{x}" y="{y}" width="{cw}" height="{ch}" rx="3"><title>{html.escape(tip)}</title></rect>'
+                    f'<text class="ct" x="{x + cw / 2}" y="{y + ch / 2 + 4}" text-anchor="middle">{lab}</text>')
+            first = PAPER_REF.search(where or "")
+            if first:  # the cell opens the statement it rests on
+                cell = f'<a href="{paper_href(first.group(1))}">{cell}</a>'
+            s.append(cell)
             if (n, d) in highlight:
                 s.append(f'<rect class="hl" x="{x + 1}" y="{y + 1}" width="{cw - 2}" height="{ch - 2}" rx="3"/>')
     s.append("</svg>")
@@ -564,8 +682,8 @@ def legend(lang, three=False):
     if three:
         out = out.replace('<span class="tag o">?</span> ' + t("открыто", "open"),
                           '<span class="tag o" style="background:repeating-linear-gradient(45deg,var(--open) 0 4px,var(--ppr) 4px 7px)">?</span> '
-                          + t("открыто; доказан случай, когда у $Q/\\gamma_2$ не больше одного инварианта $>3$ (теорема 6.8)",
-                              "open; the case of $Q/\\gamma_2$ with at most one invariant $>3$ proved (Thm. 6.8)"))
+                          + t("открыто; доказан случай, когда у $Q/\\gamma_2$ не больше одного инварианта $>3$ (теорема [[thm:exp3plus|#]])",
+                              "open; the case of $Q/\\gamma_2$ with at most one invariant $>3$ proved ([[thm:exp3plus]])"))
     return f"<p><small>{out}. {t('Пустые клетки: таких групп нет.', 'Empty cells: no such groups.')}</small></p>"
 
 
@@ -607,15 +725,9 @@ def svg_text(s):
     return s.replace("$", "")
 
 
-REF_RU = (("Prop.", "Предл."), ("Thm.", "Теор."), ("Lemma", "Лемма"), ("Rem.", "Зам."), ("question", "вопрос"),
-          ("first step in Lean", "первый шаг — в Lean"), ("“Next”", "«Дальше»"))
-
-
 def ref(s, lang):
-    if lang == "ru":
-        for a, b in REF_RU:
-            s = s.replace(a, b)
-    return s
+    """A reference of RESULTS or FUNNELS: one string for both languages, or (ru, en)."""
+    return s if isinstance(s, str) else s[0 if lang == "ru" else 1]
 
 
 def tag(k, lang):
@@ -648,33 +760,153 @@ def tex_inline(s):
             inner, j = braced(s, i + len(a) - 1)
             close = {"<em>": "</em>", "<b>": "</b>", "<span>": "</span>"}[b]
             s = s[:i] + b + inner + close + s[j:]
-    for a, b in (("---", "—"), ("--", "–"), ("~", " "), ("``", "“"), ("''", "”"), ("\\,", " "), ("\\ ", " ")):
+    for a, b in (("---", "—"), ("--", "–"), ("~", " "), ("``", "“"), ("''", "”"), ("<<", "«"), (">>", "»"),
+                 ("\\,", " "), ("\\ ", " ")):
         s = s.replace(a, b)
+    s = re.sub(r"\\S(?![A-Za-z])", "§", s)
     return s.strip()
 
 
-def read_paper(tex):
+def read_abstract(tex):
     s = tex.read_text(encoding="utf-8")
     a = s.index("\\begin{abstract}") + len("\\begin{abstract}")
-    abstract = tex_inline(s[a:s.index("\\end{abstract}")])
-    secs, i = [], 0
-    while True:
-        i = s.find("\\section{", i)
+    return tex_inline(s[a:s.index("\\end{abstract}")])
+
+
+def groups(s, k=None):
+    """The top-level {...} groups of s, in order (the first k): '{1}{The question}' -> ['1', 'The question']."""
+    out, i = [], 0
+    while k is None or len(out) < k:
+        i = s.find("{", i)
         if i < 0:
             break
-        title, i = braced(s, i + len("\\section"))
-        secs.append(tex_inline(title))
-    return abstract, secs
+        g, i = braced(s, i)
+        out.append(g)
+    return out
+
+
+# What a label names, by its prefix (the drafts keep to it): words for the links, full and short.
+KINDS = {"thm": ("Теорема", "Теор.", "Theorem", "Thm."), "prop": ("Предложение", "Предл.", "Proposition", "Prop."),
+         "lem": ("Лемма", "Лемма", "Lemma", "Lemma"), "rem": ("Замечание", "Зам.", "Remark", "Rem."),
+         "q": ("Вопрос", "Вопрос", "Question", "Question"), "sec": ("Раздел", "§", "Section", "§"),
+         "section": ("Раздел", "§", "Section", "§"),
+         "oq": ("Открытый вопрос", "вопрос", "Open question", "question")}
+
+
+def read_aux(aux, tex):
+    r"""Labels, named destinations and contents of one compiled draft, from its .aux.
+
+    labels: label -> (number, page) for every label that names a destination of the PDF (destlabel
+    renames the anchor of the first \label after it); toc: (level, number, title, page, dest) of the
+    sections and subsections; titles: label -> the optional argument of its theorem environment."""
+    rename = dict(re.findall(r"\\hyper@newdestlabel\{([^{}]*)\}\{([^{}]*)\}", aux))
+    named = set(rename.values())
+    labels = {}
+    for m in re.finditer(r"\\newlabel\{([^{}]*)\}\{", aux):
+        g = groups(braced(aux, m.end() - 1)[0])
+        if m.group(1) in named and len(g) >= 4:
+            labels[m.group(1)] = (g[0], int(g[1]))
+    toc = []
+    for m in re.finditer(r"\\contentsline \{(section|subsection)\}\{", aux):
+        g = groups(aux[m.end() - 1:], 3)
+        head, page, anchor = g[0], g[1], g[2]
+        _, number, title = groups(head)[-3:]
+        dest = rename.get(anchor, anchor)
+        toc.append((m.group(1), number, title, int(page), dest))
+        if dest == anchor and number:  # a section without a label: hyperref's name, section.N
+            labels[dest] = (number, int(page))
+    titles = {}
+    for m in re.finditer(r"\\begin\{(theorem|proposition|lemma|remark|question)\}", tex):
+        j = m.end()
+        opt = ""
+        if tex[j] == "[":  # the optional argument, brackets inside braces allowed
+            depth, k = 0, j
+            while True:
+                c = tex[k]
+                depth += c in "{["
+                depth -= c in "}]"
+                if depth == 0:
+                    break
+                k += 1
+            opt, j = tex[j + 1:k], k + 1
+        lab = re.match(r"\s*\\label\{([^{}]*)\}", tex[j:])
+        if lab:
+            titles[lab.group(1)] = opt
+    return {"labels": labels, "toc": toc, "titles": titles}
+
+
+PAPERS = {}  # lang -> read_aux() of its draft, filled by main()
+PAPER_REF = re.compile(r"\[\[([A-Za-z0-9:._-]+)(?:\|([^\]]*))?\]\]")
+USED = set()  # labels the pages link to
+
+
+def paper_entry(label, lang):
+    """(kind words, number, page) of a label, or stop the build: it must be in both drafts, with the
+    same number."""
+    for l in LANGS:
+        if label not in PAPERS[l]["labels"]:
+            sys.exit(f"the site links to [[{label}]], which is not a label of {PDF[l]}.tex "
+                     f"(labels: {', '.join(sorted(PAPERS[l]['labels']))})")
+    if PAPERS["ru"]["labels"][label][0] != PAPERS["en"]["labels"][label][0]:
+        sys.exit(f"[[{label}]] has different numbers in the two drafts: {PAPERS['ru']['labels'][label][0]}, "
+                 f"{PAPERS['en']['labels'][label][0]}")
+    kind = re.split(r"[:.]", label)[0]
+    if kind not in KINDS:
+        sys.exit(f"[[{label}]]: unknown kind {kind!r} (known: {', '.join(KINDS)})")
+    USED.add(label)
+    number, pg = PAPERS[lang]["labels"][label]
+    return KINDS[kind][:2] if lang == "ru" else KINDS[kind][2:], number, pg
+
+
+def paper_href(label, viewer=""):
+    """The viewer at the destination; viewer: the path of viewer.html from the page."""
+    return f"{viewer}viewer.html#nameddest={label}"
+
+
+def paper_text(label, lang, short=True):
+    (full, abbr), number, pg = paper_entry(label, lang)
+    word = abbr if short else full
+    return f"{word}{number}" if word == "§" else f"{word}\u00a0{number}"
+
+
+def paper_link(label, lang, text=None, viewer=""):
+    """A link to the statement with this \\label in the paper of the page's language, opening the viewer
+    at it; text: what the link says (default "Thm. 5.4"; "#" for the number alone)."""
+    (full, abbr), number, pg = paper_entry(label, lang)
+    if text is None:
+        text = paper_text(label, lang)
+    elif text == "#":
+        text = number
+    tip = (f"{full} {number}, с. {pg} черновика" if lang == "ru" else f"{full} {number}, p. {pg} of the draft")
+    if full == "Раздел" or full == "Section":
+        tip = (f"§{number}, с. {pg} черновика" if lang == "ru" else f"§{number}, p. {pg} of the draft")
+    return f'<a class="pl" href="{paper_href(label, viewer)}" title="{html.escape(tip)}">{text}</a>'
+
+
+def expand_refs(s, lang):
+    """[[label]], [[label|#]], [[label|text]] -> paper_link(); [[label|##]] -> the number alone, not a link
+    (inside the text of another link)."""
+    return PAPER_REF.sub(lambda m: paper_entry(m.group(1), lang)[1] if m.group(2) == "##"
+                         else paper_link(m.group(1), lang, m.group(2)), s)
+
+
+def refs_plain(s, lang):
+    """The references of s as plain text (for SVG titles, where there are no links)."""
+    return PAPER_REF.sub(lambda m: paper_text(m.group(1), lang) if m.group(2) in (None, "") else
+                         (paper_entry(m.group(1), lang)[1] if m.group(2) == "#" else m.group(2)), s)
 
 
 def build_pdfs(dest):
-    """Compile both drafts in a scratch copy of PAPER (twice, for the references)."""
+    """Compile both drafts in a scratch copy of PAPER (twice, for the references), with every \\label a
+    named destination (hyperref's destlabel, passed on the command line: the sources stay as they are).
+    Yields the name, the number of pages and read_aux() of each."""
     with tempfile.TemporaryDirectory() as tmp:
         for f in PAPER.glob("*.tex"):
             shutil.copy(f, tmp)
-        for name in ("d5", "d5-ru"):
+        for name in PDF.values():
             for _ in range(2):
-                r = subprocess.run(["pdflatex", "-interaction=nonstopmode", "-halt-on-error", name + ".tex"],
+                r = subprocess.run(["pdflatex", "-interaction=nonstopmode", "-halt-on-error", f"-jobname={name}",
+                                    f"\\PassOptionsToPackage{{destlabel}}{{hyperref}}\\input{{{name}.tex}}"],
                                    cwd=tmp, capture_output=True, text=True, errors="replace")
                 if r.returncode:
                     sys.exit(f"pdflatex failed on {name}.tex:\n" + r.stdout[-2000:])
@@ -683,7 +915,9 @@ def build_pdfs(dest):
                 sys.exit(f"{name}.tex: undefined references")
             pages = re.search(r"Output written on .*?\((\d+) pages", log)
             shutil.copy(pathlib.Path(tmp) / (name + ".pdf"), dest / (name + ".pdf"))
-            yield name, int(pages.group(1)) if pages else None
+            aux = read_aux((pathlib.Path(tmp) / (name + ".aux")).read_text(errors="replace"),
+                           (PAPER / (name + ".tex")).read_text(encoding="utf-8"))
+            yield name, int(pages.group(1)) if pages else None, aux
 
 
 def paper_date():
@@ -705,16 +939,21 @@ def main():
     if OUT.exists():
         shutil.rmtree(OUT)
     (OUT / "paper").mkdir(parents=True)
-    pdfs = dict(build_pdfs(OUT / "paper"))
+    pdfs = {}
+    for name, n, aux in build_pdfs(OUT / "paper"):
+        pdfs[name] = n
+        PAPERS[next(l for l in LANGS if PDF[l] == name)] = aux
     pdate = paper_date()
     date = fmt_date(max(pdate, TIMELINE[-1][0]))
-    paper = {"en": read_paper(PAPER / "d5.tex"), "ru": read_paper(PAPER / "d5-ru.tex")}
+    paper = {lang: read_abstract(PAPER / f"{PDF[lang]}.tex") for lang in LANGS}
     for lang in LANGS:
         site(lang, date, paper, pdfs, fmt_date(pdate))
+        viewer(lang)
     nblocks = write_search({h: i for i, (h, _, _) in enumerate(NAV)})
     print("search index:", sum(1 for p in PAGES if p[1] != "search.html"), "pages,", nblocks, "blocks")
     (OUT / ".nojekyll").write_text("")
-    print("site written to", OUT, "| paper of", pdate, "| pages:", pdfs)
+    print("site written to", OUT, "| paper of", pdate, "| pages:", pdfs, "| paper links:", len(USED), "labels",
+          "| code at", PIN[:7])
 
 
 def site(lang, date, paper, pdfs, pdate):
@@ -773,58 +1012,66 @@ and we have not solved it. This site shows what is proved, what is computed, and
 """) + grid(range(4, 12), range(2, 10), cover2, 2, lang, highlight={(11, 5), (11, 6), (11, 7)}) + legend(lang) + t("""
 <h2>Последнее</h2>""", """
 <h2>Latest</h2>""") + "<ul>" + "".join(f"<li>{x[li]}</li>" for x in TIMELINE[-1][1]) + "</ul>" + t(f"""
-<p>Черновик статьи (от {pdate['ru']}): <a href="paper/d5-ru.pdf">по-русски</a>, <a href="paper/d5.pdf">по-английски</a>;
-вся история&nbsp;— <a href="timeline.html">хронология</a>.</p>""", f"""
-<p>The paper draft (of {pdate['en']}): <a href="paper/d5.pdf">English</a>, <a href="paper/d5-ru.pdf">Russian</a>;
-the whole story is in the <a href="timeline.html">timeline</a>.</p>"""), contact=True)
+<p>Черновик статьи (от {pdate['ru']}): <a href="viewer.html">по-русски</a>, <a href="../viewer.html" hreflang="en">по-английски</a>
+(PDF: <a href="paper/d5-ru.pdf">RU</a>, <a href="paper/d5.pdf">EN</a>); вся история&nbsp;— <a href="timeline.html">хронология</a>.</p>""", f"""
+<p>The paper draft (of {pdate['en']}): <a href="viewer.html">English</a>, <a href="ru/viewer.html" hreflang="ru">Russian</a>
+(PDF: <a href="paper/d5.pdf">EN</a>, <a href="paper/d5-ru.pdf">RU</a>); the whole story is in the <a href="timeline.html">timeline</a>.</p>"""), contact=True)
 
     # ---------- coverage ----------
     P("coverage.html", t("Карта покрытия", "Coverage map"), t("""
 <p>Каждая клетка&nbsp;— все группы данного порядка и ранга (числа порождающих). Цвет говорит, чем закрыт вопрос для всех них:
-вычислением, доказательством или обоими вместе. Наведите на клетку&nbsp;— появится ссылка на утверждение черновика.</p>
-<h2>$2$-группы ступени $3$: $D_5(Q)=1$?</h2>
-<p>Это и есть задача 20.84: по сведению (предложение 2.1) $D_5\\subseteq\\gamma_4$ для всех групп тогда и только тогда,
+вычислением, доказательством или обоими вместе. Наведите на клетку&nbsp;— появится ссылка на утверждение черновика; щелчок открывает это утверждение.</p>
+<h2 id="c2">$2$-группы ступени $3$: $D_5(Q)=1$?</h2>
+<p>Это и есть задача 20.84: по сведению (предложение [[prop:reduction|#]]) $D_5\\subseteq\\gamma_4$ для всех групп тогда и только тогда,
 когда $D_5(Q)=1$ для всех конечных $2$-групп ступени $3$. Ступень $3$ требует $d\\le n-2$ при порядке $2^n$.
 Обведены открытые клетки порядка $2^{11}$: ранги $5$–$7$.</p>""", """
 <p>Each cell stands for all groups of the given order and rank (number of generators). The colour says what settles the
-question for all of them: a computation, a proof, or both. Hover over a cell for the statement of the draft it rests on.</p>
-<h2>$2$-groups of class $3$: is $D_5(Q)=1$?</h2>
-<p>This is Problem 20.84 itself: by the reduction (Proposition 2.1), $D_5\\subseteq\\gamma_4$ for all groups if and only if
+question for all of them: a computation, a proof, or both. Hover over a cell for the statement of the draft it rests on; a click opens that statement.</p>
+<h2 id="c2">$2$-groups of class $3$: is $D_5(Q)=1$?</h2>
+<p>This is Problem 20.84 itself: by the reduction (Proposition [[prop:reduction|#]]), $D_5\\subseteq\\gamma_4$ for all groups if and only if
 $D_5(Q)=1$ for every finite $2$-group of class $3$. Class $3$ forces $d\\le n-2$ at order $2^n$.
 The open cells at order $2^{11}$, ranks $5$–$7$, are outlined.</p>""")
       + grid(range(4, 12), range(2, 10), cover2, 2, lang, highlight={(11, 5), (11, 6), (11, 7)}) + legend(lang) + t("""
 <ul>
 <li>До $2^8$&nbsp;— решётка $\\Delta^n$ для всех групп; $2^9$&nbsp;— сито Дженнингса и решётка.</li>
 <li>$2^{10}$&nbsp;— лемма о минимальном контрпримере: достаточно шаг-$1$ потомков групп порядка $2^9$ (ANUPQ), $3400$ кандидатов.</li>
-<li>$2^{11}$&nbsp;— то же с отсечением целых поддеревьев; ранг $8$&nbsp;— квадратичными формами и леммой 5.6, ранг $9$ невозможен.</li>
+<li>$2^{11}$&nbsp;— то же с отсечением целых поддеревьев; ранг $8$&nbsp;— квадратичными формами и леммой [[lem:z4|#]], ранг $9$ невозможен.</li>
 </ul>
-<h2>$3$-группы: $D_5(Q)=\\gamma_5(Q)$?</h2>
+<h2 id="c3">$3$-группы: $D_5(Q)=\\gamma_5(Q)$?</h2>
 <p>Это вопрос о $3$-кручении в $D_5/\\gamma_5$ (оценка Тахары: экспонента делит $6$). Клетки «на бумаге» закрыты так:
 если $Q/\\gamma_5$ метабелева, то $D_5=\\gamma_5$ по Гупте–Тахаре, а неметабелева группа ступени $4$ ранга $d$ имеет порядок
-$\\ge3^{d+5}$ (предложение 6.5); при $d=2$ фактор $\\gamma_2/\\gamma_3$ цикличен. Остальное&nbsp;— перебор до $3^9$.
-Открытые клетки заштрихованы: в них доказан случай, когда у $Q/\\gamma_2$ не больше одного инварианта $>3$ (теорема 6.8).</p>""", """
+$\\ge3^{d+5}$ (предложение [[prop:metab|#]]); при $d=2$ фактор $\\gamma_2/\\gamma_3$ цикличен. Остальное&nbsp;— перебор до $3^9$.
+Открытые клетки заштрихованы: в них доказан случай, когда у $Q/\\gamma_2$ не больше одного инварианта $>3$ (теорема [[thm:exp3plus|#]]).</p>""", """
 <ul>
 <li>Up to $2^8$: the lattice $\\Delta^n$ for all groups; $2^9$: the Jennings sieve and the lattice.</li>
 <li>$2^{10}$: the minimal-counterexample lemma reduces to step-$1$ descendants of groups of order $2^9$ (ANUPQ), $3400$ candidates.</li>
-<li>$2^{11}$: the same, with whole subtrees cut; rank $8$ by quadratic forms and Lemma 5.6, rank $9$ impossible.</li>
+<li>$2^{11}$: the same, with whole subtrees cut; rank $8$ by quadratic forms and Lemma [[lem:z4|#]], rank $9$ impossible.</li>
 </ul>
-<h2>$3$-groups: is $D_5(Q)=\\gamma_5(Q)$?</h2>
+<h2 id="c3">$3$-groups: is $D_5(Q)=\\gamma_5(Q)$?</h2>
 <p>This is the question of $3$-torsion in $D_5/\\gamma_5$ (Tahara: the exponent divides $6$). The “paper” cells are closed thus:
 if $Q/\\gamma_5$ is metabelian, then $D_5=\\gamma_5$ by Gupta–Tahara, and a non-metabelian group of class $4$ and rank $d$
-has order $\\ge3^{d+5}$ (Proposition 6.5); for $d=2$ the factor $\\gamma_2/\\gamma_3$ is cyclic. The rest is the search up to $3^9$.
-Open cells are hatched: there the case of $Q/\\gamma_2$ with at most one invariant $>3$ is proved (Theorem 6.8).</p>""")
+has order $\\ge3^{d+5}$ (Proposition [[prop:metab|#]]); for $d=2$ the factor $\\gamma_2/\\gamma_3$ is cyclic. The rest is the search up to $3^9$.
+Open cells are hatched: there the case of $Q/\\gamma_2$ with at most one invariant $>3$ is proved (Theorem [[thm:exp3plus|#]]).</p>""")
       + grid(range(4, 13), range(2, 9), cover3, 3, lang) + legend(lang, three=True))
 
     # ---------- results ----------
     rows = [(tag(k, lang), (r[li], "l"), (ref(where, lang), "l")) for k, *r, where in RESULTS]
-    P("results.html", t("Результаты", "Results"), t("""
-<p>Главные утверждения черновика с их статусом. Номера&nbsp;— по <a href="paper.html">версии статьи на этом сайте</a>.
+    rids = []  # row anchors, by the first label of the row: results.html#r-thm-small, #r-thm-small-2
+    for *_, where in RESULTS:
+        rid = "r-" + re.sub(r"[:.]", "-", PAPER_REF.search(ref(where, "en")).group(1))
+        rids.append(rid if rid not in rids else f"{rid}-{sum(1 for x in rids if x.startswith(rid))+1}")
+    P("results.html", t("Результаты", "Results"), t(f"""
+<p>Главные утверждения черновика с их статусом. Номера&nbsp;— по <a href="paper.html">версии статьи на этом сайте</a>;
+ссылка на номер открывает статью на этом утверждении, ссылки в тексте ведут к вычислению, коду и данным (коммит
+<a href="{REPO}/tree/{PIN}"><code>{PIN[:7]}</code></a>), файлам Lean и открытым вопросам.
 <span class="tag c">компьютер</span>&nbsp;— проверено точным вычислением (решётки по модулю $p^E$ в форме Хауэлла или усечённая
-алгебра Магнуса, с сертификатом точности); <span class="tag p">на бумаге</span>&nbsp;— доказано; <span class="tag l">Lean</span>&nbsp;— формально проверено.</p>""", """
-<p>The main statements of the draft with their status. Numbers refer to the <a href="paper.html">version of the paper on this site</a>.
+алгебра Магнуса, с сертификатом точности); <span class="tag p">на бумаге</span>&nbsp;— доказано; <span class="tag l">Lean</span>&nbsp;— формально проверено.</p>""", f"""
+<p>The main statements of the draft with their status. Numbers refer to the <a href="paper.html">version of the paper on this site</a>;
+a number opens the paper at the statement, and the links in the text lead to the computation, the code and data (commit
+<a href="{REPO}/tree/{PIN}"><code>{PIN[:7]}</code></a>), the Lean files and the open questions.
 <span class="tag c">computer</span>: checked by an exact computation (lattices modulo $p^E$ in Howell form, or the truncated
 Magnus algebra, with the exactness certificate); <span class="tag p">paper</span>: proved; <span class="tag l">Lean</span>: formally verified.</p>""")
-      + table([t("Статус", "Status"), (t("Утверждение", "Statement"), "l"), (t("Где", "Where"), "l")], rows))
+      + table([t("Статус", "Status"), (t("Утверждение", "Statement"), "l"), (t("Где", "Where"), "l")], rows, rids))
 
     # ---------- computations ----------
     body = t("""
@@ -836,9 +1083,9 @@ is computed. The scale is logarithmic. The last step of every funnel is zero.</p
         body += f'<h2 id="{fid}">{t(ru, en)}</h2>' + funnel(steps, lang) + f"<p><small>{ref(where, lang)}</small></p>"
     rrows = []
     for r in RUNS:
-        code = f'<a href="{REPO}/tree/main/{r[7]}"><code>{r[7]}</code></a>' if r[7] else ""
+        code = gh(r[7], f"<code>{r[7]}</code>") if r[7] else ""
         rrows.append(((r[li], "l"), (num(r[2], lang), "r"), (r[3 + li], "l"), (r[5 + li], "l"), (code, "l")))
-    body += t("<h2>Все прогоны</h2>", "<h2>All runs</h2>") + table(
+    body += t('<h2 id="runs">Все прогоны</h2>', '<h2 id="runs">All runs</h2>') + table(
         [(t("Что", "What"), "l"), (t("Групп", "Groups"), "r"), (t("Итог", "Result"), "l"), (t("Время", "Time"), "l"),
          (t("Код", "Code"), "l")], rrows) + t("""
 <p><small>Метод: для конечной $G$ решётка $\\Delta^n$ строится в форме Хауэлла над $\\mathbb Z/p^E$; невхождение $g-1\\notin\\Delta^n+p^E\\Delta$
@@ -852,7 +1099,7 @@ Checks: two independent methods, PARI/GP, known values.</small></p>""")
     P("computations.html", t("Вычисления", "Computations"), body)
 
     # ---------- timeline ----------
-    items = "".join(f'<li><span class="d">{fmt_date(d)[lang]}</span><ul>' + "".join(f"<li>{x[li]}</li>" for x in xs)
+    items = "".join(f'<li id="d{d}"><span class="d">{fmt_date(d)[lang]}</span><ul>' + "".join(f"<li>{x[li]}</li>" for x in xs)
                     + "</ul></li>" for d, xs in reversed(TIMELINE))
     P("timeline.html", t("Хронология", "Timeline"), t("<p>Что и когда сделано, от последнего к первому.</p>",
                                                        "<p>What was done and when, latest first.</p>")
@@ -862,21 +1109,63 @@ Checks: two independent methods, PARI/GP, known values.</small></p>""")
     P("open.html", t("Открытые вопросы", "Open questions"), t("""
 <p>Что осталось, по убыванию важности.</p>""", """
 <p>What is left, most important first.</p>""") + "<ol>" + "".join(
-        f"<li><p>{x[li]}</p></li>" for x in OPEN) + "</ol>")
+        f'<li id="{x[0]}"><p>{x[1 + li]}</p></li>' for x in OPEN) + "</ol>")
 
     # ---------- paper ----------
-    abstract, secs = paper[lang]
-    other = paper["en" if lang == "ru" else "ru"][1]
-    sec_rows = "".join(f"<li>{s}</li>" for s in secs)
+    # The contents from the .aux of the build: every entry has an anchor here and opens the viewer at
+    # its destination; under each section, the numbered statements of it, each with the anchor of its
+    # label (paper.html#thm:small).
+    abstract = paper[lang]
+    P_ = PAPERS[lang]
+    if [e[1] for e in P_["toc"] if e[0] == "section"] != [e[1] for e in PAPERS["en" if lang == "ru" else "ru"]["toc"] if e[0] == "section"]:
+        sys.exit("the two drafts have different sections")
+    pp = t("с.", "p.")
+
+    def statements(sec):
+        labs = [lb for lb, (n, _) in P_["labels"].items() if re.split(r"[:.]", lb)[0] not in ("sec", "section")
+                and n.split(".")[0] == sec]
+        labs.sort(key=lambda lb: [int(x) for x in P_["labels"][lb][0].split(".")])
+        out = []
+        for lb in labs:
+            ttl = P_["titles"].get(lb, "")
+            if ttl.startswith("{") and braced(ttl, 0)[1] == len(ttl):
+                ttl = ttl[1:-1]
+            ttl = "" if not ttl or ttl.startswith("\\textbf{[") else f' <span class="muted">({tex_inline(ttl)})</span>'
+            out.append(f'<span id="{lb}">{paper_link(lb, lang)}{ttl}</span>')
+        return f'<div class="stm">{" · ".join(out)}</div>' if out else ""
+
+    items, sub, k = [], [], 0
+    for level, number, title, pg, dest in P_["toc"] + [("end", "", "", 0, "")]:
+        if level != "subsection" and sub:
+            items[-1] = items[-1].replace("</li>", "<ul>" + "".join(sub) + "</ul></li>")
+            sub = []
+        if level == "end":
+            break
+        entry = (f'<a href="{paper_href(dest)}">{tex_inline(title)}</a> <small>{pp}&nbsp;{pg}</small>')
+        if level == "section":
+            sid = dest if ":" in dest else (f"sec-{number}" if number else "references")
+            k = number
+            items.append(f'<li id="{sid}"{"" if number else " class=nonum"}>{(number + ". ") if number else ""}{entry}'
+                         f'{statements(number) if number else ""}</li>')
+        else:
+            sub.append(f'<li id="sec-{k}-{len(sub) + 1}">{entry}</li>')
     P("paper.html", t("Черновик статьи", "Paper draft"), t(f"""
-<p>Версия от {pdate['ru']}: <a href="paper/d5-ru.pdf"><b>PDF по-русски</b></a> ({pdfs.get('d5-ru')} с.),
-<a href="paper/d5.pdf"><b>PDF по-английски</b></a> ({pdfs.get('d5')} с.). Это черновик: статус каждого утверждения отмечен в тексте
-(<b>[Lean]</b>, <b>[на бумаге]</b>, <b>[компьютер]</b>, <b>[открыто]</b>).</p>""", f"""
-<p>Version of {pdate['en']}: <a href="paper/d5.pdf"><b>PDF in English</b></a> ({pdfs.get('d5')} pp.),
-<a href="paper/d5-ru.pdf"><b>PDF in Russian</b></a> ({pdfs.get('d5-ru')} pp.). This is a draft: the status of every statement is marked in the text
-(<b>[Lean]</b>, <b>[paper]</b>, <b>[computer]</b>, <b>[open]</b>).</p>""") + t("<h2>Аннотация</h2>", "<h2>Abstract</h2>")
-      + f"<p>{abstract}</p>" + t("<h2>Содержание</h2>", "<h2>Contents</h2>") + f"<ol>{sec_rows}</ol>")
-    assert len(secs) == len(other), "the two drafts have different sections"
+<p>Версия от {pdate['ru']}. Читать: <a href="viewer.html"><b>по-русски</b></a> ({pdfs.get('d5-ru')} с.),
+<a href="../viewer.html" hreflang="en"><b>по-английски</b></a> ({pdfs.get('d5')} с.); скачать PDF: <a href="paper/d5-ru.pdf">RU</a>,
+<a href="paper/d5.pdf">EN</a>. Это черновик: статус каждого утверждения отмечен в тексте
+(<b>[Lean]</b>, <b>[на бумаге]</b>, <b>[компьютер]</b>, <b>[открыто]</b>).</p>
+<p><small>На любое место статьи можно сослаться: <code>viewer.html#nameddest=thm:small</code> открывает теорему с меткой
+<code>thm:small</code>, <code>viewer.html#page=6</code>&nbsp;— страницу; метки&nbsp;— в содержании ниже (у каждого пункта есть и якорь
+на этой странице). То же работает с самим PDF: <code>paper/d5-ru.pdf#nameddest=thm:small</code>.</small></p>""", f"""
+<p>Version of {pdate['en']}. Read it: <a href="viewer.html"><b>in English</b></a> ({pdfs.get('d5')} pp.),
+<a href="ru/viewer.html" hreflang="ru"><b>in Russian</b></a> ({pdfs.get('d5-ru')} pp.); download the PDF: <a href="paper/d5.pdf">EN</a>,
+<a href="paper/d5-ru.pdf">RU</a>. This is a draft: the status of every statement is marked in the text
+(<b>[Lean]</b>, <b>[paper]</b>, <b>[computer]</b>, <b>[open]</b>).</p>
+<p><small>Any place of the paper can be linked to: <code>viewer.html#nameddest=thm:small</code> opens the theorem labelled
+<code>thm:small</code>, <code>viewer.html#page=6</code> a page; the labels are in the contents below (each entry also has an anchor
+on this page). The same works with the PDF itself: <code>paper/d5.pdf#nameddest=thm:small</code>.</small></p>""") + t("<h2>Аннотация</h2>", "<h2>Abstract</h2>")
+      + f"<p>{abstract}</p>" + t("<h2>Содержание</h2>", "<h2>Contents</h2>")
+      + f'<ol class="toc">{"".join(items)}</ol>')
 
     # ---------- search ----------
     P("search.html", t("Поиск по сайту", "Site search"), t("""
