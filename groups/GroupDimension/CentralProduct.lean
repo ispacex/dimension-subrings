@@ -383,7 +383,7 @@ theorem D_n_eq_of_central_product {Q : Type*} [Group Q] (H : Subgroup Q) (α β 
     (htc : t ∈ commutator H)
     (gen : ∀ q : Q, ∃ h ∈ H, q = h ∨ q = h * α ∨ q = h * β ∨ q = h * (α * β))
     (α_nmem : α ∉ H) (β_nmem : β ∉ H) (αβ_nmem : α * β ∉ H)
-    (hc : ∀ j : ℕ, of ℤ H ((g⁻¹ * g⁻¹ * s) ^ 2 ^ j) - 1 ∈ augIdeal H ^ (j + 2))
+    (hc : ∀ j : ℕ, of ℤ H ((g⁻¹ * g⁻¹ * s) ^ 2 ^ j) - 1 ∈ augIdeal H ^ (j + 2)) :
     (∀ (n : ℕ) (x : MonoidAlgebra ℤ H),
         mapDomainRingHom ℤ H.subtype x ∈ augIdeal Q ^ n ↔ x ∈ augIdeal H ^ n) ∧
       ∀ n, 2 ≤ n → D n Q = (D n H).map H.subtype :=
@@ -397,7 +397,7 @@ theorem D_n_eq_of_quaternion {Q : Type*} [Group Q] (H : Subgroup Q) (α β : Q) 
     (hα : α * α = t) (hβ : β * β = t) (ht : (t : Q) = α * β * α⁻¹ * β⁻¹)
     (htc : t ∈ commutator H)
     (gen : ∀ q : Q, ∃ h ∈ H, q = h ∨ q = h * α ∨ q = h * β ∨ q = h * (α * β))
-    (α_nmem : α ∉ H) (β_nmem : β ∉ H) (αβ_nmem : α * β ∉ H)
+    (α_nmem : α ∉ H) (β_nmem : β ∉ H) (αβ_nmem : α * β ∉ H) :
     (∀ (n : ℕ) (x : MonoidAlgebra ℤ H),
         mapDomainRingHom ℤ H.subtype x ∈ augIdeal Q ^ n ↔ x ∈ augIdeal H ^ n) ∧
       ∀ n, 2 ≤ n → D n Q = (D n H).map H.subtype := by
@@ -427,7 +427,7 @@ theorem D_n_eq_of_modular_sq {Q : Type*} [Group Q] (H : Subgroup Q) (α β : Q) 
     (hα : α * α = ((g * g : H) : Q)) (hβ : β * β = 1) (ht : (t : Q) = α * β * α⁻¹ * β⁻¹)
     (htc : t ∈ commutator H)
     (gen : ∀ q : Q, ∃ h ∈ H, q = h ∨ q = h * α ∨ q = h * β ∨ q = h * (α * β))
-    (α_nmem : α ∉ H) (β_nmem : β ∉ H) (αβ_nmem : α * β ∉ H)
+    (α_nmem : α ∉ H) (β_nmem : β ∉ H) (αβ_nmem : α * β ∉ H) :
     (∀ (n : ℕ) (x : MonoidAlgebra ℤ H),
         mapDomainRingHom ℤ H.subtype x ∈ augIdeal Q ^ n ↔ x ∈ augIdeal H ^ n) ∧
       ∀ n, 2 ≤ n → D n Q = (D n H).map H.subtype := by
@@ -445,7 +445,7 @@ theorem D_n_eq_of_modular_comm {Q : Type*} [Group Q] (H : Subgroup Q) (α β : Q
     (htc : t ∈ commutator H) (hs : s ∈ commutator H) (hs2 : s * s ∈ lowerCentralSeries H 2)
     (hs4 : s ^ 4 = 1)
     (gen : ∀ q : Q, ∃ h ∈ H, q = h ∨ q = h * α ∨ q = h * β ∨ q = h * (α * β))
-    (α_nmem : α ∉ H) (β_nmem : β ∉ H) (αβ_nmem : α * β ∉ H)
+    (α_nmem : α ∉ H) (β_nmem : β ∉ H) (αβ_nmem : α * β ∉ H) :
     (∀ (n : ℕ) (x : MonoidAlgebra ℤ H),
         mapDomainRingHom ℤ H.subtype x ∈ augIdeal Q ^ n ↔ x ∈ augIdeal H ^ n) ∧
       ∀ n, 2 ≤ n → D n Q = (D n H).map H.subtype := by
