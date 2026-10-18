@@ -18,47 +18,47 @@ for o in [64, 128, 256, 512] do
     Q := PcGroupCode(pr[2], o);
     if MS_MonoInvolution(Q) = fail then Bump(tally, "not_candidate"); continue; fi;
     ZQ := Centre(Q);
-    T := Filtered(List(RightTransversal(Q, ZQ), x -> x),
+    Tq := Filtered(List(RightTransversal(Q, ZQ), x -> x),
       x -> not x in ZQ and x^2 in ZQ and Size(ConjugacyClass(Q, x)) = 2);
     Es := []; info := [];
-    for a in T do for b in T do
+    for a in Tq do for b in Tq do
       if Comm(a, b) = One(Q) then continue; fi;
-      E := ClosureGroup(ZQ, [a, b]);
-      i := Position(Es, E);
+      EQ := ClosureGroup(ZQ, [a, b]);
+      i := Position(Es, EQ);
       if i = fail then
-        Add(Es, E); i := Length(Es);
-        Hp := Centralizer(Q, E);
+        Add(Es, EQ); i := Length(Es);
+        Hp := Centralizer(Q, EQ);
         Add(info, rec(Hp := Hp, L := LowerCentralSeriesOfGroup(Hp), Phi := FrattiniSubgroup(Hp),
-          split := Size(Hp) * Size(E) / Size(ZQ) = Size(Q), cases := []));
+          split := Size(Hp) * Size(EQ) / Size(ZQ) = Size(Q), cases := []));
       fi;
-      I := info[i];
+      rI := info[i];
       t := Comm(a, b);
       E0 := Subgroup(Q, [a, b]); ZE0 := Centre(E0);
-      if not (t in ZQ and Order(t) = 2 and IsCyclic(ZE0)) then Add(I.cases, "bad"); continue; fi;
+      if not (t in ZQ and Order(t) = 2 and IsCyclic(ZE0)) then Add(rI.cases, "bad"); continue; fi;
       if Size(ZE0) = 2 then
-        case := [IdGroup(E0), t in I.L[2], "A"];
+        case := [IdGroup(E0), t in rI.L[2], "A"];
       else
         s := MinimalGeneratingSet(ZE0)[1];
-        if ForAny(AsList(I.Hp), g -> Good(g^-2 * s, I.L)) then cov := "C";
-        elif ForAny(MaximalSubgroups(I.Hp), M -> not s in M and ForAny(AsList(M), g -> g^4 = s^2)) then cov := "R";
+        if ForAny(AsList(rI.Hp), g -> Good(g^-2 * s, rI.L)) then cov := "C";
+        elif ForAny(MaximalSubgroups(rI.Hp), M -> not s in M and ForAny(AsList(M), g -> g^4 = s^2)) then cov := "R";
         else cov := "none"; fi;
-        case := [IdGroup(E0), t in I.L[2], s in I.Phi, cov];
+        case := [IdGroup(E0), t in rI.L[2], s in rI.Phi, cov];
       fi;
-      if not case in I.cases then Add(I.cases, case); fi;
+      if not case in rI.cases then Add(rI.cases, case); fi;
     od; od;
     if Es = [] then Bump(tally, Concatenation("o", String(o), "_nosplit")); continue; fi;
-    for I in info do
-      Bump(tally, Concatenation("o", String(o), "_E_split_", String(I.split)));
-      for case in I.cases do
+    for rI in info do
+      Bump(tally, Concatenation("o", String(o), "_E_split_", String(rI.split)));
+      for case in rI.cases do
         if case = "bad" then Bump(tally, "bad"); continue; fi;
         Bump(tally, Concatenation("case_", String(case[1]), "_tg2_", String(case[2]), "_",
           JoinStringsWithSeparator(List(case{[3..Length(case)]}, String), "_")));
       od;
-      Bump(tally, Concatenation("E_covered_", String(ForAny(I.cases, c -> c <> "bad" and c[Length(c)] <> "none"
+      Bump(tally, Concatenation("E_covered_", String(ForAny(rI.cases, c -> c <> "bad" and c[Length(c)] <> "none"
         and c[2]))));
     od;
     Bump(tally, Concatenation("o", String(o), "_splits"));
-    Print(o, " ", pr[1], " ", Size(ZQ), " ", List(info, I -> [Size(I.Hp), I.split, I.cases]), "\n");
+    Print(o, " ", pr[1], " ", Size(ZQ), " ", List(info, rI -> [Size(rI.Hp), rI.split, rI.cases]), "\n");
   od;
 od;
 for k in SortedList(RecNames(tally)) do Print(k, " ", tally.(k), "\n"); od;
