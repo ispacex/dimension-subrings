@@ -8,13 +8,23 @@
 #   PqDescendants.
 # CH_Desc(V, s) -> CH_Step1(V) when OWNDESC and s = 1 and it does not fail, else MS_Desc(V, s).
 #   OWNDESC defaults to the environment variable PQ2048_OWNDESC (1 = on).
+# CH_LibRoot(V, s) -> for V elementary abelian of rank d and |V| 2^s <= 2^CH_LIBMAX (default 9): the
+#   step-s descendants of V from the SmallGroups library, i.e. the groups of order |V| 2^s, rank d and
+#   2-class 2 (exactly the immediate descendants of step s of V); else fail.  PqDescendants on V is
+#   slow there because Aut(V) = GL(d,2) is insoluble and pq has GAP compute the stabilisers.
+#   On when LIBROOT, default the environment variable PQ2048_LIBROOT (1 = on).  For order 512 the
+#   ids of a (rank, 2-class) block come from the library's own table (SmallGroupsInformation);
+#   there CH_IDS (set by tree.g from a deferred line's "ids":[a,b]) narrows them to [a .. b], and
+#   the groups come one at a time from an iterator (millions of them: not a list in memory).
 if not IsBound(CH_KMAX) then CH_KMAX := 22; fi;
 if not IsBound(OWNDESC) then
   OWNDESC := IsBound(GAPInfo.SystemEnvironment.PQ2048_OWNDESC)
              and GAPInfo.SystemEnvironment.PQ2048_OWNDESC = "1";
 fi;
 
-CH_Step1 := function(V)
+# CH_StepC(V, j): the step-1 children of class < j (j = 4: CH_Step1; j = 3: class <= 2 only, the
+# allowable hyperplanes containing gamma_3(V*) ∩ M), one per isomorphism class, or fail (k > CH_KMAX).
+CH_StepC := function(V, j)
   local Rs, pcs, n, m, M, c, N, G4, Y, k, P, r, mats, A, gens, seen, res, x, a, orb, b, f, tot,
         need, done;
   Rs := PC_Cover(V);
@@ -26,7 +36,7 @@ CH_Step1 := function(V)
   c := MS_PClass(V);
   N := MC_Vecs(pcs, n, m, PCentralSeries(Rs, 2)[c + 1]);
   if N = [] then return []; fi;                         # terminal: no descendants at all
-  G4 := MC_Vecs(pcs, n, m, MC_Gamma(Rs, 4));
+  G4 := MC_Vecs(pcs, n, m, MC_Gamma(Rs, j));
   if G4 = [] then Y := IdentityMat(m, GF(2));
   else Y := NullspaceMat(TransposedMat(G4)); fi;       # basis of the functionals vanishing on G4
   k := Length(Y);
@@ -64,8 +74,55 @@ CH_Step1 := function(V)
   return res;
 end;;
 
+if not IsBound(CH_LIBMAX) then CH_LIBMAX := 9; fi;
+if not IsBound(CH_DEFERCHUNK) then
+  CH_DEFERCHUNK := 50000;
+  if IsBound(GAPInfo.SystemEnvironment.PQ2048_DEFERCHUNK) then
+    CH_DEFERCHUNK := Int(GAPInfo.SystemEnvironment.PQ2048_DEFERCHUNK);
+  fi;
+fi;
+CH_IDS := fail;
+if not IsBound(LIBROOT) then
+  LIBROOT := IsBound(GAPInfo.SystemEnvironment.PQ2048_LIBROOT)
+             and GAPInfo.SystemEnvironment.PQ2048_LIBROOT = "1";
+fi;
+# the id range of the groups of order 512 with rank d and 2-class 2 (SmallGroupsInformation(512))
+CH_RANGE512 := rec(2 := [11, 10], 3 := [2045, 2045], 4 := [60904, 67612], 5 := [420515, 6249623],
+  6 := [7532393, 10481221], 7 := [10493062, 10494173], 8 := [10494201, 10494212]);;
+CH_LibRoot := function(V, s)
+  local d, n, ids, res, i, G;
+  if not IsElementaryAbelian(V) then return fail; fi;
+  d := Log(Size(V), 2); n := Size(V) * 2 ^ s;
+  if n > 2 ^ CH_LIBMAX then return fail; fi;
+  if n = 512 then
+    ids := CH_RANGE512.(d);
+    if IsBound(CH_IDS) and CH_IDS <> fail then
+      ids := [Maximum(ids[1], CH_IDS[1]) .. Minimum(ids[2], CH_IDS[2])];
+    else
+      ids := [ids[1] .. ids[2]];
+    fi;
+    return IteratorByFunctions(rec(pos := 0, ids := ids, n := n,
+      IsDoneIterator := it -> it!.pos >= Length(it!.ids),
+      NextIterator := function(it) it!.pos := it!.pos + 1; return SmallGroup(it!.n, it!.ids[it!.pos]); end,
+      ShallowCopy := it -> rec(pos := it!.pos, ids := it!.ids, n := it!.n)));
+  fi;
+  ids := [1 .. NrSmallGroups(n)];
+  res := [];
+  for i in ids do
+    G := SmallGroup(n, i);
+    if RankPGroup(G) = d and PClassPGroup(G) = 2 then Add(res, G); fi;
+  od;
+  return res;
+end;;
+
+CH_Step1 := V -> CH_StepC(V, 4);;
+
 CH_Desc := function(V, s)
   local res;
+  if LIBROOT then
+    res := CH_LibRoot(V, s);
+    if res <> fail then return res; fi;
+  fi;
   if OWNDESC and s = 1 then
     res := CH_Step1(V);
     if res <> fail then return res; fi;

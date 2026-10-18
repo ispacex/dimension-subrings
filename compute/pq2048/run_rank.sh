@@ -67,7 +67,10 @@ log "B: $(wc -l < "$out/B/in.jsonl") vertices of order < 2^$l2 and deferred step
 piece_b() { # PARALLEL MEM < ids
   M=$2 xargs -P "$1" -I{} sh -c '
   [ -s "$out/B/b_{}.json" ] && exit 0
-  cd "$here" && printf "%s\n" "D:=$d;; STEPRULES:=${STEPRULES:-true};; COMPACT:=${COMPACT:-false};; NMAX:=10;; LOGQ:=11;; COVERMAX:=10;; STARTFILE:=\"$out/B/in_{}\";; DUMPLEVEL:=$l2;; DUMPFILE:=\"$out/B/dump_{}.jsonl\";; STATFILE:=\"$out/B/b_{}.json\";; OUTFILE:=\"$out/B/b_{}.jsonl\";;" \
+  dl="DUMPLEVEL:=$l2;; DUMPFILE:=\"$out/B/dump_{}.jsonl\";;"
+  # an id-range piece (LIBROOT) walks its vertices of order 2^l2 itself: no dump, no stage C for them
+  grep -q "\"ids\"" "$out/B/in_{}" && dl=""
+  cd "$here" && printf "%s\n" "D:=$d;; STEPRULES:=${STEPRULES:-true};; COMPACT:=${COMPACT:-false};; NMAX:=10;; LOGQ:=11;; COVERMAX:=10;; STARTFILE:=\"$out/B/in_{}\";; $dl STATFILE:=\"$out/B/b_{}.json\";; OUTFILE:=\"$out/B/b_{}.jsonl\";;" \
     | cat - tree.g | nice -n "${NICE:-15}" "$GAP" -q -b -o "$M" --quitonbreak > "$out/B/b_{}.log" 2>&1'
 }
 [ -n "${STOP_AFTER_A:-}" ] && { log "stop after A: $nb pieces in B"; exit 0; }
