@@ -1211,7 +1211,7 @@ theorem cubeMap_cl (h1 : ∀ x : G, x ^ 3 ∈ lowerCentralSeries G 1)
 /-! ## Theorem 6.6 for finite groups of class `≤ 4` -/
 
 /-- **Theorem 6.6, finite case, modulo Tahara.** If `Q` is finite of class `≤ 4` and
-`Q/γ₂(Q)` has exponent `3`, then `D₅(Q) = 1`. -/
+`Q/γ₂(Q)` has exponent dividing `3`, then `D₅(Q) = 1`. -/
 theorem D_five_eq_bot_of_class_four (hT : TaharaFiveOne) {Q : Type} [Group Q] [Finite Q]
     (h5 : lowerCentralSeries Q 4 = ⊥) (h1 : ∀ x : Q, x ^ 3 ∈ lowerCentralSeries Q 1) :
     D 5 Q = ⊥ := by
@@ -1481,8 +1481,8 @@ theorem finite_quotient_lcs (hfin : Finite (G ⧸ lowerCentralSeries G 1)) :
     haveI : (lowerCentralSeries G (k + 2)).FiniteIndex := ⟨h3⟩
     exact Subgroup.finite_quotient_of_finiteIndex
 
-/-- **Theorem 6.6, modulo Tahara's Theorem 6.1.** If `G/γ₂(G)` is finite of exponent `3`, then
-`D₅(G) = γ₅(G)`. -/
+/-- **Theorem 6.6, modulo Tahara's Theorem 6.1.** If `G/γ₂(G)` is finite of exponent dividing
+`3`, then `D₅(G) = γ₅(G)`. -/
 theorem D_five_eq_gamma_five (hT : TaharaFiveOne) (G : Type) [Group G]
     (hfin : Finite (G ⧸ lowerCentralSeries G 1)) (h1 : ∀ x : G, x ^ 3 ∈ lowerCentralSeries G 1) :
     D 5 G = lowerCentralSeries G 4 := by
