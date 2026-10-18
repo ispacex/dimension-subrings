@@ -466,9 +466,10 @@ RESULTS = [  # (status, ru, en, ref): ref is a str or (ru, en); [[label]] is a l
     ("p", "Более общо: $D_5(G)=\\gamma_5(G)$, если $G/\\gamma_2(G)\\cong C_{3^a}\\times C_3^{s-1}$, т.е. у неё не больше одного инварианта больше $3$ (в том числе $C_9\\times C_3^{s-1}$). <a href=\"timeline.html#d2026-10-18\">Проверено независимой рецензией</a>.",
      "More generally: $D_5(G)=\\gamma_5(G)$ whenever $G/\\gamma_2(G)\\cong C_{3^a}\\times C_3^{s-1}$, i.e. it has at most one invariant larger than $3$ (including $C_9\\times C_3^{s-1}$). <a href=\"timeline.html#d2026-10-18\">Checked by an independent review</a>.",
      "[[thm:exp3plus]]"),
-    ("p", "$p$ нечётно, $|\\gamma_3/\\gamma_4|=p$, у $\\gamma_2/\\gamma_3$ не больше двух порождающих $\\Rightarrow$ $[\\gamma_2,\\gamma_2]\\subseteq\\gamma_5$. Отсюда: неметабелева $p$-группа ступени $4$ ранга $d$ имеет порядок $\\ge p^{d+5}$.",
+    ("l", "$p$ нечётно, $|\\gamma_3/\\gamma_4|=p$, у $\\gamma_2/\\gamma_3$ не больше двух порождающих $\\Rightarrow$ $[\\gamma_2,\\gamma_2]\\subseteq\\gamma_5$. Отсюда: неметабелева $p$-группа ступени $4$ ранга $d$ имеет порядок $\\ge p^{d+5}$.",
      "$p$ odd, $|\\gamma_3/\\gamma_4|=p$, $\\gamma_2/\\gamma_3$ with at most two generators $\\Rightarrow$ $[\\gamma_2,\\gamma_2]\\subseteq\\gamma_5$. Hence a non-metabelian $p$-group of class $4$ and rank $d$ has order $\\ge p^{d+5}$.",
-     "[[lem:lie]], [[prop:metab]]"),
+     ("[[lem:lie]], [[prop:metab]]; " + gh("groups/GroupDimension/ClassFourOrder.lean", "Lean", "card_ge_of_not_metabelian"),
+      "[[lem:lie]], [[prop:metab]]; " + gh("groups/GroupDimension/ClassFourOrder.lean", "Lean", "card_ge_of_not_metabelian"))),
     ("p", "$p$ нечётно, $P$ ступени $3$ с $|\\gamma_2/\\gamma_3|=p^2$, $|\\gamma_3|=p$ $\\Rightarrow$ у $p$-накрывающей группы $P^{*\\prime\\prime}=1$: все шаг-$1$ потомки метабелевы.",
      "$p$ odd, $P$ of class $3$ with $|\\gamma_2/\\gamma_3|=p^2$, $|\\gamma_3|=p$ $\\Rightarrow$ the $p$-covering group has $P^{*\\prime\\prime}=1$: all step-$1$ descendants are metabelian.",
      "[[thm:pcover]]"),
@@ -602,7 +603,9 @@ TIMELINE = [  # (iso date, [(ru, en)])
         ("Lean: предложение 5.8 доказано в Lean во всех случаях ($D_8$, $Q_8$, $M_{2^{k+2}}$), вместе с кольцевым утверждением $\\mathbb Z[H]\\cap\\Delta(Q)^n=\\Delta(H)^n$; $Q_8$ и $M_{2^{k+2}}$ сводятся к $D_8$ через одну надгруппу $(Q\\times\\mathbb Z)/\\langle(s,-2)\\rangle$.",
          "Lean: Prop. 5.8 is proved in Lean in all cases ($D_8$, $Q_8$, $M_{2^{k+2}}$), with the ring statement $\\mathbb Z[H]\\cap\\Delta(Q)^n=\\Delta(H)^n$; $Q_8$ and $M_{2^{k+2}}$ reduce to $D_8$ through one overgroup $(Q\\times\\mathbb Z)/\\langle(s,-2)\\rangle$."),
         ("Lean: сведение (предложение 2.1, замечание 2.3) доказано по модулю явных гипотез — теорем Пасси, Грюнберга и $D_3=\\gamma_3$: от ступени $\\le3$ к конечно порождённым группам и к конечным $2$-группам ступени $3$; для конечных групп теорема Грюнберга не нужна.",
-         "Lean: the reduction (Prop. 2.1, Remark 2.3) is proved modulo explicit hypotheses — the theorems of Passi and Gruenberg and $D_3=\\gamma_3$: from class $\\le3$ to finitely generated groups and to finite $2$-groups of class $3$; for finite groups Gruenberg's theorem is not needed.")]),
+         "Lean: the reduction (Prop. 2.1, Remark 2.3) is proved modulo explicit hypotheses — the theorems of Passi and Gruenberg and $D_3=\\gamma_3$: from class $\\le3$ to finitely generated groups and to finite $2$-groups of class $3$; for finite groups Gruenberg's theorem is not needed."),
+        ("Lean: лемма 6.3 и предложение 6.5 ($[\\gamma_2,\\gamma_2]\\subseteq\\gamma_5$; неметабелева $p$-группа ступени $4$ ранга $d$ имеет порядок $\\ge p^{d+5}$) доказаны в Lean без гипотез; вместо кольца Ли — группа $G/\\gamma_5$ и тождество Холла — Витта.",
+         "Lean: Lemma 6.3 and Prop. 6.5 ($[\\gamma_2,\\gamma_2]\\subseteq\\gamma_5$; a non-metabelian $p$-group of class $4$ and rank $d$ has order $\\ge p^{d+5}$) are proved in Lean with no hypotheses; instead of the Lie ring, the group $G/\\gamma_5$ and the Hall–Witt identity.")]),
 ]
 
 
