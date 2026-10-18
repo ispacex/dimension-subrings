@@ -30,7 +30,7 @@ case $out in /*) ;; *) out=$(pwd)/$out ;; esac
 root=$(cd "$(dirname "$0")/.." && pwd)
 code=$root/compute/pq2048
 GAP=${GAP:-gap}
-GAPMEM=${GAPMEM:-4g}
+GAPMEM=${GAPMEM:-16g}
 fail() { echo "run_piece: $2" >&2; exit "$1"; }
 
 [ -r "$in" ] || fail 2 "no input file $in"
