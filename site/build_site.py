@@ -828,11 +828,11 @@ is computed. The scale is logarithmic. The last step of every funnel is zero.</p
          (t("Код", "Code"), "l")], rrows) + t("""
 <p><small>Метод: для конечной $G$ решётка $\\Delta^n$ строится в форме Хауэлла над $\\mathbb Z/p^E$; невхождение $g-1\\notin\\Delta^n+p^E\\Delta$
 доказывает $g\\notin D_n$, вхождение подтверждается сертификатом $p^{E-1}\\Delta\\subseteq\\Delta^n+p^E\\Delta$. Для больших групп&nbsp;—
-усечённая алгебра Магнуса $\\mathbb Z[G]/\\Delta^n\\cong T_{<n}(\\mathbb Z^k)/I_n$ по копредставлению на $k$ порождающих.
+усечённая алгебра Магнуса $\\mathbb Z[G]/\\Delta^n\\cong T_{\\lt n}(\\mathbb Z^k)/I_n$ по копредставлению на $k$ порождающих.
 Проверки: два независимых метода, PARI/GP, известные значения.</small></p>""", """
 <p><small>Method: for finite $G$ the lattice $\\Delta^n$ is computed in Howell form over $\\mathbb Z/p^E$; non-membership $g-1\\notin\\Delta^n+p^E\\Delta$
 proves $g\\notin D_n$, membership is confirmed by the certificate $p^{E-1}\\Delta\\subseteq\\Delta^n+p^E\\Delta$. For large groups:
-the truncated Magnus algebra $\\mathbb Z[G]/\\Delta^n\\cong T_{<n}(\\mathbb Z^k)/I_n$ of a presentation on $k$ generators.
+the truncated Magnus algebra $\\mathbb Z[G]/\\Delta^n\\cong T_{\\lt n}(\\mathbb Z^k)/I_n$ of a presentation on $k$ generators.
 Checks: two independent methods, PARI/GP, known values.</small></p>""")
     P("computations.html", t("Вычисления", "Computations"), body)
 
