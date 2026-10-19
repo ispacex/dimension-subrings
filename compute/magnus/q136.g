@@ -10,10 +10,11 @@
 #   (J) for i < j < k, summed over the cyclic shifts of (i,j,k):
 #       om1(i,j) sigma_k + om2(i,j) eta_k + c om3(i,j) f_k = 0.
 # Theorem D (wiki): under N1-N3, P has a step-1 descendant  <=>  (E)+(J) has a solution with c <> 0.
+# run_q136.sh also asserts (separately from Theorem D) that the groups violating N1-N3 are terminal (logN = 0).
 #
 # Columns: id, logN (ANUPQ: PqPCover), logN (GAP's own p-quotient, EpimorphismPGroup of F/[R,F]R^p on the pc presentation),
 #   N1, N2, N3, Eall (E for all x in P/gamma_2, as on page 689), Egen, J, E+J, E+J without the om3 term
-#   (negative control), cert (E+J solution -> FromTheLeftCollector: confluent, |Q| = p|P|, gamma_4(Q) <> 1,
+#   (negative control), cert (E+J solution -> FromTheLeftCollector: confluent (then |Q| = p|P| automatically), gamma_4(Q) <> 1,
 #   Q -> P a homomorphism onto, checked relation by relation), negcert (an E-only solution with sigma = 0 when E+J fails: "true" would mean
 #   that the collector is confluent with gamma_4 <> 1; "-" when not applicable).
 LoadPackage("anupq"); LoadPackage("polycyclic");
@@ -165,10 +166,11 @@ Q136Line := function(id, P)
     JoinStringsWithSeparator(List(r{[2 .. Length(r)]}, String), ","), "\n");
 end;
 
-# MODE "block": SmallGroup(3^8, 1387558..1395381), the 7824 groups of type (5,2,1);
+# MODE "block": SmallGroup(3^8, 1387558..1395381), the 7824 groups of type (5,2,1) (p = 3 only; the type is not re-checked);
 # MODE "p7": all groups of order PR^7 of type (4,2,1) with P/gamma_2 elementary.
 Q136Run := function(shard, nshard)
   local lg, ids, id, P, Lc;
+  if MODE = "block" and PR <> 3 then Error("MODE block is for p = 3 only"); fi;
   lg := OutputTextFile(LOG, false); SetPrintFormattingStatus(lg, false);
   if MODE = "block" then ids := [1387558 .. 1395381]; else ids := [1 .. NrSmallGroups(PR^7)]; fi;
   for id in ids do

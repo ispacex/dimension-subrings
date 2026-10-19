@@ -16,7 +16,7 @@ wait
   grep -h -A3 -i error "$OUT"/q136_${TAG}_*.gaplog | head
   echo "count logN(ANUPQ),logN(GAP),N1,N2,N3,Eall,Egen,J,E+J,E+J(no om3),cert,negcert:"
   grep -hv shard "$OUT"/q136_${TAG}_?.csv | cut -d, -f2- | sort | uniq -c
-  echo "mismatches (ANUPQ vs GAP, or N>1 xor N1..N3 and E+J, or N>1 without cert, or negcert true):"
+  echo "mismatches (ANUPQ vs GAP, or logN>0 xor (N1..N3 and E+J) -- so N1..N3 false must give logN=0, or logN>0 without cert, or negcert true):"
   grep -hv shard "$OUT"/q136_${TAG}_?.csv | awk -F, '{p=($4=="true"&&$5=="true"&&$6=="true"&&$10=="true");
     if ($2 != $3 || p != ($2>0) || ($2>0 && $12 != "true") || $13 == "true") print}' | head -20
 } | tee "$OUT/summary_$TAG.txt"
