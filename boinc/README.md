@@ -109,7 +109,7 @@ docker build -f boinc/Dockerfile --build-arg CODE_COMMIT=$(git rev-parse HEAD) -
 ```
 
 * Debian 12 (pinned by digest), GAP 4.15.1 from the release tarball (pinned by SHA-256), built
-  with the system GMP; IO compiled from the same tarball; **ANUPQ** from our fork ispacex/anupq at a pinned commit (branch `uf-nostab`: the correctness fixes proposed upstream, gap-packages/anupq #96–#117, the union-find orbits of insoluble automorphism groups — MATH-187, less memory — and the `PQ_NOSTAB` switch), replacing the release's 3.3.2 — the fixes change `PqDescendants` output for input groups not in pq's own pcp and for 127 or more automorphisms (#96, #99).
+  with the system GMP; IO compiled from the same tarball; **ANUPQ** from our fork ispacex/anupq at a pinned commit (branch `uf-nostab-v4`: `correctness` b7deefa — the correctness fixes proposed upstream, gap-packages/anupq #96–#121, and the union-find orbits of insoluble automorphism groups, MATH-187, less memory — with the `PQ_NOSTAB` switch on top), replacing the release's 3.3.2 — the fixes change `PqDescendants` output for input groups not in pq's own pcp and for 127 or more automorphisms (#96, #99).
 * Of the 160-odd packages in the tarball only those GAP loads are kept: its start-up set plus
   `LoadPackage("anupq")` (29 packages, listed in `/opt/gap/loaded-packages.txt`). The set of
   loaded packages is what can change method selection and so the bytes of a result; it is the set
@@ -150,11 +150,12 @@ result.txt`.
    | `boinc-v1` | `71b4842` | `sha256:68a7a3854b7cac4cf213eb610eaed5fd73d713790109cd3c3c18fa6284c22e4f` | `sha256:5a033a08d31a87e85f6738788e58be68cbb7b8ea8d2dd3d6d5b796a2ab5c7819` |
    | `boinc-v2` | `97cb2ec` | `sha256:a4e169d844d19a5a971d44737dbcc2ba630fe473be7781ef2bc8819c81628e1c` | `sha256:7ccf9780f0f4e6cb5c41e21fc658097e26a777bfbb53f0c8a4620ff76dd9d9f8` |
    | `boinc-v3` | `20247a3` | `sha256:49b169a9a396087ac3542506d80bfce2ecb1d57fffa093e0624b7594fe8ef5dc` | `sha256:34568d602464776e6f35004b7f6603e51050f5f7bc3721df058dcfc8ffea299b` |
+   | `boinc-v5` | `bab60fa` | `sha256:e5d4d2b91115b7546fb257ccd4b58c065c9cf095c7f9130599663bf111a64110` | `sha256:4109cd6b5928b3850de13c520aae96dc7eec06406fef045a724e3eea3bfe9070` |
 
    `boinc-v1` does not read deferred-step lines and ignores `compact=true` (it writes the full
    lines); `boinc-v2` adds deferred steps and compact candidates; `boinc-v3` (ANUPQ with our
    correctness fixes and union-find, ispacex/anupq `uf-nostab`; the `flags=` header field;
-   `children.g`) is the one the variants use.
+   `children.g`); `boinc-v5` (ANUPQ = `correctness` b7deefa + PQ_NOSTAB, GAP workspace 16g; boinc-v4 was skipped: its image still set GAPMEM=4g) is the one the variants use.
 2. **Science app** ("Manage BUDA apps" → "Add science app"), the fields of `buda/desc.json`:
    input file names `piece.txt`, output file names `result.txt`, max output size 64 MB, gzip
    output on, max delay 7 days.
