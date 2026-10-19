@@ -117,6 +117,65 @@ end;;
 
 CH_Step1 := V -> CH_StepC(V, 4);;
 
+# CH_Stream(V, s): PqDescendants(V : StepSize := s) as an iterator, the descendants built one at a time
+# in the order PqDescendants lists them.  PqDescendants builds every group of pq's GAP_library file
+# before returning, and on a heavy vertex that list, not the walk, is the peak (MATH-74: pieces killed
+# at 8g inside PqList); here the file is read once as its functions and each group is built when the
+# walk asks for it.  The steps are those of PQ_DESCENDANTS in ANUPQ 3.3.2 for a non-interactive call.
+# On when STREAM, default the environment variable PQ2048_STREAM (1 = on).
+if not IsBound(STREAM) then
+  STREAM := IsBound(GAPInfo.SystemEnvironment.PQ2048_STREAM)
+            and GAPInfo.SystemEnvironment.PQ2048_STREAM = "1";
+fi;
+CH_Stream := function(V, s)
+  local datarec, p, class, n, r;
+  PushOptions(rec(StepSize := s));
+  datarec := ANUPQ_ARG_CHK("PqDescendants", [V]);
+  PQ_AUT_GROUP(datarec.group);
+  if HasIsCapable(datarec.group) and not IsCapable(datarec.group) then
+    PQ_COMPLETE_NONINTERACTIVE_FUNC_CALL(datarec);
+    PopOptions();
+    return [];
+  fi;
+  PushOptions(rec(nonuser := true));
+  p := PrimePGroup(datarec.group);
+  class := PClassPGroup(datarec.group);
+  if not (IsBound(datarec.pQuotient) and p = PrimePGroup(datarec.pQuotient) and class = datarec.class
+          or IsBound(datarec.pCover) and p = PrimePGroup(datarec.pCover)
+             and IsBound(datarec.pcoverclass) and class = datarec.pcoverclass - 1) then
+    PQ_PC_PRESENTATION(datarec, "pQ" : Prime := p, ClassBound := class);
+  fi;
+  if not (IsBound(datarec.pCover) and p = PrimePGroup(datarec.pCover)
+          and class = datarec.pcoverclass - 1) then
+    PQ_P_COVER(datarec);
+  fi;
+  PQ_PG_SUPPLY_AUTS(datarec, "pG");
+  n := PQ_PG_CONSTRUCT_DESCENDANTS(datarec);
+  PopOptions();
+  PQ_COMPLETE_NONINTERACTIVE_FUNC_CALL(datarec);
+  PopOptions();
+  if n = 0 then return []; fi;
+  r := PQ_READ_AS_FUNC_WITH_VARS(Filename(ANUPQData.tmpdir, "GAP_library"),
+                                 ["ANUPQmagic", "ANUPQautos", "ANUPQgroups"]);
+  if r = fail or not IsBound(r.ANUPQmagic) or not IsBound(r.ANUPQgroups) then
+    Error("CH_Stream: no groups in pq's GAP_library");
+  fi;
+  if not IsBound(r.ANUPQautos) then r.ANUPQautos := []; fi;
+  return IteratorByFunctions(rec(pos := 0, groups := r.ANUPQgroups, autos := r.ANUPQautos, p := p,
+    IsDoneIterator := it -> it!.pos >= Length(it!.groups),
+    NextIterator := function(it)
+      local i, l, G;
+      it!.pos := it!.pos + 1; i := it!.pos; l := [];
+      it!.groups[i](l); G := l[1];
+      if IsBound(it!.autos[i]) then it!.autos[i](G); Unbind(it!.autos[i]); fi;
+      it!.groups[i] := fail;
+      if not HasIsCapable(G) then SetIsCapable(G, false); fi;
+      SetIsPGroup(G, true); SetPrimePGroup(G, it!.p);
+      return G;
+    end,
+    ShallowCopy := it -> rec(pos := it!.pos, groups := it!.groups, autos := it!.autos, p := it!.p)));
+end;;
+
 CH_Desc := function(V, s)
   local res;
   if LIBROOT then
@@ -127,5 +186,6 @@ CH_Desc := function(V, s)
     res := CH_Step1(V);
     if res <> fail then return res; fi;
   fi;
+  if STREAM then return CH_Stream(V, s); fi;
   return MS_Desc(V, s);
 end;;
