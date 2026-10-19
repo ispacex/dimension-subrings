@@ -65,7 +65,7 @@ Q136Cert := function(P, gens, u, v, w, f, Crd, s)
     SetPower(coll, i, W([d + 2, cx[2], d + 3, cx[3]]));
     SetConjugate(coll, d + 1, i, W([d + 1, 1, d + 3, f(gens[i]), d + 4, e[d + i]]));
     SetConjugate(coll, d + 2, i, W([d + 2, 1, d + 4, e[i]]));
-    SetConjugate(coll, d + 3, i, W([d + 3, 1, d + 4, e[n - 1] * f(gens[i])]));
+    SetConjugate(coll, d + 3, i, W([d + 3, 1, d + 4, e[2 * d + 3] * f(gens[i])]));
     for j in [i + 1 .. d] do
       ab := Crd(Comm(gens[j], gens[i]));
       SetConjugate(coll, j, i, W([j, 1, d + 1, ab[1], d + 2, ab[2], d + 3, ab[3]]));
