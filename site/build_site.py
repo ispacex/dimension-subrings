@@ -155,7 +155,7 @@ footer { border-top:1px solid var(--line); margin-top:3rem; }
 .tag { display:inline-block; font-size:.78rem; line-height:1.5; padding:0 .45em; border-radius:4px; white-space:nowrap;
        color:var(--cellink); border:1px solid var(--line); }
 .tag.c { background:var(--cmp); } .tag.p { background:var(--ppr); } .tag.cp { background:var(--both); }
-.tag.o { background:var(--open); } .tag.l, .tag.lt { background:var(--soft); color:var(--ink); }
+.tag.o { background:var(--open); } .tag.l { background:var(--soft); color:var(--ink); }
 .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(15rem,1fr)); gap:.8rem; margin:1rem 0; }
 .card { border:1px solid var(--line); border-radius:8px; padding:.7rem .9rem; background:var(--soft); }
 .card h3 { margin:.1rem 0 .4rem; font-size:1rem; } .card .big { font-size:1.35rem; font-weight:600; }
@@ -455,13 +455,11 @@ def num(n, lang):
 
 
 # ---------------------------------------------------------------------------------------------
-# What is known. Status: "c" computer, "p" paper, "cp" computer + paper, "o" open, "l" Lean,
-# "lt" Lean given Tahara's Theorem 6.1 as an explicit hypothesis.
+# What is known. Status: "c" computer, "p" paper, "cp" computer + paper, "o" open, "l" Lean.
 # Refs point to the paper draft (numbers of the version on the site) and to the code.
 
 STATUS = {"c": ("компьютер", "computer"), "p": ("на бумаге", "paper"), "cp": ("компьютер + бумага", "computer + paper"),
-          "o": ("открыто", "open"), "l": ("Lean", "Lean"),
-          "lt": ("Lean по модулю Тахары", "Lean modulo Tahara")}
+          "o": ("открыто", "open"), "l": ("Lean", "Lean")}
 
 RESULTS = [  # (status, ru, en, ref): ref is a str or (ru, en); [[label]] is a link to the statement
     # in the paper, the other links go to what backs a number: a funnel or table of computations.html,
@@ -495,14 +493,14 @@ RESULTS = [  # (status, ru, en, ref): ref is a str or (ru, en); [[label]] is a l
     ("cp", "Нет $3$-кручения в $D_5(G)/\\gamma_5(G)$, если силовская $3$-подгруппа $G$ имеет порядок $\\le3^9$; $D_5=\\gamma_5$ для <a href=\"computations.html#f39\">всех $3$-групп порядка $\\le3^9$</a>.",
      "No $3$-torsion in $D_5(G)/\\gamma_5(G)$ when the Sylow $3$-subgroup of $G$ has order $\\le3^9$; $D_5=\\gamma_5$ for <a href=\"computations.html#f39\">all $3$-groups of order $\\le3^9$</a>.",
      "[[thm:3e9]]"),
-    ("lt", "$D_5(G)=\\gamma_5(G)$, если $G/\\gamma_2(G)$ конечна и имеет экспоненту $3$ — при любом ранге и порядке. В Lean доказано при теореме 6.1 Тахары как явной гипотезе.",
-     "$D_5(G)=\\gamma_5(G)$ whenever $G/\\gamma_2(G)$ is finite of exponent $3$, of any rank and order. Proved in Lean with Tahara's Theorem 6.1 as an explicit hypothesis.",
-     ("[[thm:exp3]]; " + gh("groups/GroupDimension/ExpThree.lean", "Lean", "D_five_eq_gamma_five"),
-      "[[thm:exp3]]; " + gh("groups/GroupDimension/ExpThree.lean", "Lean", "D_five_eq_gamma_five"))),
-    ("lt", "Более общо: $D_5(G)=\\gamma_5(G)$, если $G/\\gamma_2(G)\\cong C_{3^a}\\times C_3^{s-1}$, т.е. у неё не больше одного инварианта больше $3$ (в том числе $C_9\\times C_3^{s-1}$). <a href=\"timeline.html#d2026-10-18\">Проверено независимой рецензией</a>; в Lean доказано при теореме 6.1 Тахары как явной гипотезе.",
-     "More generally: $D_5(G)=\\gamma_5(G)$ whenever $G/\\gamma_2(G)\\cong C_{3^a}\\times C_3^{s-1}$, i.e. it has at most one invariant larger than $3$ (including $C_9\\times C_3^{s-1}$). <a href=\"timeline.html#d2026-10-18\">Checked by an independent review</a>; proved in Lean with Tahara's Theorem 6.1 as an explicit hypothesis.",
-     ("[[thm:exp3plus]]; " + gh("groups/GroupDimension/ExpThreePlus.lean", "Lean", "D_five_eq_gamma_five_cyclic"),
-      "[[thm:exp3plus]]; " + gh("groups/GroupDimension/ExpThreePlus.lean", "Lean", "D_five_eq_gamma_five_cyclic"))),
+    ("l", "$D_5(G)=\\gamma_5(G)$, если $G/\\gamma_2(G)$ конечна и имеет экспоненту $3$ — при любом ранге и порядке. Доказано в Lean вместе с теоремой 6.1 Тахары, на которую опирается доказательство.",
+     "$D_5(G)=\\gamma_5(G)$ whenever $G/\\gamma_2(G)$ is finite of exponent $3$, of any rank and order. Proved in Lean, together with Tahara's Theorem 6.1 on which the proof relies.",
+     ("[[thm:exp3]]; " + gh("groups/GroupDimension/TaharaTheorem.lean", "Lean", "D_five_eq_gamma_five_of_exp_three"),
+      "[[thm:exp3]]; " + gh("groups/GroupDimension/TaharaTheorem.lean", "Lean", "D_five_eq_gamma_five_of_exp_three"))),
+    ("l", "Более общо: $D_5(G)=\\gamma_5(G)$, если $G/\\gamma_2(G)\\cong C_{3^a}\\times C_3^{s-1}$, т.е. у неё не больше одного инварианта больше $3$ (в том числе $C_9\\times C_3^{s-1}$). <a href=\"timeline.html#d2026-10-18\">Проверено независимой рецензией</a> и доказано в Lean вместе с теоремой 6.1 Тахары.",
+     "More generally: $D_5(G)=\\gamma_5(G)$ whenever $G/\\gamma_2(G)\\cong C_{3^a}\\times C_3^{s-1}$, i.e. it has at most one invariant larger than $3$ (including $C_9\\times C_3^{s-1}$). <a href=\"timeline.html#d2026-10-18\">Checked by an independent review</a> and proved in Lean, together with Tahara's Theorem 6.1.",
+     ("[[thm:exp3plus]]; " + gh("groups/GroupDimension/TaharaTheorem.lean", "Lean", "D_five_eq_gamma_five_of_cubes_cyclic"),
+      "[[thm:exp3plus]]; " + gh("groups/GroupDimension/TaharaTheorem.lean", "Lean", "D_five_eq_gamma_five_of_cubes_cyclic"))),
     ("l", "$p$ нечётно, $|\\gamma_3/\\gamma_4|=p$, у $\\gamma_2/\\gamma_3$ не больше двух порождающих $\\Rightarrow$ $[\\gamma_2,\\gamma_2]\\subseteq\\gamma_5$. Отсюда: неметабелева $p$-группа ступени $4$ ранга $d$ имеет порядок $\\ge p^{d+5}$.",
      "$p$ odd, $|\\gamma_3/\\gamma_4|=p$, $\\gamma_2/\\gamma_3$ with at most two generators $\\Rightarrow$ $[\\gamma_2,\\gamma_2]\\subseteq\\gamma_5$. Hence a non-metabelian $p$-group of class $4$ and rank $d$ has order $\\ge p^{d+5}$.",
      ("[[lem:lie]], [[prop:metab]]; " + gh("groups/GroupDimension/ClassFourOrder.lean", "Lean", "card_ge_of_not_metabelian"),
@@ -645,6 +643,9 @@ TIMELINE = [  # (iso date, [(ru, en)])
          "Lean: Lemma 6.3 and Prop. 6.5 ($[\\gamma_2,\\gamma_2]\\subseteq\\gamma_5$; a non-metabelian $p$-group of class $4$ and rank $d$ has order $\\ge p^{d+5}$) are proved in Lean with no hypotheses; instead of the Lie ring, the group $G/\\gamma_5$ and the Hall–Witt identity."),
         ("Lean: теоремы 6.6 и 6.8 ($D_5=\\gamma_5$ при $G/\\gamma_2\\cong C_{3^a}\\times C_3^{s-1}$) доказаны в Lean по модулю теоремы 6.1 Тахары, записанной явной гипотезой и сверенной со сканом; оба подслучая, включая строку $s$ условия (E).",
          "Lean: Theorems 6.6 and 6.8 ($D_5=\\gamma_5$ for $G/\\gamma_2\\cong C_{3^a}\\times C_3^{s-1}$) are proved in Lean modulo Tahara's Theorem 6.1, stated as an explicit hypothesis and checked against the scan; both subcases, including the row $s$ of condition (E).")]),
+    ("2026-10-19", [
+        ("Lean: теорема 6.1 Тахары (описание $D_5$ для конечных групп ступени $\\le4$) доказана в Lean, без <code>sorry</code>, только стандартные аксиомы; теоремы 6.6 и 6.8 теперь доказаны в Lean без гипотез. При формализации найдена опечатка в нашей записи условия (C₂) Тахары; исправлена до доказательства.",
+         "Lean: Tahara's Theorem 6.1 (the description of $D_5$ for finite groups of class $\\le4$) is proved in Lean, with no <code>sorry</code> and only the standard axioms; Theorems 6.6 and 6.8 are now proved in Lean with no hypotheses. The formalization found a typo in our transcription of Tahara's condition (C₂); it was fixed before the proof.")]),
 ]
 
 
