@@ -11,10 +11,10 @@
 #       om1(i,j) sigma_k + om2(i,j) eta_k + c om3(i,j) f_k = 0.
 # Theorem D (wiki): under N1-N3, P has a step-1 descendant  <=>  (E)+(J) has a solution with c <> 0.
 #
-# Columns: id, logN (ANUPQ: PqPCover), logN (GAP's own p-quotient, EpimorphismPGroup of F/[R,F]R^p),
+# Columns: id, logN (ANUPQ: PqPCover), logN (GAP's own p-quotient, EpimorphismPGroup of F/[R,F]R^p on the pc presentation),
 #   N1, N2, N3, Eall (E for all x in P/gamma_2, as on page 689), Egen, J, E+J, E+J without the om3 term
 #   (negative control), cert (E+J solution -> FromTheLeftCollector: confluent, |Q| = p|P|, gamma_4(Q) <> 1,
-#   Q -> P a homomorphism onto), negcert (an E-only solution with sigma = 0 when E+J fails: "true" would mean
+#   Q -> P a homomorphism onto, checked relation by relation), negcert (an E-only solution with sigma = 0 when E+J fails: "true" would mean
 #   that the collector is confluent with gamma_4 <> 1; "-" when not applicable).
 LoadPackage("anupq"); LoadPackage("polycyclic");
 if not IsBound(PR) then PR := 3; fi;
@@ -25,10 +25,11 @@ Q136LogNAnupq := function(P)
   return LogInt(Size(PCentralSeries(S, PR)[4]), PR);
 end;
 
-Q136LogNGap := function(P, gens)
-  local iso, FP, F, fg, rels, G2, S;
-  iso := IsomorphismFpGroupByGenerators(P, gens);
-  FP := Image(iso); F := FreeGroupOfFpGroup(FP); fg := GeneratorsOfGroup(F);
+Q136LogNGap := function(P)
+  # the pc presentation (redundant generators, no coset enumeration): then F/[R,F]R^p = P* x C_p^k, and the
+  # elementary central factor C_p^k already dies in P_2, so P_4 is that of P*
+  local FP, F, fg, rels, G2, S;
+  FP := Image(IsomorphismFpGroup(P)); F := FreeGroupOfFpGroup(FP); fg := GeneratorsOfGroup(F);
   rels := RelatorsOfFpGroup(FP);
   G2 := F / Concatenation(Concatenation(List(rels, r -> List(fg, g -> Comm(r, g)))), List(rels, r -> r^PR));
   S := Image(EpimorphismPGroup(G2, PR, 4));
@@ -47,7 +48,7 @@ end;
 
 # the pc presentation of Q from a solution s = (eta, sigma, mu_u, mu_v, c)
 Q136Cert := function(P, gens, u, v, w, f, Crd, s)
-  local d, n, p, coll, W, i, j, ab, cx, e, Q, qg, hom;
+  local d, n, p, coll, W, i, j, ab, cx, e, Q, im, Ev;
   d := Length(gens); p := PR; n := d + 4;
   e := List(s, IntFFE);
   W := function(l)
@@ -78,9 +79,16 @@ Q136Cert := function(P, gens, u, v, w, f, Crd, s)
   Q := PcpGroupByCollector(coll);
   if Size(Q) <> p * Size(P) then return false; fi;
   if Size(LowerCentralSeriesOfGroup(Q)[4]) = 1 then return false; fi;
-  qg := List([1..n], i -> PcpElementByGenExpList(coll, [i, 1]));
-  hom := GroupHomomorphismByImages(Q, P, qg, Concatenation(gens, [u, v, w, One(P)]));
-  return hom <> fail and Size(Image(hom)) = Size(P);
+  # Q -> P, generators to (gens, u, v, w, 1): check every relation of the collector in P (onto since gens generate P)
+  im := Concatenation(gens, [u, v, w, One(P)]);
+  Ev := l -> Product([1, 3 .. Length(l) - 1], k -> im[l[k]]^l[k + 1], One(P));
+  for i in [1..n] do
+    if im[i]^p <> Ev(GetPower(coll, i)) then return false; fi;
+    for j in [i + 1 .. n] do
+      if im[j]^im[i] <> Ev(GetConjugate(coll, j, i)) then return false; fi;
+    od;
+  od;
+  return true;
 end;
 
 Q136Check := function(P)
@@ -153,7 +161,7 @@ end;
 Q136Line := function(id, P)
   local r;
   r := Q136Check(P);
-  return Concatenation(String(id), ",", String(Q136LogNAnupq(P)), ",", String(Q136LogNGap(P, r[1])), ",",
+  return Concatenation(String(id), ",", String(Q136LogNAnupq(P)), ",", String(Q136LogNGap(P)), ",",
     JoinStringsWithSeparator(List(r{[2 .. Length(r)]}, String), ","), "\n");
 end;
 
