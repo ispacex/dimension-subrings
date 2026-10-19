@@ -19,13 +19,13 @@
 LoadPackage("anupq"); LoadPackage("polycyclic");
 if not IsBound(PR) then PR := 3; fi;
 
-LogNAnupq := function(P)
+Q136LogNAnupq := function(P)
   local S;
   S := PqPCover(P);
   return LogInt(Size(PCentralSeries(S, PR)[4]), PR);
 end;
 
-LogNGap := function(P, gens)
+Q136LogNGap := function(P, gens)
   local iso, FP, F, fg, rels, G2, S;
   iso := IsomorphismFpGroupByGenerators(P, gens);
   FP := Image(iso); F := FreeGroupOfFpGroup(FP); fg := GeneratorsOfGroup(F);
@@ -35,7 +35,7 @@ LogNGap := function(P, gens)
   return LogInt(Size(PCentralSeries(S, PR)[4]), PR);
 end;
 
-Sol := function(A, n)
+Q136Sol := function(A, n)
   # a solution with c = 1, or fail
   local ns, z;
   if A = [] then z := List([1..n], i -> Zero(GF(PR))); z[n] := One(GF(PR)); return z; fi;
@@ -46,7 +46,7 @@ Sol := function(A, n)
 end;
 
 # the pc presentation of Q from a solution s = (eta, sigma, mu_u, mu_v, c)
-Cert := function(P, gens, u, v, w, f, Crd, s)
+Q136Cert := function(P, gens, u, v, w, f, Crd, s)
   local d, n, p, coll, W, i, j, ab, cx, e, Q, qg, hom;
   d := Length(gens); p := PR; n := d + 4;
   e := List(s, IntFFE);
@@ -83,7 +83,7 @@ Cert := function(P, gens, u, v, w, f, Crd, s)
   return hom <> fail and Size(Image(hom)) = Size(P);
 end;
 
-Check := function(P)
+Q136Check := function(P)
   local L, G2, G3, Z2, w, v, u, els, crd, Crd, f, gens, d, tup, x, i, j, k, t, t0, n, row,
         Eall, Egen, J, J0, om, cyc, F, s, cert, neg;
   F := GF(PR);
@@ -135,31 +135,31 @@ Check := function(P)
     od;
     Add(J, t * One(F)); Add(J0, t0 * One(F));
   od;
-  s := Sol(Concatenation(Egen, J), n);
+  s := Q136Sol(Concatenation(Egen, J), n);
   cert := "-"; neg := "-";
   if s <> fail then
-    cert := Cert(P, gens, u, v, w, f, Crd, s);
+    cert := Q136Cert(P, gens, u, v, w, f, Crd, s);
   else
-    s := Sol(Egen, n);
+    s := Q136Sol(Egen, n);
     if s <> fail then
       for i in [d + 1 .. 2 * d] do s[i] := Zero(F); od;
-      neg := Cert(P, gens, u, v, w, f, Crd, s);
+      neg := Q136Cert(P, gens, u, v, w, f, Crd, s);
     fi;
   fi;
-  return [gens, true, true, true, Sol(Eall, n) <> fail, Sol(Egen, n) <> fail, Sol(J, n) <> fail,
-          Sol(Concatenation(Egen, J), n) <> fail, Sol(Concatenation(Egen, J0), n) <> fail, cert, neg];
+  return [gens, true, true, true, Q136Sol(Eall, n) <> fail, Q136Sol(Egen, n) <> fail, Q136Sol(J, n) <> fail,
+          Q136Sol(Concatenation(Egen, J), n) <> fail, Q136Sol(Concatenation(Egen, J0), n) <> fail, cert, neg];
 end;
 
-Line := function(id, P)
+Q136Line := function(id, P)
   local r;
-  r := Check(P);
-  return Concatenation(String(id), ",", String(LogNAnupq(P)), ",", String(LogNGap(P, r[1])), ",",
+  r := Q136Check(P);
+  return Concatenation(String(id), ",", String(Q136LogNAnupq(P)), ",", String(Q136LogNGap(P, r[1])), ",",
     JoinStringsWithSeparator(List(r{[2 .. Length(r)]}, String), ","), "\n");
 end;
 
 # MODE "block": SmallGroup(3^8, 1387558..1395381), the 7824 groups of type (5,2,1);
 # MODE "p7": all groups of order PR^7 of type (4,2,1) with P/gamma_2 elementary.
-Run := function(shard, nshard)
+Q136Run := function(shard, nshard)
   local lg, ids, id, P, Lc;
   lg := OutputTextFile(LOG, false); SetPrintFormattingStatus(lg, false);
   if MODE = "block" then ids := [1387558 .. 1395381]; else ids := [1 .. NrSmallGroups(PR^7)]; fi;
@@ -174,13 +174,13 @@ Run := function(shard, nshard)
       if not (Length(Lc) = 4 and Index(Lc[1], Lc[2]) = PR^4 and Index(Lc[2], Lc[3]) = PR^2
               and Size(Lc[3]) = PR) then continue; fi;
     fi;
-    WriteAll(lg, Line(id, P));
+    WriteAll(lg, Q136Line(id, P));
   od;
   WriteAll(lg, Concatenation("shard ", String(shard), " done\n"));
   CloseStream(lg);
 end;
 if IsBound(SHARD) then
   if MODE = "block" then LoadPackage("sglppow"); fi;
-  Run(SHARD, NSHARD);
+  Q136Run(SHARD, NSHARD);
 fi;
 QUIT;
