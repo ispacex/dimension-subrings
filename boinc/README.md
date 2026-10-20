@@ -14,6 +14,8 @@ one input file in, one output file out, the same bytes on every host.
 | `buda/desc.json` | the BUDA science app as the "Add science app" form records it |
 | `make_batch.sh` | split files of `run_rank.sh` → a BUDA batch directory (one job per piece and replica) and its manifest |
 | `collect.sh` | the batch's output files → compared replicas, checked against the manifest → the layout of a `run_rank.sh` run |
+| `boinc-merge.sh` | `collect.sh`'s results → the `B/` of a running `run_rank.sh` run, only for the pieces that have no stat file there yet (never overwrites; the log says `boinc`) |
+| `boinc-cmp.sh` | `collect.sh`'s results against an older run's `B/` pieces: counters without `ms_*`, candidates, dump |
 | `../.github/workflows/boinc-image.yml` | builds the image for x86_64 and aarch64 on a `boinc-v*` tag and pushes it to the GitHub registry |
 
 ## A piece is a job
