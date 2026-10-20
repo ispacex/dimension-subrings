@@ -789,8 +789,10 @@ $2$-class 2, $H$ a step-1 descendant of $V$ and $P_3(H) = \langle z \rangle$.
 * **Tahara's rule** (`TAH19`): a leaf $H$ of order $2^{N-1}$ whose $H_{ab}$ has at most one invariant
   $\ge 4$ is dropped before (Г$_N$) and the cover search. A candidate $Q$ over $H$ has
   $n \in \gamma_3(Q) \le \gamma_2(Q)$, so $Q_{ab} = H_{ab}$, and $D_4(Q) = \gamma_4(Q) = 1$ by
-  K. Tahara, J. Algebra 45 (1977) 102–131, Cor. 19 (I. B. S. Passi, *Group rings and their
-  augmentation ideals*, LNM 715, Thm. 10.1) †; hence $D_5(Q) = 1$. **This rule drops candidates**
+  K. Tahara, J. Algebra 45 (1977) 102–131, Cor. 19, p. 125 (checked against the scan, attached to
+  MATH-74): for a finite 2-group $G$ of class 3 with $G/G_2$ of type $(\beta_1, 2, \dots, 2)$, i.e. at
+  most one cyclic factor of order $\ge 4$, $D_4(G) = G_4$ (Tahara attributes it to I. B. S. Passi,
+  *Group rings and their augmentation ideals*, LNM 715, Thm. 10.1); hence $D_5(Q) = 1$. **This rule drops candidates**
   (only ones with $D_5 = 1$): the candidate counts of ranks 5 and 6 (824 and 13) are those left
   after it. On rank 6 the run `m72r6y`, where part of the pieces had been counted without the rule,
   kept 469 candidates, all with $D_4 = D_5 = 1$; the 13 of the full run are among them (MATH-72,
