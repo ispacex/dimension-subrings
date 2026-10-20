@@ -127,6 +127,64 @@ if not IsBound(STREAM) then
   STREAM := IsBound(GAPInfo.SystemEnvironment.PQ2048_STREAM)
             and GAPInfo.SystemEnvironment.PQ2048_STREAM = "1";
 fi;
+# CH_FileIterator(file, n, p): the n groups of pq's GAP_library file, read from the file one block at a
+# time.  PQ_READ_AS_FUNC_WITH_VARS reads the whole file into a string, copies it and parses all of it
+# before the first group is built: on the heaviest vertex (d00121, MATH-74) that file is tens of GB and
+# the read, not the walk, is the peak.  A block is the text from one "## group number: k" line to the
+# next (the group's function and, if pq wrote them, its automorphisms); it is parsed when the walk asks
+# for group k, so at most one block is in memory.  The file is moved out of the way first (another pq
+# call writes the same name) and kept open until the last group, so the hourly gap-tmp-clean leaves
+# it alone; it is removed once read.  On when STREAMFILE, default PQ2048_STREAMFILE (1 = on).
+if not IsBound(STREAMFILE) then
+  STREAMFILE := IsBound(GAPInfo.SystemEnvironment.PQ2048_STREAMFILE)
+                and GAPInfo.SystemEnvironment.PQ2048_STREAMFILE = "1";
+fi;
+CH_FILESEQ := 0;
+CH_FileIterator := function(file, n, p)
+  local path, stream, line;
+  CH_FILESEQ := CH_FILESEQ + 1;
+  path := Concatenation(file, ".", String(CH_FILESEQ));
+  Exec(Concatenation("mv '", file, "' '", path, "'"));
+  stream := InputTextFile(path);
+  if stream = fail then Error("CH_FileIterator: cannot open ", path); fi;
+  # the header (ANUPQgroups := []; ANUPQautos := [];) up to the first block
+  repeat line := ReadLine(stream);
+  until line = fail or StartsWith(line, "## group number:");
+  if line = fail then Error("CH_FileIterator: no groups in ", path); fi;
+  return IteratorByFunctions(rec(pos := 0, n := n, p := p, stream := stream, path := path, next := line,
+    IsDoneIterator := it -> it!.pos >= it!.n,
+    NextIterator := function(it)
+      local k, lines, line, s, r, l, G;
+      if it!.next = fail then Error("CH_FileIterator: ", it!.path, " ends at group ", it!.pos); fi;
+      k := Int(NormalizedWhitespace(it!.next{[17 .. Length(it!.next)]}));
+      it!.pos := it!.pos + 1;
+      if k <> it!.pos then Error("CH_FileIterator: group ", k, " where ", it!.pos, " was due"); fi;
+      lines := [];
+      repeat
+        line := ReadLine(it!.stream);
+        if line = fail or StartsWith(line, "## group number:") then break; fi;
+        if StartsWith(line, "ANUPQmagic") then line := fail; break; fi;
+        Add(lines, line);
+      until false;
+      it!.next := line;
+      s := Concatenation("local ANUPQgroups, ANUPQautos;\nANUPQgroups := []; ANUPQautos := [];\n",
+                         Concatenation(lines), "\nreturn [ANUPQgroups, ANUPQautos];\n");
+      Unbind(lines);
+      r := ReadAsFunction(InputTextString(s))();
+      Unbind(s);
+      l := [];
+      r[1][k](l); G := l[1];
+      if IsBound(r[2][k]) then r[2][k](G); fi;
+      if not HasIsCapable(G) then SetIsCapable(G, false); fi;
+      SetIsPGroup(G, true); SetPrimePGroup(G, it!.p);
+      if it!.pos >= it!.n then CloseStream(it!.stream); RemoveFile(it!.path); fi;
+      return G;
+    end,
+    # one pass only: the copy shares the stream (the walk never copies it)
+    ShallowCopy := it -> rec(pos := it!.pos, n := it!.n, p := it!.p, stream := it!.stream,
+                             path := it!.path, next := it!.next)));
+end;;
+
 CH_Stream := function(V, s)
   local datarec, p, class, n, r;
   PushOptions(rec(StepSize := s));
@@ -155,6 +213,7 @@ CH_Stream := function(V, s)
   PQ_COMPLETE_NONINTERACTIVE_FUNC_CALL(datarec);
   PopOptions();
   if n = 0 then return []; fi;
+  if STREAMFILE then return CH_FileIterator(Filename(ANUPQData.tmpdir, "GAP_library"), n, p); fi;
   r := PQ_READ_AS_FUNC_WITH_VARS(Filename(ANUPQData.tmpdir, "GAP_library"),
                                  ["ANUPQmagic", "ANUPQautos", "ANUPQgroups"]);
   if r = fail or not IsBound(r.ANUPQmagic) or not IsBound(r.ANUPQgroups) then
