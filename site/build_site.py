@@ -490,8 +490,8 @@ RESULTS = [  # (status, ru, en, ref): ref is a str or (ru, en); [[label]] is a l
     ("cp", "$D_5(G)\\subseteq\\gamma_4(G)$ для всякой конечной $G$ с силовской $2$-подгруппой <a href=\"computations.html#f210\">порядка $\\le2^{10}$</a>, в частности для всех групп порядка $<2048$.",
      "$D_5(G)\\subseteq\\gamma_4(G)$ for every finite $G$ with Sylow $2$-subgroup <a href=\"computations.html#f210\">of order $\\le2^{10}$</a>, in particular for all groups of order $<2048$.",
      "[[thm:small]](1)"),
-    ("cp", "Порядок $2^{11}$, ступень $3$: $D_5=1$ при всех рангах — <a href=\"computations.html#f211\">ранги $2$–$7$ перебором</a>, $\\ge8$ на бумаге. Контрпример, если он есть, имеет порядок $\\ge2^{12}$.",
-     "Order $2^{11}$, class $3$: $D_5=1$ for every rank — <a href=\"computations.html#f211\">ranks $2$–$7$ by search</a>, $\\ge8$ on paper. A counterexample, if any, has order $\\ge2^{12}$.",
+    ("cp", "Порядок $2^{11}$, ступень $3$: $D_5=1$ при всех рангах — <a href=\"computations.html#f211\">ранги $2$–$7$ перебором</a>, $\\ge8$ на бумаге. Контрпример, если он есть, имеет порядок $\\ge2^{12}$. Две оговорки — <a href=\"open.html#q-check\">в открытых вопросах</a>.",
+     "Order $2^{11}$, class $3$: $D_5=1$ for every rank — <a href=\"computations.html#f211\">ranks $2$–$7$ by search</a>, $\\ge8$ on paper. A counterexample, if any, has order $\\ge2^{12}$. Two caveats are <a href=\"open.html#q-check\">in the open questions</a>.",
      "[[prop:2048]], [[prop:rank8]]"),
     ("l", "Центральные произведения: $D_n(H\\circ E)=D_n(H)$ при $E\\in\\{D_8,Q_8\\}$ и $t\\in\\gamma_2(H)$, а для $E=M_{2^{k+2}}$ — при условии на $g^{-2}s$ (например, $s=g^2$). "
           + gh("compute/central", "Все $386$ кандидатов") + " порядков $2^6$–$2^9$ ему удовлетворяют, так что разложимость $H\\circ E$ с $E\\in\\{D_8,Q_8,M_{16}\\}$ контрпримера не даёт. "
@@ -531,6 +531,8 @@ RESULTS = [  # (status, ru, en, ref): ref is a str or (ru, en); [[label]] is a l
 OPEN = [  # (id, ru, en): the id is the anchor on open.html
     ("q-main", "Сам вопрос 20.84: $D_5(Q)=1$ для всех конечных $2$-групп ступени $3$? Контрпример обязан иметь $D_4(Q)\\ne1$ и порядок $\\ge2^{12}$.",
      "Problem 20.84 itself: is $D_5(Q)=1$ for all finite $2$-groups of class $3$? A counterexample must have $D_4(Q)\\ne1$ and order $\\ge2^{12}$."),
+    ("q-check", "Две оговорки к порядкам $2^{10}$ и $2^{11}$. (1) Поиск $2^{10}$ и ранги $2$–$4$, $7$ при $2^{11}$ считались на ANUPQ до исправлений аудита; два исправленных дефекта могут менять потомков, повтор на исправленной версии ещё не сделан. (2) Ранги $5$ и $6$ используют следствие 19 Тахары (J. Algebra 45, 1977), ещё не сверенное с источником.",
+     "Two caveats on orders $2^{10}$ and $2^{11}$. (1) The $2^{10}$ search and ranks $2$–$4$, $7$ at $2^{11}$ ran on ANUPQ before the audit fixes; two of the fixed defects can change descendants, and the runs have not yet been repeated on the fixed version. (2) Ranks $5$ and $6$ use Tahara's Corollary 19 (J. Algebra 45, 1977), not yet checked against the source."),
     ("q-tahara", "Бывает ли $3$-кручение в $D_5/\\gamma_5$ (достигается ли оценка Тахары $6$)? Минимальный пример — порядка $\\ge3^{10}$, ступени $4$, с циклическим центром и не меньше чем двумя инвариантами $\\ge9$ у $Q/\\gamma_2$.",
      "Is there $3$-torsion in $D_5/\\gamma_5$, i.e. is Tahara's bound $6$ attained? A minimal example has order $\\ge3^{10}$, class $4$, cyclic centre and at least two invariants $\\ge9$ in $Q/\\gamma_2$."),
     ("q-c9c9", "Следующий случай: у $Q/\\gamma_2$ два инварианта $\\ge9$, например $C_9\\times C_9\\times C_3$. Там $\\gamma_2/\\gamma_3$ может иметь экспоненту $9$, и доказательство теоремы [[thm:exp3plus|#]] не проходит.",
@@ -558,9 +560,9 @@ FUNNELS = [
         ("кандидаты порядка $2^{11}$", "candidates of order $2^{11}$", 52568),
         ("$D_5\\ne1$", "$D_5\\ne1$", 0)], ("[[sec:computations]], «Дальнейшее»", "[[sec:computations]], “Next”")),
     ("f211r5", "Порядок $2^{11}$, ранг $5$", "Order $2^{11}$, rank $5$", [
-        ("потомки порядка $2^{10}$, ранг $5$", "descendants of order $2^{10}$, rank $5$", 206519 + 44633 + 5002747 + 12557380),
-        ("оставлены как родители (отсечение, теорема B, Тахара)", "kept as parents (pruning, Theorem B, Tahara)", 206519),
-        ("кандидаты порядка $2^{11}$", "candidates of order $2^{11}$", 824),
+        ("потомки порядка $2^{10}$, ранг $5$, проверенные фильтрами", "descendants of order $2^{10}$, rank $5$, tested by the filters", 206519 + 44633 + 5002747 + 12557380),
+        ("оставлены как родители (отсечение, теорема B, правило Тахары)", "kept as parents (pruning, Theorem B, Tahara's rule)", 206519),
+        ("кандидаты порядка $2^{11}$ (после правила Тахары)", "candidates of order $2^{11}$ (after Tahara's rule)", 824),
         ("$D_5\\ne1$", "$D_5\\ne1$", 0)], ("[[sec:computations]], «Дальнейшее»", "[[sec:computations]], “Next”")),
     ("f38", "Порядок $3^8$", "Order $3^8$", [
         ("все группы порядка $3^8$", "all groups of order $3^8$", 1396077),
@@ -1078,7 +1080,7 @@ and we have not solved it. This site shows what is proved, what is computed, and
 <h2>Coverage map: $2$-groups of class $3$</h2>
 <p>A cell stands for all $2$-groups of class $3$ of the given order and rank; it is closed when all of them have $D_5=1$.
 {n2} cells are closed and {o2} open. More on the <a href="coverage.html">coverage map</a> page.</p>
-""") + grid(range(4, 12), range(2, 10), cover2, 2, lang, highlight={(11, 5), (11, 6), (11, 7)}) + legend(lang) + t("""
+""") + grid(range(4, 12), range(2, 10), cover2, 2, lang, highlight=()) + legend(lang) + t("""
 <h2>Последнее</h2>""", """
 <h2>Latest</h2>""") + "<ul>" + "".join(f"<li>{x[li]}</li>" for x in TIMELINE[-1][1]) + "</ul>" + t(f"""
 <p>Черновик статьи (от {pdate['ru']}): <a href="viewer.html">по-русски</a>, <a href="../viewer.html" hreflang="en">по-английски</a>
@@ -1100,7 +1102,7 @@ question for all of them: a computation, a proof, or both. Hover over a cell for
 <p>This is Problem 20.84 itself: by the reduction (Proposition [[prop:reduction|#]]), $D_5\\subseteq\\gamma_4$ for all groups if and only if
 $D_5(Q)=1$ for every finite $2$-group of class $3$. Class $3$ forces $d\\le n-2$ at order $2^n$.
 No cell is open here any more: order $2^{11}$ is settled for every rank (Proposition [[prop:2048|#]]).</p>""")
-      + grid(range(4, 12), range(2, 10), cover2, 2, lang, highlight={(11, 5), (11, 6), (11, 7)}) + legend(lang) + t("""
+      + grid(range(4, 12), range(2, 10), cover2, 2, lang, highlight=()) + legend(lang) + t("""
 <ul>
 <li>До $2^8$&nbsp;— решётка $\\Delta^n$ для всех групп; $2^9$&nbsp;— сито Дженнингса и решётка.</li>
 <li>$2^{10}$&nbsp;— лемма о минимальном контрпримере: достаточно шаг-$1$ потомков групп порядка $2^9$ (ANUPQ), $3400$ кандидатов.</li>
