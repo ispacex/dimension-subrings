@@ -214,6 +214,7 @@ non-trivial $\gamma_3$ at large rank (Corollary 1), and on the parent itself it 
 | `cmp37.sh`, `cmp37.g`, `cmp37.py` | the check on $2^{10}$: comparison with `../pq1024/results/candidates.csv` parent by parent (the same pc code, otherwise the ANUPQ standard presentation) |
 | `run_rank.sh`, `rank_sum.py` | the runs by rank: `tree.g` for one rank up to $2^{11}$ in pieces A/B/C (`DUMPLEVEL`, `STARTFILE`, `DEFERFILE`, the `steps.g` rules) and the lattice by variant B; batches, compact candidates, shuffled stage C (section "One rank in pieces"); progress in `$JOB_ROOT/progress` |
 | `expand_compact.g`, `shuffle_split.py`, `run_r8.sh` | compact candidate lines → full ones; the seeded shuffle and split of stage C; rank 8 from the groups of order 512 |
+| `split_ids.sh`, `split_library.sh`, `run_parts.sh`, `merge_parts.py` | heavy pieces of stage B: an id-range piece cut into smaller ranges; one deferred step walked in parts from pq's file of its descendants, the parts' results joined (section "One rank in pieces") |
 | `results/` | stat files of the runs (`small/`, `s512/`, `est/`, `trees/`, `steps/`, `check1024/`) |
 
 `../pq1024/desc1c.g` has an optional parameter `PFILTER` (a function of the parent; `false` means
@@ -410,6 +411,20 @@ walk exactly the tree of one process. Three details matter for larger ranks:
   input's order, so `b2048.jsonl` is the same as from one process except the timings in `stats`
   (checked on every 17th of the 52 568 rank-4 candidates: 3 093 lines identical, 967 CPU-s in
   246 s of wall time on 4 processes).
+* **Heavy pieces of stage B.** `split_ids.sh OUTDIR STEP` cuts every unfinished id-range piece of
+  more than STEP ids into pieces of STEP ids. One deferred step can still be one process for many
+  hours: in rank 5 `d00121` (a vertex of order 128, step 3) has 2 218 768 descendants, walked one by
+  one on one core. `run_parts.sh` walks such a piece in parts. pq's file of the step's descendants
+  (`GAP_library`, kept with `CH_FILEKEEP` or as a hard link to the file a run is reading) is cut by
+  `split_library.sh` into ranges of consecutive groups, the blocks unchanged; each range is walked by
+  `tree.g` with `CH_FILERANGE`, which reads those groups instead of calling pq (`CH_FileBlocks`, the
+  reader of `CH_FileIterator`); `merge_parts.py` joins the results. Every descendant is handled on
+  its own and the cover search goes through the parents in the order they were found, so the parts'
+  counters summed (those of the vertex itself taken once), their candidates in order with `id`
+  renumbered and their dumps in order are what the piece gives whole. Checked byte for byte, without
+  the timings: `d00126` of rank 5 (7 parts, 104 dumped vertices, 103 parents) against its result in
+  the run, and a vertex of order 512 of stage C with 46 parents and 3 candidates (5 parts) against
+  its whole run.
 
 `run_r8.sh`: rank 8, whose first step from $2^8$ runs out of memory in `PqDescendants`, starts
 instead from the groups of rank 8 of order 512 in SmallGroups (exactly the step-1 descendants of

@@ -139,19 +139,33 @@ if not IsBound(STREAMFILE) then
   STREAMFILE := IsBound(GAPInfo.SystemEnvironment.PQ2048_STREAMFILE)
                 and GAPInfo.SystemEnvironment.PQ2048_STREAMFILE = "1";
 fi;
+# CH_FILEKEEP (a directory): CH_FileIterator also links each file it reads there, as GAP_library.<seq>,
+# so that the same step can be walked again in parts (CH_FILERANGE below).
 CH_FILESEQ := 0;
 CH_FileIterator := function(file, n, p)
-  local path, stream, line;
+  local path;
   CH_FILESEQ := CH_FILESEQ + 1;
   path := Concatenation(file, ".", String(CH_FILESEQ));
   Exec(Concatenation("mv '", file, "' '", path, "'"));
+  if IsBound(CH_FILEKEEP) then
+    Exec(Concatenation("ln '", path, "' '", CH_FILEKEEP, "/GAP_library.", String(CH_FILESEQ), "'"));
+  fi;
+  return CH_FileBlocks(path, 1, n, p, true);
+end;;
+# CH_FileBlocks(path, first, last, p, remove): the groups first .. last of a GAP_library file at path
+# (pq's whole file, or a part of it cut by split_library.sh, which keeps the header and the blocks of
+# these groups as they are), as CH_FileIterator reads them; the file is removed after the last group
+# if remove.
+CH_FileBlocks := function(path, first, last, p, remove)
+  local stream, line;
   stream := InputTextFile(path);
   if stream = fail then Error("CH_FileIterator: cannot open ", path); fi;
   # the header (ANUPQgroups := []; ANUPQautos := [];) up to the first block
   repeat line := ReadLine(stream);
   until line = fail or StartsWith(line, "## group number:");
   if line = fail then Error("CH_FileIterator: no groups in ", path); fi;
-  return IteratorByFunctions(rec(pos := 0, n := n, p := p, stream := stream, path := path, next := line,
+  return IteratorByFunctions(rec(pos := first - 1, n := last, p := p, stream := stream, path := path,
+    next := line, remove := remove,
     IsDoneIterator := it -> it!.pos >= it!.n,
     NextIterator := function(it)
       local k, lines, line, s, r, l, G;
@@ -177,12 +191,15 @@ CH_FileIterator := function(file, n, p)
       if IsBound(r[2][k]) then r[2][k](G); fi;
       if not HasIsCapable(G) then SetIsCapable(G, false); fi;
       SetIsPGroup(G, true); SetPrimePGroup(G, it!.p);
-      if it!.pos >= it!.n then CloseStream(it!.stream); RemoveFile(it!.path); fi;
+      if it!.pos >= it!.n then
+        CloseStream(it!.stream);
+        if it!.remove then RemoveFile(it!.path); fi;
+      fi;
       return G;
     end,
     # one pass only: the copy shares the stream (the walk never copies it)
     ShallowCopy := it -> rec(pos := it!.pos, n := it!.n, p := it!.p, stream := it!.stream,
-                             path := it!.path, next := it!.next)));
+                             path := it!.path, next := it!.next, remove := it!.remove)));
 end;;
 
 CH_Stream := function(V, s)
@@ -235,8 +252,16 @@ CH_Stream := function(V, s)
     ShallowCopy := it -> rec(pos := it!.pos, groups := it!.groups, autos := it!.autos, p := it!.p)));
 end;;
 
+# CH_FILERANGE := [first, last] with CH_FILEPART (a path): the descendants are not computed but read,
+# the groups first .. last of that GAP_library file (CH_FileBlocks), which it keeps.  For a piece of
+# one vertex and one step (a deferred step of stage B) walked in parts: each part walks its range,
+# and since every descendant is handled on its own and the cover search goes through the parents in
+# the order found, the parts' results joined in order are the piece's (merge_parts.py).
 CH_Desc := function(V, s)
   local res;
+  if IsBound(CH_FILERANGE) then
+    return CH_FileBlocks(CH_FILEPART, CH_FILERANGE[1], CH_FILERANGE[2], PrimePGroup(V), false);
+  fi;
   if LIBROOT then
     res := CH_LibRoot(V, s);
     if res <> fail then return res; fi;
