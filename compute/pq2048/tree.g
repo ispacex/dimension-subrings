@@ -77,6 +77,16 @@ end;;
 NOSTAB := IsBound(GAPInfo.SystemEnvironment.PQ2048_NOSTAB) and GAPInfo.SystemEnvironment.PQ2048_NOSTAB = "1";;
 THMA := IsBound(GAPInfo.SystemEnvironment.PQ2048_THMA) and GAPInfo.SystemEnvironment.PQ2048_THMA = "1";;
 TAH19 := IsBound(GAPInfo.SystemEnvironment.PQ2048_TAH19) and GAPInfo.SystemEnvironment.PQ2048_TAH19 = "1";;
+# TR_Consume(l): the list l of descendants walked as an iterator that unbinds each entry as it hands it
+# out, so a descendant and what the tests cache on it can be collected once it is handled, instead of
+# all of a vertex's descendants staying until its step is done.
+TR_Consume := function(l)
+  return IteratorByFunctions(rec(pos := 0, l := l, n := Length(l),
+    IsDoneIterator := it -> it!.pos >= it!.n,
+    NextIterator := function(it) local x;
+      it!.pos := it!.pos + 1; x := it!.l[it!.pos]; Unbind(it!.l[it!.pos]); return x; end,
+    ShallowCopy := it -> rec(pos := it!.pos, l := it!.l, n := it!.n)));
+end;;
 TR_Live := function() local g; g := GasmanStatistics();
   if IsBound(g.full) and IsBound(g.full.livekb) then return g.full.livekb; fi; return -1; end;;
 TR_Run := function()
@@ -184,6 +194,7 @@ TR_Run := function()
         ds := CH_Desc(G, s);
       fi;
       r1 := TR_Rt(); t1 := TS_Cpu(); nrej := 0; nkept := 0; ncut := 0; nd := 0;
+      if IsList(ds) then ds := TR_Consume(ds); fi;
       for H in ds do
         nd := nd + 1;
         c := NilpotencyClassOfGroup(H);
@@ -222,7 +233,8 @@ TR_Run := function()
         if c >= 2 and MS_PClass(H) >= 3 then
           TR_Add(S.par, k + s, 1);
           if k + s <= COVERMAX then
-            Add(covers, H);
+            # kept as its code, like the stack: rebuilt for the cover search below
+            Add(covers, rec(code := CodePcGroup(H), order := Size(H)));
           fi;
         fi;
       od;
@@ -232,12 +244,13 @@ TR_Run := function()
           ",\"filter\":", String(TS_Cpu() - t1), ",\"kept\":", String(nkept), ",\"cut\":", String(ncut),
           ",\"rej\":", String(nrej), "}"));
       fi;
-      Unbind(ds);
+      Unbind(ds); H := fail;
     od;
     TR_Add(S.ms_desc, k, TS_Cpu() - t);
     mc := TS_Cpu();
     # the cover search on each parent just found
     for H in covers do
+      H := PcGroupCode(H.code, H.order);
       k := Log(Size(H), 2);
       t := TS_Cpu();
       r := MC_Data(H);
