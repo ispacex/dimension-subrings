@@ -6,7 +6,12 @@ The static site on the D_5 problem: https://ispacex.github.io/d5/
     site/two_tier.sh OUT_DIR                                 # search index into the form ispacex's engine reads
 
 PAPER_DIR holds the paper draft, d5.tex and d5-ru.tex (its source is kept elsewhere); both are
-compiled here with pdflatex, so the PDFs on the site are always those of the sources read.
+compiled here with pdflatex, so the PDFs on the site are always those of the sources read. These two are
+the "lab notebook" (status markers, the tracker, how each run was made), and everything on the site that
+links into the paper links into them. If PAPER_DIR also has d5-preprint.tex, the arXiv version (EN only,
+its own numbering), it is compiled too, shown by preprint-viewer.html and offered on paper.html next to
+the notebook; nothing links into it by label. Without it the build is as before. ARXIV_ID, once known,
+adds the arXiv link.
 KERNEL_DIR is a checkout of gitlab.com/ispacex/cflint-fast-core: its docs/analysis.md and
 docs/analysis.ru.md become kernel.html, converted with pandoc. GitLab draws only the first 50
 formulas of a page and hides every other one behind a "performance issues" box, and that document
@@ -70,6 +75,8 @@ LANGS = ("ru", "en")
 SITE_TITLE = {"ru": "Задача о $D_5$", "en": "The $D_5$ problem"}
 REPO = "https://github.com/ispacex/dimension-subrings"
 PDF = {"en": "d5", "ru": "d5-ru"}  # paper/<name>.pdf of each language
+PREPRINT = "d5-preprint"  # paper/<name>.tex: the arXiv version, compiled and shown only if PAPER has it
+ARXIV_ID = None  # e.g. "2611.01234" once the preprint is on arXiv: paper.html then links to arxiv.org/abs/<id>
 
 
 def git(*a):
@@ -1402,12 +1409,14 @@ def refs_plain(s, lang):
 
 def build_pdfs(dest):
     """Compile both drafts in a scratch copy of PAPER (twice, for the references), with every \\label a
-    named destination (hyperref's destlabel, passed on the command line: the sources stay as they are).
-    Yields the name, the number of pages and read_aux() of each."""
+    named destination (hyperref's destlabel, passed on the command line: the sources stay as they are),
+    and the preprint if PAPER has it. Yields the name, the number of pages and read_aux() of each draft
+    (None for the preprint: nothing links into it by label)."""
+    names = list(PDF.values()) + ([PREPRINT] if (PAPER / f"{PREPRINT}.tex").exists() else [])
     with tempfile.TemporaryDirectory() as tmp:
         for f in PAPER.glob("*.tex"):
             shutil.copy(f, tmp)
-        for name in PDF.values():
+        for name in names:
             for _ in range(2):
                 r = subprocess.run(["pdflatex", "-interaction=nonstopmode", "-halt-on-error", f"-jobname={name}",
                                     f"\\PassOptionsToPackage{{destlabel}}{{hyperref}}\\input{{{name}.tex}}"],
@@ -1420,7 +1429,7 @@ def build_pdfs(dest):
             pages = re.search(r"Output written on .*?\((\d+) pages", log)
             shutil.copy(pathlib.Path(tmp) / (name + ".pdf"), dest / (name + ".pdf"))
             aux = read_aux((pathlib.Path(tmp) / (name + ".aux")).read_text(errors="replace"),
-                           (PAPER / (name + ".tex")).read_text(encoding="utf-8"))
+                           (PAPER / (name + ".tex")).read_text(encoding="utf-8")) if name != PREPRINT else None
             yield name, int(pages.group(1)) if pages else None, aux
 
 
@@ -1446,13 +1455,16 @@ def main():
     pdfs = {}
     for name, n, aux in build_pdfs(OUT / "paper"):
         pdfs[name] = n
-        PAPERS[next(l for l in LANGS if PDF[l] == name)] = aux
+        if aux:
+            PAPERS[next(l for l in LANGS if PDF[l] == name)] = aux
     pdate = paper_date()
     date = fmt_date(max(pdate, TIMELINE[-1][0]))
     paper = {lang: read_abstract(PAPER / f"{PDF[lang]}.tex") for lang in LANGS}
     for lang in LANGS:
         site(lang, date, paper, pdfs, fmt_date(pdate))
         viewer(lang)
+        if PREPRINT in pdfs:
+            viewer(lang, "preprint-viewer.html", "paper/", PREPRINT, "paper.html", ("Препринт", "Preprint"))
         viewer(lang, "kernel-viewer.html", "kernel/", KERNEL_PDF[lang][:-4], "kernel.html", ("Быстрое ядро", "Fast kernel"))
     nblocks = write_search({h: i for i, (h, _, _) in enumerate(NAV)})
     print("search index:", sum(1 for p in PAGES if p[1] != "search.html"), "pages,", nblocks, "blocks")
@@ -1661,7 +1673,32 @@ Checks: two independent methods, PARI/GP, known values.</small></p>""")
                          f'{statements(number) if number else ""}</li>')
         else:
             sub.append(f'<li id="sec-{k}-{len(sub) + 1}">{entry}</li>')
-    P("paper.html", t("Черновик статьи", "Paper draft"), t(f"""
+    # Two versions, when PAPER has the preprint: it first, then the notebook, the rest of this page.
+    versions = ""
+    if PREPRINT in pdfs:
+        arxiv = f', <a href="https://arxiv.org/abs/{ARXIV_ID}">arXiv:{ARXIV_ID}</a>' if ARXIV_ID else ""
+        pre = "" if lang == "en" else "../"
+        versions = t(f"""
+<div class="box"><p>Статья есть в двух версиях: препринт для arXiv и лабораторный журнал со всеми подробностями.</p>
+<ul>
+<li><b>Препринт (версия для arXiv)</b>: <a href="preprint-viewer.html">читать</a> ({pdfs[PREPRINT]} с., по-английски),
+<a href="{pre}paper/{PREPRINT}.pdf">PDF</a>{arxiv}.</li>
+<li><b>Лабораторный журнал (все подробности)</b>: черновик ниже, по-русски и по-английски.</li>
+</ul>
+<p><small>Препринт&nbsp;— сжатый текст статьи: результаты и доказательства. Журнал добавляет статус каждого утверждения,
+ссылки на задачи трекера (D5-N) и то, как сделано каждое вычисление; на него, а не на препринт, ведут все ссылки на номера утверждений на этом сайте
+(в препринте нумерация может быть другой).</small></p></div>""", f"""
+<div class="box"><p>The paper comes in two versions: the preprint for arXiv, and the lab notebook with all the details.</p>
+<ul>
+<li><b>Preprint (arXiv version)</b>: <a href="preprint-viewer.html">read it</a> ({pdfs[PREPRINT]} pp., English),
+<a href="{pre}paper/{PREPRINT}.pdf">PDF</a>{arxiv}.</li>
+<li><b>Lab notebook (full details)</b>: the draft below, in English and Russian.</li>
+</ul>
+<p><small>The preprint is the paper proper: the results and their proofs. The notebook adds the status of every statement,
+links to the tracker (D5-N) and how each computation was made; every link to a statement number on this site goes to the
+notebook, not to the preprint (whose numbering may differ).</small></p></div>""") + t(
+            "<h2>Лабораторный журнал</h2>", "<h2>Lab notebook</h2>")
+    P("paper.html", t("Черновик статьи", "Paper draft"), versions + t(f"""
 <p>Версия от {pdate['ru']}. Читать: <a href="viewer.html"><b>по-русски</b></a> ({pdfs.get('d5-ru')} с.),
 <a href="../viewer.html" hreflang="en"><b>по-английски</b></a> ({pdfs.get('d5')} с.); скачать PDF: <a href="paper/d5-ru.pdf">RU</a>,
 <a href="paper/d5.pdf">EN</a>. Это черновик: статус каждого утверждения отмечен в тексте
