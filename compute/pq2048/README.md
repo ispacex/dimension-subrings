@@ -809,7 +809,9 @@ $2$-class 2, $H$ a step-1 descendant of $V$ and $P_3(H) = \langle z \rangle$.
 
 ANUPQ: ranks 5 and 6 ran on ispacex/anupq `correctness` (the audit fixes) with union-find and
 `PQ_NOSTAB`. Ranks 2–4 and 7, and the $2^{10}$ search in `../pq1024`, ran before those fixes;
-#96 and #99 can change descendants, and these runs have not yet been repeated on `correctness`.
+#96 and #99 can change descendants, so they were repeated on the same build ecdf1a7 (MATH-68,
+comments 6192–6300): ranks 2–4, 7 and 8 give the same candidates, and the $2^{10}$ search the same
+858 chunk tables, 3400 candidates and lattice answers (`../pq1024/results`, up to the time columns).
 
 ## Not proved
 
