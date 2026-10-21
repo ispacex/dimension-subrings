@@ -86,6 +86,11 @@ KERNEL_REPO = "https://gitlab.com/ispacex/cflint-fast-core"
 KERNEL_DOC = {"en": "docs/analysis.md", "ru": "docs/analysis.ru.md"}
 KERNEL_PIN = subprocess.run(["git", "-C", str(KERNEL), "log", "-1", "--format=%H", "--", *KERNEL_DOC.values()],
                             capture_output=True, text=True).stdout.strip()
+# Paths in the document's code (`gpu/stdmono.py`, `results/c5/carrier/`) link to the repository at the
+# commit the page is built from.
+KERNEL_HEAD = subprocess.run(["git", "-C", str(KERNEL), "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+KERNEL_FILES = set(subprocess.run(["git", "-C", str(KERNEL), "ls-tree", "-r", "--name-only", "HEAD"],
+                                  capture_output=True, text=True).stdout.split())
 if not KERNEL_PIN:
     sys.exit(f"{KERNEL}: not a checkout of cflint-fast-core with {' and '.join(KERNEL_DOC.values())}")
 
@@ -1010,6 +1015,45 @@ def kernel_links(html_, ids):
     return "".join(parts)
 
 
+def kernel_source_links(body):
+    """A repository path in <code> or <pre> (a file, a directory, or a file name that only one file has)
+    becomes a link to it at KERNEL_HEAD; anything else in the code stays as it is."""
+    dirs = {"/".join(f.split("/")[:k]) for f in KERNEL_FILES for k in range(1, f.count("/") + 1)}
+    base = {}
+    for f in KERNEL_FILES:
+        base.setdefault(f.rsplit("/", 1)[-1], []).append(f)
+
+    def target(tok):
+        t = tok.rstrip("/")
+        if t in KERNEL_FILES:
+            return f"{KERNEL_REPO}/-/blob/{KERNEL_HEAD}/{t}"
+        if t in dirs and "/" in tok:  # a bare `c` is more often a letter than the directory c/
+            return f"{KERNEL_REPO}/-/tree/{KERNEL_HEAD}/{t}"
+        if "/" not in t and "." in t and len(base.get(t, [])) == 1:
+            return f"{KERNEL_REPO}/-/blob/{KERNEL_HEAD}/{base[t][0]}"
+        return None
+
+    def sub(text):
+        def one(m):
+            u = target(m.group(0))
+            return f'<a href="{u}">{m.group(0)}</a>' if u else m.group(0)
+        return re.sub(r"(?<![\w./-])[A-Za-z0-9_][\w.-]*(?:/[\w.-]+)*/?(?![\w/-])", one, text)
+
+    parts, code, link = re.split(r"(<[^>]+>)", body), 0, 0
+    for k, x in enumerate(parts):
+        if x.startswith("<"):
+            t = re.match(r"</?([a-zA-Z0-9]+)", x)
+            name = t.group(1).lower() if t else ""
+            d = -1 if x.startswith("</") else 1
+            if name in ("code", "pre"):
+                code += d
+            elif name == "a":
+                link += d
+        elif code and not link:
+            parts[k] = sub(x)
+    return "".join(parts)
+
+
 def kernel_doc(lang):
     """The body of kernel.html: the kernel document of cflint-fast-core (KERNEL_DOC) through pandoc.
     Its own title and EN/RU line are dropped (the page has both); formulas go back to $...$ and
@@ -1054,7 +1098,7 @@ GitLab draws only the first 50 formulas of a page, and this one has about three 
 download: <a href="{pdf}{KERNEL_PDF['en']}" download>EN</a>, <a href="{pdf}{KERNEL_PDF['ru']}" download>RU</a>.</p></div>"""}[lang])
     head = "Содержание" if lang == "ru" else "Contents"
     ids = kernel_anchors(body)
-    body = kernel_links(body, ids)
+    body = kernel_source_links(kernel_links(body, ids))
     note = kernel_links(KERNEL_ABSTRACT[lang], ids) + note
     side = [(int(lv), i, h) for lv, i, h in re.findall(r'<h([23]) id="([^"]+)">(.*?)</h\1>', body)]
     return f'{note}<div class="toc-inline"><h2>{head}</h2><ol class="toc">{toc}</ol></div><div class="kernel">{body}</div>', side
