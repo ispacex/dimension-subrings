@@ -1294,6 +1294,7 @@ KINDS = {"thm": ("Теорема", "Теор.", "Theorem", "Thm."), "prop": ("П
          "lem": ("Лемма", "Лемма", "Lemma", "Lemma"), "rem": ("Замечание", "Зам.", "Remark", "Rem."),
          "q": ("Вопрос", "Вопрос", "Question", "Question"), "sec": ("Раздел", "§", "Section", "§"),
          "section": ("Раздел", "§", "Section", "§"),
+         "app": ("Приложение", "Прил.", "Appendix", "App."),
          "oq": ("Открытый вопрос", "вопрос", "Open question", "question")}
 
 
@@ -1634,9 +1635,10 @@ Checks: two independent methods, PARI/GP, known values.</small></p>""")
     pp = t("с.", "p.")
 
     def statements(sec):
-        labs = [lb for lb, (n, _) in P_["labels"].items() if re.split(r"[:.]", lb)[0] not in ("sec", "section")
+        labs = [lb for lb, (n, _) in P_["labels"].items() if re.split(r"[:.]", lb)[0] not in ("sec", "section", "app")
                 and n.split(".")[0] == sec]
-        labs.sort(key=lambda lb: [int(x) for x in P_["labels"][lb][0].split(".")])
+        # appendix statements are numbered A.1, B.2: letters sort after the section numbers
+        labs.sort(key=lambda lb: [(0, int(x)) if x.isdigit() else (1, x) for x in P_["labels"][lb][0].split(".")])
         out = []
         for lb in labs:
             ttl = P_["titles"].get(lb, "")
