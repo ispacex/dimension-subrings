@@ -1,4 +1,4 @@
-## Referee check for MATH-183 (independent of m183/*.py).
+## Referee check for D5-31 (independent of m183/*.py).
 ## For Q = H o_C E compares, for n = 2..nmax,
 ##   ring(n):  Z[H] cap Delta_Q^n  =  Delta_H^n      (what the projection proof actually yields)
 ##   grp(n):   D_n(Q)              =  D_n(H)

@@ -1,5 +1,5 @@
-## MATH-186: all splittings Q = H'∘E of the 386 candidates Q of orders 64..512, and which
-## proved statement covers each (wiki page of MATH-186, §2-§4).  E = <a,b>Z(Q) with a, b not
+## D5-29: all splittings Q = H'∘E of the 386 candidates Q of orders 64..512, and which
+## proved statement covers each (wiki page of D5-29, §2-§4).  E = <a,b>Z(Q) with a, b not
 ## commuting, a^2, b^2 in Z(Q) and conjugacy classes of size 2; then H' = C_Q(E), Q = H'E and
 ## H' ∩ E = Z(Q).  For each two-generated E0 = <a,b> inside E:
 ##   |Z(E0)| = 2 (D8, Q8): "A", Theorem A, needs t = [a,b] in gamma_2(H');

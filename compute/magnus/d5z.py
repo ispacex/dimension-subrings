@@ -1,4 +1,4 @@
-"""Decide z in D_5(Q) for one element z of a finite 3-group Q given by a presentation (MATH-120).
+"""Decide z in D_5(Q) for one element z of a finite 3-group Q given by a presentation (D5-26).
 
 Input: JSON lines from c38.g, one per group:
   {"id": ..., "k": d, "rels": [extrep, ...], "z": extrep, "ctrl": [extrep, ...]}

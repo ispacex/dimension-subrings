@@ -1,4 +1,4 @@
-## MATH-184: the condition of Theorem C (wiki 702) on the candidates with Z(H) = C_4.
+## D5-31: the condition of Theorem C (wiki 702) on the candidates with Z(H) = C_4.
 ## For each generator s of Z(H) and each g in H: is c = g^-2 s such that c^(2^k) in gamma_(k+2)(H)
 ## for all k?  Prints [s in gamma_2, number of good g, collected orders of c] per s.
 ## Job kimmy/tm/20261018-092230-m184-gsearch-11bce88: 95 of 95 pass; the 17 with s not in gamma_2

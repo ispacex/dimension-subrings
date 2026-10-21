@@ -1,4 +1,4 @@
-# MATH-127 (1): random 3-groups Q of class 4 with Q/gamma_2 of exponent 3, non-metabelian, as a test
+# D5-27 (1): random 3-groups Q of class 4 with Q/gamma_2 of exponent 3, non-metabelian, as a test
 # of the theorem "D_5(Q) = 1 when Q/gamma_2(Q) has exponent 3" (wiki, child of 687).
 # Set SEED, NG (groups to try), KS (list of ranks), MODE (1 or 2), OUT (jsonl) before reading this file.
 # Q = class-4 3-quotient (ANUPQ, p-class 4 = lower central class 4 here, since Q^3 <= gamma_2)

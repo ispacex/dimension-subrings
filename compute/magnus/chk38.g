@@ -1,4 +1,4 @@
-# MATH-120: check the presentations written by c38.g or c39.g (set CHKIN to a *.jsonl file first;
+# D5-26: check the presentations written by c38.g or c39.g (set CHKIN to a *.jsonl file first;
 # CHKORDER, default 3^8, is the expected order; PROG, if bound, gets the count every 1000 lines).
 # For every survivor line: the 3-quotient of <x_1..x_k | rels> (ANUPQ, p-class <= 30) has order
 # CHKORDER and class 4, and the image of z is central of order 3 and lies in Q'' ∩ M_5.

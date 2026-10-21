@@ -765,7 +765,7 @@ $\Phi(Q)$ has order 2.
 
 ## Rules of the rank-5 and rank-6 runs
 
-The rank-5 and rank-6 runs at $2^{11}$ (MATH-74, MATH-72) use, besides (Г$_N$), the flags `THMA`,
+The rank-5 and rank-6 runs at $2^{11}$ ([D5-3](https://math.kaiku.tech/issue/D5-3)) use, besides (Г$_N$), the flags `THMA`,
 `THMB`, `TAH19`, `TIGHT` and `NOSTAB` of `tree.g` (`LIBROOT` and `OWNCOVER` only change how
 descendants and covers are built). Here $N = 11$, $V$ is a vertex of order $2^{N-2} = 2^9$ and
 $2$-class 2, $H$ a step-1 descendant of $V$ and $P_3(H) = \langle z \rangle$.
@@ -782,40 +782,40 @@ $2$-class 2, $H$ a step-1 descendant of $V$ and $P_3(H) = \langle z \rangle$.
   class 3 of a vertex of $p$-class 2 and order $2^{N-2}$ passes (Г$_N$). $V$ itself is no parent
   (its 2-class is 2, a parent's is $\ge 3$), and its steps $\ge 2$ go past $2^{N-1}$. $\square$
   Checked by enumeration: $N = 8$, 527 descendants, and $N = 9$, 12 227 descendants, 0 violations
-  (MATH-68, comment 5777).
+  ([D5-3](https://math.kaiku.tech/issue/D5-3)).
 * **Theorem B** (`THMB`): the step-1 descendants of class 3 of $V$ are dropped before (Г$_N$) when
   $V_{ab}$ has fewer than two invariants $\ge 4$. This is statement 1 of "Not proved" (the proved
-  part), which does not need the condition on $V_{ab}$. Checked: MATH-74, comment 5812.
+  part), which does not need the condition on $V_{ab}$. Checked in the rank-5 work ([D5-3](https://math.kaiku.tech/issue/D5-3)).
 * **Tahara's rule** (`TAH19`): a leaf $H$ of order $2^{N-1}$ whose $H_{ab}$ has at most one invariant
   $\ge 4$ is dropped before (Г$_N$) and the cover search. A candidate $Q$ over $H$ has
   $n \in \gamma_3(Q) \le \gamma_2(Q)$, so $Q_{ab} = H_{ab}$, and $D_4(Q) = \gamma_4(Q) = 1$ by
-  K. Tahara, J. Algebra 45 (1977) 102–131, Cor. 19, p. 125 (checked against the scan, attached to
-  MATH-74): for a finite 2-group $G$ of class 3 with $G/G_2$ of type $(\beta_1, 2, \dots, 2)$, i.e. at
+  K. Tahara, J. Algebra 45 (1977) 102–131, Cor. 19, p. 125 (checked against the
+  original): for a finite 2-group $G$ of class 3 with $G/G_2$ of type $(\beta_1, 2, \dots, 2)$, i.e. at
   most one cyclic factor of order $\ge 4$, $D_4(G) = G_4$ (Tahara attributes it to I. B. S. Passi,
   *Group rings and their augmentation ideals*, LNM 715, Thm. 10.1); hence $D_5(Q) = 1$. **This rule drops candidates**
   (only ones with $D_5 = 1$): the candidate counts of ranks 5 and 6 (824 and 13) are those left
   after it. On rank 6 the run `m72r6y`, where part of the pieces had been counted without the rule,
-  kept 469 candidates, all with $D_4 = D_5 = 1$; the 13 of the full run are among them (MATH-72,
-  comment 6009).
+  kept 469 candidates, all with $D_4 = D_5 = 1$; the 13 of the full run are among them
+  ([D5-3](https://math.kaiku.tech/issue/D5-3)).
 * **Tightness** (`TIGHT`): (Г$_N$) of a class-2 vertex of order $2^{N-1}$ by `PR_Tight2` (`prune.g`)
   instead of `PR_Data`; 0 differences on 5120 descendants of rank-5 vertices and on all class-2
-  groups of orders 128 and 256 (MATH-74, comment 5822).
+  groups of orders 128 and 256 ([D5-3](https://math.kaiku.tech/issue/D5-3)).
 * **No automorphism groups for leaves** (`NOSTAB`): the step 1 of a vertex of order $2^{N-2}$, whose
   children are leaves, runs pq with `PQ_NOSTAB`. Check: for the 283 groups of SmallGroups of rank
   $\le 3$ and orders $2^2$–$2^6$, $3^2$–$3^4$, $5^2$–$5^3$, the descendants of one more class with and
   without `PQ_NOSTAB` are the same (35 213 descendants, by `CodePcGroup`), on ispacex/anupq
-  `uf-nostab` ecdf1a7, the build of the rank-5 run (MATH-74, comment 6150). The upstream form of
+  `uf-nostab` ecdf1a7, the build of the rank-5 run ([D5-3](https://math.kaiku.tech/issue/D5-3)). The upstream form of
   the option is gap-packages/anupq#124 (`-l`, `LastClassAutomorphisms := false`).
 
 ANUPQ: ranks 5 and 6 ran on ispacex/anupq `correctness` (the audit fixes) with union-find and
 `PQ_NOSTAB`. Ranks 2–4 and 7, and the $2^{10}$ search in `../pq1024`, ran before those fixes;
-#96 and #99 can change descendants, so they were repeated on the same build ecdf1a7 (MATH-68,
-comments 6192–6300): ranks 2–4, 7 and 8 give the same candidates, and the $2^{10}$ search the same
+#96 and #99 can change descendants, so they were repeated on the same build ecdf1a7
+([D5-3](https://math.kaiku.tech/issue/D5-3)): ranks 2–4, 7 and 8 give the same candidates, and the $2^{10}$ search the same
 858 chunk tables, 3400 candidates and lattice answers (`../pq1024/results`, up to the time columns).
 
 ## Not proved
 
-The statements that stood here were analysed in MATH-128 (17.10.2026): one is false, one gave a
+The statements that stood here were analysed on 17.10.2026: one is false, one gave a
 test that is sound but cuts nothing new on ranks 5–6, one is open, one turned out to be a remark
 on (Г3) (now after the corollary of Theorem 1), and for one the literature was found. None of
 them is used for pruning beyond what is said below.
@@ -828,7 +828,7 @@ them is used for pruning beyond what is said below.
      elementary, so $A = \gamma_2(R)/K$ is elementary for every $K \ge \gamma_3(R)$. Hence
      $|A \vee B \vee E_1| \ge 2|A|$ ($E_1 = \mathbb Z/4$), $|A \vee R_{ab} \vee E_2| \ge |R_{ab}|$,
      and the left-hand side of (Г$_N$) is at least $2|K| \cdot 2|A| \cdot |R_{ab}| = 4|R| = 2^{N+1}$:
-     **no descendant of class 3 passes**. This is Theorem B of `tree.g` (branch `tree-profile`, `PQ2048_THMB`, MATH-74)
+     **no descendant of class 3 passes**. This is Theorem B of `tree.g` (branch `tree-profile`, `PQ2048_THMB`, [D5-3](https://math.kaiku.tech/issue/D5-3))
      without its condition on the invariants of $V_{ab}$.
    * For $R$ of class 2 the same count gives only $\ge 2^N$, and such descendants do pass.
      Counterexample: $V = H \times \mathbb Z/4$, where $d(H) = 4$, $|H| = 2^7$ and

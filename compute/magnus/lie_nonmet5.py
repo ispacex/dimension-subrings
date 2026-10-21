@@ -1,4 +1,4 @@
-"""Non-metabelian searches for p-torsion in delta_5/gamma_5 (MATH-119).
+"""Non-metabelian searches for p-torsion in delta_5/gamma_5 (D5-4).
 
 Passi-Sicking (arXiv:1602.04919, Thm 1): 2 delta_n(L) <= gamma_n(L) for metabelian L.  With
 functoriality this gives 2 delta_n(L) <= L'' + gamma_n(L) for every Lie ring, so odd torsion of

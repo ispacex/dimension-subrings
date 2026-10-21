@@ -3,7 +3,7 @@
 # GAP 4.15.1 from the release tarball (sha256 pinned), IO compiled from that tarball, ANUPQ from
 # our fork ispacex/anupq at a pinned commit (sha256 pinned): branch uf-nostab-v4 = the
 # correctness fixes proposed upstream (gap-packages/anupq #96-#121), the union-find orbits of
-# insoluble automorphism groups (MATH-187) and the PQ_NOSTAB switch.
+# insoluble automorphism groups (D5-30) and the PQ_NOSTAB switch.
 # Every other package left out unless GAP loads it on start-up or with ANUPQ (the set of
 # loaded packages is what can change a computation; it is kept exactly).  The search code of
 # compute/pq1024 and compute/pq2048 is copied in at build time, so one image = one version of

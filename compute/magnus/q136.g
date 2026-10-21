@@ -1,4 +1,4 @@
-# MATH-136: the exact non-terminality criterion for p-groups of type (d,2,1) (wiki: child of page 689).
+# D5-6: the exact non-terminality criterion for p-groups of type (d,2,1) (wiki: child of page 689).
 # P: p odd, P/gamma_2 elementary of rank d, |gamma_2/gamma_3| = p^2, |gamma_3| = p.  Notation:
 #   w generates gamma_3, v in Z(P) ∩ gamma_2 \ gamma_3, u in gamma_2 \ Z(P); x_1..x_d a minimal generating set;
 #   [u,x_i] = w^f_i;  x_i^p = v^alpha_i w^beta_i;  [x_i,x_j] = u^om1(i,j) v^om2(i,j) w^om3(i,j)  ([a,b] = a^-1 b^-1 a b).

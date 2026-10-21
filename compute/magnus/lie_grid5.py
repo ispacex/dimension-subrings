@@ -1,4 +1,4 @@
-"""Grid over the Bartholdi-Mikhailov (9.1) pattern at n = 5, p = 3 (MATH-42).
+"""Grid over the Bartholdi-Mikhailov (9.1) pattern at n = 5, p = 3 (D5-4).
 
 In f_i = 3^i e_i the ring (9.1) reads 3^{a_k} f_k = y_k and f_i + f_j = 3^c y_ij on the pairs
 S = {01, 02, 13, 23}.  Here: y_k of weight 2, a in {0..3}^4, one c in {0..4} for all pairs, pair

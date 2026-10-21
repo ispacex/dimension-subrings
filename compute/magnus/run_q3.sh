@@ -1,5 +1,5 @@
 #!/bin/bash
-# MATH-127 q3: run q3.g on 4 shards plus the explicit family; logs in $JOB_OUT.
+# D5-27 q3: run q3.g on 4 shards plus the explicit family; logs in $JOB_OUT.
 set -e
 export PATH=$JOB_CACHE/bin:$PATH
 cd "$(dirname "$0")"

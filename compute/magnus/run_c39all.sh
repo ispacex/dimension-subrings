@@ -1,5 +1,5 @@
 #!/bin/bash
-# MATH-120: the order-3^9 run, part d <= 4, on NSH parallel shards (tm job; run from compute/magnus).
+# D5-26: the order-3^9 run, part d <= 4, on NSH parallel shards (tm job; run from compute/magnus).
 # Per shard: c39all.g writes survivors to a FIFO; they are kept gzipped and decided by d5z.py on
 # the fly, so the presentations (~20 KB each) never sit uncompressed on disk.
 # Output in $JOB_OUT: d5z_<k>.jsonl (verdicts), cand_<k>.jsonl.gz, c39_<k>.log, summary.txt.

@@ -1,11 +1,11 @@
-# MATH-135: random 3-groups Q of class 4 with Q/gamma_2(Q) = C_9 x C_3^(k-1), as a test of
+# D5-28: random 3-groups Q of class 4 with Q/gamma_2(Q) = C_9 x C_3^(k-1), as a test of
 # "D_5(Q) = 1 when Q/gamma_2 = C_9 x C_3^(s-1)" (wiki, child of 690).  Adapted from q1gen.g.
 # Set SEED, NG (groups to try), KS (list of ranks k = s), MODE (1 or 2), EPS0 (probability of
 # forcing x_k^9 into gamma_3), OUT (jsonl) before reading this file; optional DS (list of orders
 # d(s) = 3^a of x_k mod gamma_2 to choose from, default [9]) and PQCLASS (default a + 4).
 # Optional EXTRAW (default [2, 3, 3, 4]): weights of the extra relators. EXTRAW := [3, 3, 4] (no
 # weight 2, with MODE 1) gives larger groups, in which [x_i^9, x_k] != 1 occurs in the subcase
-# x_k^9 in gamma_3 (review of MATH-135, wiki 694).
+# x_k^9 in gamma_3 (review of D5-28, wiki 694).
 #
 # G = <x_1..x_k | x_i^3 = W_i (i<k), x_k^d(s) = W_k, extra relators, all left-normed commutators of
 # weight 5 in the x_i>.  The weight-5 relators make G/N nilpotent of class <= 4 for every N with G/N
@@ -120,7 +120,7 @@ for it in [1..NG] do
        and not xk^(dk/3) in L[2] and Index(P, Om) = dk / 3;
   if not idok then stats.idfail := stats.idfail + 1; fi;
   # c9 = number of i < k with [x_i^9, x_k] != 1 (= [x_i,x_k]^9): in the subcase x_k^(3^a) in gamma_3,
-  # a = 2, these are the terms u_is [x_i^9, x_s] of g_A that the proof cancels (wiki, MATH-135, §3.4)
+  # a = 2, these are the terms u_is [x_i^9, x_s] of g_A that the proof cancels (wiki, D5-28, §3.4)
   c9 := Number([1..k-1], i -> Comm(gens[i]^9, xk) <> One(P));
   if eps0 and nonmet and c9 > 0 then stats.eps0c9 := stats.eps0c9 + 1; fi;
   J := JenningsSeries(P);

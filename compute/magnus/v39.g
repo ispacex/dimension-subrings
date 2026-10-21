@@ -1,4 +1,4 @@
-# MATH-120: check of C39Pass (c39.g) against C39One.  For each id in IDS with rank 3/4 and class 3/4
+# D5-26: check of C39Pass (c39.g) against C39One.  For each id in IDS with rank 3/4 and class 3/4
 # print: id, C39Pass, ms for it, descendants, survivors, ms for C39One.  A parent with survivors
 # that fails C39Pass would be an error in the test, so it is flagged "BAD".  Times are wall clock
 # (Runtime() leaves out the pq child process).

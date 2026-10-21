@@ -1,4 +1,4 @@
-# MATH-127 q3: the equation (E) of the wiki page versus the nucleus, for the 7824 groups of type (5,2,1).
+# D5-27 q3: the equation (E) of the wiki page versus the nucleus, for the 7824 groups of type (5,2,1).
 # For P (order 3^8, rank 5, type (5,2,1)) the paper part proves: if P has a step-1 descendant then
 #   (N1) |Z(P) ∩ gamma_2(P)| = 9, (N2) gamma_2(P) is elementary abelian, (N3) P^3 <= Z(P), and
 #   (E)  the linear system below has a solution with c <> 0.

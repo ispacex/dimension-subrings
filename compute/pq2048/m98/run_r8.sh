@@ -1,7 +1,7 @@
 #!/bin/sh
-# m98/run_r8.sh OUTDIR PQBIN -- run_r8.sh of MATH-73 (mikh 68ec4a8) with the pq binary PQBIN (the
-# patched one of MATH-98) and the RSS sampler.
-# run_r8.sh OUTDIR — rank 8 on 2^11 (MATH-73) from the groups of order 512 of rank 8 in SmallGroups
+# m98/run_r8.sh OUTDIR PQBIN -- run_r8.sh of D5-3 (mikh 68ec4a8) with the pq binary PQBIN (the
+# patched one of D5-30) and the RSS sampler.
+# run_r8.sh OUTDIR — rank 8 on 2^11 (D5-3) from the groups of order 512 of rank 8 in SmallGroups
 # instead of from 2^8: PqDescendants(2^8, step 1) (GL(8,2) on a 36-dimensional multiplicator)
 # ran out of memory twice.  The rank-8 groups of order 512 are exactly the step-1 descendants of
 # 2^8 (|Phi| = 2), so the walk from them (tree.g STARTFILE, NMAX 10, LOGQ 11) is the walk of

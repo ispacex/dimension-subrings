@@ -1,7 +1,7 @@
-# MATH-120: the order-3^8 sieve for D_5 != 1 (needs the sglppow package for SmallGroup(3^8, i)).
+# D5-26: the order-3^8 sieve for D_5 != 1 (needs the sglppow package for SmallGroup(3^8, i)).
 # Set FROM, TO (ids) and OUT (file prefix) before reading this file.
 #
-# Sieve (wiki 579, Prop. 2, and the minimal-counterexample lemma of MATH-120):
+# Sieve (wiki 579, Prop. 2, and the minimal-counterexample lemma of D5-26):
 #   class 4 (D_5 = gamma_5 for class != 4 at this order), d(Q) in {3,4}, Q'' != 1,
 #   Z(Q) cyclic (else D_5(Q) lies in two minimal normal subgroups N1, N2 with N1 ∩ N2 = 1,
 #   because D_5(Q/N) = 1 for |Q/N| <= 3^7), and soc = Omega_1(Z(Q)) inside Q'' ∩ M_5.

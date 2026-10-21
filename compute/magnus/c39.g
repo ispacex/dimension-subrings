@@ -1,4 +1,4 @@
-# MATH-120: candidates of order 3^9.  Since D_5 = 1 for all 3-groups of order <= 3^8, a 3-group
+# D5-26: candidates of order 3^9.  Since D_5 = 1 for all 3-groups of order <= 3^8, a 3-group
 # Q of order 3^9 with D_5(Q) != 1 has cyclic centre and is a step-1 immediate descendant of
 # P = Q / Omega_1(Z(Q)) (wiki: Cor. 7).  For each parent id in PARENTS (SmallGroup(3^8, id))
 # take PqDescendants(P : StepSize := 1) and apply the sieve of c38.g: class 4, Q'' != 1,

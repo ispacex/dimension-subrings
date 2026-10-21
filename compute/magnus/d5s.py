@@ -1,4 +1,4 @@
-"""MATH-127 (1), MATH-135: D_5(Q) for the groups of q1gen.g and q9gen.g.  Input lines {"id","k","rels","zs",...}; zs = one
+"""D5-27 (1), D5-28: D_5(Q) for the groups of q1gen.g and q9gen.g.  Input lines {"id","k","rels","zs",...}; zs = one
 generator of each subgroup of order 3 of S = Omega_1(Z) ∩ Q'' ∩ M_5.  A nontrivial D_5(Q) (normal,
 inside Q'' ∩ M_5 of exponent 3) meets Z(Q), so D_5(Q) = 1 iff no z in zs lies in D_5.
 Exactness as in d5z.py (non-membership exact; certificate printed).  Usage: python d5s.py [E] < in.jsonl"""

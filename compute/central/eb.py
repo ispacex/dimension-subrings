@@ -1,4 +1,4 @@
-"""MATH-184: e_b = pi((y-1)^b) in Z[<c>], y^2=c, pi(v0+v1 y)=v0+v1; test e_b in F_b(w)."""
+"""D5-31: e_b = pi((y-1)^b) in Z[<c>], y^2=c, pi(v0+v1 y)=v0+v1; test e_b in F_b(w)."""
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lat import hnf, contains
