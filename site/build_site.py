@@ -2,11 +2,15 @@
 """
 The static site on the D_5 problem: https://ispacex.github.io/d5/
 
-    python3 site/build_site.py --paper PAPER_DIR [OUT_DIR]   # default OUT_DIR: site/out/
+    python3 site/build_site.py --paper PAPER_DIR --kernel KERNEL_DIR [OUT_DIR]   # default OUT_DIR: site/out/
     site/two_tier.sh OUT_DIR                                 # search index into the form ispacex's engine reads
 
 PAPER_DIR holds the paper draft, d5.tex and d5-ru.tex (its source is kept elsewhere); both are
-compiled here with pdflatex, so the PDFs on the site are always those of the sources read. The
+compiled here with pdflatex, so the PDFs on the site are always those of the sources read.
+KERNEL_DIR is a checkout of gitlab.com/ispacex/cflint-fast-core: its docs/analysis.md and
+docs/analysis.ru.md become kernel.html, converted with pandoc. GitLab draws only the first 50
+formulas of a page and hides every other one behind a "performance issues" box, and that document
+has about three thousand; here KaTeX draws them all. The
 results, the runs and the timeline are written down in this file, in RESULTS, RUNS, FUNNELS and
 TIMELINE below: they are the paper's numbers, and a change in the paper means a change here. The
 coverage maps are computed from the rules in cover2() and cover3(), which say which theorem or run
@@ -52,11 +56,14 @@ HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parent
 
 args = sys.argv[1:]
-if "--paper" not in args or args.index("--paper") + 1 >= len(args):
-    sys.exit("usage: build_site.py --paper PAPER_DIR [OUT_DIR]")
-i = args.index("--paper")
-PAPER = pathlib.Path(args[i + 1]).resolve()
-del args[i:i + 2]
+DIRS = {}
+for flag in ("--paper", "--kernel"):
+    if flag not in args or args.index(flag) + 1 >= len(args):
+        sys.exit("usage: build_site.py --paper PAPER_DIR --kernel KERNEL_DIR [OUT_DIR]")
+    i = args.index(flag)
+    DIRS[flag] = pathlib.Path(args[i + 1]).resolve()
+    del args[i:i + 2]
+PAPER, KERNEL = DIRS["--paper"], DIRS["--kernel"]
 OUT = pathlib.Path(args[0]) if args else HERE / "out"
 
 LANGS = ("ru", "en")
@@ -73,6 +80,14 @@ def git(*a):
 # last commit that touched the code, the data or the Lean files (a commit of main when the site is
 # built from main).
 PIN = git("log", "-1", "--format=%H", "--", "compute", "groups", "notes", "scripts").stdout.strip()
+
+# The kernel document comes from another repository (GitLab); its link names the commit read.
+KERNEL_REPO = "https://gitlab.com/ispacex/cflint-fast-core"
+KERNEL_DOC = {"en": "docs/analysis.md", "ru": "docs/analysis.ru.md"}
+KERNEL_PIN = subprocess.run(["git", "-C", str(KERNEL), "log", "-1", "--format=%H", "--", *KERNEL_DOC.values()],
+                            capture_output=True, text=True).stdout.strip()
+if not KERNEL_PIN:
+    sys.exit(f"{KERNEL}: not a checkout of cflint-fast-core with {' and '.join(KERNEL_DOC.values())}")
 
 
 def gh(path, text, symbol=None):
@@ -94,6 +109,7 @@ def gh(path, text, symbol=None):
 
 NAV = [("index.html", "Сводка", "Summary"), ("coverage.html", "Карта покрытия", "Coverage map"),
        ("results.html", "Результаты", "Results"), ("computations.html", "Вычисления", "Computations"),
+       ("kernel.html", "Быстрое ядро", "Fast kernel"),
        ("timeline.html", "Хронология", "Timeline"), ("open.html", "Открытые вопросы", "Open questions"),
        ("paper.html", "Статья", "Paper"), ("search.html", "Поиск", "Search")]
 
@@ -171,6 +187,10 @@ ol.tl { list-style:none; padding:0; border-left:2px solid var(--line); margin-le
 ol.tl li { position:relative; padding:0 0 .9rem 1.1rem; }
 ol.tl li::before { content:""; position:absolute; left:-.42rem; top:.45rem; width:.7rem; height:.7rem; border-radius:50%;
        background:var(--acc); border:2px solid var(--bg); }
+.kernel h2, .kernel h3, .kernel h4 { scroll-margin-top:1rem; } .kernel h4 { font-size:1rem; }
+.kernel th, .kernel td { text-align:left; } .kernel .katex-display { overflow-x:auto; overflow-y:hidden; padding:.2rem 0; }
+.kernel pre { background:var(--soft); padding:.6rem .8rem; border-radius:6px; overflow-x:auto; font-size:.88rem; }
+.kernel pre code { padding:0; } .kernel blockquote { border-left:4px solid var(--line); margin:1rem 0; padding:0 1rem; color:var(--muted); }
 ol.toc { list-style:none; padding-left:0; } ol.toc > li { margin:.55rem 0; } ol.toc ul { margin:.2rem 0 0; padding-left:1.4rem; }
 ol.toc .stm { font-size:.88rem; margin:.15rem 0 0 1.4rem; } ol.toc .stm > span { white-space:nowrap; }
 ol.toc .stm > span .muted { white-space:normal; }
@@ -186,7 +206,7 @@ KATEX = """<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.
 
 def plain(s):
     """Text for <title>: no KaTeX there."""
-    for a, b in (("\\gamma", "γ"), ("\\le", "≤"), ("_5", "₅"), ("_4", "₄"), ("^", ""), ("$", ""), ("\\", "")):
+    for a, b in (("\\gamma", "γ"), ("\\le", "≤"), ("_5", "₅"), ("_4", "₄"), ("_n", "ₙ"), ("^", ""), ("$", ""), ("\\", "")):
         s = s.replace(a, b)
     return s
 
@@ -819,6 +839,40 @@ def braced(s, i):
         j += 1
 
 
+def kernel_doc(lang):
+    """The body of kernel.html: the kernel document of cflint-fast-core (KERNEL_DOC) through pandoc.
+    Its own title and EN/RU line are dropped (the page has both); formulas go back to $...$ and
+    $$...$$ for the site's KaTeX; tables get the site's frame; a relative link points into the
+    repository at KERNEL_PIN; a contents list of the sections goes on top."""
+    md = (KERNEL / KERNEL_DOC[lang]).read_text(encoding="utf-8")
+    md = re.sub(r"\A# [^\n]*\n", "", md)
+    md = re.sub(r"^\*[^\n]*\]\(analysis(?:\.ru)?\.md\)[^\n]*\*\n", "", md, count=1, flags=re.M)
+    run = subprocess.run(["pandoc", "-f", "gfm+tex_math_dollars", "-t", "html", "--mathjax", "--wrap=none"],
+                         input=md, capture_output=True, text=True)
+    if run.returncode:
+        sys.exit(f"pandoc on {KERNEL_DOC[lang]}: {run.stderr}")
+    body = run.stdout
+    # A dollar of the prose (Modal's \$0.79) would pair with the next one into a formula: each goes in
+    # a span of its own, a text node KaTeX's auto-render reads alone.
+    body = "".join(x if re.match(r'<(?:span class="math|code|pre)', x) else x.replace("$", "<span>$</span>")
+                   for x in re.split(r'(<span class="math (?:inline|display)">.*?</span>|<code>.*?</code>|<pre.*?</pre>)',
+                                     body, flags=re.S))
+    body = re.sub(r'<span class="math inline">\\\((.*?)\\\)</span>', r"$\1$", body, flags=re.S)
+    body = re.sub(r'<span class="math display">\\\[(.*?)\\\]</span>', r"$$\1$$", body, flags=re.S)
+    body = re.sub(r"<table>(.*?)</table>", r'<div class="tw"><table>\1</table></div>', body, flags=re.S)
+    docs = f"{KERNEL_REPO}/-/blob/{KERNEL_PIN}/docs/"
+    body = re.sub(r'href="(?!https?:|mailto:|#)([^"]+)"', lambda m: f'href="{docs}{m.group(1)}"', body)
+    toc = "".join(f'<li><a href="#{a}">{h}</a></li>' for a, h in re.findall(r'<h2 id="([^"]+)">(.*?)</h2>', body))
+    src = f'<a href="{KERNEL_REPO}/-/blob/{KERNEL_PIN}/{KERNEL_DOC[lang]}"><code>{KERNEL_DOC[lang]}</code></a>'
+    repo = f'<a href="{KERNEL_REPO}">ispacex/cflint-fast-core</a>'
+    note = ({"ru": f"""<div class="box"><p>Документ {src} из {repo} (коммит <code>{KERNEL_PIN[:7]}</code>) как есть.
+GitLab рисует на странице только первые 50 формул, а здесь их около трёх тысяч; тут их рисует KaTeX, все.</p></div>""",
+             "en": f"""<div class="box"><p>The document {src} of {repo} (commit <code>{KERNEL_PIN[:7]}</code>) as it is.
+GitLab draws only the first 50 formulas of a page, and this one has about three thousand; here KaTeX draws all of them.</p></div>"""}[lang])
+    head = "Содержание" if lang == "ru" else "Contents"
+    return f'{note}<h2>{head}</h2><ol class="toc">{toc}</ol><div class="kernel">{body}</div>'
+
+
 def tex_inline(s):
     """A bit of LaTeX prose for HTML: math is left to KaTeX, a few text macros are translated."""
     s = re.sub(r"\\label\{[^}]*\}", "", s)
@@ -1168,6 +1222,10 @@ proves $g\\notin D_n$, membership is confirmed by the certificate $p^{E-1}\\Delt
 the truncated Magnus algebra $\\mathbb Z[G]/\\Delta^n\\cong T_{\\lt n}(\\mathbb Z^k)/I_n$ of a presentation on $k$ generators.
 Checks: two independent methods, PARI/GP, known values.</small></p>""")
     P("computations.html", t("Вычисления", "Computations"), body)
+
+    # ---------- fast kernel ----------
+    P("kernel.html", t("Быстрое ядро для $D_n$: профиль, вариант A, вариант B",
+                       "A fast kernel for $D_n$: profile, variant A, variant B"), kernel_doc(lang))
 
     # ---------- timeline ----------
     items = "".join(f'<li id="d{d}"><span class="d">{fmt_date(d)[lang]}</span><ul>' + "".join(f"<li>{x[li]}</li>" for x in xs)
