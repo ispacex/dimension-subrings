@@ -1,3 +1,6 @@
 [submodule "upstream/lie-algebras"]
 	path = upstream/lie-algebras
 	url = https://github.com/TimmPeterson/lie-algebras.git
+[submodule "groups"]
+	path = groups
+	url = https://github.com/ispacex/group-dimension.git

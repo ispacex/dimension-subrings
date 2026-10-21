@@ -30,7 +30,7 @@ For a **finite** $G$ the order does not grow: the 2-group is the Sylow 2-subgrou
 of $G$. So checking all 2-groups of class 3 of order $\le 2^k$ proves $D_5 \subseteq \gamma_4$
 for every finite group whose 2-part has order $\le 2^k$. The proof, with one refinement, is in
 [`compute/README.md`](compute/README.md); the passage to the quotient is also proved in Lean
-([`groups/`](groups/README.md), `dimensionQuestion5_iff`).
+([`groups/`](https://github.com/ispacex/group-dimension), `dimensionQuestion5_iff`).
 
 ## What has been computed
 
@@ -60,7 +60,7 @@ $\le 3^6$, a sample of order $3^7$), $D_5/\gamma_5$ has no 3-torsion for any fin
 | [`compute/pq1024/`](compute/pq1024/README.md) | order $2^{10}$: the lemma, the ANUPQ search, the lattices of the candidates |
 | [`compute/pq2048/`](compute/pq2048/README.md) | order $2^{11}$: conditions (Г), (Г$_N$) with proofs, their checks, the search by rank |
 | [`compute/magnus/`](compute/magnus/README.md) | truncated Magnus algebra, a Rips-type family, a 3-torsion sieve |
-| [`groups/`](groups/README.md) | Lean 4 / Mathlib: $D_n(G)$, $\gamma_n \subseteq D_n$, $D_2 = \gamma_2$, the reduction to class 3, comparison with the Lie case |
+| [`groups/`](https://github.com/ispacex/group-dimension) | Lean 4 / Mathlib: $D_n(G)$, $\gamma_n \subseteq D_n$, $D_2 = \gamma_2$, the reduction to class 3, comparison with the Lie case; a submodule — the standalone Lake package [ispacex/group-dimension](https://github.com/ispacex/group-dimension) (`require`-able, history kept) |
 | [`notes/`](notes/formalization-audit.md) | an audit of the Lie-ring formalization against the paper |
 | [`scripts/`](scripts/build-audit.sh) | `build-audit.sh`: build the authors' formalization and print its axioms |
 | [`remote/`](remote/README.md) | running long jobs on a remote Linux box |
@@ -108,7 +108,7 @@ can go to a remote machine through [`remote/`](remote/README.md).
 * cflint-fast-core: <https://gitlab.com/ispacex/cflint-fast-core>.
 
 Further literature (Rips, Passi, Tahara, Gupta–Kuz'min, Gruenberg), with references not yet
-checked against the originals marked †, is in [`groups/README.md`](groups/README.md) and
+checked against the originals marked †, is in [`groups/README.md`](https://github.com/ispacex/group-dimension#readme) and
 [`compute/README.md`](compute/README.md).
 
 ## License
