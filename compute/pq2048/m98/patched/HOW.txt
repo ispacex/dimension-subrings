@@ -1,5 +1,5 @@
-MATH-98: these scripts run from the top of a checkout of the patched pq
+D5-30: these scripts run from the top of a checkout of the patched pq
 (github.com/ispacex/anupq, branch insoluble-space-efficient), with this directory copied to m98/:
   m98/run.sh r8.g small.g small2.g      # builds pq into $JOB_ROOT/pqbuild, PQNEW = it, PQOLD = the installed one
-The stock measurement is ../run.sh a0.g from this repository; ../run_r8.sh is MATH-73's run_r8.sh with
+The stock measurement is ../run.sh a0.g from this repository; ../run_r8.sh is the rank-8 run_r8.sh (D5-3) with
 the pq binary as a second argument.

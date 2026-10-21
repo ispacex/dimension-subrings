@@ -1,4 +1,4 @@
-# MATH-127 (2): check of Proposition 3 (p = 3): if |gamma_3/gamma_4| = 3 and gamma_2/gamma_3
+# D5-27 (2): check of Proposition 3 (p = 3): if |gamma_3/gamma_4| = 3 and gamma_2/gamma_3
 # needs at most 2 generators (r <= 2), then [gamma_2, gamma_2] <= gamma_5.
 # Also counts the groups of class >= 4 by (class, rank d, log_3 of the lower central factors, r)
 # and how many of them are non-metabelian.

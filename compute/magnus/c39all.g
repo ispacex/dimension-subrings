@@ -1,4 +1,4 @@
-# MATH-120: the full order-3^9 run, part d <= 4 (wiki, sec. 5).  Parents: all SmallGroup(3^8, id)
+# D5-26: the full order-3^9 run, part d <= 4 (wiki, sec. 5).  Parents: all SmallGroup(3^8, id)
 # of rank 3 or 4 and class 3 or 4 (rank 2 gives Q'' in gamma_5 = 1; rank 5 is a separate part),
 # with id = SHARD mod NSHARD.  Each parent that passes C39Pass (c39.g; the others have no candidate
 # descendant) goes through C39One; survivors are written to

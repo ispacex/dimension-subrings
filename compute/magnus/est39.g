@@ -1,4 +1,4 @@
-# MATH-120: cost estimate for order 3^9.  A minimal counterexample Q of order 3^9 has cyclic
+# D5-26: cost estimate for order 3^9.  A minimal counterexample Q of order 3^9 has cyclic
 # centre, so P_c(Q) = Omega_1(Z(Q)) and Q is a step-1 immediate descendant of P = Q/Omega_1(Z(Q)),
 # a group of order 3^8.  For a random sample of parents P (ids in RANGES, class 3 or 4) time
 # PqDescendants(P : StepSize := 1) and count descendants of class 4 that are non-metabelian with

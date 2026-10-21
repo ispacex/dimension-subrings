@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# MATH-72/74: build pq from ispacex/anupq master with PQ_NOSTAB (the MATH-98 fix), then run "$@" with
+# D5-3, ranks 5-6: build pq from ispacex/anupq master with PQ_NOSTAB (see D5-30), then run "$@" with
 # GAP = a wrapper that reads pqbin.g (ANUPQData.binary := the patched pq) before its stdin.
 set -u
 top=$(pwd)

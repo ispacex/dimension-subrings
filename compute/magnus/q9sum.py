@@ -1,4 +1,4 @@
-"""MATH-135: summary of d5s.py output on q9gen.g groups.  Usage: python q9sum.py < d5s.jsonl"""
+"""D5-28: summary of d5s.py output on q9gen.g groups.  Usage: python q9sum.py < d5s.jsonl"""
 import json
 import sys
 from collections import Counter

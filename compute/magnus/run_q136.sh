@@ -1,5 +1,5 @@
 #!/bin/bash
-# MATH-136: q136.g on 4 shards.  Usage: run_q136.sh block        (the 7824 groups of order 3^8, type (5,2,1))
+# D5-6: q136.g on 4 shards.  Usage: run_q136.sh block        (the 7824 groups of order 3^8, type (5,2,1))
 #                                       run_q136.sh p7 P         (groups of order P^7, type (4,2,1))
 # Summary in $JOB_OUT/summary_<tag>.txt.
 export PATH=$JOB_CACHE/bin:$PATH

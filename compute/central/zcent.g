@@ -1,4 +1,4 @@
-## MATH-183 §6: the centres of the candidates H (orders 64..512) — size, cyclicity,
+## D5-31 §6: the centres of the candidates H (orders 64..512) — size, cyclicity,
 ## whether the involution is in gamma_3, and for an element s of order 4 in Z(H)
 ## whether s is in gamma_2(H) and in Phi(H).  Job kimmy/tm/20261018-075032-m183-zcent2-11bce88.
 Read(Concatenation(ROOT, "/compute/central/common.g"));

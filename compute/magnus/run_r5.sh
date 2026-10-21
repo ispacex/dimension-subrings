@@ -1,5 +1,5 @@
 #!/bin/bash
-# MATH-120: r5.g on NSH parallel shards (tm job; run from compute/magnus).  Output in $JOB_OUT:
+# D5-26: r5.g on NSH parallel shards (tm job; run from compute/magnus).  Output in $JOB_OUT:
 # r5_<k>.log (one line per parent of type (5,2,1)), gap_<k>.out, summary.txt.
 NSH=${NSH:-4}; GAP=${GAP:-gap}; OUTD=${JOB_OUT:-out}; mkdir -p "$OUTD"
 TOTAL=1396077

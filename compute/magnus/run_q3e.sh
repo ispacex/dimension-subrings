@@ -1,5 +1,5 @@
 #!/bin/bash
-# MATH-127 q3: q3e.g on 4 shards; summary in $JOB_OUT/summary_e.txt.
+# D5-27 q3: q3e.g on 4 shards; summary in $JOB_OUT/summary_e.txt.
 export PATH=$JOB_CACHE/bin:$PATH
 cd "$(dirname "$0")"
 OUT=${JOB_OUT:-.}

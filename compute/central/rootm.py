@@ -1,4 +1,4 @@
-"""Lemma R (MATH-186): K = H<r>, r central, r^m = sigma in H, <r> cap H = <sigma>.
+"""Lemma R (D5-29): K = H<r>, r central, r^m = sigma in H, <r> cap H = <sigma>.
 If sigma = g^m for some g in H, then q(u r^j) = u g^j maps Delta_K^n into Delta_H^n.
 Checks q(Delta_K^n) in Delta_H^n and the ring equality Z[H] cap Delta_K^n = Delta_H^n,
 exact HNF.  python3 rootm.py [NAME...]"""

@@ -1,7 +1,7 @@
 """The metabelian Lie ring L_1 of Ionin-Mikhailov-Petrov (arXiv:2610.02042, sec. "Finite plateaux",
 N = 1): metabelian, class 4, delta_5(L_1) = delta_6 != delta_7 = 0, so delta_5/gamma_5 != 0.
 With q = 2 it is L_1 itself (2-torsion, a metabelian control); with q = 3 the same pattern with
-every power of 2 replaced by the power of 3 (a metabelian candidate for 3-torsion, MATH-42):
+every power of 2 replaced by the power of 3 (a metabelian candidate for 3-torsion, D5-4):
 
     r1 = q^2 x1 + q c3 + c2,  r2 = q^4 x2 + q^2 c3 - c1,  r3 = q^6 x3 - q^2 c2 - q c1,
     c_i = [x4, x5, x_i],  u_i = [c_i, x_i],  weight-4 Hall elements other than u_i killed,

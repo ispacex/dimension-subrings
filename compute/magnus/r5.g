@@ -1,4 +1,4 @@
-# MATH-120: order 3^9, part d = 5 (wiki, sec. 5).  A candidate Q then has type (5,2,1,1), so its
+# D5-26: order 3^9, part d = 5 (wiki, sec. 5).  A candidate Q then has type (5,2,1,1), so its
 # parent P = Q/<z> is a group of order 3^8 of rank 5, class 3 and type (5,2,1).  For the ids with
 # id = SHARD mod NSHARD: find these parents, run C39Pass (c39.g) on each, and write one line per
 # parent to LOG (id, pass, ms) and a summary line at the end.  PqDescendants is not called here.

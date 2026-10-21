@@ -1,9 +1,9 @@
-# MATH-127, question 3: terminality of the order-3^8 groups of type (5,2,1) (ids 1387558..1395381,
+# D5-27, question 3: terminality of the order-3^8 groups of type (5,2,1) (ids 1387558..1395381,
 # found by r5.g).  For each P with id = SHARD mod NSHARD in that block write one CSV line:
 #   id, logZ, logZg2 = log|Z(P) ∩ gamma_2(P)|, pclass(P), logM, logN (nucleus P_4(P*)),
 #   class(P*), log|gamma_4(P*)|, log|gamma_5(P*)|, log|P*''|, exp gamma_2(P), P^3 <= Z(P),
 #   log|P^3|, log|P^3 ∩ gamma_3(P)|
-# Paper claim (wiki, MATH-127 q3): N != 1  ==>  |Z(P) ∩ gamma_2(P)| = 9.
+# Paper claim (wiki, D5-27 q3): N != 1  ==>  |Z(P) ∩ gamma_2(P)| = 9.
 # For the first NDESC parents with N != 1 also run PqDescendants(StepSize 1) and record how many
 # descendants there are and how many have Q'' != 1 (paper: none).
 LoadPackage("sglppow"); LoadPackage("anupq");

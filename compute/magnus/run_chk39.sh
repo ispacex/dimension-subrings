@@ -1,5 +1,5 @@
 #!/bin/bash
-# MATH-120: chk38.g on the order-3^9 candidates of a run_c39all.sh job (tm job; run from
+# D5-26: chk38.g on the order-3^9 candidates of a run_c39all.sh job (tm job; run from
 # compute/magnus).  CANDDIR: that job's out/ with cand_<k>.jsonl.gz; one GAP per file.
 # Output in $JOB_OUT: chk_<k>.out, summary.txt.
 GAP=${GAP:-gap}; OUTD=${JOB_OUT:-out}; mkdir -p "$OUTD"

@@ -119,7 +119,7 @@ CH_Step1 := V -> CH_StepC(V, 4);;
 
 # CH_Stream(V, s): PqDescendants(V : StepSize := s) as an iterator, the descendants built one at a time
 # in the order PqDescendants lists them.  PqDescendants builds every group of pq's GAP_library file
-# before returning, and on a heavy vertex that list, not the walk, is the peak (MATH-74: pieces killed
+# before returning, and on a heavy vertex that list, not the walk, is the peak (D5-3: pieces killed
 # at 8g inside PqList); here the file is read once as its functions and each group is built when the
 # walk asks for it.  The steps are those of PQ_DESCENDANTS in ANUPQ 3.3.2 for a non-interactive call.
 # On when STREAM, default the environment variable PQ2048_STREAM (1 = on).
@@ -129,7 +129,7 @@ if not IsBound(STREAM) then
 fi;
 # CH_FileIterator(file, n, p): the n groups of pq's GAP_library file, read from the file one block at a
 # time.  PQ_READ_AS_FUNC_WITH_VARS reads the whole file into a string, copies it and parses all of it
-# before the first group is built: on the heaviest vertex (d00121, MATH-74) that file is tens of GB and
+# before the first group is built: on the heaviest vertex (d00121, D5-3) that file is tens of GB and
 # the read, not the walk, is the peak.  A block is the text from one "## group number: k" line to the
 # next (the group's function and, if pq wrote them, its automorphisms); it is parsed when the walk asks
 # for group k, so at most one block is in memory.  The file is moved out of the way first (another pq

@@ -1,4 +1,4 @@
-"""MATH-183: the filtration P_j = p(Delta_E^j) of Z[C] for a central subgroup C of a finite group E
+"""D5-31: the filtration P_j = p(Delta_E^j) of Z[C] for a central subgroup C of a finite group E
 and a Z[C]-linear functional p: Z[E] -> Z[C] with p(1) = 1.  Exact integer HNF (pure Python)."""
 from itertools import product
 
