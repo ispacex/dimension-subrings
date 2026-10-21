@@ -874,6 +874,44 @@ def braced(s, i):
         j += 1
 
 
+KERNEL_PDF = {"en": "analysis.pdf", "ru": "analysis-ru.pdf"}  # kernel/<name> of each language
+KERNEL_TEX_HEAD = r"""\directlua{luaotfload.add_fallback("fb", {"STIX Two Math:", "Apple Symbols:", "Menlo:"})}
+\setmainfont{STIX Two Text}[RawFeature={fallback=fb}]
+\setmonofont{Menlo}[Scale=0.85,RawFeature={fallback=fb}]
+"""
+
+
+def kernel_tex(tex):
+    """A formula KaTeX takes but LaTeX does not: x_\\mathbb Z wants braces, x_{\\mathbb Z}."""
+    return re.sub(r"([_^])\s*(\\(?:mathbb|mathrm|mathfrak|mathcal|mathbf|operatorname|text|textstyle|bar|tilde|hat|overline)"
+                  r"\s*(?:\{[^{}]*\}|\s*\\?[A-Za-z0-9]))", r"\1{\2}", tex)
+
+
+def kernel_pdf(lang, md):
+    """kernel/<KERNEL_PDF>: the same markdown through pandoc and LuaLaTeX (STIX Two, glyphs it lacks from
+    STIX Two Math, Apple Symbols and Menlo); the title is the document's own, the subtitle its commit."""
+    title = re.match(r"# ([^\n]*)\n", md).group(1)
+    body = md[len(title) + 3:]
+    body = re.sub(r"\$\$(.+?)\$\$", lambda m: "$$" + kernel_tex(m.group(1)) + "$$", body, flags=re.S)
+    body = re.sub(r"(?<![\\$])\$(?!\$)(.+?)(?<![\\$])\$", lambda m: "$" + kernel_tex(m.group(1)) + "$", body, flags=re.S)
+    sub = f"{KERNEL_DOC[lang]}, ispacex/cflint-fast-core@{KERNEL_PIN[:7]}"
+    yaml = lambda v: "'" + v.replace("'", "''") + "'"  # the title is markdown (it has a formula): YAML, not -M
+    body = f"---\ntitle: {yaml(title)}\nsubtitle: {yaml(sub)}\nlang: {lang}\n---\n" + body
+    dest = OUT / "kernel"
+    dest.mkdir(exist_ok=True)
+    with tempfile.TemporaryDirectory() as tmp:
+        head = pathlib.Path(tmp) / "head.tex"
+        head.write_text(KERNEL_TEX_HEAD)
+        run = subprocess.run(["pandoc", "-f", "gfm+tex_math_dollars", "-o", str(dest / KERNEL_PDF[lang]),
+                              "--pdf-engine=lualatex", "--toc", "-H", str(head), "-V", "mathfont=STIX Two Math", "-V", "geometry:margin=2cm", "-V", "colorlinks"],
+                             input=body, capture_output=True, text=True, cwd=tmp)
+    if run.returncode:
+        sys.exit(f"PDF of {KERNEL_DOC[lang]}: {run.stderr[-2000:]}")
+    missing = sorted({l.split("There is no ")[1].split(" ")[0] for l in run.stderr.splitlines() if "Missing character" in l})
+    if missing:
+        print(f"PDF of {KERNEL_DOC[lang]}: no glyph for {' '.join(missing)}")
+
+
 def kernel_doc(lang):
     """The body of kernel.html: the kernel document of cflint-fast-core (KERNEL_DOC) through pandoc.
     Its own title and EN/RU line are dropped (the page has both); formulas go back to $...$ and
@@ -881,8 +919,9 @@ def kernel_doc(lang):
     repository at KERNEL_PIN; a contents list of the sections goes on top (for narrow screens: on wide
     ones the sections and subsections are on the right, the side_toc() entries returned with the body)."""
     md = (KERNEL / KERNEL_DOC[lang]).read_text(encoding="utf-8")
-    md = re.sub(r"\A# [^\n]*\n", "", md)
     md = re.sub(r"^\*[^\n]*\]\(analysis(?:\.ru)?\.md\)[^\n]*\*\n", "", md, count=1, flags=re.M)
+    kernel_pdf(lang, md)
+    md = re.sub(r"\A# [^\n]*\n", "", md)
     run = subprocess.run(["pandoc", "-f", "gfm+tex_math_dollars", "-t", "html", "--mathjax", "--wrap=none"],
                          input=md, capture_output=True, text=True)
     if run.returncode:
@@ -901,10 +940,13 @@ def kernel_doc(lang):
     toc = "".join(f'<li><a href="#{a}">{h}</a></li>' for a, h in re.findall(r'<h2 id="([^"]+)">(.*?)</h2>', body))
     src = f'<a href="{KERNEL_REPO}/-/blob/{KERNEL_PIN}/{KERNEL_DOC[lang]}"><code>{KERNEL_DOC[lang]}</code></a>'
     repo = f'<a href="{KERNEL_REPO}">ispacex/cflint-fast-core</a>'
+    pdf = ("" if lang == "en" else "../") + "kernel/"
     note = ({"ru": f"""<div class="box"><p>Документ {src} из {repo} (коммит <code>{KERNEL_PIN[:7]}</code>) как есть.
-GitLab рисует на странице только первые 50 формул, а здесь их около трёх тысяч; тут их рисует KaTeX, все.</p></div>""",
+GitLab рисует на странице только первые 50 формул, а здесь их около трёх тысяч; тут их рисует KaTeX, все.</p>
+<p><b>PDF:</b> <a href="{pdf}{KERNEL_PDF['ru']}" download>по-русски</a>, <a href="{pdf}{KERNEL_PDF['en']}" download>по-английски</a>.</p></div>""",
              "en": f"""<div class="box"><p>The document {src} of {repo} (commit <code>{KERNEL_PIN[:7]}</code>) as it is.
-GitLab draws only the first 50 formulas of a page, and this one has about three thousand; here KaTeX draws all of them.</p></div>"""}[lang])
+GitLab draws only the first 50 formulas of a page, and this one has about three thousand; here KaTeX draws all of them.</p>
+<p><b>PDF:</b> <a href="{pdf}{KERNEL_PDF['en']}" download>English</a>, <a href="{pdf}{KERNEL_PDF['ru']}" download>Russian</a>.</p></div>"""}[lang])
     head = "Содержание" if lang == "ru" else "Contents"
     side = [(int(lv), i, h) for lv, i, h in re.findall(r'<h([23]) id="([^"]+)">(.*?)</h\1>', body)]
     return f'{note}<div class="toc-inline"><h2>{head}</h2><ol class="toc">{toc}</ol></div><div class="kernel">{body}</div>', side
