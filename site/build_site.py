@@ -95,20 +95,39 @@ if not KERNEL_PIN:
     sys.exit(f"{KERNEL}: not a checkout of cflint-fast-core with {' and '.join(KERNEL_DOC.values())}")
 
 
+# Submodules whose files the site links to: the link goes to the submodule's own repository at the
+# commit the submodule is pinned to at PIN (the submodule must be checked out: `git submodule update
+# --init groups`).
+SUBMODULES = {"groups": "https://github.com/ispacex/group-dimension"}
+
+
 def gh(path, text, symbol=None):
     """A link to path (a file or a directory) of this repository at PIN; with symbol, to the line of
-    the first `def symbol`/`theorem symbol`/... in the file. Stops the build if either is missing."""
-    kind = git("cat-file", "-t", f"{PIN}:{path}").stdout.strip()
+    the first `def symbol`/`theorem symbol`/... in the file. Stops the build if either is missing.
+    A path inside a submodule (SUBMODULES) links to the submodule's repository at its pinned commit."""
+    top, _, rest = path.partition("/")
+    if top in SUBMODULES and rest:
+        entry = git("ls-tree", PIN, top).stdout.split()  # <mode> commit <sha>\t<path>
+        if len(entry) < 3 or entry[1] != "commit":
+            sys.exit(f"gh(): {top} is not a submodule in {REPO} at {PIN[:7]}")
+        repo, pin, rel = SUBMODULES[top], entry[2], rest
+
+        def g(*a):
+            return subprocess.run(["git", "-C", str(ROOT / top), *a], capture_output=True, text=True)
+    else:
+        repo, pin, rel, g = REPO, PIN, path, git
+    kind = g("cat-file", "-t", f"{pin}:{rel}").stdout.strip()
     if kind not in ("blob", "tree"):
-        sys.exit(f"gh(): {path} is not in {REPO} at {PIN[:7]}")
-    href = f"{REPO}/{'blob' if kind == 'blob' else 'tree'}/{PIN}/{path}"
+        sys.exit(f"gh(): {rel} is not in {repo} at {pin[:7]}"
+                 + (f" (is the submodule {top} checked out?)" if repo != REPO else ""))
+    href = f"{repo}/{'blob' if kind == 'blob' else 'tree'}/{pin}/{rel}"
     if symbol:
-        lines = git("show", f"{PIN}:{path}").stdout.splitlines()
+        lines = g("show", f"{pin}:{rel}").stdout.splitlines()
         pat = re.compile(r"^\s*(?:@\[[^\]]*\]\s*)?(?:private\s+|noncomputable\s+|protected\s+)*"
                          r"(?:theorem|lemma|def|abbrev|instance|structure|class)\s+" + re.escape(symbol) + r"\b")
         at = [k for k, ln in enumerate(lines, 1) if pat.match(ln)]
         if not at:
-            sys.exit(f"gh(): no declaration {symbol} in {path} at {PIN[:7]}")
+            sys.exit(f"gh(): no declaration {symbol} in {rel} at {pin[:7]}")
         href += f"#L{at[0]}"
     return f'<a href="{href}">{text}</a>'
 
