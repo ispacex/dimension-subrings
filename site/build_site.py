@@ -208,6 +208,7 @@ aside.side { display:none; }
   aside.side a:hover { color:var(--acc); }
   aside.side a.on { color:var(--acc); border-left-color:var(--acc); }
 }
+p.lead { font-size:1.05rem; }
 ol.toc { list-style:none; padding-left:0; } ol.toc > li { margin:.55rem 0; } ol.toc ul { margin:.2rem 0 0; padding-left:1.4rem; }
 ol.toc .stm { font-size:.88rem; margin:.15rem 0 0 1.4rem; } ol.toc .stm > span { white-space:nowrap; }
 ol.toc .stm > span .muted { white-space:normal; }
@@ -392,25 +393,30 @@ VIEWER_JS = {  # (ru, en), for the script
 }
 
 
-def viewer(lang):
-    """viewer.html of a language: the template site/viewer.html with the texts, the theme and the PDF
-    of that language filled in. Not in the search index (it has no text of its own)."""
+def viewer(lang, fn="viewer.html", folder="paper/", default=None, back="paper.html", what=None):
+    """fn of a language: the template site/viewer.html with the texts, the theme and the PDF of that
+    language filled in; viewer.html shows the paper (paper/), kernel-viewer.html the kernel document
+    (kernel/). what: (ru, en) words for the title and the short back link. Not in the search index
+    (it has no text of its own)."""
     li = 0 if lang == "ru" else 1
+    default = default or PDF[lang]
+    what = what or ("Черновик статьи", "Paper draft")
     other = "en" if lang == "ru" else "ru"
-    twin = {"en": "ru/viewer.html", "ru": "../viewer.html"}[lang]
-    alt = "".join(f'\n<link rel="alternate" hreflang="{h}" href="{ORIGIN}{url(l, "viewer.html")}">'
+    twin = {"en": f"ru/{fn}", "ru": f"../{fn}"}[lang]
+    alt = "".join(f'\n<link rel="alternate" hreflang="{h}" href="{ORIGIN}{url(l, fn)}">'
                   for h, l in (("en", "en"), ("ru", "ru"), ("x-default", "en")))
     here = f'<strong lang="{lang}" aria-current="true">{lang.upper()}</strong>'
     there = f'<a href="{twin}" hreflang="{other}" lang="{other}">{other.upper()}</a>'
     switch = (f'<span class="lang" role="group" aria-label="{"Язык" if lang == "ru" else "Language"}">'
               + (here + there if lang == "en" else there + here) + "</span>")
-    paper_dir = "paper/" if lang == "en" else "../paper/"
-    title = ("Черновик статьи" if lang == "ru" else "Paper draft") + " — " + plain(SITE_TITLE[lang])
-    fill = {"LANG": lang, "TITLE": html.escape(title), "ALT": alt + og_tags(lang, "viewer.html", title, SITE_DESC[lang]), "THEME_HEAD": THEME_HEAD, "THEME_BODY": THEME_BODY,
+    paper_dir = folder if lang == "en" else "../" + folder
+    title = what[li] + " — " + plain(SITE_TITLE[lang])
+    fill = {"LANG": lang, "TITLE": html.escape(title), "ALT": alt + og_tags(lang, fn, title, SITE_DESC[lang]), "THEME_HEAD": THEME_HEAD, "THEME_BODY": THEME_BODY,
             "TOKENS": CSS.split("* { box-sizing")[0], "THEME_SWITCH": theme_switch(lang), "LANG_SWITCH": switch,
-            "SITE": html.escape(plain(SITE_TITLE[lang])), "PAPER": "Черновик" if lang == "ru" else "Paper",
-            "BACK_TITLE": "К странице статьи" if lang == "ru" else "Back to the paper page",
-            "PDF_HREF": paper_dir + PDF[lang] + ".pdf", "PAPER_DIR": paper_dir, "DEFAULT_FILE": PDF[lang], "PDFJS": PDFJS,
+            "SITE": html.escape(plain(SITE_TITLE[lang])), "PAPER": what[li].split()[0],
+            "BACK_HREF": back, "BACK_TITLE": (("К странице статьи", "Back to the paper page") if back == "paper.html"
+                           else ("К странице документа", "Back to the document page"))[li],
+            "PDF_HREF": paper_dir + default + ".pdf", "PAPER_DIR": paper_dir, "DEFAULT_FILE": default, "PDFJS": PDFJS,
             "STRINGS": json.dumps({k: v[li] for k, v in VIEWER_JS.items()}, ensure_ascii=False)}
     fill.update({k: v[li] for k, v in VIEWER_TEXT.items()})
     doc = (HERE / "viewer.html").read_text(encoding="utf-8")
@@ -420,7 +426,7 @@ def viewer(lang):
         sys.exit(f"site/viewer.html: unfilled {sorted(set(left))}")
     d = OUT if lang == "en" else OUT / "ru"
     d.mkdir(parents=True, exist_ok=True)
-    (d / "viewer.html").write_text(doc, encoding="utf-8")
+    (d / fn).write_text(doc, encoding="utf-8")
 
 
 def tex_text(s):
@@ -874,7 +880,21 @@ def braced(s, i):
         j += 1
 
 
-KERNEL_PDF = {"en": "analysis.pdf", "ru": "analysis-ru.pdf"}  # kernel/<name> of each language
+KERNEL_PDF = {"en": "analysis.pdf", "ru": "analysis-ru.pdf"}
+# The document names the tasks of the internal tracker (MATH-43); the reader gets their public twins on the
+# board of the project (https://math.kaiku.tech/board/D5). A MATH key missing here stops the build.
+KERNEL_TASKS = {"MATH-41": "D5-2", "MATH-43": "D5-7", "MATH-144": "D5-9", "MATH-170": "D5-10", "MATH-171": "D5-11"}
+TASK_URL = "https://math.kaiku.tech/issue/"
+
+
+def kernel_tasks(md):
+    """MATH-n -> its D5 twin: a link in the text, the bare key in a heading (the contents link to it)."""
+    unknown = sorted(set(re.findall(r"MATH-\d+", md)) - set(KERNEL_TASKS))
+    if unknown:
+        sys.exit(f"kernel document: no public twin for {unknown} (KERNEL_TASKS)")
+    return "\n".join(re.sub(r"MATH-\d+", lambda m: KERNEL_TASKS[m.group(0)] if line.startswith("#")
+                            else f"[{KERNEL_TASKS[m.group(0)]}]({TASK_URL}{KERNEL_TASKS[m.group(0)]})", line)
+                     for line in md.split("\n"))  # kernel/<name> of each language
 KERNEL_TEX_HEAD = r"""\directlua{luaotfload.add_fallback("fb", {"STIX Two Math:", "Apple Symbols:", "Menlo:"})}
 \setmainfont{STIX Two Text}[RawFeature={fallback=fb}]
 \setmonofont{Menlo}[Scale=0.85,RawFeature={fallback=fb}]
@@ -912,6 +932,84 @@ def kernel_pdf(lang, md):
         print(f"PDF of {KERNEL_DOC[lang]}: no glyph for {' '.join(missing)}")
 
 
+# What the document is about, for a reader who has not seen the repository. Written here, not taken from
+# the document: it changes with the document's sections, so check it when §0 or §6 changes.
+KERNEL_ABSTRACT = {
+    "en": r"""<p class="lead">Everything the $D_5$ project computes comes down to one question: for an element $g$ of a group $G$,
+does $g-1$ lie in $\Delta^n$, the $n$-th power of the augmentation ideal of $\mathbb Z[G]$, that is, is
+$g\in D_n(G)$? The reference implementation answers it inside $\mathbb Z[G]$, with matrices of size $|G|-1$, so a level
+costs about $|G|^3$ operations and groups of order beyond a few thousand are out of reach.</p>
+<p>This document describes a faster way and what it was used for. For $G$ given by $d$ generators and relators,
+$\mathbb Z[G]/\Delta^n$ is a quotient $A_n/J_n$ of the truncated free associative algebra, whose rank
+$M=d+d^2+\dots+d^{n-1}$ does not depend on the order of $G$ (variant B, proved in §3). It agrees with the reference
+everywhere both were run (§5), is 230–380 times faster on groups of order $3^7$, takes seconds on 2-groups of order up to
+$2^{107}$, and applies to infinite groups, where a membership is certified through Quillen's theorem (§6.4).
+§6 applies it to the open questions of the project: the plateau question of [IMP26, §3.3] (answered: $w\notin D_7$,
+§6.5); the search for metabelian groups of class 4 and 5 with large $D_n$ (§6.6–6.10); what makes the presentation
+(3.12) work and why its carrier relator buys exactly one level (§6.11–6.12); and a level-by-level method that avoids
+the dense matrix for six generators (§6.13). Each result is marked <i>[on paper]</i> or <i>[computer]</i>; §7 compares
+the method with the literature.</p>""",
+    "ru": r"""<p class="lead">Всё, что считается в проекте о $D_5$, сводится к одному вопросу: лежит ли $g-1$ для элемента $g$ группы
+$G$ в $\Delta^n$, $n$-й степени фундаментального идеала $\mathbb Z[G]$, то есть верно ли $g\in D_n(G)$? Эталонная
+реализация отвечает на него внутри $\mathbb Z[G]$, матрицами размера $|G|-1$: уровень стоит порядка $|G|^3$ операций, и
+группы порядка больше нескольких тысяч недоступны.</p>
+<p>Этот документ описывает более быстрый способ и то, для чего он применён. Для $G$, заданной $d$ образующими и
+соотношениями, $\mathbb Z[G]/\Delta^n$ — фактор $A_n/J_n$ усечённой свободной ассоциативной алгебры, ранг которой
+$M=d+d^2+\dots+d^{n-1}$ не зависит от порядка $G$ (вариант B, доказательство в §3). Он совпадает с эталоном везде, где
+считались оба (§5), в 230–380 раз быстрее на группах порядка $3^7$, считает за секунды 2-группы порядка до $2^{107}$ и
+применим к бесконечным группам, где принадлежность подтверждается сертификатом по теореме Квиллена (§6.4).
+В §6 он применён к открытым вопросам проекта: вопрос о плато [IMP26, §3.3] (ответ: $w\notin D_7$, §6.5); поиск
+метабелевых групп ступени 4 и 5 с большим $D_n$ (§6.6–6.10); почему работает копредставление (3.12) и почему его
+соотношение-носитель даёт ровно один уровень (§6.11–6.12); послойный метод без плотной матрицы для шести образующих
+(§6.13). Каждый результат помечен <i>[на бумаге]</i> или <i>[компьютер]</i>; в §7 — сравнение с литературой.</p>""",
+}
+
+
+def kernel_anchors(body):
+    """Section number -> heading id of the kernel document: "6.4" from "6.4. ...", "6.11(g)" from an
+    "(g) ..." heading under 6.11."""
+    ids, cur = {}, None
+    for lv, i, h in re.findall(r'<h([234]) id="([^"]+)">(.*?)</h\1>', body):
+        text = re.sub(r"<[^>]+>", "", h)
+        if lv in "23" and (m := re.match(r"(\d+(?:\.\d+)*)\.\s", text)):
+            cur = m.group(1)
+            ids[cur] = i
+        elif lv == "4" and cur and (m := re.match(r"\(([a-z])\)", text)):
+            ids[f"{cur}({m.group(1)})"] = i
+    return ids
+
+
+def kernel_links(html_, ids):
+    """§6.4, §6.11(g), §6.7–6.10 in the text become links to those sections. Not inside a heading, a link
+    or code, and not a section of another paper ([IMP26, §3.3])."""
+    ref = re.compile(r"§(\d+(?:\.\d+)*)(\([a-z]\))?(?:([–-])(\d+(?:\.\d+)*)(\([a-z]\))?)?")
+
+    def one(num, sub):
+        key = num.rstrip(".") + (sub or "")
+        return key if key in ids else num.rstrip(".") if num.rstrip(".") in ids else None
+
+    def link(m, text):
+        if re.search(r"\[[A-Z][A-Za-z]*\d{2}[a-z]?,\s*$", text[:m.start()]):
+            return m.group(0)
+        a = one(m.group(1), m.group(2))
+        out = f'<a href="#{ids[a]}">§{m.group(1)}{m.group(2) or ""}</a>' if a else f"§{m.group(1)}{m.group(2) or ''}"
+        if m.group(4):
+            b = one(m.group(4), m.group(5))
+            tail = m.group(4) + (m.group(5) or "")
+            out += m.group(3) + (f'<a href="#{ids[b]}">{tail}</a>' if b else tail)
+        return out
+
+    parts, skip = re.split(r"(<[^>]+>)", html_), 0
+    for k, x in enumerate(parts):
+        if x.startswith("<"):
+            t = re.match(r"</?([a-zA-Z0-9]+)", x)
+            if t and t.group(1).lower() in ("a", "h1", "h2", "h3", "h4", "code", "pre"):
+                skip += -1 if x.startswith("</") else 1
+        elif not skip and "§" in x:
+            parts[k] = ref.sub(lambda m, x=x: link(m, x), x)
+    return "".join(parts)
+
+
 def kernel_doc(lang):
     """The body of kernel.html: the kernel document of cflint-fast-core (KERNEL_DOC) through pandoc.
     Its own title and EN/RU line are dropped (the page has both); formulas go back to $...$ and
@@ -920,6 +1018,7 @@ def kernel_doc(lang):
     ones the sections and subsections are on the right, the side_toc() entries returned with the body)."""
     md = (KERNEL / KERNEL_DOC[lang]).read_text(encoding="utf-8")
     md = re.sub(r"^\*[^\n]*\]\(analysis(?:\.ru)?\.md\)[^\n]*\*\n", "", md, count=1, flags=re.M)
+    md = kernel_tasks(md)
     kernel_pdf(lang, md)
     md = re.sub(r"\A# [^\n]*\n", "", md)
     run = subprocess.run(["pandoc", "-f", "gfm+tex_math_dollars", "-t", "html", "--mathjax", "--wrap=none"],
@@ -935,6 +1034,10 @@ def kernel_doc(lang):
     body = re.sub(r'<span class="math inline">\\\((.*?)\\\)</span>', r"$\1$", body, flags=re.S)
     body = re.sub(r'<span class="math display">\\\[(.*?)\\\]</span>', r"$$\1$$", body, flags=re.S)
     body = re.sub(r"<table>(.*?)</table>", r'<div class="tw"><table>\1</table></div>', body, flags=re.S)
+    # A numbered section is addressed by its number (kernel.html#s6.11, #s6.11g), not by pandoc's id made
+    # from its title: links from the tracker and elsewhere outlive a change of wording.
+    for key, old in kernel_anchors(body).items():
+        body = body.replace(f'id="{old}"', f'id="s{key.replace("(", "").replace(")", "")}"', 1)
     docs = f"{KERNEL_REPO}/-/blob/{KERNEL_PIN}/docs/"
     body = re.sub(r'href="(?!https?:|mailto:|#)([^"]+)"', lambda m: f'href="{docs}{m.group(1)}"', body)
     toc = "".join(f'<li><a href="#{a}">{h}</a></li>' for a, h in re.findall(r'<h2 id="([^"]+)">(.*?)</h2>', body))
@@ -943,11 +1046,16 @@ def kernel_doc(lang):
     pdf = ("" if lang == "en" else "../") + "kernel/"
     note = ({"ru": f"""<div class="box"><p>Документ {src} из {repo} (коммит <code>{KERNEL_PIN[:7]}</code>) как есть.
 GitLab рисует на странице только первые 50 формул, а здесь их около трёх тысяч; тут их рисует KaTeX, все.</p>
-<p><b>PDF:</b> <a href="{pdf}{KERNEL_PDF['ru']}" download>по-русски</a>, <a href="{pdf}{KERNEL_PDF['en']}" download>по-английски</a>.</p></div>""",
+<p>Читать в PDF: <a href="kernel-viewer.html"><b>по-русски</b></a>, <a href="../kernel-viewer.html" hreflang="en"><b>по-английски</b></a>;
+скачать: <a href="{pdf}{KERNEL_PDF['ru']}" download>RU</a>, <a href="{pdf}{KERNEL_PDF['en']}" download>EN</a>.</p></div>""",
              "en": f"""<div class="box"><p>The document {src} of {repo} (commit <code>{KERNEL_PIN[:7]}</code>) as it is.
 GitLab draws only the first 50 formulas of a page, and this one has about three thousand; here KaTeX draws all of them.</p>
-<p><b>PDF:</b> <a href="{pdf}{KERNEL_PDF['en']}" download>English</a>, <a href="{pdf}{KERNEL_PDF['ru']}" download>Russian</a>.</p></div>"""}[lang])
+<p>Read the PDF: <a href="kernel-viewer.html"><b>in English</b></a>, <a href="ru/kernel-viewer.html" hreflang="ru"><b>in Russian</b></a>;
+download: <a href="{pdf}{KERNEL_PDF['en']}" download>EN</a>, <a href="{pdf}{KERNEL_PDF['ru']}" download>RU</a>.</p></div>"""}[lang])
     head = "Содержание" if lang == "ru" else "Contents"
+    ids = kernel_anchors(body)
+    body = kernel_links(body, ids)
+    note = kernel_links(KERNEL_ABSTRACT[lang], ids) + note
     side = [(int(lv), i, h) for lv, i, h in re.findall(r'<h([23]) id="([^"]+)">(.*?)</h\1>', body)]
     return f'{note}<div class="toc-inline"><h2>{head}</h2><ol class="toc">{toc}</ol></div><div class="kernel">{body}</div>', side
 
@@ -1151,6 +1259,7 @@ def main():
     for lang in LANGS:
         site(lang, date, paper, pdfs, fmt_date(pdate))
         viewer(lang)
+        viewer(lang, "kernel-viewer.html", "kernel/", KERNEL_PDF[lang][:-4], "kernel.html", ("Быстрое ядро", "Fast kernel"))
     nblocks = write_search({h: i for i, (h, _, _) in enumerate(NAV)})
     print("search index:", sum(1 for p in PAGES if p[1] != "search.html"), "pages,", nblocks, "blocks")
     for lang in LANGS:
