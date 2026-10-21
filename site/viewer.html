@@ -1,7 +1,8 @@
 <!doctype html>
 <!-- The PDF viewer of the D5 site (pdf.js), the counterpart of ispacex.github.io/ship/pdf-viewer.html.
-     A template: site/build_site.py fills in the fields in double underscores and writes viewer.html and ru/viewer.html.
-     Opens paper/<file>.pdf (?file=d5 or d5-ru, default: the page's language) at
+     A template: site/build_site.py fills in the fields in double underscores and writes viewer.html, kernel-viewer.html and their ru/ twins.
+     Opens <dir>/<file>.pdf (the paper: paper/, ?file=d5 or d5-ru; the kernel document: kernel/, ?file=analysis or
+     analysis-ru; default: the page's language) at
        #nameddest=<label>   a named destination: every \label of the draft (thm:small, sec:three, ...)
        #page=<n>            a page
        #search=<words>      the first match of a search
@@ -90,7 +91,7 @@ body { margin:0; display:flex; flex-direction:column; overflow:hidden; backgroun
 </style></head>
 <body>
 <header id="bar">
-  <a class="home" href="paper.html" title="__BACK_TITLE__">&#8592; <span class="long">__SITE__</span><span class="short">__PAPER__</span></a>
+  <a class="home" href="__BACK_HREF__" title="__BACK_TITLE__">&#8592; <span class="long">__SITE__</span><span class="short">__PAPER__</span></a>
   <span class="grp">
     <button class="btn" id="btn-toc" type="button" aria-pressed="false" title="__S_TOC__" aria-label="__S_TOC__"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button>
     <button class="btn" id="btn-search" type="button" aria-pressed="false" title="__S_SEARCH__" aria-label="__S_SEARCH__"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></button>
