@@ -44,10 +44,10 @@ which provably decides non-membership, and membership too when a certificate pas
 | $2^8 = 256$ | all 24 328 groups of class $\ge 3$ | $D_n = \gamma_n$ for all $n$ |
 | $2^9 = 512$ | all 1 587 389 metabelian groups of class 3: a Jennings sieve, then lattices for the 2792 that pass it | $D_5 = 1$ |
 | $2^{10} = 1024$ | not in SmallGroups: ANUPQ (`PqDescendants`) and a minimal-counterexample lemma (a counterexample is a step-1 descendant of a group of order 512 with cyclic $\gamma_3$, and has cyclic centre); 88 809 descendants of class 3, **3400 candidates** | $D_5 = 1$ (even $D_4 = D_5 = 1$) for all 3400 |
-| $2^{11} = 2048$ | the same generation with whole subtrees cut by two proved conditions, (Г) and (Г$_N$); **ranks 2 and 3 are closed** (603 candidates, all with $D_5 = 1$); the other ranks are running | in progress |
+| $2^{11} = 2048$ | the same generation with whole subtrees cut by two proved conditions, (Г) and (Г$_N$); ranks 2–7 by search (17, 586, 52 568, 824, 13 and 9 candidates; ranks 5 and 6 also cut by Tahara's Corollary 19), rank $\ge 8$ by a short argument with a small computer check (Prop. 5.7 of the paper); all searches on ANUPQ with the audit fixes | $D_5 = 1$ for every group of class 3 (every candidate searched has $D_4 = D_5 = 1$): a counterexample has order $\ge 2^{12}$ |
 
 Consequences: **$D_5(G) \subseteq \gamma_4(G)$ for every finite group whose 2-part has order at
-most $2^{10}$**, in particular for all groups of order $< 2048$; $D_n(G) = \gamma_n(G)$ for all
+most $2^{11}$**, in particular for all groups of order $< 4096$; $D_n(G) = \gamma_n(G)$ for all
 $n$ for every finite group of order $< 512$; and, from the 3-groups computed (all of order
 $\le 3^6$, a sample of order $3^7$), $D_5/\gamma_5$ has no 3-torsion for any finite group whose
 3-part has order $\le 3^6$. Tables: [`compute/results/SUMMARY.md`](compute/results/SUMMARY.md).
