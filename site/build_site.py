@@ -504,6 +504,92 @@ def blocks_of(body):
     return out
 
 
+# The text of the paper itself goes into the search, not only its contents list: a number, a group or a
+# word that is only in the draft (SmallGroup(512, 10 494 201)) is otherwise found by nothing. One page per
+# language, the viewer of that draft; every paragraph links to the last named destination before it (a
+# section or a numbered statement), so a hit opens the PDF there.
+PAPER_TEXT = {"en": "Paper draft: full text", "ru": "Черновик статьи: полный текст"}
+DISPLAY = r"equation|equation\*|align|align\*|gather|gather\*|multline|multline\*"
+
+
+def paper_blocks(lang):
+    r"""The blocks of the draft of a language for the search index (FORMAT.md of sitesearch): bare text,
+    formulas kept as TeX between \( \) and \[ \], the section heading above, the anchor
+    `nameddest=<label>` of the viewer."""
+    P_ = PAPERS[lang]
+    tex = (PAPER / f"{PDF[lang]}.tex").read_text(encoding="utf-8")
+    names = dict(re.findall(r"\\newtheorem\{(\w+)\}(?:\[\w+\])?\{([^{}]*)\}", tex))
+    body = tex[tex.index("\\begin{document}") + len("\\begin{document}"):tex.index("\\end{document}")]
+    body = re.sub(r"(?<!\\)%[^\n]*", "", body)
+    body = body.replace("\\begin{thebibliography}", "\n\n\\section*{" + ("Литература" if lang == "ru" else "References") + "}\n\n")
+    body = re.sub(r"\\bibitem\{([^{}]*)\}", r"\n\n[\1] ", body)
+    for cmd in ("maketitle", "tableofcontents", "end{thebibliography}"):
+        body = body.replace("\\" + cmd, "")
+    body = re.sub(r"\\begin\{abstract\}", "\n\n\\\\section*{" + ("Аннотация" if lang == "ru" else "Abstract") + "}\n\n", body)
+    sections = iter([e for e in P_["toc"] if e[0] in ("section", "subsection")])
+
+    def number(lab):
+        return P_["labels"].get(lab, ("?",))[0] if lab in P_["labels"] else "?"
+
+    def prose(t):
+        t = re.sub(r"~?\\cite(\[[^\]]*\])?\{([^}]*)\}", lambda m: f" [{m.group(2)}{', ' + m.group(1)[1:-1] if m.group(1) else ''}]", t)
+        t = re.sub(r"\\eqref\{([^{}]*)\}", lambda m: f"({number(m.group(1))})", t)
+        t = re.sub(r"\\(?:ref|autoref|cref)\{([^{}]*)\}", lambda m: number(m.group(1)), t)
+        t = re.sub(r"\\href\{[^{}]*\}\{((?:[^{}]|\{[^{}]*\})*)\}", r"\1", t)
+        t = re.sub(r"\\url\{([^{}]*)\}", r"\1", t)
+        t = re.sub(r"\\begin\{(\w+)\}(?:\[((?:[^\[\]]|\{[^{}]*\})*)\])?",
+                   lambda m: (names[m.group(1)] + (f" ({m.group(2)})" if m.group(2) else "") + ". ") if m.group(1) in names
+                   else ("" if m.group(1) != "proof" else ("Доказательство. " if lang == "ru" else "Proof. ")), t)
+        t = re.sub(r"\\end\{\w+\}", " ", t)
+        t = re.sub(r"\\item(\[[^\]]*\])?", lambda m: " " + (m.group(1)[1:-1] + " " if m.group(1) else "• "), t)
+        for a, b in (("---", "—"), ("--", "–"), ("~", " "), ("``", "“"), ("''", "”"), ("<<", "«"), (">>", "»"),
+                     ("\\,", " "), ("\\ ", " "), ("\\\\", " "), ("\\&", "&"), ("\\%", "%"), ("\\#", "#"), ("\\_", "_")):
+            t = t.replace(a, b)
+        t = re.sub(r"\\S(?![A-Za-z])", "§", t)
+        t = re.sub(r"\\(?:dots|ldots)(?![A-Za-z])", "…", t)
+        t = re.sub(r"\\[A-Za-z]+\*?(?:\[[^\]]*\])?", "", t)   # \textbf, \emph, \noindent, \medskip: the word goes, the text stays
+        return t.replace("{", "").replace("}", "")
+
+    def clean(par):
+        # Display formulas first, then inline ones; what lies between them is prose.
+        par = re.sub(r"\\begin\{(" + DISPLAY + r")\}(.*?)\\end\{\1\}",
+                     lambda m: " \\[" + re.sub(r"\\label\{[^{}]*\}|\\notag|\\nonumber", "", m.group(2)).replace("&", " ").replace("\\\\", " ") + "\\] ",
+                     par, flags=re.S)
+        out, k = [], 0
+        for m in re.finditer(r"\\\[.*?\\\]|\$\$.*?\$\$|\\\(.*?\\\)|(?<!\\)\$(?:\\\$|[^$])+?\$", par, re.S):
+            out.append(prose(par[k:m.start()]))
+            f = m.group(0)
+            f = f[2:-2] if f.startswith(("\\[", "$$", "\\(")) else f[1:-1]
+            out.append(("\\[" + f.strip() + "\\]") if m.group(0).startswith(("\\[", "$$")) else ("\\(" + f.strip() + "\\)"))
+            k = m.end()
+        out.append(prose(par[k:]))
+        return re.sub(r"\s+", " ", "".join(out)).strip()
+
+    blocks, head, anchor = [], "", None
+    for par in re.split(r"\n\s*\n", body):
+        h = re.search(r"\\(sub)?section(\*)?\{((?:[^{}]|\{[^{}]*\})*)\}", par)
+        if h:
+            title = clean(h.group(3))
+            if h.group(2):
+                head, anchor = title, anchor
+            else:
+                e = next(sections)
+                head, anchor = f"{e[1]}. {title}" if e[1] else title, e[4]
+            par = par[:h.start()] + par[h.end():]
+        labs = [l for l in re.findall(r"\\label\{([^{}]*)\}", par) if l in P_["labels"]]
+        if labs:
+            anchor = labs[0]
+        par = re.sub(r"\\label\{[^{}]*\}", "", par)
+        text = clean(par)
+        if len(text) < 2:
+            continue
+        b = {"text": index_text(text), "section": index_text(head)} if head else {"text": index_text(text)}
+        if anchor:
+            b["anchor"] = "nameddest=" + anchor
+        blocks.append(b)
+    return blocks
+
+
 def write_search(order):
     pages = []
     for lang, fn, title, body in PAGES:
@@ -511,6 +597,9 @@ def write_search(order):
             continue
         pages.append({"url": url(lang, fn), "title": tex_text(title), "lang": lang,
                       "section": SECTION[lang], "order": order.get(fn, 9), "blocks": blocks_of(body)})
+    for lang in LANGS:
+        pages.append({"url": url(lang, "viewer.html"), "title": PAPER_TEXT[lang], "lang": lang,
+                      "section": SECTION[lang], "order": order.get("paper.html", 9), "blocks": paper_blocks(lang)})
     (OUT / "search-index.json").write_text(json.dumps({"pages": pages}, ensure_ascii=False, separators=(",", ":")))
     nav = [{k: v for k, v in p.items() if k != "blocks"} for p in pages]
     (OUT / "nav-index.json").write_text(json.dumps({"pages": nav}, ensure_ascii=False, separators=(",", ":")))
