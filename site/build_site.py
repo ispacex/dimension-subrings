@@ -191,6 +191,23 @@ ol.tl li::before { content:""; position:absolute; left:-.42rem; top:.45rem; widt
 .kernel th, .kernel td { text-align:left; } .kernel .katex-display { overflow-x:auto; overflow-y:hidden; padding:.2rem 0; }
 .kernel pre { background:var(--soft); padding:.6rem .8rem; border-radius:6px; overflow-x:auto; font-size:.88rem; }
 .kernel pre code { padding:0; } .kernel blockquote { border-left:4px solid var(--line); margin:1rem 0; padding:0 1rem; color:var(--muted); }
+aside.side { display:none; }
+@media (min-width:1180px) {
+  body.has-side .wrap { max-width:1420px; }
+  main.has-side { display:grid; grid-template-columns:minmax(0,1fr) 250px; gap:2.2rem; align-items:start; }
+  .has-side .toc-inline { display:none; }
+  aside.side { display:block; position:sticky; top:1rem; max-height:calc(100vh - 2rem); overflow-y:auto; margin-top:1.2rem;
+         font-size:.86rem; line-height:1.35; border-left:1px solid var(--line); padding:.2rem 0 .2rem .9rem; }
+  aside.side p { margin:0 0 .5rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.04em; font-size:.75rem; }
+  aside.side ol { list-style:none; margin:0; padding:0; }
+  aside.side li { margin:.18rem 0; }
+  aside.side li.l2 { margin-top:.65rem; font-weight:600; }
+  aside.side li.l3 { padding-left:.7rem; }
+  aside.side a { color:var(--muted); text-decoration:none; display:block; border-left:2px solid transparent; margin-left:calc(-.9rem - 1px); padding-left:calc(.9rem - 1px); }
+  aside.side li.l3 a { margin-left:calc(-1.6rem - 1px); padding-left:calc(1.6rem - 1px); }
+  aside.side a:hover { color:var(--acc); }
+  aside.side a.on { color:var(--acc); border-left-color:var(--acc); }
+}
 ol.toc { list-style:none; padding-left:0; } ol.toc > li { margin:.55rem 0; } ol.toc ul { margin:.2rem 0 0; padding-left:1.4rem; }
 ol.toc .stm { font-size:.88rem; margin:.15rem 0 0 1.4rem; } ol.toc .stm > span { white-space:nowrap; }
 ol.toc .stm > span .muted { white-space:normal; }
@@ -303,7 +320,25 @@ def theme_switch(lang):
         f'<svg viewBox="0 0 24 24" aria-hidden="true">{th[3]}</svg></button>' for th in THEMES) + "</span>")
 
 
-def page(lang, fn, title, body, date, contact=False):
+# The contents on the right of a long page (as on ispacex.github.io/gap/findings.html): sticky, shown
+# from 1180px on, the section being read marked as the page scrolls.
+SIDE_JS = """<script>(function(){var a=document.querySelectorAll('aside.side a');if(!a.length||!('IntersectionObserver' in window))return;
+var m={},h=[],cur=null;for(var i=0;i<a.length;i++){var id=decodeURIComponent(a[i].getAttribute('href').slice(1)),e=document.getElementById(id);if(e){m[id]=a[i];h.push(e)}}
+function mark(id){if(cur)cur.classList.remove('on');cur=m[id]||null;if(cur){cur.classList.add('on');
+var t=cur.closest('aside'),r=cur.getBoundingClientRect(),q=t.getBoundingClientRect();if(r.top<q.top||r.bottom>q.bottom)cur.scrollIntoView({block:'nearest'})}}
+function pick(){var best=h[0];for(var i=0;i<h.length;i++){if(h[i].getBoundingClientRect().top<=window.innerHeight*0.25)best=h[i];else break}mark(best.id)}
+var o=new IntersectionObserver(pick,{rootMargin:'0px 0px -70% 0px'});for(var i=0;i<h.length;i++)o.observe(h[i]);
+addEventListener('scroll',function(){if(window.scrollY+window.innerHeight>=document.documentElement.scrollHeight-2)mark(h[h.length-1].id)},{passive:true});pick()})()</script>"""
+
+
+def side_toc(lang, entries):
+    """The <aside> of the right-hand contents; entries: (level 2 or 3, id, html) of the headings."""
+    head = "На этой странице" if lang == "ru" else "On this page"
+    items = "".join(f'<li class="l{lv}"><a href="#{i}">{h}</a></li>' for lv, i, h in entries)
+    return f'<aside class="side" aria-label="{head}"><p>{head}</p><ol>{items}</ol></aside>'
+
+
+def page(lang, fn, title, body, date, contact=False, side=None):
     body = expand_refs(body, lang)
     PAGES.append((lang, fn, title, body))
     li = 1 if lang == "ru" else 2
@@ -323,13 +358,13 @@ def page(lang, fn, title, body, date, contact=False):
 {THEME_HEAD}
 <title>{html.escape(plain(title))} — {html.escape(plain(SITE_TITLE[lang]))}</title>{alt}{og_tags(lang, fn, plain(title) if fn == "index.html" else f"{plain(title)} — {plain(SITE_TITLE[lang])}", blurb(lang, body))}
 <style>{CSS}</style>{KATEX}</head>
-<body><header><div class="wrap"><div class="top"><a class="title" href="index.html">{SITE_TITLE[lang]}</a>
+<body{' class="has-side"' if side else ""}><header><div class="wrap"><div class="top"><a class="title" href="index.html">{SITE_TITLE[lang]}</a>
 <div class="tools"><span class="pal"></span>{theme_switch(lang)}{switch}</div></div>
 <nav aria-label="{"Разделы" if lang == "ru" else "Sections"}">{nav}</nav></div></header>
-<main class="wrap"><h1>{title}</h1>
+<main class="wrap{' has-side' if side else ""}">{'<div class="content">' if side else ""}<h1>{title}</h1>
 {body}
-</main><footer><div class="wrap"><small>{FOOTER[lang].format(date=date[lang], repo=REPO)}</small>{f'<p><small>{CONTACT[lang]}</small></p>' if contact else ""}</div></footer>
-{THEME_BODY}
+{'</div>' + side_toc(lang, side) if side else ""}</main><footer><div class="wrap"><small>{FOOTER[lang].format(date=date[lang], repo=REPO)}</small>{f'<p><small>{CONTACT[lang]}</small></p>' if contact else ""}</div></footer>
+{THEME_BODY}{SIDE_JS if side else ""}
 {palette(lang)}
 </body></html>"""
     d = OUT if lang == "en" else OUT / "ru"
@@ -839,14 +874,54 @@ def braced(s, i):
         j += 1
 
 
+KERNEL_PDF = {"en": "analysis.pdf", "ru": "analysis-ru.pdf"}  # kernel/<name> of each language
+KERNEL_TEX_HEAD = r"""\directlua{luaotfload.add_fallback("fb", {"STIX Two Math:", "Apple Symbols:", "Menlo:"})}
+\setmainfont{STIX Two Text}[RawFeature={fallback=fb}]
+\setmonofont{Menlo}[Scale=0.85,RawFeature={fallback=fb}]
+"""
+
+
+def kernel_tex(tex):
+    """A formula KaTeX takes but LaTeX does not: x_\\mathbb Z wants braces, x_{\\mathbb Z}."""
+    return re.sub(r"([_^])\s*(\\(?:mathbb|mathrm|mathfrak|mathcal|mathbf|operatorname|text|textstyle|bar|tilde|hat|overline)"
+                  r"\s*(?:\{[^{}]*\}|\s*\\?[A-Za-z0-9]))", r"\1{\2}", tex)
+
+
+def kernel_pdf(lang, md):
+    """kernel/<KERNEL_PDF>: the same markdown through pandoc and LuaLaTeX (STIX Two, glyphs it lacks from
+    STIX Two Math, Apple Symbols and Menlo); the title is the document's own, the subtitle its commit."""
+    title = re.match(r"# ([^\n]*)\n", md).group(1)
+    body = md[len(title) + 3:]
+    body = re.sub(r"\$\$(.+?)\$\$", lambda m: "$$" + kernel_tex(m.group(1)) + "$$", body, flags=re.S)
+    body = re.sub(r"(?<![\\$])\$(?!\$)(.+?)(?<![\\$])\$", lambda m: "$" + kernel_tex(m.group(1)) + "$", body, flags=re.S)
+    sub = f"{KERNEL_DOC[lang]}, ispacex/cflint-fast-core@{KERNEL_PIN[:7]}"
+    yaml = lambda v: "'" + v.replace("'", "''") + "'"  # the title is markdown (it has a formula): YAML, not -M
+    body = f"---\ntitle: {yaml(title)}\nsubtitle: {yaml(sub)}\nlang: {lang}\n---\n" + body
+    dest = OUT / "kernel"
+    dest.mkdir(exist_ok=True)
+    with tempfile.TemporaryDirectory() as tmp:
+        head = pathlib.Path(tmp) / "head.tex"
+        head.write_text(KERNEL_TEX_HEAD)
+        run = subprocess.run(["pandoc", "-f", "gfm+tex_math_dollars", "-o", str(dest / KERNEL_PDF[lang]),
+                              "--pdf-engine=lualatex", "--toc", "-H", str(head), "-V", "mathfont=STIX Two Math", "-V", "geometry:margin=2cm", "-V", "colorlinks"],
+                             input=body, capture_output=True, text=True, cwd=tmp)
+    if run.returncode:
+        sys.exit(f"PDF of {KERNEL_DOC[lang]}: {run.stderr[-2000:]}")
+    missing = sorted({l.split("There is no ")[1].split(" ")[0] for l in run.stderr.splitlines() if "Missing character" in l})
+    if missing:
+        print(f"PDF of {KERNEL_DOC[lang]}: no glyph for {' '.join(missing)}")
+
+
 def kernel_doc(lang):
     """The body of kernel.html: the kernel document of cflint-fast-core (KERNEL_DOC) through pandoc.
     Its own title and EN/RU line are dropped (the page has both); formulas go back to $...$ and
     $$...$$ for the site's KaTeX; tables get the site's frame; a relative link points into the
-    repository at KERNEL_PIN; a contents list of the sections goes on top."""
+    repository at KERNEL_PIN; a contents list of the sections goes on top (for narrow screens: on wide
+    ones the sections and subsections are on the right, the side_toc() entries returned with the body)."""
     md = (KERNEL / KERNEL_DOC[lang]).read_text(encoding="utf-8")
-    md = re.sub(r"\A# [^\n]*\n", "", md)
     md = re.sub(r"^\*[^\n]*\]\(analysis(?:\.ru)?\.md\)[^\n]*\*\n", "", md, count=1, flags=re.M)
+    kernel_pdf(lang, md)
+    md = re.sub(r"\A# [^\n]*\n", "", md)
     run = subprocess.run(["pandoc", "-f", "gfm+tex_math_dollars", "-t", "html", "--mathjax", "--wrap=none"],
                          input=md, capture_output=True, text=True)
     if run.returncode:
@@ -865,12 +940,16 @@ def kernel_doc(lang):
     toc = "".join(f'<li><a href="#{a}">{h}</a></li>' for a, h in re.findall(r'<h2 id="([^"]+)">(.*?)</h2>', body))
     src = f'<a href="{KERNEL_REPO}/-/blob/{KERNEL_PIN}/{KERNEL_DOC[lang]}"><code>{KERNEL_DOC[lang]}</code></a>'
     repo = f'<a href="{KERNEL_REPO}">ispacex/cflint-fast-core</a>'
+    pdf = ("" if lang == "en" else "../") + "kernel/"
     note = ({"ru": f"""<div class="box"><p>Документ {src} из {repo} (коммит <code>{KERNEL_PIN[:7]}</code>) как есть.
-GitLab рисует на странице только первые 50 формул, а здесь их около трёх тысяч; тут их рисует KaTeX, все.</p></div>""",
+GitLab рисует на странице только первые 50 формул, а здесь их около трёх тысяч; тут их рисует KaTeX, все.</p>
+<p><b>PDF:</b> <a href="{pdf}{KERNEL_PDF['ru']}" download>по-русски</a>, <a href="{pdf}{KERNEL_PDF['en']}" download>по-английски</a>.</p></div>""",
              "en": f"""<div class="box"><p>The document {src} of {repo} (commit <code>{KERNEL_PIN[:7]}</code>) as it is.
-GitLab draws only the first 50 formulas of a page, and this one has about three thousand; here KaTeX draws all of them.</p></div>"""}[lang])
+GitLab draws only the first 50 formulas of a page, and this one has about three thousand; here KaTeX draws all of them.</p>
+<p><b>PDF:</b> <a href="{pdf}{KERNEL_PDF['en']}" download>English</a>, <a href="{pdf}{KERNEL_PDF['ru']}" download>Russian</a>.</p></div>"""}[lang])
     head = "Содержание" if lang == "ru" else "Contents"
-    return f'{note}<h2>{head}</h2><ol class="toc">{toc}</ol><div class="kernel">{body}</div>'
+    side = [(int(lv), i, h) for lv, i, h in re.findall(r'<h([23]) id="([^"]+)">(.*?)</h\1>', body)]
+    return f'{note}<div class="toc-inline"><h2>{head}</h2><ol class="toc">{toc}</ol></div><div class="kernel">{body}</div>', side
 
 
 def tex_inline(s):
@@ -1086,8 +1165,8 @@ def site(lang, date, paper, pdfs, pdate):
         return ru if lang == "ru" else en
     li = 0 if lang == "ru" else 1
 
-    def P(fn, title, body, contact=False):
-        page(lang, fn, title, body, date, contact)
+    def P(fn, title, body, contact=False, side=None):
+        page(lang, fn, title, body, date, contact, side)
 
     # ---------- summary ----------
     n2 = sum(1 for n in range(4, 12) for d in range(2, 10) if cover2(n, d) and cover2(n, d)[0] != "o")
@@ -1224,8 +1303,9 @@ Checks: two independent methods, PARI/GP, known values.</small></p>""")
     P("computations.html", t("Вычисления", "Computations"), body)
 
     # ---------- fast kernel ----------
+    body, side = kernel_doc(lang)
     P("kernel.html", t("Быстрое ядро для $D_n$: профиль, вариант A, вариант B",
-                       "A fast kernel for $D_n$: profile, variant A, variant B"), kernel_doc(lang))
+                       "A fast kernel for $D_n$: profile, variant A, variant B"), body, side=side)
 
     # ---------- timeline ----------
     items = "".join(f'<li id="d{d}"><span class="d">{fmt_date(d)[lang]}</span><ul>' + "".join(f"<li>{x[li]}</li>" for x in xs)
