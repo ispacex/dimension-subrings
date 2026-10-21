@@ -214,6 +214,7 @@ aside.side { display:none; }
   aside.side a.on { color:var(--acc); border-left-color:var(--acc); }
 }
 p.lead { font-size:1.05rem; }
+.kernel .ref:target { background:var(--sel); border-radius:3px; } .kernel .ref { scroll-margin-top:1rem; }
 ol.toc { list-style:none; padding-left:0; } ol.toc > li { margin:.55rem 0; } ol.toc ul { margin:.2rem 0 0; padding-left:1.4rem; }
 ol.toc .stm { font-size:.88rem; margin:.15rem 0 0 1.4rem; } ol.toc .stm > span { white-space:nowrap; }
 ol.toc .stm > span .muted { white-space:normal; }
@@ -1015,6 +1016,45 @@ def kernel_links(html_, ids):
     return "".join(parts)
 
 
+CITE = re.compile(r"\[([A-Z][A-Za-z]*\d{2}[a-z]?)(?=[\],])")
+
+
+def kernel_entries(body):
+    """The keys of the literature list (§7): a list entry of it that begins with, or names, `[KEY]`."""
+    at = body.find('id="s7"')
+    return set(re.findall(r"\[([A-Z][A-Za-z]*\d{2}[a-z]?)\]", re.sub(r"<[^>]+>", "", body[at:]))) if at >= 0 else set()
+
+
+def kernel_cites(html_, keys, define=False):
+    """[BM23], [IMP26, §3.3]: the key links to its entry in §7 (#ref-BM23). With define, the first
+    `[KEY]` of §7 becomes that entry's anchor. Not inside a heading, a link or code. A key cited and
+    not in the list stops the build: a citation must lead somewhere."""
+    parts, skip, defined, in7 = re.split(r"(<[^>]+>)", html_), 0, set(), False
+    for k, x in enumerate(parts):
+        if x.startswith("<"):
+            if define and 'id="s7"' in x:
+                in7 = True
+            t = re.match(r"</?([a-zA-Z0-9]+)", x)
+            if t and t.group(1).lower() in ("a", "h1", "h2", "h3", "h4", "code", "pre"):
+                skip += -1 if x.startswith("</") else 1
+            continue
+        if skip or "[" not in x:
+            continue
+
+        def one(m):
+            key = m.group(1)
+            if key not in keys:
+                sys.exit(f"kernel document: [{key}] is cited but §7 has no entry for it")
+            if in7 and key not in defined and x[m.end():m.end() + 1] == "]":
+                defined.add(key)
+                return f'<span class="ref" id="ref-{key}">[{key}</span>'
+            return f'[<a class="cite" href="#ref-{key}">{key}</a>'
+        parts[k] = CITE.sub(one, x)
+    if define and defined != keys:
+        sys.exit(f"kernel document: no anchor for {sorted(keys - defined)} in §7")
+    return "".join(parts)
+
+
 def kernel_source_links(body):
     """A repository path in <code> or <pre> (a file, a directory, or a file name that only one file has)
     becomes a link to it at KERNEL_HEAD; anything else in the code stays as it is."""
@@ -1098,8 +1138,9 @@ GitLab draws only the first 50 formulas of a page, and this one has about three 
 download: <a href="{pdf}{KERNEL_PDF['en']}" download>EN</a>, <a href="{pdf}{KERNEL_PDF['ru']}" download>RU</a>.</p></div>"""}[lang])
     head = "Содержание" if lang == "ru" else "Contents"
     ids = kernel_anchors(body)
-    body = kernel_source_links(kernel_links(body, ids))
-    note = kernel_links(KERNEL_ABSTRACT[lang], ids) + note
+    keys = kernel_entries(body)
+    body = kernel_source_links(kernel_cites(kernel_links(body, ids), keys, define=True))
+    note = kernel_cites(kernel_links(KERNEL_ABSTRACT[lang], ids), keys) + note
     side = [(int(lv), i, h) for lv, i, h in re.findall(r'<h([23]) id="([^"]+)">(.*?)</h\1>', body)]
     return f'{note}<div class="toc-inline"><h2>{head}</h2><ol class="toc">{toc}</ol></div><div class="kernel">{body}</div>', side
 
