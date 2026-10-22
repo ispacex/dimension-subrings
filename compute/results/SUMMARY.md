@@ -19,7 +19,8 @@ $D_n(G) = \gamma_n(G)$ for **all** $n$: the computation went on until $D_n = 1$.
 | all metabelian groups of order $2^9 = 512$ of class 3 | 1 587 389 (sieve over the 1 708 439 groups of $p$-class $\ge 3$) | $D_5 = 1$; for the 2792 groups that passed the sieve the lattice gives $D_4 = D_5 = 1$ |
 | all 2-groups of order $2^{10} = 1024$ of class 3 (the $2^{10}$ run, via ANUPQ and the minimal counterexample lemma, [`../pq1024/README.md`](../pq1024/README.md)) | 88 809 step-1 descendants of class 3, of which 3400 candidates | $D_5 = 1$; all 3400 candidates have $D_4 = D_5 = 1$ and $D_n = \gamma_n$ |
 | all 3-groups of order $81, 243, 729$ | 15 + 67 + 504 = 586 | $D_n = \gamma_n$ for all $n$; no 3-torsion in $D_5/\gamma_5$ |
-| a sample of the 3-groups of order $3^7 = 2187$ of class 4 that passed the sieve (every 25th) | 49 of 1202 | $D_5 = 1$, $D_n = \gamma_n$ for all $n$ |
+| all 3-groups of order $3^7 = 2187$ of class 4 that passed the sieve: lattice in C (variant A) and truncated Magnus algebra (variant B) of [cflint-core](https://gitlab.com/ispacex/cflint-core) (`docs/analysis.md` §6.1), 6010 levels, 0 discrepancies | 1202 | $D_5 = 1$, $D_n = \gamma_n$ for all $n$ |
+| the same, a sample (every 25th) run with the numpy lattice of this directory | 49 of 1202 | $D_5 = 1$, $D_n = \gamma_n$ for all $n$ |
 | all groups of order $5^4 = 625$ | 15 | $D_n = \gamma_n$ (a control; for $p \ge 5$ and $n \le 5$ this is a theorem) |
 
 ### Consequences for arbitrary finite groups (via the reduction in the README)
@@ -138,9 +139,10 @@ gives the same answer. Tables by chunk and by candidate — `../pq1024/results/`
    $2^{10}$ is closed (above). For $2^{11}$ the same path needs the parents of order 1024 of class
    $\le 3$ with cyclic $\gamma_3$; by the estimate of the $p$-cover search there are
    $0.5$–$1.1 \cdot 10^9$ of them, so pruning of whole subtrees or a different setup is needed.
-2. **Full enumeration of the 3-groups of order 2187 of class 4:** 1202 candidates at ~5 min each,
-   i.e. about 100 CPU hours in the current numpy implementation. It is worth moving `howell` to
-   C/flint first.
+2. **Full enumeration of the 3-groups of order 2187 of class 4 — done** (not with the numpy code
+   of this directory, which ran only on the 49-group sample): all 1202 candidates by variants A in C
+   (4905 s) and B (157 s, three threads) of cflint-core, with $D_n = \gamma_n$ for all $n$ (the row
+   above). By Gupta–Tahara 1985 and metabelianity it was no longer needed for $D_5$.
 3. **Quotients of known counterexamples** (Rips, $D_4 \ne \gamma_4$, order $2^{38}$;
    Bartholdi–Mikhailov, $3^{494}$) by large normal subgroups. The goal is to find the smallest
    order at which $D_4 \ne \gamma_4$ is already visible, to calibrate how far a possible
