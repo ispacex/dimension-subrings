@@ -855,12 +855,12 @@ TIMELINE = [  # (iso date, [(ru, en)])
         ("Повтор на ANUPQ с исправлениями аудита: поиск $2^{10}$ (все $858$ кусков, $3400$ кандидатов и ответы решётки) и ранги $2$–$4$, $7$, $8$ порядка $2^{11}$ совпали со старыми прогонами полностью. Оговорка к порядкам $2^{10}$ и $2^{11}$ снята.",
          "A repeat with ANUPQ with the audit fixes: the $2^{10}$ search (all $858$ chunks, $3400$ candidates and the lattice answers) and ranks $2$–$4$, $7$, $8$ of order $2^{11}$ agree exactly with the old runs. The caveat on orders $2^{10}$ and $2^{11}$ is lifted.")]),
     ("2026-10-22", [
+        ("Препринт отправлен в arXiv (math.GR).",
+         "The preprint is submitted to arXiv (math.GR)."),
         ("Точный критерий нетерминальности $p$-групп типа $(d,2,1)$ (теорема [[thm:nonterm|#]]): доказан на бумаге при нечётном $p$ и элементарной $P/\\gamma_2$, проверен вычислением на $3^8$, $3^7$, $5^7$, $7^7$. Вопрос снят из открытых.",
          "An exact criterion for nonterminality of $p$-groups of type $(d,2,1)$ (Theorem [[thm:nonterm|#]]): proved on paper for odd $p$ and elementary $P/\\gamma_2$, checked by computer at $3^8$, $3^7$, $5^7$, $7^7$. The question is removed from the open ones."),
         ("В статье: явная алгебра Ли типа $(3,3,1,1)$ с $[M_2,M_2]\\ne0$ — над $\\mathbb F_p$ при любом нечётном $p$ (приложение A); полный разбор случая $a=2$ теоремы [[thm:exp3plus|#]] (приложение B).",
-         "In the paper: an explicit Lie algebra of type $(3,3,1,1)$ with $[M_2,M_2]\\ne0$ over $\\mathbb F_p$ for every odd $p$ (Appendix A); the full case $a=2$ of Theorem [[thm:exp3plus|#]] (Appendix B)."),
-        ("Препринт отправлен в arXiv (math.GR). Аннотация теперь говорит о том, что доказано, а не о том, что задача не решена.",
-         "The preprint is submitted to arXiv (math.GR). The abstract now states what is proved rather than that the problem is not solved.")]),
+         "In the paper: an explicit Lie algebra of type $(3,3,1,1)$ with $[M_2,M_2]\\ne0$ over $\\mathbb F_p$ for every odd $p$ (Appendix A); the full case $a=2$ of Theorem [[thm:exp3plus|#]] (Appendix B).")]),
 ]
 
 
@@ -1507,7 +1507,7 @@ $D_n(G)=G\\cap(1+\\Delta^n)$&nbsp;— размерные подгруппы, $\\
 <p>Порядок $2^{{11}}$, ступень $3$: закрыт целиком, при всех рангах; контрпример, если он есть, имеет порядок $\\ge2^{{12}}$.</p></div>
 <div class="card"><h3>$3$-кручение: $D_5=\\gamma_5$</h3><div class="big">до $3^9$</div>
 <p>Нет $3$-кручения в $D_5/\\gamma_5$, если силовская $3$-подгруппа имеет порядок $\\le3^9$.</p>
-<p>На бумаге — для всех групп, у которых $G/\\gamma_2$&nbsp;— конечная $3$-группа не больше чем с одним инвариантом больше $3$ (например, экспоненты $3$ или $C_9\\times C_3^{{s-1}}$), любого порядка.</p></div>
+<p>На бумаге — для всех групп, у которых $G/\\gamma_2$&nbsp;— конечная $3$-группа, у которой не больше одного инварианта, большего $3$ (например, экспоненты $3$ или вида $C_9\\times C_3^{{s-1}}$), любого порядка.</p></div>
 <div class="card"><h3>Кольца Ли и Lean</h3><div class="big">доказано</div>
 <p>$D_5(L)\\subseteq\\gamma_4(L)$ для колец Ли; формализация проверена. Групповой вопрос и сведение к $2$-группам ступени $3$ сформулированы в Lean.</p></div>
 <div class="card"><h3>Контрпримеров</h3><div class="big">0</div>
@@ -1643,7 +1643,7 @@ Checks: two independent methods, PARI/GP, known values.</small></p>""")
 <p>Что осталось, по убыванию важности.</p>""", """
 <p>What is left, most important first.</p>""") + "<ol>" + "".join(
         f'<li id="{x[0]}"><p>{x[1 + li]} '
-        f'<a href="{TASK_URL}{x[3]}">{t("Задача", "Issue")} {x[3]}</a></p></li>' for x in OPEN) + "</ol>")
+        f'<a href="{TASK_URL}{x[3]}">{t("Трекер", "Tracker")}: {x[3]}</a></p></li>' for x in OPEN) + "</ol>")
 
     # ---------- paper ----------
     # The contents from the .aux of the build: every entry has an anchor here and opens the viewer at
