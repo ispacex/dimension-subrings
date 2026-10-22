@@ -713,17 +713,17 @@ RESULTS = [  # (status, ru, en, ref): ref is a str or (ru, en); [[label]] is a l
      ("[[sec:open]], вопрос [[oq:theoremc|#]]", "[[sec:open]], question [[oq:theoremc|#]]")),
 ]
 
-OPEN = [  # (id, ru, en): the id is the anchor on open.html
+OPEN = [  # (id, ru, en, task): the id is the anchor on open.html; task is the D5 issue in the tracker
     ("q-main", "Сам вопрос 20.84: $D_5(Q)=1$ для всех конечных $2$-групп ступени $3$? Контрпример обязан иметь $D_4(Q)\\ne1$ и порядок $\\ge2^{12}$.",
-     "Problem 20.84 itself: is $D_5(Q)=1$ for all finite $2$-groups of class $3$? A counterexample must have $D_4(Q)\\ne1$ and order $\\ge2^{12}$."),
+     "Problem 20.84 itself: is $D_5(Q)=1$ for all finite $2$-groups of class $3$? A counterexample must have $D_4(Q)\\ne1$ and order $\\ge2^{12}$.", "D5-2"),
     ("q-tahara", "Бывает ли $3$-кручение в $D_5/\\gamma_5$ (достигается ли оценка Тахары $6$)? Минимальный пример — порядка $\\ge3^{10}$, ступени $4$, с циклическим центром и не меньше чем двумя инвариантами $\\ge9$ у $Q/\\gamma_2$.",
-     "Is there $3$-torsion in $D_5/\\gamma_5$, i.e. is Tahara's bound $6$ attained? A minimal example has order $\\ge3^{10}$, class $4$, cyclic centre and at least two invariants $\\ge9$ in $Q/\\gamma_2$."),
+     "Is there $3$-torsion in $D_5/\\gamma_5$, i.e. is Tahara's bound $6$ attained? A minimal example has order $\\ge3^{10}$, class $4$, cyclic centre and at least two invariants $\\ge9$ in $Q/\\gamma_2$.", "D5-4"),
     ("q-c9c9", "Следующий случай: у $Q/\\gamma_2$ два инварианта $\\ge9$, например $C_9\\times C_9\\times C_3$. Там $\\gamma_2/\\gamma_3$ может иметь экспоненту $9$, и доказательство теоремы [[thm:exp3plus|#]] не проходит.",
-     "The next case: $Q/\\gamma_2$ with two invariants $\\ge9$, e.g. $C_9\\times C_9\\times C_3$. There $\\gamma_2/\\gamma_3$ may have exponent $9$, and the proof of Theorem [[thm:exp3plus|#]] does not go through."),
+     "The next case: $Q/\\gamma_2$ with two invariants $\\ge9$, e.g. $C_9\\times C_9\\times C_3$. There $\\gamma_2/\\gamma_3$ may have exponent $9$, and the proof of Theorem [[thm:exp3plus|#]] does not go through.", "D5-5"),
     ("q-theoremc", "Групповой аналог теоремы C: $D_{2c-1}(G)=1$ для метабелевых групп ступени $\\le c$? Открыто при $p=2$, $c\\ge3$ и при нечётном $p$, $c\\ge p+2$.",
-     "The group analogue of Theorem C: $D_{2c-1}(G)=1$ for metabelian groups of class $\\le c$? Open for $p=2$, $c\\ge3$ and for odd $p$, $c\\ge p+2$."),
+     "The group analogue of Theorem C: $D_{2c-1}(G)=1$ for metabelian groups of class $\\le c$? Open for $p=2$, $c\\ge3$ and for odd $p$, $c\\ge p+2$.", "D5-7"),
     ("q-central", "Центральные произведения со склейкой по собственной подгруппе, когда $\\sigma$ не является $2^{j+1}$-й степенью: $12$ из $212$ разложений кандидатов порядков $2^8$–$2^9$ ничем не покрыты. Проекцией на $H$ это в общем случае не сделать: у $D_8\\circ_{\\langle t\\rangle}M_{16}$ кольцевое равенство нарушено при $n=4,5$.",
-     "Central products glued along a proper subgroup when $\\sigma$ is not a $2^{j+1}$-th power: $12$ of the $212$ splittings of candidates of orders $2^8$–$2^9$ are covered by nothing. A projection to $H$ cannot do it in general: for $D_8\\circ_{\\langle t\\rangle}M_{16}$ the ring equality fails at $n=4,5$."),
+     "Central products glued along a proper subgroup when $\\sigma$ is not a $2^{j+1}$-th power: $12$ of the $212$ splittings of candidates of orders $2^8$–$2^9$ are covered by nothing. A projection to $H$ cannot do it in general: for $D_8\\circ_{\\langle t\\rangle}M_{16}$ the ring equality fails at $n=4,5$.", "D5-8"),
 ]
 
 # Funnels of the searches: (id, ru title, en title, [(ru, en, n)], ref). The last step is the number
@@ -858,7 +858,9 @@ TIMELINE = [  # (iso date, [(ru, en)])
         ("Точный критерий нетерминальности $p$-групп типа $(d,2,1)$ (теорема [[thm:nonterm|#]]): доказан на бумаге при нечётном $p$ и элементарной $P/\\gamma_2$, проверен вычислением на $3^8$, $3^7$, $5^7$, $7^7$. Вопрос снят из открытых.",
          "An exact criterion for nonterminality of $p$-groups of type $(d,2,1)$ (Theorem [[thm:nonterm|#]]): proved on paper for odd $p$ and elementary $P/\\gamma_2$, checked by computer at $3^8$, $3^7$, $5^7$, $7^7$. The question is removed from the open ones."),
         ("В статье: явная алгебра Ли типа $(3,3,1,1)$ с $[M_2,M_2]\\ne0$ — над $\\mathbb F_p$ при любом нечётном $p$ (приложение A); полный разбор случая $a=2$ теоремы [[thm:exp3plus|#]] (приложение B).",
-         "In the paper: an explicit Lie algebra of type $(3,3,1,1)$ with $[M_2,M_2]\\ne0$ over $\\mathbb F_p$ for every odd $p$ (Appendix A); the full case $a=2$ of Theorem [[thm:exp3plus|#]] (Appendix B).")]),
+         "In the paper: an explicit Lie algebra of type $(3,3,1,1)$ with $[M_2,M_2]\\ne0$ over $\\mathbb F_p$ for every odd $p$ (Appendix A); the full case $a=2$ of Theorem [[thm:exp3plus|#]] (Appendix B)."),
+        ("Препринт отправлен в arXiv (math.GR). Аннотация теперь говорит о том, что доказано, а не о том, что задача не решена.",
+         "The preprint is submitted to arXiv (math.GR). The abstract now states what is proved rather than that the problem is not solved.")]),
 ]
 
 
@@ -1498,14 +1500,14 @@ def site(lang, date, paper, pdfs, pdate):
 $D_n(G)=G\\cap(1+\\Delta^n)$&nbsp;— размерные подгруппы, $\\gamma_n(G)$&nbsp;— нижний центральный ряд. Всегда $\\gamma_n\\subseteq D_n$,
 и $D_n=\\gamma_n$ при $n\\le3$; при $n=4$ это неверно (Рипс). <b>Верно ли $D_5(G)\\subseteq\\gamma_4(G)$ для всякой группы?</b></p>
 <p>Для колец Ли ответ «да» (Ионин, Михайлов, Петров, 2026, с формализацией в Lean). Для групп вопрос открыт;
-мы его не решили. Здесь — что доказано, что посчитано и что осталось.</p></div>
+к нему с нескольких сторон подходит наш препринт, отправленный в arXiv 22 октября 2026 года. Здесь — что доказано, что посчитано и что осталось.</p></div>
 <div class="cards">
 <div class="card"><h3>$2$-кручение: $D_5\\subseteq\\gamma_4$</h3><div class="big">до $2^{{10}}$</div>
 <p>Верно для всякой конечной группы с силовской $2$-подгруппой порядка $\\le2^{{10}}$, в частности для всех групп порядка $<2048$.</p>
 <p>Порядок $2^{{11}}$, ступень $3$: закрыт целиком, при всех рангах; контрпример, если он есть, имеет порядок $\\ge2^{{12}}$.</p></div>
 <div class="card"><h3>$3$-кручение: $D_5=\\gamma_5$</h3><div class="big">до $3^9$</div>
 <p>Нет $3$-кручения в $D_5/\\gamma_5$, если силовская $3$-подгруппа имеет порядок $\\le3^9$.</p>
-<p>На бумаге — для всех групп, у которых $G/\\gamma_2$ имеет не больше одного инварианта больше $3$ (например, экспоненту $3$ или $C_9\\times C_3^{{s-1}}$), любого порядка.</p></div>
+<p>На бумаге — для всех групп, у которых $G/\\gamma_2$&nbsp;— конечная $3$-группа не больше чем с одним инвариантом больше $3$ (например, экспоненты $3$ или $C_9\\times C_3^{{s-1}}$), любого порядка.</p></div>
 <div class="card"><h3>Кольца Ли и Lean</h3><div class="big">доказано</div>
 <p>$D_5(L)\\subseteq\\gamma_4(L)$ для колец Ли; формализация проверена. Групповой вопрос и сведение к $2$-группам ступени $3$ сформулированы в Lean.</p></div>
 <div class="card"><h3>Контрпримеров</h3><div class="big">0</div>
@@ -1518,15 +1520,15 @@ $D_n(G)=G\\cap(1+\\Delta^n)$&nbsp;— размерные подгруппы, $\\
 <div class="box"><p><b>The question</b> (Kourovka notebook, Problem 20.84). Let $\\Delta$ be the augmentation ideal of $\\mathbb Z[G]$,
 $D_n(G)=G\\cap(1+\\Delta^n)$ the dimension subgroups and $\\gamma_n(G)$ the lower central series. Always $\\gamma_n\\subseteq D_n$,
 and $D_n=\\gamma_n$ for $n\\le3$; for $n=4$ this fails (Rips). <b>Is $D_5(G)\\subseteq\\gamma_4(G)$ for every group?</b></p>
-<p>For Lie rings the answer is yes (Ionin, Mikhailov, Petrov, 2026, formalized in Lean). For groups it is open,
-and we have not solved it. This site shows what is proved, what is computed, and what is left.</p></div>
+<p>For Lie rings the answer is yes (Ionin, Mikhailov, Petrov, 2026, formalized in Lean). For groups it is open;
+our preprint, submitted to arXiv on 22 October 2026, approaches it from several sides. This site shows what is proved, what is computed, and what is left.</p></div>
 <div class="cards">
 <div class="card"><h3>$2$-torsion: $D_5\\subseteq\\gamma_4$</h3><div class="big">up to $2^{{10}}$</div>
 <p>True for every finite group whose Sylow $2$-subgroup has order $\\le2^{{10}}$, in particular for all groups of order $<2048$.</p>
 <p>Order $2^{{11}}$, class $3$: settled for every rank; a counterexample, if any, has order $\\ge2^{{12}}$.</p></div>
 <div class="card"><h3>$3$-torsion: $D_5=\\gamma_5$</h3><div class="big">up to $3^9$</div>
 <p>No $3$-torsion in $D_5/\\gamma_5$ when the Sylow $3$-subgroup has order $\\le3^9$.</p>
-<p>On paper for all groups whose $G/\\gamma_2$ has at most one invariant larger than $3$ (e.g. exponent $3$, or $C_9\\times C_3^{{s-1}}$), of any order.</p></div>
+<p>On paper for all groups whose $G/\\gamma_2$ is a finite $3$-group with at most one invariant larger than $3$ (e.g. of exponent $3$, or $C_9\\times C_3^{{s-1}}$), of any order.</p></div>
 <div class="card"><h3>Lie rings and Lean</h3><div class="big">proved</div>
 <p>$D_5(L)\\subseteq\\gamma_4(L)$ for Lie rings; the formalization audited. The group question and the reduction to $2$-groups of class $3$ are stated in Lean.</p></div>
 <div class="card"><h3>Counterexamples</h3><div class="big">0</div>
@@ -1640,7 +1642,8 @@ Checks: two independent methods, PARI/GP, known values.</small></p>""")
     P("open.html", t("Открытые вопросы", "Open questions"), t("""
 <p>Что осталось, по убыванию важности.</p>""", """
 <p>What is left, most important first.</p>""") + "<ol>" + "".join(
-        f'<li id="{x[0]}"><p>{x[1 + li]}</p></li>' for x in OPEN) + "</ol>")
+        f'<li id="{x[0]}"><p>{x[1 + li]} '
+        f'<a href="{TASK_URL}{x[3]}">{t("Задача", "Issue")} {x[3]}</a></p></li>' for x in OPEN) + "</ol>")
 
     # ---------- paper ----------
     # The contents from the .aux of the build: every entry has an anchor here and opens the viewer at
