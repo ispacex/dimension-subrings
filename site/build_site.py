@@ -702,6 +702,9 @@ RESULTS = [  # (status, ru, en, ref): ref is a str or (ru, en); [[label]] is a l
     ("p", "$p$ нечётно, $P$ ступени $3$ с $|\\gamma_2/\\gamma_3|=p^2$, $|\\gamma_3|=p$ $\\Rightarrow$ у $p$-накрывающей группы $P^{*\\prime\\prime}=1$: все шаг-$1$ потомки метабелевы.",
      "$p$ odd, $P$ of class $3$ with $|\\gamma_2/\\gamma_3|=p^2$, $|\\gamma_3|=p$ $\\Rightarrow$ the $p$-covering group has $P^{*\\prime\\prime}=1$: all step-$1$ descendants are metabelian.",
      "[[thm:pcover]]"),
+    ("cp", "$p$ нечётно, $P$ типа $(d,2,1)$ с элементарной $P/\\gamma_2$: $P$ нетерминальна (у неё есть непосредственные потомки) ровно тогда, когда выполнены условия N1–N3 и система (E)+(J) разрешима с $c\\ne0$. Проверено вычислением: при $3^8$ критерий выделяет ровно $190$ нетерминальных из $7\\,824$, при $3^7$, $5^7$, $7^7$ — ровно $102$, $110$, $118$.",
+     "$p$ odd, $P$ of type $(d,2,1)$ with $P/\\gamma_2$ elementary: $P$ is nonterminal (has immediate descendants) exactly when N1–N3 hold and the system (E)+(J) is solvable with $c\\ne0$. Checked by computer: at $3^8$ the criterion picks out exactly the $190$ nonterminal groups among $7\\,824$; at $3^7$, $5^7$, $7^7$ exactly $102$, $110$, $118$.",
+     "[[thm:nonterm]]"),
     ("c", "Факторы ступени $3$ групп рипсовского типа порядков $2^{40}$–$2^{107}$: везде $D_5=1$, в трёх из них $D_4\\ne1$ (" + gh("compute/magnus/README.md", "с сертификатом точности") + ").",
      "Class-$3$ quotients of Rips-type groups of orders $2^{40}$–$2^{107}$: $D_5=1$ in all, $D_4\\ne1$ in three of them (" + gh("compute/magnus/README.md", "with the exactness certificate") + ").",
      ("[[sec:open]], вопрос [[oq:main|#]]", "[[sec:open]], question [[oq:main|#]]")),
@@ -717,8 +720,6 @@ OPEN = [  # (id, ru, en): the id is the anchor on open.html
      "Is there $3$-torsion in $D_5/\\gamma_5$, i.e. is Tahara's bound $6$ attained? A minimal example has order $\\ge3^{10}$, class $4$, cyclic centre and at least two invariants $\\ge9$ in $Q/\\gamma_2$."),
     ("q-c9c9", "Следующий случай: у $Q/\\gamma_2$ два инварианта $\\ge9$, например $C_9\\times C_9\\times C_3$. Там $\\gamma_2/\\gamma_3$ может иметь экспоненту $9$, и доказательство теоремы [[thm:exp3plus|#]] не проходит.",
      "The next case: $Q/\\gamma_2$ with two invariants $\\ge9$, e.g. $C_9\\times C_9\\times C_3$. There $\\gamma_2/\\gamma_3$ may have exponent $9$, and the proof of Theorem [[thm:exp3plus|#]] does not go through."),
-    ("q-nonterminal", "Точный критерий нетерминальности групп типа $(d,2,1)$: при $3^8$ потомки есть у $190$ из $7\\,824$, известные необходимые условия выполнены ещё у $573$ терминальных.",
-     "An exact criterion for nonterminality of groups of type $(d,2,1)$: at $3^8$, $190$ of the $7\\,824$ have descendants, and the known necessary conditions also hold for $573$ terminal ones."),
     ("q-theoremc", "Групповой аналог теоремы C: $D_{2c-1}(G)=1$ для метабелевых групп ступени $\\le c$? Открыто при $p=2$, $c\\ge3$ и при нечётном $p$, $c\\ge p+2$.",
      "The group analogue of Theorem C: $D_{2c-1}(G)=1$ for metabelian groups of class $\\le c$? Open for $p=2$, $c\\ge3$ and for odd $p$, $c\\ge p+2$."),
     ("q-central", "Центральные произведения со склейкой по собственной подгруппе, когда $\\sigma$ не является $2^{j+1}$-й степенью: $12$ из $212$ разложений кандидатов порядков $2^8$–$2^9$ ничем не покрыты. Проекцией на $H$ это в общем случае не сделать: у $D_8\\circ_{\\langle t\\rangle}M_{16}$ кольцевое равенство нарушено при $n=4,5$.",
@@ -853,6 +854,11 @@ TIMELINE = [  # (iso date, [(ru, en)])
     ("2026-10-21", [
         ("Повтор на ANUPQ с исправлениями аудита: поиск $2^{10}$ (все $858$ кусков, $3400$ кандидатов и ответы решётки) и ранги $2$–$4$, $7$, $8$ порядка $2^{11}$ совпали со старыми прогонами полностью. Оговорка к порядкам $2^{10}$ и $2^{11}$ снята.",
          "A repeat with ANUPQ with the audit fixes: the $2^{10}$ search (all $858$ chunks, $3400$ candidates and the lattice answers) and ranks $2$–$4$, $7$, $8$ of order $2^{11}$ agree exactly with the old runs. The caveat on orders $2^{10}$ and $2^{11}$ is lifted.")]),
+    ("2026-10-22", [
+        ("Точный критерий нетерминальности $p$-групп типа $(d,2,1)$ (теорема [[thm:nonterm|#]]): доказан на бумаге при нечётном $p$ и элементарной $P/\\gamma_2$, проверен вычислением на $3^8$, $3^7$, $5^7$, $7^7$. Вопрос снят из открытых.",
+         "An exact criterion for nonterminality of $p$-groups of type $(d,2,1)$ (Theorem [[thm:nonterm|#]]): proved on paper for odd $p$ and elementary $P/\\gamma_2$, checked by computer at $3^8$, $3^7$, $5^7$, $7^7$. The question is removed from the open ones."),
+        ("В статье: явная алгебра Ли типа $(3,3,1,1)$ с $[M_2,M_2]\\ne0$ — над $\\mathbb F_p$ при любом нечётном $p$ (приложение A); полный разбор случая $a=2$ теоремы [[thm:exp3plus|#]] (приложение B).",
+         "In the paper: an explicit Lie algebra of type $(3,3,1,1)$ with $[M_2,M_2]\\ne0$ over $\\mathbb F_p$ for every odd $p$ (Appendix A); the full case $a=2$ of Theorem [[thm:exp3plus|#]] (Appendix B).")]),
 ]
 
 
