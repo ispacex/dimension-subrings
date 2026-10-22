@@ -672,9 +672,10 @@ RESULTS = [  # (status, ru, en, ref): ref is a str or (ru, en); [[label]] is a l
     ("cp", "$D_5(G)\\subseteq\\gamma_4(G)$ для всякой конечной $G$ с силовской $2$-подгруппой <a href=\"computations.html#f210\">порядка $\\le2^{10}$</a>, в частности для всех групп порядка $<2048$.",
      "$D_5(G)\\subseteq\\gamma_4(G)$ for every finite $G$ with Sylow $2$-subgroup <a href=\"computations.html#f210\">of order $\\le2^{10}$</a>, in particular for all groups of order $<2048$.",
      "[[thm:small]](1)"),
-    ("cp", "Порядок $2^{11}$, ступень $3$: $D_5=1$ при всех рангах — <a href=\"computations.html#f211\">ранги $2$–$7$ перебором</a>, $\\ge8$ на бумаге. Контрпример, если он есть, имеет порядок $\\ge2^{12}$. Поиск $2^{10}$ и ранги $2$–$4$, $7$, $8$ повторены на ANUPQ с исправлениями аудита: результаты совпали полностью.",
-     "Order $2^{11}$, class $3$: $D_5=1$ for every rank — <a href=\"computations.html#f211\">ranks $2$–$7$ by search</a>, $\\ge8$ on paper. A counterexample, if any, has order $\\ge2^{12}$. The $2^{10}$ search and ranks $2$–$4$, $7$, $8$ were repeated with ANUPQ with the audit fixes: the results agree exactly.",
-     "[[prop:2048]], [[prop:rank8]]"),
+    ("cp", "Порядок $2^{11}$, ступень $3$: $D_5=1$ при всех рангах — <a href=\"computations.html#f211\">ранги $2$–$7$ перебором</a>, $\\ge8$ на бумаге (у всякого кандидата $|\\Phi(Q)|\\ge16$; доказано и в Lean). Контрпример, если он есть, имеет порядок $\\ge2^{12}$. Поиск $2^{10}$ и ранги $2$–$4$, $7$, $8$ повторены на ANUPQ с исправлениями аудита: результаты совпали полностью.",
+     "Order $2^{11}$, class $3$: $D_5=1$ for every rank — <a href=\"computations.html#f211\">ranks $2$–$7$ by search</a>, $\\ge8$ on paper (every candidate has $|\\Phi(Q)|\\ge16$; also proved in Lean). A counterexample, if any, has order $\\ge2^{12}$. The $2^{10}$ search and ranks $2$–$4$, $7$, $8$ were repeated with ANUPQ with the audit fixes: the results agree exactly.",
+     ("[[prop:2048]], [[prop:rank8]]; " + gh("groups/GroupDimension/Candidate.lean", "Lean", "false_of_card_expCentral_two_le"),
+      "[[prop:2048]], [[prop:rank8]]; " + gh("groups/GroupDimension/Candidate.lean", "Lean", "false_of_card_expCentral_two_le"))),
     ("l", "Центральные произведения: $D_n(H\\circ E)=D_n(H)$ при $E\\in\\{D_8,Q_8\\}$ и $t\\in\\gamma_2(H)$, а для $E=M_{2^{k+2}}$ — при условии на $g^{-2}s$ (например, $s=g^2$). "
           + gh("compute/central", "Все $386$ кандидатов") + " порядков $2^6$–$2^9$ ему удовлетворяют, так что разложимость $H\\circ E$ с $E\\in\\{D_8,Q_8,M_{16}\\}$ контрпримера не даёт. "
           "Склейка по собственной подгруппе $Z(E)$ закрыта при $\\sigma=g^{2^{j+1}}$ (центральный корень любой степени; <a href=\"open.html#q-central\">остальное открыто</a>); у каждого из $20$ раскладывающихся кандидатов есть разложение, покрытое предложением [[prop:central|#]]. " + gh("groups/GroupDimension/CentralProduct.lean", "Предложение [[prop:central|##]]", "D_n_eq_of_central_product") + " и " + gh("groups/GroupDimension/CentralRoot.lean", "лемма [[lem:root|##]]", "D_n_eq_of_index") + " доказаны в Lean; проверка кандидатов — вычислением.",
@@ -861,6 +862,9 @@ TIMELINE = [  # (iso date, [(ru, en)])
          "An exact criterion for nonterminality of $p$-groups of type $(d,2,1)$ (Theorem [[thm:nonterm|#]]): proved on paper for odd $p$ and elementary $P/\\gamma_2$, checked by computer at $3^8$, $3^7$, $5^7$, $7^7$. The question is removed from the open ones."),
         ("В статье: явная алгебра Ли типа $(3,3,1,1)$ с $[M_2,M_2]\\ne0$ — над $\\mathbb F_p$ при любом нечётном $p$ (приложение A); полный разбор случая $a=2$ теоремы [[thm:exp3plus|#]] (приложение B).",
          "In the paper: an explicit Lie algebra of type $(3,3,1,1)$ with $[M_2,M_2]\\ne0$ over $\\mathbb F_p$ for every odd $p$ (Appendix A); the full case $a=2$ of Theorem [[thm:exp3plus|#]] (Appendix B).")]),
+    ("2026-10-23", [
+        ("Предложение [[prop:rank8|#]] доказано элементарно: у всякого кандидата $|\\Phi(Q)|\\ge16$, то есть ранг $\\le\\log_2|Q|-4$. Классификация групп порядка $2^9$ ранга $8$ и вычисление их потомков больше не нужны (остались проверкой). Доказано в Lean, как и лемма [[lem:z4|#]]. Следствие: контрпример порядка $2^{12}$, если он есть, имеет ранг $\\le8$.",
+         "Prop. [[prop:rank8|#]] has an elementary proof: every candidate has $|\\Phi(Q)|\\ge16$, i.e. rank $\\le\\log_2|Q|-4$. The classification of the groups of order $2^9$ and rank $8$ and the computation of their descendants are no longer needed (they remain as checks). Proved in Lean, as is Lemma [[lem:z4|#]]. Consequence: a counterexample of order $2^{12}$, if any, has rank $\\le8$.")]),
 ]
 
 
@@ -1563,7 +1567,7 @@ No cell is open here any more: order $2^{11}$ is settled for every rank (Proposi
 <ul>
 <li>До $2^8$&nbsp;— решётка $\\Delta^n$ для всех групп; $2^9$&nbsp;— сито Дженнингса и решётка.</li>
 <li>$2^{10}$&nbsp;— лемма о минимальном контрпримере: достаточно шаг-$1$ потомков групп порядка $2^9$ (ANUPQ), $3400$ кандидатов.</li>
-<li>$2^{11}$&nbsp;— то же с отсечением целых поддеревьев; ранг $8$&nbsp;— квадратичными формами и леммой [[lem:z4|#]], ранг $9$ невозможен.</li>
+<li>$2^{11}$&nbsp;— то же с отсечением целых поддеревьев; ранги $\\ge8$ невозможны: у всякого кандидата $|\\Phi(Q)|\\ge16$ (предложение [[prop:rank8|#]]).</li>
 </ul>
 <h2 id="c3">$3$-группы: $D_5(Q)=\\gamma_5(Q)$?</h2>
 <p>Это вопрос о $3$-кручении в $D_5/\\gamma_5$ (оценка Тахары: экспонента делит $6$). Клетки «на бумаге» закрыты так:
@@ -1573,7 +1577,7 @@ $\\ge3^{d+5}$ (предложение [[prop:metab|#]]); при $d=2$ факто
 <ul>
 <li>Up to $2^8$: the lattice $\\Delta^n$ for all groups; $2^9$: the Jennings sieve and the lattice.</li>
 <li>$2^{10}$: the minimal-counterexample lemma reduces to step-$1$ descendants of groups of order $2^9$ (ANUPQ), $3400$ candidates.</li>
-<li>$2^{11}$: the same, with whole subtrees cut; rank $8$ by quadratic forms and Lemma [[lem:z4|#]], rank $9$ impossible.</li>
+<li>$2^{11}$: the same, with whole subtrees cut; ranks $\\ge8$ are impossible: every candidate has $|\\Phi(Q)|\\ge16$ (Prop. [[prop:rank8|#]]).</li>
 </ul>
 <h2 id="c3">$3$-groups: is $D_5(Q)=\\gamma_5(Q)$?</h2>
 <p>This is the question of $3$-torsion in $D_5/\\gamma_5$ (Tahara: the exponent divides $6$). The “paper” cells are closed thus:
