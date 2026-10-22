@@ -672,8 +672,8 @@ RESULTS = [  # (status, ru, en, ref): ref is a str or (ru, en); [[label]] is a l
     ("cp", "$D_5(G)\\subseteq\\gamma_4(G)$ для всякой конечной $G$ с силовской $2$-подгруппой <a href=\"computations.html#f210\">порядка $\\le2^{10}$</a>, в частности для всех групп порядка $<2048$.",
      "$D_5(G)\\subseteq\\gamma_4(G)$ for every finite $G$ with Sylow $2$-subgroup <a href=\"computations.html#f210\">of order $\\le2^{10}$</a>, in particular for all groups of order $<2048$.",
      "[[thm:small]](1)"),
-    ("cp", "Порядок $2^{11}$, ступень $3$: $D_5=1$ при всех рангах — <a href=\"computations.html#f211\">ранги $2$–$7$ перебором</a>, $\\ge8$ на бумаге (у всякого кандидата $|\\Phi(Q)|\\ge16$; доказано и в Lean). Контрпример, если он есть, имеет порядок $\\ge2^{12}$. Поиск $2^{10}$ и ранги $2$–$4$, $7$, $8$ повторены на ANUPQ с исправлениями аудита: результаты совпали полностью.",
-     "Order $2^{11}$, class $3$: $D_5=1$ for every rank — <a href=\"computations.html#f211\">ranks $2$–$7$ by search</a>, $\\ge8$ on paper (every candidate has $|\\Phi(Q)|\\ge16$; also proved in Lean). A counterexample, if any, has order $\\ge2^{12}$. The $2^{10}$ search and ranks $2$–$4$, $7$, $8$ were repeated with ANUPQ with the audit fixes: the results agree exactly.",
+    ("cp", "Порядок $2^{11}$, ступень $3$: $D_5=1$ при всех рангах — <a href=\"computations.html#f211\">ранги $2$–$7$ перебором</a>, $\\ge8$ без перебора (у всякого кандидата $|\\Phi(Q)|\\ge16$ — на бумаге, а в Lean — в виде: у кандидата не бывает $|P_2(Q)|\\le8$; переход к кандидатам — через предложение [[prop:1024|#]]). Контрпример, если он есть, имеет порядок $\\ge2^{12}$. Поиск $2^{10}$ и ранги $2$–$4$, $7$, $8$ повторены на ANUPQ с исправлениями аудита: результаты совпали полностью.",
+     "Order $2^{11}$, class $3$: $D_5=1$ for every rank — <a href=\"computations.html#f211\">ranks $2$–$7$ by search</a>, $\\ge8$ without search (every candidate has $|\\Phi(Q)|\\ge16$ on paper, and in Lean as: no candidate has $|P_2(Q)|\\le8$; the passage to candidates is via Prop. [[prop:1024|#]]). A counterexample, if any, has order $\\ge2^{12}$. The $2^{10}$ search and ranks $2$–$4$, $7$, $8$ were repeated with ANUPQ with the audit fixes: the results agree exactly.",
      ("[[prop:2048]], [[prop:rank8]]; " + gh("groups/GroupDimension/Candidate.lean", "Lean", "false_of_card_expCentral_two_le"),
       "[[prop:2048]], [[prop:rank8]]; " + gh("groups/GroupDimension/Candidate.lean", "Lean", "false_of_card_expCentral_two_le"))),
     ("l", "Центральные произведения: $D_n(H\\circ E)=D_n(H)$ при $E\\in\\{D_8,Q_8\\}$ и $t\\in\\gamma_2(H)$, а для $E=M_{2^{k+2}}$ — при условии на $g^{-2}s$ (например, $s=g^2$). "
@@ -715,8 +715,8 @@ RESULTS = [  # (status, ru, en, ref): ref is a str or (ru, en); [[label]] is a l
 ]
 
 OPEN = [  # (id, ru, en, task): the id is the anchor on open.html; task is the D5 issue in the tracker
-    ("q-main", "Сам вопрос 20.84: $D_5(Q)=1$ для всех конечных $2$-групп ступени $3$? Контрпример обязан иметь $D_4(Q)\\ne1$ и порядок $\\ge2^{12}$.",
-     "Problem 20.84 itself: is $D_5(Q)=1$ for all finite $2$-groups of class $3$? A counterexample must have $D_4(Q)\\ne1$ and order $\\ge2^{12}$.", "D5-2"),
+    ("q-main", "Сам вопрос 20.84: $D_5(Q)=1$ для всех конечных $2$-групп ступени $3$? Контрпример обязан иметь $D_4(Q)\\ne1$ и порядок $\\ge2^{12}$; при порядке $2^{12}$ он — кандидат ранга $\\le8$.",
+     "Problem 20.84 itself: is $D_5(Q)=1$ for all finite $2$-groups of class $3$? A counterexample must have $D_4(Q)\\ne1$ and order $\\ge2^{12}$; at order $2^{12}$ it is a candidate of rank $\\le8$.", "D5-2"),
     ("q-tahara", "Бывает ли $3$-кручение в $D_5/\\gamma_5$ (достигается ли оценка Тахары $6$)? Минимальный пример — порядка $\\ge3^{10}$, ступени $4$, с циклическим центром и не меньше чем двумя инвариантами $\\ge9$ у $Q/\\gamma_2$.",
      "Is there $3$-torsion in $D_5/\\gamma_5$, i.e. is Tahara's bound $6$ attained? A minimal example has order $\\ge3^{10}$, class $4$, cyclic centre and at least two invariants $\\ge9$ in $Q/\\gamma_2$.", "D5-4"),
     ("q-c9c9", "Следующий случай: у $Q/\\gamma_2$ два инварианта $\\ge9$, например $C_9\\times C_9\\times C_3$. Там $\\gamma_2/\\gamma_3$ может иметь экспоненту $9$, и доказательство теоремы [[thm:exp3plus|#]] не проходит.",
@@ -863,8 +863,8 @@ TIMELINE = [  # (iso date, [(ru, en)])
         ("В статье: явная алгебра Ли типа $(3,3,1,1)$ с $[M_2,M_2]\\ne0$ — над $\\mathbb F_p$ при любом нечётном $p$ (приложение A); полный разбор случая $a=2$ теоремы [[thm:exp3plus|#]] (приложение B).",
          "In the paper: an explicit Lie algebra of type $(3,3,1,1)$ with $[M_2,M_2]\\ne0$ over $\\mathbb F_p$ for every odd $p$ (Appendix A); the full case $a=2$ of Theorem [[thm:exp3plus|#]] (Appendix B).")]),
     ("2026-10-23", [
-        ("Предложение [[prop:rank8|#]] доказано элементарно: у всякого кандидата $|\\Phi(Q)|\\ge16$, то есть ранг $\\le\\log_2|Q|-4$. Классификация групп порядка $2^9$ ранга $8$ и вычисление их потомков больше не нужны (остались проверкой). Доказано в Lean, как и лемма [[lem:z4|#]]. Следствие: контрпример порядка $2^{12}$, если он есть, имеет ранг $\\le8$.",
-         "Prop. [[prop:rank8|#]] has an elementary proof: every candidate has $|\\Phi(Q)|\\ge16$, i.e. rank $\\le\\log_2|Q|-4$. The classification of the groups of order $2^9$ and rank $8$ and the computation of their descendants are no longer needed (they remain as checks). Proved in Lean, as is Lemma [[lem:z4|#]]. Consequence: a counterexample of order $2^{12}$, if any, has rank $\\le8$.")]),
+        ("Утверждение о кандидатах в предложении [[prop:rank8|#]] доказано элементарно: у всякого кандидата $|\\Phi(Q)|\\ge16$, то есть ранг $\\le\\log_2|Q|-4$. Классификация групп порядка $2^9$ ранга $8$ и вычисление их потомков больше не нужны (остаются как проверка). В Lean доказано, что у кандидата не бывает $|P_2(Q)|\\le8$; доказана и лемма [[lem:z4|#]]. Следствие: контрпример порядка $2^{12}$, если он есть, имеет ранг $\\le8$.",
+         "The statement on candidates in Prop. [[prop:rank8|#]] now has an elementary proof: every candidate has $|\\Phi(Q)|\\ge16$, i.e. rank $\\le\\log_2|Q|-4$. The classification of the groups of order $2^9$ and rank $8$ and the computation of their descendants are no longer needed (they remain as checks). Lean proves that no candidate has $|P_2(Q)|\\le8$, and Lemma [[lem:z4|#]]. Consequence: a counterexample of order $2^{12}$, if any, has rank $\\le8$.")]),
 ]
 
 
@@ -876,10 +876,8 @@ def cover2(n, d):
         return "c", "[[prop:computer]]"
     if n == 10:
         return "cp", "[[prop:1024]]"
-    if d <= 8:
-        return "cp", "[[prop:rank8]]" if d == 8 else "[[prop:2048]]"
-    if d == 9:
-        return "p", "[[prop:rank8]]"
+    if n == 11:
+        return "cp", "[[prop:rank8]]" if d >= 8 else "[[prop:2048]]"
     return "o", None
 
 
@@ -1567,7 +1565,7 @@ No cell is open here any more: order $2^{11}$ is settled for every rank (Proposi
 <ul>
 <li>До $2^8$&nbsp;— решётка $\\Delta^n$ для всех групп; $2^9$&nbsp;— сито Дженнингса и решётка.</li>
 <li>$2^{10}$&nbsp;— лемма о минимальном контрпримере: достаточно шаг-$1$ потомков групп порядка $2^9$ (ANUPQ), $3400$ кандидатов.</li>
-<li>$2^{11}$&nbsp;— то же с отсечением целых поддеревьев; ранги $\\ge8$ невозможны: у всякого кандидата $|\\Phi(Q)|\\ge16$ (предложение [[prop:rank8|#]]).</li>
+<li>$2^{11}$&nbsp;— то же с отсечением целых поддеревьев; кандидатов ранга $\\ge8$ нет: у всякого кандидата $|\\Phi(Q)|\\ge16$ (предложение [[prop:rank8|#]]).</li>
 </ul>
 <h2 id="c3">$3$-группы: $D_5(Q)=\\gamma_5(Q)$?</h2>
 <p>Это вопрос о $3$-кручении в $D_5/\\gamma_5$ (оценка Тахары: экспонента делит $6$). Клетки «на бумаге» закрыты так:
@@ -1577,7 +1575,7 @@ $\\ge3^{d+5}$ (предложение [[prop:metab|#]]); при $d=2$ факто
 <ul>
 <li>Up to $2^8$: the lattice $\\Delta^n$ for all groups; $2^9$: the Jennings sieve and the lattice.</li>
 <li>$2^{10}$: the minimal-counterexample lemma reduces to step-$1$ descendants of groups of order $2^9$ (ANUPQ), $3400$ candidates.</li>
-<li>$2^{11}$: the same, with whole subtrees cut; ranks $\\ge8$ are impossible: every candidate has $|\\Phi(Q)|\\ge16$ (Prop. [[prop:rank8|#]]).</li>
+<li>$2^{11}$: the same, with whole subtrees cut; there are no candidates of rank $\\ge8$: every candidate has $|\\Phi(Q)|\\ge16$ (Prop. [[prop:rank8|#]]).</li>
 </ul>
 <h2 id="c3">$3$-groups: is $D_5(Q)=\\gamma_5(Q)$?</h2>
 <p>This is the question of $3$-torsion in $D_5/\\gamma_5$ (Tahara: the exponent divides $6$). The “paper” cells are closed thus:
