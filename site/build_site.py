@@ -720,8 +720,8 @@ OPEN = [  # (id, ru, en, task): the id is the anchor on open.html; task is the D
      "Is there $3$-torsion in $D_5/\\gamma_5$, i.e. is Tahara's bound $6$ attained? A minimal example has order $\\ge3^{10}$, class $4$, cyclic centre and at least two invariants $\\ge9$ in $Q/\\gamma_2$.", "D5-4"),
     ("q-c9c9", "Следующий случай: у $Q/\\gamma_2$ два инварианта $\\ge9$, например $C_9\\times C_9\\times C_3$. Там $\\gamma_2/\\gamma_3$ может иметь экспоненту $9$, и доказательство теоремы [[thm:exp3plus|#]] не проходит.",
      "The next case: $Q/\\gamma_2$ with two invariants $\\ge9$, e.g. $C_9\\times C_9\\times C_3$. There $\\gamma_2/\\gamma_3$ may have exponent $9$, and the proof of Theorem [[thm:exp3plus|#]] does not go through.", "D5-5"),
-    ("q-theoremc", "Групповой аналог теоремы C: $D_{2c-1}(G)=1$ для метабелевых групп ступени $\\le c$? Открыто при $p=2$, $c\\ge3$ и при нечётном $p$, $c\\ge p+2$.",
-     "The group analogue of Theorem C: $D_{2c-1}(G)=1$ for metabelian groups of class $\\le c$? Open for $p=2$, $c\\ge3$ and for odd $p$, $c\\ge p+2$.", "D5-7"),
+    ("q-theoremc", "Групповой аналог теоремы C: $D_{2c-1}(G)=1$ для метабелевых групп ступени $\\le c$? Для нечётных простых ответ положительный при всех $c$ (Гупта, 1991); открыт случай $p=2$, $c\\ge3$.",
+     "The group analogue of Theorem C: $D_{2c-1}(G)=1$ for metabelian groups of class $\\le c$? For odd primes the answer is yes for every $c$ (Gupta, 1991); open for $p=2$, $c\\ge3$.", "D5-7"),
     ("q-central", "Центральные произведения со склейкой по собственной подгруппе, когда $\\sigma$ не является $2^{j+1}$-й степенью: $12$ из $212$ разложений кандидатов порядков $2^8$–$2^9$ ничем не покрыты. Проекцией на $H$ это в общем случае не сделать: у $D_8\\circ_{\\langle t\\rangle}M_{16}$ кольцевое равенство нарушено при $n=4,5$.",
      "Central products glued along a proper subgroup when $\\sigma$ is not a $2^{j+1}$-th power: $12$ of the $212$ splittings of candidates of orders $2^8$–$2^9$ are covered by nothing. A projection to $H$ cannot do it in general: for $D_8\\circ_{\\langle t\\rangle}M_{16}$ the ring equality fails at $n=4,5$.", "D5-8"),
 ]
