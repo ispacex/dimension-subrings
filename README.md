@@ -58,6 +58,7 @@ $\le 3^6$, a sample of order $3^7$), $D_5/\gamma_5$ has no 3-torsion for any fin
 |---|---|
 | [`compute/`](compute/README.md) | `dimsub.py` (lattices $\Delta^n$ mod $p^E$, Howell form, $D_n$), the SmallGroups runs, independent checks (methods B and C), result tables |
 | [`compute/pq1024/`](compute/pq1024/README.md) | order $2^{10}$: the lemma, the ANUPQ search, the lattices of the candidates |
+| [`compute/cert1024/`](compute/cert1024/README.md) | order $2^{10}$: certificates that the $3400$ candidates have $D_4 = D_5 = 1$, checked in Lean (`native_decide`) |
 | [`compute/pq2048/`](compute/pq2048/README.md) | order $2^{11}$: conditions (Г), (Г$_N$) with proofs, their checks, the search by rank |
 | [`compute/magnus/`](compute/magnus/README.md) | truncated Magnus algebra, a Rips-type family, a 3-torsion sieve |
 | [`groups/`](https://github.com/ispacex/group-dimension) | Lean 4 / Mathlib: $D_n(G)$, $\gamma_n \subseteq D_n$, $D_2 = \gamma_2$, the reduction to class 3, Jennings' inclusion, Theorems 6.6 and 6.8, the group side of the Lie comparison (the Lie theorem itself only at tag `lean-v4.29`); a submodule — the standalone Lake package [ispacex/group-dimension](https://github.com/ispacex/group-dimension) (`require`-able, history kept; Lean/Mathlib v4.35.0 with modules, submitted to the [Palomar registry](https://palomar-registry.org)) |
