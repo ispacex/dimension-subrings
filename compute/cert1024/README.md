@@ -60,6 +60,7 @@ order of `PqDescendants` alone; it prints the ANUPQ version and binary used. $E$
 | rerun from this commit (29e98ed): `export_pc.g` with the per-parent candidate check, output byte-identical to `pc1024.jsonl.gz`; `lines_from_lean.sh` on group-dimension `13e41a1` (sha256 `be1729b9…0529`); `verify_lines.g` | `20261023-091943-cert-reexport-verify-29e98ed` | 4.7 + 7.5 min; 3400 lines, 0 failed relations |
 | Lean at group-dimension `13e41a1`: `lake build GroupDimension.Cert1024.Prop1024` (34 chunks, `native_decide`) and both axiom audits | `20261023-091934-gd-cert-13e41a1` | 28 min on 6 cores (about 2.6 CPU-h), 2–9 s per candidate |
 | Lean v4.35 (module system), group-dimension `3edf124` (merge of main): the same build and audits | `20261023-100907-gd-cert` (tree = `3edf124`, uncommitted at the time); replay of the committed `3edf124` on its cache: `20261023-103740-gd-review34-v435-3edf124`, nothing rebuilt | 24 min on 6 cores |
+| Pruned nilpotency check (spanning sets of $\Delta^d V$, kernel-checked `nilSpan_sound`), group-dimension `57d99d9` (#7): fresh build of `GroupDimension.Cert1024.Data.All`; data unchanged (0-line diff to `bc56772`), so `verify_lines.g` above still applies | kimmy, run by hand (baseline `bc56772` measured the same way: 23.5 min, 8016 s user) | 3.5 min on 6 cores (1150 s user); on average 371 matrix–vector products per candidate, at most 790 |
 
 Sizes: $r$ (number of cyclic factors of $V$) from $3$ to $19$, median $10$; entries $< 2^7$.
 
