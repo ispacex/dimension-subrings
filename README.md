@@ -60,7 +60,7 @@ $\le 3^6$, a sample of order $3^7$), $D_5/\gamma_5$ has no 3-torsion for any fin
 | [`compute/pq1024/`](compute/pq1024/README.md) | order $2^{10}$: the lemma, the ANUPQ search, the lattices of the candidates |
 | [`compute/pq2048/`](compute/pq2048/README.md) | order $2^{11}$: conditions (Г), (Г$_N$) with proofs, their checks, the search by rank |
 | [`compute/magnus/`](compute/magnus/README.md) | truncated Magnus algebra, a Rips-type family, a 3-torsion sieve |
-| [`groups/`](https://github.com/ispacex/group-dimension) | Lean 4 / Mathlib: $D_n(G)$, $\gamma_n \subseteq D_n$, $D_2 = \gamma_2$, the reduction to class 3, comparison with the Lie case; a submodule — the standalone Lake package [ispacex/group-dimension](https://github.com/ispacex/group-dimension) (`require`-able, history kept) |
+| [`groups/`](https://github.com/ispacex/group-dimension) | Lean 4 / Mathlib: $D_n(G)$, $\gamma_n \subseteq D_n$, $D_2 = \gamma_2$, the reduction to class 3, Jennings' inclusion, Theorems 6.6 and 6.8; a submodule — the standalone Lake package [ispacex/group-dimension](https://github.com/ispacex/group-dimension) (`require`-able, history kept; Lean/Mathlib v4.35.0 with modules, submitted to the [Palomar registry](https://palomar-registry.org)) |
 | [`notes/`](notes/formalization-audit.md) | an audit of the Lie-ring formalization against the paper |
 | [`scripts/`](scripts/build-audit.sh) | `build-audit.sh`: build the authors' formalization and print its axioms |
 | [`remote/`](remote/README.md) | running long jobs on a remote Linux box |
@@ -84,12 +84,13 @@ micromamba create -p ./env -c conda-forge gap-defaults pari python=3.12 numpy
 ./run_export.sh 64 1 267 all data/g64.jsonl
 env/bin/python run.py data/g64.jsonl out/A64.jsonl --jobs 8
 
-# Lean: Mathlib from its cache, then the project and the needed part of the authors' package
+# Lean: Mathlib from its cache, then the project
 cd ../groups && lake exe cache get && lake build
 ```
 
 Versions: GAP 4.15.1 with SmallGroups 1.5.4 and ANUPQ, PARI/GP 2.17.3, Python 3.12 with NumPy,
-Lean v4.29.0 and Mathlib v4.29.0. Each subdirectory's README has its own commands; long runs
+Lean v4.35.0 and Mathlib v4.35.0 for `groups/` (the audit of the authors' formalization in
+`scripts/` uses its own v4.29.0). Each subdirectory's README has its own commands; long runs
 can go to a remote machine through [`remote/`](remote/README.md).
 
 ## Related
