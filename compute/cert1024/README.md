@@ -9,7 +9,7 @@ not certified; it stays [computer] and is an explicit hypothesis of the Lean the
 
 ## The certificate
 
-For a candidate $Q$ with its ANUPQ pc presentation on $g_1,\dots,g_{10}$ (relative orders $2$):
+For a candidate $Q$ with its ANUPQ pc presentation on $g_1,\dots,g_{10}$ (relative orders $2$; the Lean code and the paper index them $g_0,\dots,g_9$):
 
 * a finite abelian group $V = \bigoplus_{i<r} \mathbb Z/2^{a_i}$;
 * integer $r\times r$ matrices $C_1,\dots,C_{10}$, the action of the $g_k$ on $V$.
