@@ -32,7 +32,11 @@ $T = \mathbb Z/2^E\langle X_1..X_d\rangle_{<4}$ let $J$ be the two-sided ideal o
 $T/J = (\mathbb Z/2^E)[Q]/\Delta^4$; $w = \mu(n) - 1\notin J$ since $n\notin D_4(Q)$. A left ideal
 $L\supseteq J$ with $w\notin L$ is enlarged greedily, and $V = T/L$ in Smith coordinates. Every
 nontrivial normal subgroup of a candidate contains $n$, which acts nontrivially on $V$, so $V$ is
-faithful — which is why check 5 passes. $E$ is the least exponent that works ($2$–$7$, mostly $3$).
+faithful — which is why check 5 passes.
+
+`export_pc.g` reruns the `desc1.g` filter over all step-1 descendants of every parent and stops
+unless it selects exactly the $k$ of `cands.txt`, so the link to `candidates.csv` does not rest on the
+order of `PqDescendants` alone; it prints the ANUPQ version and binary used. $E$ is the least exponent that works ($2$–$7$, mostly $3$).
 
 ## Files
 
@@ -44,7 +48,8 @@ faithful — which is why check 5 passes. $E$ is the least exponent that works (
 | `gen_cert.py` | builds the certificates and checks them itself (same checks 1–5, numpy) |
 | `cert1024.jsonl.gz` | the $3400$ certificates: `mods` $a_i$, `mats` $C_k$, $E$, $r$ |
 | `emit_lean.py` | writes `GroupDimension/Cert1024/Data/*.lean` of group-dimension (34 chunks of 100 lines) |
-| `verify_lines.g` | GAP cross-check (input: the lines of the Lean data, `grep -o '^  "[0-9][^"]*"' Data/C*.lean \| tr -d '"'`): the relations of each Lean data line hold in the ANUPQ group (so the Lean group, of order $2^{10}$, is isomorphic to it) |
+| `lines_from_lean.sh` | extracts the data lines from the Lean files (`sh lines_from_lean.sh <group-dimension>/GroupDimension/Cert1024/Data > lines.txt`; for group-dimension `13e41a1` the sha256 is `be1729b9…0529`) |
+| `verify_lines.g` | GAP cross-check (input: `lines.txt`; it also checks the token count of each line): the relations of each Lean data line hold in the ANUPQ group (so the Lean group, of order $2^{10}$, is isomorphic to it) |
 
 ## Runs (kimmy, through tm)
 

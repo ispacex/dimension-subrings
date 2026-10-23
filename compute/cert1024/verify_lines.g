@@ -12,7 +12,10 @@ VL_Run := function()
   curp := -1; bad := 0; n := 0;
   for s in lines do
     xs := List(SplitString(s, " "), Int);
+    if fail in xs then Error("token ", s{[1..20]}); fi;
     id := xs[1]; parent := QuoInt(id, 1000); k := id mod 1000; m := xs[2];
+    l := xs[3 + m + m * (m - 1) / 2];
+    if m <> 10 or Length(xs) <> 3 + m + m * (m - 1) / 2 + l + m * l * l then Error("length ", id); fi;
     if parent <> curp then curp := parent; D := MS_Desc(SmallGroup(512, curp), 1); fi;
     Q := D[k]; g := AsList(Pcgs(Q));
     if Length(g) <> m or Size(Q) <> 2^m then Error("size ", id); fi;

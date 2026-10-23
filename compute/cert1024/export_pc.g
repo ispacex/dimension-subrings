@@ -11,6 +11,9 @@
 #   n          = exponents of the involution of Z(Q) (MS_MonoInvolution: cyclic centre, in γ3 ∩ M5)
 #   words[k]   = g_k as a word in g_1..g_d (letter list, ±index), for the Magnus algebra
 #   checks     = class, |Q|, relative orders, whether g_1..g_d generate Q.
+# For every parent the desc1.g filter (class 3, cyclic centre, MS_MonoInvolution) is rerun over all
+# its step-1 descendants, and the run stops unless the k it selects are exactly those of INFILE:
+# so the link to candidates.csv does not rest on the order of PqDescendants alone.
 Read("../pq1024/lib.g");
 ReadWords := function(file)
   local s, lines;
@@ -30,12 +33,18 @@ Js := l -> ReplacedString(String(l), " ", "");;
 CE_Run := function()
   local rows, out, curp, D, r, Q, pcgs, m, d, n, F, hom, pw, cj, i, j, words, gen, t0;
   rows := ReadWords(INFILE);
+  Print("ANUPQ ", PackageInfo("anupq")[1].Version, " binary ", ANUPQData.binary, "\n");
   out := OutputTextFile(OUTFILE, false); SetPrintFormattingStatus(out, false);
   curp := -1; t0 := Runtime();
   for r in rows do
     if r[1] <> curp then
       curp := r[1];
       D := MS_Desc(SmallGroup(512, curp), 1);
+      if Filtered([1 .. Length(D)], j -> NilpotencyClassOfGroup(D[j]) = 3 and
+           IsCyclic(Centre(D[j])) and MS_MonoInvolution(D[j]) <> fail) <>
+         List(Filtered(rows, x -> x[1] = curp), x -> x[2]) then
+        Error("the candidates of parent ", curp, " differ from INFILE");
+      fi;
     fi;
     Q := D[r[2]];
     if 1000 * r[1] + r[2] <> r[3] then Error("id"); fi;
