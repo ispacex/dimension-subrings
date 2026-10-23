@@ -57,8 +57,8 @@ order of `PqDescendants` alone; it prints the ANUPQ version and binary used. $E$
 |---|---|---|
 | `export_pc.g`, 3400 candidates (1646 parents) | `20261023-064616-cert-exp-all` | 4.4 min GAP |
 | `gen_cert.py --jobs 2` | `20261023-070158-cert-gen-all` | 40 CPU-min (max 3.1 s per group); all self-checks pass |
-| `verify_lines.g` (GAP cross-check of the Lean lines) | `20261023-072940-cert-verify-lines` | 7.5 min; 3400 lines, 0 failed relations |
-| Lean: `lake build GroupDimension.Cert1024.Prop1024` (34 chunks, `native_decide`) | `20261023-072917-gd-cert` | 2.6 CPU-h (29 min on 6 cores), 2–9 s per candidate |
+| rerun from this commit (29e98ed): `export_pc.g` with the per-parent candidate check, output byte-identical to `pc1024.jsonl.gz`; `lines_from_lean.sh` on group-dimension `13e41a1` (sha256 `be1729b9…0529`); `verify_lines.g` | `20261023-091943-cert-reexport-verify-29e98ed` | 4.7 + 7.5 min; 3400 lines, 0 failed relations |
+| Lean at group-dimension `13e41a1`: `lake build GroupDimension.Cert1024.Prop1024` (34 chunks, `native_decide`) and both axiom audits | `20261023-091934-gd-cert-13e41a1` | 28 min on 6 cores (about 2.6 CPU-h), 2–9 s per candidate |
 
 Sizes: $r$ (number of cyclic factors of $V$) from $3$ to $19$, median $10$; entries $< 2^7$.
 
