@@ -147,13 +147,14 @@ gives the same answer. Tables by chunk and by candidate — `../pq1024/results/`
    Bartholdi–Mikhailov, $3^{494}$) by large normal subgroups. The goal is to find the smallest
    order at which $D_4 \ne \gamma_4$ is already visible, to calibrate how far a possible
    counterexample to $D_5 \subseteq \gamma_4$ may be.
-   **Rips: done ([MATH-39](https://default.kaiku.tech/issue/MATH-39), [`../magnus/README.md`](../magnus/README.md), `tah.g` …
+   **Rips: subgroups done, quotients sampled ([MATH-39](https://default.kaiku.tech/issue/MATH-39), [`../magnus/README.md`](../magnus/README.md), `tah.g` …
    `tahfam.g`).** Rips's group, taken from Tahara's presentation (1978, §3, $k=2$, $\ell=0$), has
    $D_4 = \{1, w\}$, $w = y_1^{128}$ (certified), and $\Omega_1(Z) = \langle w\rangle$. All 15
    maximal subgroups and $G/\langle w\rangle$ have $D_4 = 1$. Hence every proper subgroup has
    $D_4 = 1$, and no proper quotient keeps $w$. Random descents through 26 147 quotients
    (with repetitions) found no new $D_4 \ne 1$. A hill climb over the exponents of Tahara's
-   template found nothing below $2^{38}$. So the quotients of Rips's group give no calibration
+   template found nothing below $2^{38}$. So the sections of Rips's group checked give no calibration
    below $2^{38}$: among the examples we know, Rips's group is still the smallest with
-   $D_4 \ne \gamma_4$. That all proper quotients have $D_4 = 1$ is checked only on a sample.
+   $D_4 \ne \gamma_4$. That all proper quotients have $D_4 = 1$ is checked only on a sample, and proper sections
+   $H/N$ with $H < G$, $N \ne 1$ are not checked.
    Bartholdi–Mikhailov: not done.

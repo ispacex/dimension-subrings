@@ -5,7 +5,8 @@
 #   [x_q,y_q] = y1^t_q (q = 2,3,4), all other [x_i,y_q] = 1,
 #   x1^b1 = y2^u1, x2^b2 = y3^u2 y4^v2, x3^b3 = y2^u3 y4^v3, x4^b4 = y2^u4 y3^v4.
 # The group is the largest finite 2-quotient of this presentation (it may collapse).
-# Hill climb from Rips's values: change one exponent (halve, double, negate, set to 0 or 1),
+# Hill climb from Rips's values: change exponents (orders halved twice as often as doubled; others halved,
+# doubled, negated, set to 0 or +-1; two changes per proposal),
 # accept if D_4 != 1 and the order does not grow. Prints every accepted improvement.
 Read("../pq1024/latb/export_pres.g");
 Read("d4lib.g");
@@ -46,7 +47,7 @@ Mutate := function(c)
   return d;
 end;
 OK := Q -> RankPGroup(Q) = 4 and NilpotencyClassOfGroup(Q) = 3;
-if IsBound(NOCLIMB) then return; fi;
+if IsBound(NOCLIMB) then return; fi;   # tahfam.g reads only the template (top-level return ends Read)
 cur := RIPS; Q := TahShape(cur); dQ := D4Orders([Q])[1];
 Print("start ", Desc(Q, dQ), "\n");
 for round in [1..NROUND] do

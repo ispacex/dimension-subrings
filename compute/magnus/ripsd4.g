@@ -1,4 +1,4 @@
-# MATH-39: quotients of Rips's group (Tahara 1978, k=2, l=0) with D_4 != 1 (= gamma_4, class 3).
+# MATH-39: sections of Rips's group (Tahara 1978, k=2, l=0) with D_4 != 1 (= gamma_4, class 3).
 # D_4(Q) <= D_3(Q) = gamma_3(Q), so D_4(Q) is found by testing every element of gamma_3(Q)
 # with the truncated Magnus algebra (../pq1024/latb/magnus_pres.py, Howell form mod 2^E).
 # Random descent over sections: from X, try every maximal subgroup and X/<z> for every z of order 2

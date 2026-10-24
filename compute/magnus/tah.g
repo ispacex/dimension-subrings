@@ -1,4 +1,6 @@
 # Tahara 1978 (Nagoya Math. J. 69), sec. 3: family of order 2^(8k+22+l); k=2,l=0 is Rips's group.
+# Comm(a,b) = a^-1 b^-1 a b in GAP, taken to be Tahara's [a,b]; the orders and |D_4| it gives
+# agree with Tahara for (k,l) = (2,0), (2,1), (3,0).
 TahGroup := function(k, l)
   local F, x1,x2,x3,x4,y1,y2,y3,y4, rels, al, be, xs, ys, i, j;
   F := FreeGroup("x1","x2","x3","x4","y1","y2","y3","y4");
