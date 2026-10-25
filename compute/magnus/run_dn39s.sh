@@ -10,5 +10,7 @@ done
 wait
 { grep -H -m3 "Error" "$OUTD"/gap_*.out && echo "GAP ERROR"
   grep -h "^3\^8 ids" "$OUTD"/gap_*.out
+  got=$(grep -h "^3\^8 ids" "$OUTD"/gap_*.out | sed 's/.*groups=\([0-9]*\).*/\1/' | paste -sd+ - | bc)
+  [ "$got" = "$N8" ] && echo "groups complete: $got" || echo "groups INCOMPLETE: $got of $N8"
   cat "$OUTD"/dn39s_*.csv | awk -F, '$NF=="true" {n++; m[$4]++; h+=(3^$4-1)/2} END {print "pass:", n, "hyperplanes in all:", h; for (k in m) print "  log3|M| =", k, ":", m[k]}'
 } | tee "$OUTD/summary.txt"

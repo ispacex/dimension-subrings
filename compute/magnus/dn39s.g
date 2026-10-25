@@ -39,7 +39,7 @@ DN39S := function(from, to, out)
       String(inM), ",", String(pass), "\n"));
   od;
   CloseStream(f);
-  Print("3^8 ids ", from, "..", to, ": groups=", to - from + 1, " parents (d 2..5, class >= 4)=", np,
+  Print("3^8 ids ", from, "..", to, ": groups=", Minimum(to, NrSmallGroups(3^8)) - from + 1, " parents (d 2..5, class >= 4)=", np,
         " pass=", npass, " sec=", Int((Runtime() - t) / 1000), "\n");
 end;;
 DN39S(FROM, TO, OUT);
