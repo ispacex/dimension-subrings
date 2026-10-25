@@ -160,8 +160,10 @@ gives the same answer. Tables by chunk and by candidate — `../pq1024/results/`
    Bartholdi–Mikhailov ([MATH-403](https://default.kaiku.tech/issue/MATH-403), [`../magnus/bm494/`](../magnus/bm494/README.md)):
    their 3-group is an example of $D_7 \ne \gamma_7$, not of $D_4 \ne \gamma_4$. It has class 6, so
    $\gamma_7 = 1$, and its witness $w$ has order 3. The centre is $C_3 \times C_{3^{15}}$ with $w$ in its
-   Frattini subgroup, so every maximal subgroup of the centre contains $w$. This is why their descent
-   stops at $3^{494}$. A central subgroup $\langle u\rangle$ of order 3 with $u \notin \langle w\rangle$
-   (there are 3) gives $G/\langle u\rangle$ of order $3^{493}$ with $w \ne 1$, hence $D_7 \ne \gamma_7$.
-   Its centre is cyclic, so none of its proper quotients keeps $w$. Subgroups and new witnesses in
-   quotients are not checked. That $w \in D_7$ is BM's Prop. 9.2, not our computation.
+   Frattini subgroup, so no subgroup of index 3 in the centre avoids $w$; this is consistent with
+   their descent (by maximal subgroups of the centre not containing $w$) stopping at $3^{494}$.
+   A central subgroup $\langle u\rangle$ of order 3 with $u \notin \langle w\rangle$ (there are 3) still
+   gives $G/\langle u\rangle$ of order $3^{493}$ with $w \ne 1$, hence $D_7 \ne \gamma_7$. Its centre is
+   cyclic, so none of its proper quotients keeps $w$; these three cover all quotients of $G$ keeping $w$.
+   Subgroups, and new witnesses in quotients, are not checked. That $w \in D_7$ is BM's argument
+   (Prop. 9.2; the group (9.2) maps to $G$, $\omega \mapsto w$), not our computation.

@@ -1,6 +1,6 @@
-# MATH-403: why BM's descent (by maximal subgroups of the centre avoiding w) stops at 3^494, and the
+# MATH-403: w in Phi(Z(G)), so no subgroup of index 3 in Z(G) avoids w (BM's descent, read literally), and the
 # three quotients G/<u>, |u| = 3, u in Omega_1(Z(G)) \ <w>: their centres and Omega_1.
-Read("3group.gap");
+Read("../3group.gap");
 W := EvalString(w);;
 ZG := Centre(G);;
 Print("w in Agemo(Z,3) = Phi(Z): ", W in Agemo(ZG, 3), "\n");
