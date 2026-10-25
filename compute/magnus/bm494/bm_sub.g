@@ -9,9 +9,9 @@
 # fail.  Set LEVEL0 := true;; to also include G itself.
 Read("../3group.gap");
 W := EvalString(w);;
-X := [x1, x2, x3, x4];;
-Y2 := [x1, x2^9, x3^81, x4^729];;
-Y3 := [LeftNormedComm([z2,z4,z1]), LeftNormedComm([z2,z4,z2]), LeftNormedComm([z2,z4,z3]), LeftNormedComm([z2,z4,z4])];;
+XS := [x1, x2, x3, x4];;
+YS2 := [x1, x2^9, x3^81, x4^729];;
+YS3 := [LeftNormedComm([z2,z4,z1]), LeftNormedComm([z2,z4,z2]), LeftNormedComm([z2,z4,z3]), LeftNormedComm([z2,z4,z4])];;
 Print("in G: relations of (9.2) as in the file: ", ForAll(rels, r -> EvalString(r)), "\n");
 # fail list: 0 = all hold, else the positions (1..4 for Y2, 5..8 for Y3) that fail
 Check := function(H, y2, y3)
@@ -40,7 +40,7 @@ if IsBound(LEVEL0) and LEVEL0 then Add(cases, ["G", IdentityMapping(G)]); fi;
 for k in [1..Length(us)] do Add(cases, [Concatenation("G/<u", String(k), ">"), NaturalHomomorphismByNormalSubgroupNC(G, Group(us[k]))]); od;
 for c in cases do
   hom := c[2]; Q := Image(hom);
-  xs := List(X, x -> Image(hom, x)); y2 := List(Y2, y -> Image(hom, y)); y3 := List(Y3, y -> Image(hom, y));
+  xs := List(XS, x -> Image(hom, x)); y2 := List(YS2, y -> Image(hom, y)); y3 := List(YS3, y -> Image(hom, y));
   wQ := Image(hom, W);
   t := Runtime();
   Print(c[1], ": log3|Q| = ", Log(Size(Q), 3), ", w <> 1: ", not IsOne(wQ), ", fails in Q itself: ", Check(Q, y2, y3), "\n");
