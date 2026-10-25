@@ -1,7 +1,8 @@
 # MATH-403: subgroups and sections of the Bartholdi-Mikhailov 3-group with the witness w kept in D_7.
 # BM's proof of Prop. 9.2 uses only: e_0 = x1, e_1 = x2, e_2 = x3, e_3 = x4 lie in H, and
 #   (C2) x1, x2^9, x3^81, x4^729 lie in gamma_2(H)    (BM: e_i^(3^(2i)) = y_i of degree 2),
-#   (C3) the y_ij = [z2,z4,z1], [z2,z4,z2], [z2,z4,z3], [z2,z4,z4] lie in gamma_3(H)   (degree 3),
+#   (C3) the y_ij = [z2,z4,z1], [z2,z4,z2], [z2,z4,z4] lie in gamma_3(H)   (degree 3; the file's choice of
+#        witnesses for (2,3), (1,3), (0,2), y_01 = 1; [z2,z4,z3] is the file's extra pair (1,2), also tested),
 # the relations of (9.2) being identities in G.  Then w in D_7(H); with gamma_7(H) <= gamma_7(G) = 1
 # and w <> 1, H has D_7 <> gamma_7.  (C2), (C3) pass to quotients H/N, and w survives if w notin N.
 # This file: for each Q = G/<u> of order 3^493 (bm_final.g), check (C2), (C3) in Q (positive control)
@@ -13,7 +14,7 @@ XS := [x1, x2, x3, x4];;
 YS2 := [x1, x2^9, x3^81, x4^729];;
 YS3 := [LeftNormedComm([z2,z4,z1]), LeftNormedComm([z2,z4,z2]), LeftNormedComm([z2,z4,z3]), LeftNormedComm([z2,z4,z4])];;
 Print("in G: relations of (9.2) as in the file: ", ForAll(rels, r -> EvalString(r)), "\n");
-# fail list: 0 = all hold, else the positions (1..4 for Y2, 5..8 for Y3) that fail
+# fail list: [] = all hold, else the positions (1..4 for Y2, 5..8 for Y3) that fail
 Check := function(H, y2, y3)
   local D, L3, bad;
   D := DerivedSubgroup(H);
@@ -35,7 +36,7 @@ us := [];;
 for u in AsList(O) do
   if not IsOne(u) and not u in Group(W) and ForAll(us, v -> not u in Group(v)) then Add(us, u); fi;
 od;
-cases := [];;
+cases := [];; hom := fail;;
 if IsBound(LEVEL0) and LEVEL0 then Add(cases, ["G", IdentityMapping(G)]); fi;
 for k in [1..Length(us)] do Add(cases, [Concatenation("G/<u", String(k), ">"), NaturalHomomorphismByNormalSubgroupNC(G, Group(us[k]))]); od;
 for c in cases do
