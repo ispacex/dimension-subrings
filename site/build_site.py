@@ -1766,15 +1766,15 @@ notebook, not to the preprint (whose numbering may differ).</small></p></div>"""
     P("paper.html", t("Черновик статьи", "Paper draft"), versions + t(f"""
 <p>Версия от {pdate['ru']}. Читать: <a href="viewer.html"><b>по-русски</b></a> ({pdfs.get('d5-ru')} с.),
 <a href="../viewer.html" hreflang="en"><b>по-английски</b></a> ({pdfs.get('d5')} с.); скачать PDF: <a href="paper/d5-ru.pdf">RU</a>,
-<a href="paper/d5.pdf">EN</a>. Это черновик: статус каждого утверждения отмечен в тексте
-(<b>[Lean]</b>, <b>[на бумаге]</b>, <b>[компьютер]</b>, <b>[открыто]</b>).</p>
+<a href="paper/d5.pdf">EN</a>. Какие результаты получены с помощью компьютера, а какие формально проверены в Lean, сказано во введении
+(абзац «Соглашения о доказательствах») и в самих доказательствах.</p>
 <p><small>На любое место статьи можно сослаться: <code>viewer.html#nameddest=thm:small</code> открывает теорему с меткой
 <code>thm:small</code>, <code>viewer.html#page=6</code>&nbsp;— страницу; метки&nbsp;— в содержании ниже (у каждого пункта есть и якорь
 на этой странице). То же работает с самим PDF: <code>paper/d5-ru.pdf#nameddest=thm:small</code>.</small></p>""", f"""
 <p>Version of {pdate['en']}. Read it: <a href="viewer.html"><b>in English</b></a> ({pdfs.get('d5')} pp.),
 <a href="ru/viewer.html" hreflang="ru"><b>in Russian</b></a> ({pdfs.get('d5-ru')} pp.); download the PDF: <a href="paper/d5.pdf">EN</a>,
-<a href="paper/d5-ru.pdf">RU</a>. This is a draft: the status of every statement is marked in the text
-(<b>[Lean]</b>, <b>[paper]</b>, <b>[computer]</b>, <b>[open]</b>).</p>
+<a href="paper/d5-ru.pdf">RU</a>. Which results are computer-assisted and which are formally verified in Lean is stated in the introduction
+(paragraph “Conventions on proofs”) and in the proofs themselves.</p>
 <p><small>Any place of the paper can be linked to: <code>viewer.html#nameddest=thm:small</code> opens the theorem labelled
 <code>thm:small</code>, <code>viewer.html#page=6</code> a page; the labels are in the contents below (each entry also has an anchor
 on this page). The same works with the PDF itself: <code>paper/d5.pdf#nameddest=thm:small</code>.</small></p>""") + t("<h2>Аннотация</h2>", "<h2>Abstract</h2>")
