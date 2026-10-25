@@ -718,6 +718,9 @@ RESULTS = [  # (status, ru, en, ref): ref is a str or (ru, en); [[label]] is a l
     ("c", "$3$-кручение: $3$-группа Бартольди–Михайлова с $D_7\\ne\\gamma_7$ имеет порядок $3^{494}$, но три её фактора по центральным подгруппам порядка $3$, не содержащим свидетеля $\\omega$, имеют порядок $3^{493}$ и $D_7\\ne\\gamma_7$, так что $3^{494}$ — не наименьший порядок $3$-группы с $D_7\\ne\\gamma_7$; всякий собственный фактор этих трёх групп убивает $\\omega$. Что $\\omega\\in D_7$, следует из предложения 9.2 Бартольди–Михайлова через отображение их группы (9.2) в $G$ (не сюръективное). Подгруппы обеих групп и новые свидетели в факторах не проверялись (" + gh("compute/magnus/bm494/README.md", "код") + ").",
      "$3$-torsion: the Bartholdi–Mikhailov $3$-group with $D_7\\ne\\gamma_7$ has order $3^{494}$, but its three quotients by central subgroups of order $3$ not containing the witness $\\omega$ have order $3^{493}$ and $D_7\\ne\\gamma_7$, so $3^{494}$ is not the least order of a $3$-group with $D_7\\ne\\gamma_7$; every proper quotient of these three groups kills $\\omega$. That $\\omega\\in D_7$ follows from Bartholdi–Mikhailov's Prop. 9.2 via the map (not onto) from their group (9.2) to $G$. Subgroups of either group, and new witnesses in quotients, not checked (" + gh("compute/magnus/bm494/README.md", "code") + ").",
      ("[[sec:computations]]", "[[sec:computations]]")),
+    ("c", "$3$-кручение: $3$-группа с $D_n\\ne\\gamma_n$ (при каком-либо $n$) имеет порядок $\\ge3^9$. Пример наименьшего порядка имеет циклический центр, его цоколь лежит в $D_{c+1}\\cap Q''\\cap M_{c+1}$ ($c$ — ступень); ступень $4$ закрыта до $3^9$ теоремой о $D_5$, а у всех $1035$ групп порядков $3^6$–$3^8$ ступени $\\ge5$, удовлетворяющих этим условиям, $D_{c+1}=1$ (" + gh("compute/magnus/README.md", "код") + ").",
+     "$3$-torsion: a $3$-group with $D_n\\ne\\gamma_n$ (for some $n$) has order $\\ge3^9$. A least-order example has cyclic centre and its socle lies in $D_{c+1}\\cap Q''\\cap M_{c+1}$ ($c$ the class); class $4$ is settled up to $3^9$ by the $D_5$ theorem, and all $1035$ groups of order $3^6$–$3^8$ and class $\\ge5$ that meet these conditions have $D_{c+1}=1$ (" + gh("compute/magnus/README.md", "code") + ").",
+     ("[[sec:open]], вопрос [[oq:torsion|#]]", "[[sec:open]], question [[oq:torsion|#]]")),
     ("c", "Групповой аналог теоремы C при $c=4$: у группы плато $D_6\\ne1$, но $D_7=1$, так что $2c-2$ достигается и аналог, если верен, точен (<a href=\"open.html#q-theoremc\">открытый вопрос</a>).",
      "The group analogue of Theorem C at $c=4$: the plateau group has $D_6\\ne1$ but $D_7=1$, so $2c-2$ is attained and the analogue, if true, is sharp (<a href=\"open.html#q-theoremc\">an open question</a>).",
      ("[[sec:open]], вопрос [[oq:theoremc|#]]", "[[sec:open]], question [[oq:theoremc|#]]")),
@@ -797,6 +800,8 @@ RUNS = [  # (what ru, what en, groups, result ru, result en, cost ru, cost en, c
      "$D_5=1$; $D_4\\ne1$ в трёх", "$D_5=1$; $D_4\\ne1$ in three", "", "", "compute/magnus"),
     ("факторы группы Рипса, $2^{38}$ и ниже (проверок, с повторениями)", "quotients of Rips's group, $2^{38}$ and below (checks, with repetitions)", 26147,
      "ни одного с $D_4\\ne1$ (выборка)", "none with $D_4\\ne1$ (a sample)", "$15$ мин на $8$ ядрах", "$15$ min on $8$ cores", "compute/magnus"),
+    ("$3$-группы порядков $3^6$–$3^8$ ступени $\\ge5$, после сита для $3$-кручения", "$3$-groups of order $3^6$–$3^8$ and class $\\ge5$, after the sieve for $3$-torsion", 1035,
+     "$D_{c+1}=1$ у всех", "$D_{c+1}=1$ in all", "$11$ мин на $10$ ядрах", "$11$ min on $10$ cores", "compute/magnus"),
 ]
 
 TIMELINE = [  # (iso date, [(ru, en)])
@@ -905,7 +910,9 @@ TIMELINE = [  # (iso date, [(ru, en)])
          "Rips's group from Tahara's 1978 presentation: $D_4=\\{1,y_1^{128}\\}$; every proper subgroup and every quotient checked has $D_4=1$, so the sections checked give no calibration below $2^{38}$ (proper sections $H/N$ not checked). " + gh("compute/magnus/README.md", "Code") + ".")]),
     ("2026-10-25", [
         ("$3$-группа Бартольди–Михайлова с $D_7\\ne\\gamma_7$: порядок $3^{494}$ снижен до $3^{493}$ (три фактора по центральным подгруппам порядка $3$, не содержащим $\\omega$); у этих трёх групп циклический центр, так что ни один их собственный фактор свидетеля не сохраняет. Подгруппы и новые свидетели в факторах не проверялись. " + gh("compute/magnus/bm494/README.md", "Код") + ".",
-         "The Bartholdi–Mikhailov $3$-group with $D_7\\ne\\gamma_7$: order $3^{494}$ brought down to $3^{493}$ (three quotients by central subgroups of order $3$ not containing $\\omega$); these three groups have cyclic centre, so none of their proper quotients keeps the witness. Subgroups, and new witnesses in quotients, not checked. " + gh("compute/magnus/bm494/README.md", "Code") + ".")]),
+         "The Bartholdi–Mikhailov $3$-group with $D_7\\ne\\gamma_7$: order $3^{494}$ brought down to $3^{493}$ (three quotients by central subgroups of order $3$ not containing $\\omega$); these three groups have cyclic centre, so none of their proper quotients keeps the witness. Subgroups, and new witnesses in quotients, not checked. " + gh("compute/magnus/bm494/README.md", "Code") + "."),
+        ("$3$-группа с $3$-кручением в каком-либо $D_n/\\gamma_n$ имеет порядок $\\ge3^9$: сведение к примеру наименьшего порядка (циклический центр, цоколь в $D_{c+1}\\cap Q''\\cap M_{c+1}$) и перебор всех $3$-групп порядков $3^6$–$3^8$ ступени $\\ge5$; ступень $4$ — теорема о $D_5$ до $3^9$. " + gh("compute/magnus/README.md", "Код") + ".",
+         "A $3$-group with $3$-torsion in some $D_n/\\gamma_n$ has order $\\ge3^9$: a reduction to a least-order example (cyclic centre, socle in $D_{c+1}\\cap Q''\\cap M_{c+1}$) and a run over all $3$-groups of order $3^6$–$3^8$ and class $\\ge5$; class $4$ is the $D_5$ theorem up to $3^9$. " + gh("compute/magnus/README.md", "Code") + ".")]),
 ]
 
 
