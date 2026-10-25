@@ -5,7 +5,7 @@ homotopy groups of spheres*, J. Topology 16 (2023), arXiv:1805.10894 (v3, CC BY 
 group $G$ of order $3^{494}$ on $x_2, x_3, x_4, z_1, \dots, z_4$ ($x_1 = [z_1, z_2]$) and a word `w`.
 
 Why $w \in D_7(G)$. With $e_i = x_{i+1}$ and $y_i$, $y_{ij}$ the commutators of the $z$'s chosen in BM §9.3
-(in $\gamma_2$ and $\gamma_3$), the 9 relations of BM (9.2) (with $y_{01} = 1$) hold in $G$, and `w` equals BM's
+(in $\gamma_2$ and $\gamma_3$), the 8 relations of BM (9.2) (with $y_{01} = 1$) hold in $G$, as does the file's extra one for $(i,j) = (1,2)$, and `w` equals BM's
 $\omega = [e_2, e_1, e_0]^{3^9}$ in $G$ (both checked by `bm_check.g`). So the group (9.2) maps to $G$ (not
 onto: $G$ also needs the $z$'s), with $\omega \mapsto w$. BM Prop. 9.2 gives $\omega \in \delta_7$ there ($y_i$, $y_{ij}$
 of degrees 2 and 3), and the map sends $y_i - 1$, $y_{ij} - 1$ into $\varpi^2$, $\varpi^3$ of $\mathbb Z[G]$, so
@@ -13,7 +13,7 @@ $w \in D_7(G)$. This is BM's argument, not recomputed here.
 
 | File | What |
 |---|---|
-| `bm_check.g`, `run_check.sh` | all 9 relations hold, `w` $= [x_3, x_2, x_1]^{3^9}$; order $3^{494}$, rank 7, class 6 (so $\gamma_7 = 1$), lower central series $\log_3$ = 494, 435, 353, 162, 41, 6; $w = $ `f494^2` $\ne 1$, $w^3 = 1$; $Z(G) \cong C_3 \times C_{3^{15}}$, $\Omega_1(Z) \cong C_3^2 \ni w$; of its 4 subgroups of order 3, the 3 other than $\langle w\rangle$ keep $w \ne 1$ in the quotient |
+| `bm_check.g`, `run_check.sh` | all 9 relations of the file hold (the 8 of (9.2) and one for $(i,j) = (1,2)$), `w` $= [x_3, x_2, x_1]^{3^9}$; order $3^{494}$, rank 7, class 6 (so $\gamma_7 = 1$), lower central series $\log_3$ = 494, 435, 353, 162, 41, 6; $w = $ `f494^2` $\ne 1$, $w^3 = 1$; $Z(G) \cong C_3 \times C_{3^{15}}$, $\Omega_1(Z) \cong C_3^2 \ni w$; of its 4 subgroups of order 3, the 3 other than $\langle w\rangle$ keep $w \ne 1$ in the quotient |
 | `bm_final.g`, `run_final.sh` | $w \in Z(G)^3 = \Phi(Z(G))$, so no subgroup of index 3 in $Z(G)$ avoids $w$; the three $G/\langle u\rangle$, $u \in \Omega_1(Z) \setminus \langle w\rangle$, have order $3^{493}$, $w \ne 1$, $Z \cong C_{3^{15}}$, $\Omega_1(Z) = \langle w\rangle$ |
 | `bm_descent.g`, `run_descent.sh` | sanity check: random descents $Q \to Q/\langle u\rangle$, $u \in \Omega_1(Z(Q)) \setminus \langle w\rangle$, until $\Omega_1(Z(Q)) = \langle w\rangle$; `NSH=8` (tm, 4 min): every walk stops after one step, at $3^{493}$ |
 
