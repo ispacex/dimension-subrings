@@ -144,7 +144,7 @@ gives the same answer. Tables by chunk and by candidate — `../pq1024/results/`
    (4905 s) and B (157 s, three threads) of cflint-core, with $D_n = \gamma_n$ for all $n$ (the row
    above). By Gupta–Tahara 1985 and metabelianity it was no longer needed for $D_5$.
 3. **Quotients of known counterexamples** (Rips, $D_4 \ne \gamma_4$, order $2^{38}$;
-   Bartholdi–Mikhailov, $3^{494}$) by large normal subgroups. The goal is to find the smallest
+   Bartholdi–Mikhailov, $D_7 \ne \gamma_7$, $3^{494}$) by large normal subgroups. The goal is to find the smallest
    order at which $D_4 \ne \gamma_4$ is already visible, to calibrate how far a possible
    counterexample to $D_5 \subseteq \gamma_4$ may be.
    **Rips: subgroups done, quotients sampled ([MATH-39](https://default.kaiku.tech/issue/MATH-39), [`../magnus/README.md`](../magnus/README.md), `tah.g` …
@@ -157,4 +157,13 @@ gives the same answer. Tables by chunk and by candidate — `../pq1024/results/`
    below $2^{38}$: among the examples we know, Rips's group is still the smallest with
    $D_4 \ne \gamma_4$. That all proper quotients have $D_4 = 1$ is checked only on a sample, and proper sections
    $H/N$ with $H < G$, $N \ne 1$ are not checked.
-   Bartholdi–Mikhailov: not done.
+   Bartholdi–Mikhailov ([MATH-403](https://default.kaiku.tech/issue/MATH-403), [`../magnus/bm494/`](../magnus/bm494/README.md)):
+   their 3-group is an example of $D_7 \ne \gamma_7$, not of $D_4 \ne \gamma_4$. It has class 6, so
+   $\gamma_7 = 1$, and its witness $w$ has order 3. The centre is $C_3 \times C_{3^{15}}$ with $w$ in its
+   Frattini subgroup, so no subgroup of index 3 in the centre avoids $w$; this is consistent with
+   their descent (by maximal subgroups of the centre not containing $w$) stopping at $3^{494}$.
+   A central subgroup $\langle u\rangle$ of order 3 with $u \notin \langle w\rangle$ (there are 3) still
+   gives $G/\langle u\rangle$ of order $3^{493}$ with $w \ne 1$, hence $D_7 \ne \gamma_7$. Its centre is
+   cyclic, so none of its proper quotients keeps $w$; these three cover all quotients of $G$ keeping $w$.
+   Subgroups, and new witnesses in quotients, are not checked. That $w \in D_7$ is BM's argument
+   (Prop. 9.2; the group (9.2) maps to $G$, $\omega \mapsto w$), not our computation.
