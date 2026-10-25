@@ -803,7 +803,7 @@ RUNS = [  # (what ru, what en, groups, result ru, result en, cost ru, cost en, c
     ("$3$-группы порядков $3^6$–$3^8$ ступени $\\ge5$, после сита для $3$-кручения", "$3$-groups of order $3^6$–$3^8$ and class $\\ge5$, after the sieve for $3$-torsion", 1035,
      "$D_{c+1}=1$ у всех", "$D_{c+1}=1$ in all", "$11$ мин на $10$ ядрах", "$11$ min on $10$ cores", "compute/magnus"),
     ("$3$-группы порядка $3^9$ ступени $\\ge5$, после сита для $3$-кручения", "$3$-groups of order $3^9$ and class $\\ge5$, after the sieve for $3$-torsion", 27547,
-     "$D_{c+1}=1$ у всех", "$D_{c+1}=1$ in all", "$5{,}6$ ч на $10$ ядрах", "$5.6$ h on $10$ cores", "compute/magnus"),
+     "$D_{c+1}=1$ у всех", "$D_{c+1}=1$ in all", "$5$ ч $36$ мин на $10$ ядрах", "$5$ h $36$ min on $10$ cores", "compute/magnus"),
 ]
 
 TIMELINE = [  # (iso date, [(ru, en)])
@@ -915,7 +915,7 @@ TIMELINE = [  # (iso date, [(ru, en)])
          "The Bartholdi–Mikhailov $3$-group with $D_7\\ne\\gamma_7$: order $3^{494}$ brought down to $3^{493}$ (three quotients by central subgroups of order $3$ not containing $\\omega$); these three groups have cyclic centre, so none of their proper quotients keeps the witness. Subgroups, and new witnesses in quotients, not checked. " + gh("compute/magnus/bm494/README.md", "Code") + "."),
         ("$3$-группа с $3$-кручением в каком-либо $D_n/\\gamma_n$ имеет порядок $\\ge3^9$: сведение к примеру наименьшего порядка (циклический центр, цоколь в $D_{c+1}\\cap Q''\\cap M_{c+1}$) и перебор всех $3$-групп порядков $3^6$–$3^8$ ступени $\\ge5$; ступень $4$ — теорема о $D_5$ до $3^9$. " + gh("compute/magnus/README.md", "Код") + ".",
          "A $3$-group with $3$-torsion in some $D_n/\\gamma_n$ has order $\\ge3^9$: a reduction to a least-order example (cyclic centre, socle in $D_{c+1}\\cap Q''\\cap M_{c+1}$) and a run over all $3$-groups of order $3^6$–$3^8$ and class $\\ge5$; class $4$ is the $D_5$ theorem up to $3^9$. " + gh("compute/magnus/README.md", "Code") + "."),
-        ("Та же оценка поднята до $3^{10}$: порядок $3^9$, ступень $\\ge5$. Пример наименьшего порядка — потомок шага $1$ группы порядка $3^8$; из $66\\,569$ родителей проверку на $p$-накрытии проходят $4627$, у всех $27\\,547$ потомков, прошедших сито, $D_{c+1}=1$; шаг порождения повторён на исправленном ANUPQ с тем же результатом. " + gh("compute/magnus/README.md", "Код") + ".",
+        ("Та же оценка поднята до $3^{10}$: порядок $3^9$, ступень $\\ge5$. Пример наименьшего порядка — потомок шага $1$ группы порядка $3^8$; из $66\\,569$ родителей проверку на $p$-накрывающей проходят $4627$, у всех $27\\,547$ потомков, прошедших сито, $D_{c+1}=1$; шаг порождения повторён на исправленном ANUPQ с тем же результатом. " + gh("compute/magnus/README.md", "Код") + ".",
          "The same bound raised to $3^{10}$: order $3^9$, class $\\ge5$. A least-order example is a step-$1$ descendant of a group of order $3^8$; of $66\\,569$ parents $4627$ pass the $p$-cover test, and all $27\\,547$ descendants that pass the sieve have $D_{c+1}=1$; the descendant step was repeated with the fixed ANUPQ, with the same result. " + gh("compute/magnus/README.md", "Code") + ".")]),
 ]
 
