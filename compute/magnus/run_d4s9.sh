@@ -41,7 +41,7 @@ import json, collections; print(collections.Counter(json.loads(l)['verdict'] for
 import re, sys
 t = [0, 0, 0, 0]
 for l in sys.stdin:
-    m = re.search(r'groups=(\d+) class3=(\d+) Z cyclic=(\d+) survivors \S+=(\d+)', l)
+    m = re.search(r'groups=(\d+) class3=(\d+) Z cyclic=(\d+) survivors \(.*?\)=(\d+)', l)
     t = [a + int(b) for a, b in zip(t, m.groups())]
 print('groups, class 3, Z cyclic, survivors:', t)"
   ns=$(cat "$OUTD"/d4s9_*.jsonl | wc -l); nd=$(cat "$OUTD"/d4z_*.jsonl | wc -l)
