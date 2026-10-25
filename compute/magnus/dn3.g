@@ -12,6 +12,7 @@
 # n = c+1, and kz = the largest k with z in gamma_k, for the control z in D_kz) and prints counts.
 if K = 8 then LoadPackage("sglppow"); fi;
 Read("presgens.g");
+SetPrintFormattingStatus("*stdout*", false);
 DN3 := function(from, to, prefix)
   local js, i, G, L, c, DD, J, M, Z, soc, gens, pr, z, kz, n, nc, nnm, ncyc, nfin, t;
   js := OutputTextFile(Concatenation(prefix, ".jsonl"), false); SetPrintFormattingStatus(js, false);
@@ -45,6 +46,6 @@ DN3 := function(from, to, prefix)
   CloseStream(js);
   Print("3^", K, " ids ", from, "..", to, ": groups=", n, " class>=5=", nc, " non-metabelian=", nnm,
         " Z cyclic=", ncyc, " survivors (soc <= Q''∩M_{c+1})=", nfin, " sec=", Int((Runtime() - t) / 1000), "\n");
-end;
+end;;
 DN3(FROM, TO, OUT);
 QUIT;

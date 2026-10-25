@@ -15,6 +15,12 @@ wait
 cat "$OUTD"/dn3_*.jsonl | $PY dnz.py > "$OUTD/dnz.jsonl"
 { grep -H -m3 "Error" "$OUTD"/gap_*.out && echo "GAP ERROR"
   grep -h "^3\^" "$OUTD"/gap_*.out
+  # completeness: every group of each order looked at exactly once
+  for K in 6 7 8; do
+    got=$(grep -h "^3\^$K " "$OUTD"/gap_*.out | sed 's/.*groups=\([0-9]*\).*/\1/' | awk '{s+=$1} END {print s+0}')
+    want=$(case $K in 6) echo 504;; 7) echo 9310;; 8) echo 1396077;; esac)
+    [ "$got" = "$want" ] && echo "3^$K complete: $got groups" || echo "3^$K INCOMPLETE: $got of $want groups"
+  done
   $PY -c "
 import json, collections
 r = [json.loads(l) for l in open('$OUTD/dnz.jsonl')]

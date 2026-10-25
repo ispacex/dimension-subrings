@@ -21,7 +21,7 @@ $D_n(G) = \gamma_n(G)$ for **all** $n$: the computation went on until $D_n = 1$.
 | all 3-groups of order $81, 243, 729$ | 15 + 67 + 504 = 586 | $D_n = \gamma_n$ for all $n$; no 3-torsion in $D_5/\gamma_5$ |
 | all 3-groups of order $3^7 = 2187$ of class 4 that passed the sieve: lattice in C (variant A) and truncated Magnus algebra (variant B) of [cflint-core](https://gitlab.com/ispacex/cflint-core) (`docs/analysis.md` §6.1), 6010 levels, 0 discrepancies | 1202 | $D_5 = 1$, $D_n = \gamma_n$ for all $n$ |
 | the same, a sample (every 25th) run with the numpy lattice of this directory | 49 of 1202 | $D_5 = 1$, $D_n = \gamma_n$ for all $n$ |
-| all 3-groups of order $3^6, 3^7, 3^8$ of class $\ge 5$, sieve for a least-order example with 3-torsion in some $D_n/\gamma_n$ (cyclic centre, socle in $Q \cap M_{c+1}$; [MATH-403](https://default.kaiku.tech/issue/MATH-403), `../magnus/dn3.g`) | 504 + 9310 + 1 396 077 groups looked at, 1035 passed the sieve | the socle is not in $D_{c+1}$ for all 1035 (exact): no 3-torsion in any $D_n/\gamma_n$ |
+| all 3-groups of order $3^6, 3^7, 3^8$ of class $\ge 5$, sieve for a least-order example with 3-torsion in some $D_n/\gamma_n$ (cyclic centre, socle in $Q'' \cap M_{c+1}$; [MATH-403](https://default.kaiku.tech/issue/MATH-403), `../magnus/dn3.g`) | 504 + 9310 + 1 396 077 groups looked at, 1035 passed the sieve | the socle is not in $D_{c+1}$ for all 1035 (exact), so $D_{c+1} = 1$: none is a least-order example |
 | all groups of order $5^4 = 625$ | 15 | $D_n = \gamma_n$ (a control; for $p \ge 5$ and $n \le 5$ this is a theorem) |
 
 ### Consequences for arbitrary finite groups (via the reduction in the README)
@@ -37,10 +37,10 @@ $D_n(G) = \gamma_n(G)$ for **all** $n$: the computation went on until $D_n = 1$.
    at most $p^3$ (such $p$-groups have class $\le 2$). All the corresponding $p$-groups are
    checked.
 3. **$D_5/\gamma_5$ has no 3-torsion for any finite group whose 3-part has order $\le 3^6$.**
-4. **A 3-group with 3-torsion in $D_n/\gamma_n$ for some $n$ has order $\ge 3^9$**
+4. **$D_n/\gamma_n$ has no 3-torsion, for any $n$, for any finite group whose 3-part has order $\le 3^8$**; equivalently, a 3-group with 3-torsion in some $D_n/\gamma_n$ has order $\ge 3^9$
    ([MATH-403](https://default.kaiku.tech/issue/MATH-403)). A least-order example $Q$ has $\gamma_n(Q) = 1$, cyclic
-   centre, and its socle in $D_{c+1}(Q) \cap Q \cap M_{c+1}$ ($c$ the class; Gupta 1991 for $Q$);
-   class $\le 3$ is impossible ($D_4 = \gamma_4$ in 3-groups), class 4 is the $D_5$ case (none up to $3^9$, paper),
+   centre, and its socle in $D_{c+1}(Q) \cap Q'' \cap M_{c+1}$ ($c$ the class; Gupta 1991 for $Q''$);
+   class $\le 3$ is impossible ($D_4 = \gamma_4$ in 3-groups), class 4 gives $D_n \subseteq D_5 = \gamma_5 = 1$ (up to $3^9$, paper),
    and class $\ge 5$ is excluded up to $3^8$ by the run in the table.
 
 ## What the data show
