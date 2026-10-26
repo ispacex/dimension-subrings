@@ -43,6 +43,8 @@ DL_Run := function()
     w := First(AsList(Omega(Centre(G), 2, 1)), x -> x <> One(G));   # y_1^128 for (2,0)
     R := Image(NaturalHomomorphismByNormalSubgroup(G, Subgroup(G, [w])));
     R := Image(IsomorphismPcGroup(R));
+    SetIsPGroup(R, true); SetPrimePGroup(R, 2);
+    Print("ctrl parent: log2|R|=", Log(Size(R), 2), " class=", NilpotencyClassOfGroup(R), " p-class=", MS_PClass(R), " rank=", RankPGroup(R), "\n");
     npar := 1; nw := DL_Write(out, Size(R), 0, R);
   else
     for i in [IDFROM .. Minimum(IDTO, NrSmallGroups(NN))] do
