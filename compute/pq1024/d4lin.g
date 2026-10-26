@@ -14,7 +14,7 @@ Read("latb/export_pres.g");
 if not IsBound(PCMIN) then PCMIN := 2; fi;
 if not IsBound(RIPSCTRL) then RIPSCTRL := false; fi;
 if not IsBound(TK) then TK := 2; TL := 0; fi;
-if not IsBound(IDFROM) then IDFROM := 0; IDTO := 0; fi;
+if not IsBound(IDFROM) then IDFROM := 0; IDTO := 0; NN := 0; fi;
 DL_Bits := mat -> List(mat, row -> List(row, IntFFE));;
 DL_Write := function(out, nn, i, R)
   local r, M;
