@@ -403,3 +403,34 @@ isomorphic copies — that is, with $\mathrm{Aut}$ at every node). Hence for $2^
 path is out of reach on the main server (16 cores, shared); what is needed is cutting whole subtrees (conditions inherited
 by quotients, like cyclicity of $\gamma_3$) or a different setting of the $2^{11}$ search (`../pq2048`). This is a question about
 the setting, not about the code.
+
+## $D_4 \ne \gamma_4$ at order $2^{10}$ ([MATH-415](https://default.kaiku.tech/issue/MATH-415))
+
+The same search, for $D_4$ in place of $D_5$: `run_d4s10.sh`, which runs `desc1c.g` with
+`JK := 4` (the Jennings term $M_4$ in `lib.g` and `cover.g`), `PCMIN := 2` and `NMAXL := 4`. The
+defaults keep the $D_5$ search unchanged.
+
+**Lemma ($D_4$).** Let $Q$ be a 2-group of order $2^{10}$ with $D_4(Q) \ne \gamma_4(Q)$, and suppose
+every 2-group of order $\le 2^9$ has $D_4 = \gamma_4$ (orders $\le 2^8$: `../results/SUMMARY.md`;
+$2^9$: `../magnus/d4s9.g`). Then $Q$ has class exactly 3 (for class $\ge 4$, $Q/\gamma_4(Q)$ would be
+a smaller example; class $\le 2$ gives $D_4 \subseteq D_3 = \gamma_3 = 1$), and every proper quotient
+$Q/N$ has order $\le 2^9$ and class $\le 3$, hence $D_4(Q/N) = 1$ and $D_4(Q) \le N$. So:
+
+1. $Z(Q)$ is cyclic and $D_4(Q) = \Omega_1(Z(Q)) = \langle n \rangle$;
+2. $n \in \gamma_3(Q) \cap M_4(Q)$;
+3. $M_4 = Q^4 \gamma_2^2 \gamma_4 \le P_3$, so the $p$-class $c$ of $Q$ is $\ge 3$, and
+   $P_c(Q) \le \Omega_1(Z(Q)) = \langle n\rangle$;
+4. $Q$ is a step-1 immediate descendant of $R = Q/\langle n \rangle$, of class 2 or 3, $p$-class
+   $c - 1 \ge 2$, with $\gamma_3(R)$ cyclic.
+
+Only (3) and (4) differ from the $D_5$ lemma: $M_4$ lies in $P_3$, not in $P_4$, so the parents
+include the groups of order 512 of $p$-class 2. These are about 8.8 million groups, all of class 2.
+
+**Check** (`MODE=check`, tm `d4s10-check`, 5 cores, 30 min): orders 256 and 512 from all parents of
+orders 128 and 256, up to isomorphism, give 412 and 4421 candidates, by rank 2–7
+$[12, 124, 249, 23, 4]$ and $[21, 128, 3682, 562, 25, 3]$. These are exactly the survivors of the direct
+sieve `../magnus/d4s9.g` over SmallGroups (order 256 is its control run).
+
+**Benchmark** (tm `d4s10-bench`, five chunks of 2000 ids): 6603 parents, 288 s CPU, 4148 candidates
+(no isomorphism reduction), all with $n \notin D_4$. Extrapolated to all 10 494 213 ids: about
+85 CPU-h.
