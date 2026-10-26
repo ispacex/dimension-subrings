@@ -12,7 +12,9 @@
 # FORMAT = "perm" — the format of desc1.g / export.g for dimsub.py.  STATFILE as desc1.g, where
 # "admissible_U" is the number of hyperplanes passing the linear conditions, "cand_U" those with
 # cyclic centre, "candidates_by_rank" the candidates written (iso classes when DEDUP).
-# Input: NN, IDFROM, IDTO, PRUNE, DEDUP, OUTFILE, STATFILE [, FORMAT, KMAX, CMAX, PFILTER].
+# Input: NN, IDFROM, IDTO, PRUNE, DEDUP, OUTFILE, STATFILE [, FORMAT, KMAX, CMAX, PFILTER, JK, PCMIN,
+# NMAXL].  The D_4 search (MATH-415): JK = 4 (n in M_4, lib.g), PCMIN = 2 (M_4 <= P_3 only gives
+# p-class >= 3 for Q, i.e. >= 2 for the parent), NMAXL = 4 (the level of "pres" lines).
 # PFILTER (the 2^11 search, ../pq2048): a function R -> true/false; a parent with false is skipped (counted in
 # "pfiltered"). Only conditions proved to hold for the parent of every candidate may go here.
 Read("lib.g");
@@ -20,6 +22,8 @@ Read("cover.g");
 Read("export_lib.g");
 Read("latb/export_pres.g");
 if not IsBound(FORMAT) then FORMAT := "pres"; fi;
+if not IsBound(PCMIN) then PCMIN := 3; fi;
+if not IsBound(NMAXL) then NMAXL := 5; fi;
 # A parent whose hyperplanes are too many to list one by one (2^k > 2^KMAX to enumerate, or more
 # than CMAX passing the linear conditions) is done by PqDescendants as in desc1.g.
 if not IsBound(KMAX) then KMAX := 14; fi;
@@ -37,7 +41,7 @@ MC_Run := function()
     R := SmallGroup(NN, i);
     c := NilpotencyClassOfGroup(R);
     if c < 2 or c > 3 then continue; fi;
-    if MS_PClass(R) < 3 then continue; fi;
+    if MS_PClass(R) < PCMIN then continue; fi;
     if PRUNE and not IsCyclic(LowerCentralSeriesOfGroup(R)[3]) then nskip := nskip + 1; continue; fi;
     if IsBound(PFILTER) and not PFILTER(R) then npf := npf + 1; continue; fi;
     npar := npar + 1;
@@ -78,7 +82,7 @@ MC_Run := function()
           ",\"cand\":[", String(Position(elts, Image(iso, x.n)) - 1), "],\"parent\":", String(i),
           ",\"u\":", String(List(x.f, IntFFE)), "}\n"));
       else
-        line := CP_Line(2 * NN, 1000 * i + k, x.Q, 5, [x.n]);
+        line := CP_Line(2 * NN, 1000 * i + k, x.Q, NMAXL, [x.n]);
         WriteAll(out, Concatenation(line{[1 .. Length(line) - 2]}, ",\"parent\":", String(i),
           ",\"u\":", ReplacedString(String(List(x.f, IntFFE)), " ", ""),
           ",\"code\":", String(CodePcGroup(x.Q)),

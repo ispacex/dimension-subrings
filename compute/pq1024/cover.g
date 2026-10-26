@@ -1,5 +1,5 @@
 # Step-1 descendants by linear algebra on the p-cover.  See README.md,
-# "Search through the p-cover".  Needs lib.g (MS_PClass, MS_M5, MS_MonoInvolution).
+# "Search through the p-cover".  Needs lib.g (MS_PClass, MS_MJ, MS_MonoInvolution).
 #
 # For a parent R (2-group of class <= 3) let R* = PqPCover(R), M its p-multiplicator (the last
 # MultiplicatorRank pcgs elements of R*), N = P_c(R*) the nucleus (c = p-class of R).  Every step-1
@@ -7,7 +7,7 @@
 # conditions of the lemma that concern n (M/U = <n>) are linear in U:
 #   class <= 3          <=>  gamma_4(R*) <= U
 #   n in gamma_3(Q)     <=>  M ∩ gamma_3(R*) not in U
-#   n in M_5(Q)         <=>  M ∩ M_5(R*) not in U.
+#   n in M_5(Q)         <=>  M ∩ M_5(R*) not in U   (M_JK, JK = 4 for the D_4 search).
 # A hyperplane is the kernel of a nonzero functional f on M = GF(2)^m; f vanishes on gamma_4(R*),
 # so f = a * Y with Y a basis of the annihilator of gamma_4(R*) and a in GF(2)^k.  Each remaining
 # condition reads "a not in ker P_X" with P_X = X * Y^T.
@@ -57,7 +57,7 @@ MC_Data := function(R)
   c := MS_PClass(R);
   G4 := MC_Vecs(pcs, n, m, MC_Gamma(Rs, 4));
   A := MC_Vecs(pcs, n, m, Intersection(M, MC_Gamma(Rs, 3)));
-  B := MC_Vecs(pcs, n, m, Intersection(M, MS_M5(Rs)));
+  B := MC_Vecs(pcs, n, m, Intersection(M, MS_MJ(Rs)));
   N := MC_Vecs(pcs, n, m, PCentralSeries(Rs, 2)[c + 1]);
   if G4 = [] then Y := IdentityMat(m, GF(2));
   else Y := NullspaceMat(TransposedMat(G4)); fi;   # rows y with G4 * y^T = 0
