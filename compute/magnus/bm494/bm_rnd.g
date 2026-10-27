@@ -58,7 +58,7 @@ for c in cases do
   xs := List(XS, x -> Image(hom, x));
   ys := List(Concatenation(YS2, YS3), y -> Image(hom, y)); wQ := Image(hom, W);
   t := Runtime();
-  LQ := LowerCentralSeriesOfGroup(Q);
+  LQ := ShallowCopy(LowerCentralSeriesOfGroup(Q));
   Print("w in gamma_j(Q): ", List(LQ, H -> wQ in H), ", gamma_6(Q) central: ", IsSubgroup(Centre(Q), LQ[6]), "\n");
   Ms := MaxOver(Q, xs);
   Print(c[1], ": log3|Q| = ", Log(Size(Q), 3), ", maximal subgroups containing x1..x4: ", Length(Ms), "\n");
@@ -66,7 +66,7 @@ for c in cases do
     nall := nall + 1;
     bad := Intersection(Check(M, ys{[1..4]}, ys{[5..8]}), NEED);
     t1 := Runtime();
-    LM := LowerCentralSeriesOfGroup(M);
+    LM := ShallowCopy(LowerCentralSeriesOfGroup(M));
     while Length(LM) < 7 do Add(LM, TrivialSubgroup(M)); od;
     res := List([1..NTRY], k -> TryN(M, LM, LQ, wQ));
     found := First(res, r -> r[1] <> fail);

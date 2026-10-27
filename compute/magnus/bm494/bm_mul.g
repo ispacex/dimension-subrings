@@ -79,7 +79,7 @@ for c in cases do
   xs := List(XS, x -> Image(hom, x));
   ys := List(Concatenation(YS2, YS3), y -> Image(hom, y)); wQ := Image(hom, W);
   t := Runtime();
-  LQ := LowerCentralSeriesOfGroup(Q);
+  LQ := ShallowCopy(LowerCentralSeriesOfGroup(Q));
   while Length(LQ) < 8 do Add(LQ, TrivialSubgroup(Q)); od;
   A := LQ[6]; AL := AsSSortedList(A);
   iso := IsomorphismPcGroup(A); P := Image(iso);
@@ -98,7 +98,7 @@ for c in cases do
     nall := nall + 1;
     bad := Intersection(Check(M, ys{[1..4]}, ys{[5..8]}), NEED);
     t1 := Runtime();
-    LM := LowerCentralSeriesOfGroup(M);
+    LM := ShallowCopy(LowerCentralSeriesOfGroup(M));
     while Length(LM) < 8 do Add(LM, TrivialSubgroup(M)); od;
     gm := Reps(M, FrattiniSubgroup(M));
     data := [];
