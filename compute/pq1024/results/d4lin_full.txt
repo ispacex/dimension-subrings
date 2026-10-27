@@ -1,0 +1,8 @@
+# tm kimmy/tm/20261026-093505-d4lin-full-96bf134 (dimension-subrings 96bf134)
+# command: NSH=8 compute/pq1024/run_d4lin.sh   (8 cores, 12G; 2026-10-26T09:40:55Z .. 2026-10-27T10:59:57Z, 25h19m)
+# job log (summary.txt of out/; no GAP errors, all gap_*.out empty). The per-chunk files
+# (l1024_*.jsonl, s1024_*.json, z1024_*.jsonl; 9.2 GB in all) stay on the runner.
+started 2026-10-26T09:40:55+00:00 on kimmy, cpus 0-7
+chunks complete: 525
+1024 stat files 525 {'parents': 10208630, 'skipped_gamma3': 222499, 'parents_with_U': 1253329, 'gap_ms': 170940327} | decided 1253329 of 1253329 | sec 245155 | max m 36 | dim K_D [0, 1] | parents with U, n in D_4: 0 []
+finished 2026-10-27T10:59:57+00:00, exit 0

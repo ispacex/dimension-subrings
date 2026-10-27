@@ -164,6 +164,13 @@ gives the same answer. Tables by chunk and by candidate — `../pq1024/results/`
    below $2^{38}$: among the examples we know, Rips's group is still the smallest with
    $D_4 \ne \gamma_4$. That all proper quotients have $D_4 = 1$ is checked only on a sample, and proper sections
    $H/N$ with $H < G$, $N \ne 1$ are not checked.
+   **Lower bound ([MATH-415](https://default.kaiku.tech/issue/MATH-415)):** a 2-group with
+   $D_4 \ne \gamma_4$ has order $\ge 2^{11}$. Order $2^9$ by a sieve over SmallGroups
+   ([`../magnus/README.md`](../magnus/README.md), `d4s9.g`, 4421 survivors), order $2^{10}$ by the
+   step-1 descendants of all 10 208 630 possible parents of order 512 (class 2–3, 2-class $\ge 2$, cyclic $\gamma_3$), with $n \in D_4$ made a
+   linear condition on the $p$-cover ([`../pq1024/README.md`](../pq1024/README.md), `run_d4lin.sh`,
+   tm `d4lin-full`, 25 h). So $D_4(G) = \gamma_4(G)$ for every finite $G$ whose Sylow 2-subgroup has
+   order $\le 2^{10}$.
    Bartholdi–Mikhailov ([MATH-403](https://default.kaiku.tech/issue/MATH-403), [`../magnus/bm494/`](../magnus/bm494/README.md)):
    their 3-group is an example of $D_7 \ne \gamma_7$, not of $D_4 \ne \gamma_4$. It has class 6, so
    $\gamma_7 = 1$, and its witness $w$ has order 3. The centre is $C_3 \times C_{3^{15}}$ with $w$ in its
