@@ -724,11 +724,14 @@ RESULTS = [  # (status, ru, en, ref): ref is a str or (ru, en); [[label]] is a l
     ("c", "Групповой аналог теоремы C при $c=4$: у группы плато $D_6\\ne1$, но $D_7=1$, так что $2c-2$ достигается и аналог, если верен, точен (<a href=\"open.html#q-theoremc\">открытый вопрос</a>).",
      "The group analogue of Theorem C at $c=4$: the plateau group has $D_6\\ne1$ but $D_7=1$, so $2c-2$ is attained and the analogue, if true, is sharp (<a href=\"open.html#q-theoremc\">an open question</a>).",
      ("[[sec:open]], вопрос [[oq:theoremc|#]]", "[[sec:open]], question [[oq:theoremc|#]]")),
+    ("c", "Нижняя оценка для $D_4\\ne\\gamma_4$: такая $2$-группа имеет порядок $\\ge2^{11}$, так что $D_4(G)=\\gamma_4(G)$ для всякой конечной $G$ с силовской $2$-подгруппой порядка $\\le2^{10}$. Наименьший известный пример — группа Рипса порядка $2^{38}$. Порядок $2^{10}$: условие $n\\in D_4$ на $p$-накрывающей группе линейно по гиперплоскости $U$ (лемма Накаямы), и ни у одного из $10\\,208\\,630$ родителей порядка $2^9$ нет $U$ с $n\\in D_4$ (" + gh("compute/pq1024/README.md", "код") + ").",
+     "A lower bound for $D_4\\ne\\gamma_4$: such a $2$-group has order $\\ge2^{11}$, so $D_4(G)=\\gamma_4(G)$ for every finite $G$ with Sylow $2$-subgroup of order $\\le2^{10}$. The smallest known example is Rips's group, of order $2^{38}$. Order $2^{10}$: the condition $n\\in D_4$ on the $p$-covering group is linear in the hyperplane $U$ (Nakayama's lemma), and none of the $10\\,208\\,630$ parents of order $2^9$ has a $U$ with $n\\in D_4$ (" + gh("compute/pq1024/README.md", "code") + ").",
+     ("[[sec:computations]]", "[[sec:computations]]")),
 ]
 
 OPEN = [  # (id, ru, en, task): the id is the anchor on open.html; task is the D5 issue in the tracker
-    ("q-main", "Сам вопрос 20.84: $D_5(Q)=1$ для всех конечных $2$-групп ступени $3$? Контрпример обязан иметь $D_4(Q)\\ne1$ и порядок $\\ge2^{12}$; при порядке $2^{12}$ он — кандидат ранга $\\le8$.",
-     "Problem 20.84 itself: is $D_5(Q)=1$ for all finite $2$-groups of class $3$? A counterexample must have $D_4(Q)\\ne1$ and order $\\ge2^{12}$; at order $2^{12}$ it is a candidate of rank $\\le8$.", "D5-2"),
+    ("q-main", "Сам вопрос 20.84: $D_5(Q)=1$ для всех конечных $2$-групп ступени $3$? Контрпример обязан иметь $D_4(Q)\\ne1$ и порядок $\\ge2^{12}$; при порядке $2^{12}$ он — кандидат ранга $\\le8$. (Для одного лишь $D_4\\ne\\gamma_4$ оценка $2^{11}$; наименьший известный пример имеет порядок $2^{38}$.)",
+     "Problem 20.84 itself: is $D_5(Q)=1$ for all finite $2$-groups of class $3$? A counterexample must have $D_4(Q)\\ne1$ and order $\\ge2^{12}$; at order $2^{12}$ it is a candidate of rank $\\le8$. (For $D_4\\ne\\gamma_4$ alone the bound is $2^{11}$; the smallest known example has order $2^{38}$.)", "D5-2"),
     ("q-tahara", "Бывает ли $3$-кручение в $D_5/\\gamma_5$ (достигается ли оценка Тахары $6$)? Минимальный пример — порядка $\\ge3^{10}$, ступени $4$, с циклическим центром и не меньше чем двумя инвариантами $\\ge9$ у $Q/\\gamma_2$.",
      "Is there $3$-torsion in $D_5/\\gamma_5$, i.e. is Tahara's bound $6$ attained? A minimal example has order $\\ge3^{10}$, class $4$, cyclic centre and at least two invariants $\\ge9$ in $Q/\\gamma_2$.", "D5-4"),
     ("q-c9c9", "Следующий случай: у $Q/\\gamma_2$ два инварианта $\\ge9$, например $C_9\\times C_9\\times C_3$. Там $\\gamma_2/\\gamma_3$ может иметь экспоненту $9$, и доказательство теоремы [[thm:exp3plus|#]] не проходит.",
@@ -798,6 +801,10 @@ RUNS = [  # (what ru, what en, groups, result ru, result en, cost ru, cost en, c
      "$D_5=1$ у всех (проверка теоремы [[thm:exp3|#]])", "$D_5=1$ in all (a check of Thm. [[thm:exp3|#]])", "$5$ мин", "$5$ min", "compute/magnus"),
     ("факторы групп рипсовского типа, $2^{40}$–$2^{107}$", "quotients of Rips-type groups, $2^{40}$–$2^{107}$", 14,
      "$D_5=1$; $D_4\\ne1$ в трёх", "$D_5=1$; $D_4\\ne1$ in three", "", "", "compute/magnus"),
+    ("$2$-группы порядка $2^9$ ступени $3$ с циклическим центром, после сита (кандидаты для $D_4\\ne\\gamma_4$)", "$2$-groups of order $2^9$ of class $3$ with cyclic centre, after the sieve (candidates for $D_4\\ne\\gamma_4$)", 4421,
+     "у всех $D_4=1$", "$D_4=1$ in all", "$16$ мин на $10$ ядрах", "$16$ min on $10$ cores", "compute/magnus"),
+    ("родители порядка $2^9$ для $D_4\\ne\\gamma_4$ при порядке $2^{10}$ (у $1\\,253\\,329$ есть допустимые $U$)", "parents of order $2^9$ for $D_4\\ne\\gamma_4$ at order $2^{10}$ ($1\\,253\\,329$ with admissible $U$)", 10208630,
+     "ни одной $U$ с $D_4\\ne1$", "no $U$ with $D_4\\ne1$", "$25$ ч на $8$ ядрах", "$25$ h on $8$ cores", "compute/pq1024"),
     ("факторы группы Рипса, $2^{38}$ и ниже (проверок, с повторениями)", "quotients of Rips's group, $2^{38}$ and below (checks, with repetitions)", 26147,
      "ни одного с $D_4\\ne1$ (выборка)", "none with $D_4\\ne1$ (a sample)", "$15$ мин на $8$ ядрах", "$15$ min on $8$ cores", "compute/magnus"),
     ("$3$-группы порядков $3^6$–$3^8$ ступени $\\ge5$, после сита для $3$-кручения", "$3$-groups of order $3^6$–$3^8$ and class $\\ge5$, after the sieve for $3$-torsion", 1035,
@@ -917,6 +924,9 @@ TIMELINE = [  # (iso date, [(ru, en)])
          "A $3$-group with $3$-torsion in some $D_n/\\gamma_n$ has order $\\ge3^9$: a reduction to a least-order example (cyclic centre, socle in $D_{c+1}\\cap Q''\\cap M_{c+1}$) and a run over all $3$-groups of order $3^6$–$3^8$ and class $\\ge5$; class $4$ is the $D_5$ theorem up to $3^9$. " + gh("compute/magnus/README.md", "Code") + "."),
         ("Та же оценка поднята до $3^{10}$: порядок $3^9$, ступень $\\ge5$. Пример наименьшего порядка — потомок шага $1$ группы порядка $3^8$; из $66\\,569$ родителей проверку на $p$-накрывающей проходят $4627$, у всех $27\\,547$ потомков, прошедших сито, $D_{c+1}=1$; шаг порождения повторён на исправленном ANUPQ с тем же результатом. " + gh("compute/magnus/README.md", "Код") + ".",
          "The same bound raised to $3^{10}$: order $3^9$, class $\\ge5$. A least-order example is a step-$1$ descendant of a group of order $3^8$; of $66\\,569$ parents $4627$ pass the $p$-cover test, and all $27\\,547$ descendants that pass the sieve have $D_{c+1}=1$; the descendant step was repeated with the fixed ANUPQ, with the same result. " + gh("compute/magnus/README.md", "Code") + ".")]),
+    ("2026-10-27", [
+        ("$2$-группа с $D_4\\ne\\gamma_4$ имеет порядок $\\ge2^{11}$ (наименьший известный пример — группа Рипса, $2^{38}$). Порядок $2^9$ — ситом по SmallGroups ($4\\,421$ кандидат), порядок $2^{10}$ — по всем $10\\,208\\,630$ родителям порядка $2^9$, где $n\\in D_4$ — линейное условие на $p$-накрывающей группе. " + gh("compute/pq1024/README.md", "Код") + ".",
+         "A $2$-group with $D_4\\ne\\gamma_4$ has order $\\ge2^{11}$ (the smallest known example is Rips's group, $2^{38}$). Order $2^9$ by a sieve over SmallGroups ($4\\,421$ candidates), order $2^{10}$ by all $10\\,208\\,630$ parents of order $2^9$, with $n\\in D_4$ a linear condition on the $p$-covering group. " + gh("compute/pq1024/README.md", "Code") + ".")]),
 ]
 
 
