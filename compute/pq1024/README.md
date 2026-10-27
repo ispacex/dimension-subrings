@@ -456,13 +456,14 @@ one more linear condition. Here $(M-1)\Delta$ is the two-sided ideal generated b
 $U$, a presentation of $R^*$ for the Magnus algebra of level 4, the words of a basis $m_1..m_m$ of $M$,
 and $Y, P_A, P_B, P_N$. `latb/d4lin.py` computes $J' = J_4 + (\mu(m_j)-1)a_i$ (two-sided closure) and
 $K_D = \{c : \sum c_j(\mu(m_j)-1) \in J'\}$ modulo $2^{30}$, then counts the $a$ with $aY$ outside all of
-$\ker P_A, P_B, P_N, P_D$. Modulo $2^E$ membership is only necessary, so the computed $K_D$ contains the
+$\ker P_A, P_B, P_N, P_D$ (`count_ABND`) and outside $\ker P_N, P_D$ (`count_ND`, the verdict: it drops
+conditions, so it can only be larger). Modulo $2^E$ membership is only necessary, so the computed $K_D$ contains the
 true one: **count 0 is exact**. A positive count would be checked directly on $R^*/U$.
 
 `run_d4lin.sh`:
 
 * `MODE=ctrl`: Tahara's groups $(k,\ell) = (2,0)$ (Rips, $2^{38}$) and $(2,1)$, through their parents
-  $R = G/\langle w\rangle$ (order $2^{37}$, $2^{38}$). Both give $\dim K_D = 1$ and 8192 hyperplanes with
+  $R = G/\langle w\rangle$ (order $2^{37}$, $2^{38}$). Both give $\dim K_D = 1$ and `count_ND` = 8192 hyperplanes with
   $n \in D_4$ (of the 12 288 admissible ones), as they must.
 * `MODE=check`: orders 256 and 512 from all parents of orders 128 and 256; no example exists there.
 * `MODE=main`: order 1024 from all `SmallGroup(512, i)`. Benchmark on the five chunks of
@@ -477,7 +478,7 @@ admissible $U$; count 0 for all, $\dim K_D \in \{0, 1\}$, in agreement with `../
 `SmallGroup(512, 1..10494213)`. Of the groups of class 2–3 and $p$-class $\ge 2$, 222 499 have
 non-cyclic $\gamma_3$ and are skipped; the other **10 208 630 parents** were processed, **1 253 329** of them
 have admissible $U$, and `d4lin.py` decided all 1 253 329 (245 155 s; $m \le 36$, $\dim K_D \in \{0,1\}$):
-**count 0 for every one**, no GAP errors. Hence no group of order $2^{10}$ has $D_4 \ne \gamma_4$, and
+**count 0 for every one**, no GAP errors (job log: `results/d4lin_full.txt`). Hence no group of order $2^{10}$ has $D_4 \ne \gamma_4$, and
 
 > **a 2-group with $D_4 \ne \gamma_4$ has order $\ge 2^{11}$; $D_4(G) = \gamma_4(G)$ for every finite group
 > $G$ whose Sylow 2-subgroup has order $\le 2^{10}$** (by Passi, $D_4^2 \subseteq \gamma_4$ reduces a finite

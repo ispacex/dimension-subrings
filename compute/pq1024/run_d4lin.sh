@@ -16,7 +16,8 @@ one() {  # NN a b: GAP, then d4lin.py on its parents
   o=$((2 * $1))
   echo "NN:=$1;; IDFROM:=$2;; IDTO:=$3;; OUTFILE:=\"$OUTD/l${o}_$2.jsonl\";; STATFILE:=\"$OUTD/s${o}_$2.json\";;" \
     | cat - d4lin.g | gapr
-  (cd latb && $PY d4lin.py < "$OUTD/l${o}_$2.jsonl" > "$OUTD/z${o}_$2.jsonl")
+  (cd latb && $PY d4lin.py < "$OUTD/l${o}_$2.jsonl" > "$OUTD/z${o}_$2.jsonl") \
+    || { echo "d4lin.py FAILED on $o $2"; rm -f "$OUTD/z${o}_$2.jsonl"; }
 }
 summ() {
   $PY - "$OUTD" "$@" <<'PYEOF'
@@ -31,6 +32,8 @@ for o in sys.argv[2:]:
     print(o, "stat files", len(st), tot, "| decided", len(z), "of", nl,
           "| sec", round(sum(r["seconds"] for r in z)), "| max m", max([r["m"] for r in z] or [0]),
           "| dim K_D", sorted({r["dim_KD"] for r in z}), "| parents with U, n in D_4:", len(pos), pos[:20])
+    if len(z) != nl:
+        print(o, "UNDECIDED:", nl - len(z), "parents with U have no d4lin.py verdict")
 PYEOF
 }
 case "$MODE" in
@@ -67,7 +70,7 @@ main)
     sleep 60
   done
   wait
-  { grep -H -m3 Error "$OUTD"/gap_*.out && echo "GAP ERROR"
+  { grep -H -m3 -e Error -e FAILED "$OUTD"/gap_*.out && echo "GAP ERROR"
     n=$(ls "$OUTD"/s1024_*.json | wc -l); [ "$n" = "$TOTAL" ] && echo "chunks complete: $n" || echo "chunks INCOMPLETE: $n of $TOTAL"
     summ 1024; } | tee "$OUTD/summary.txt" ;;
 esac

@@ -167,7 +167,7 @@ gives the same answer. Tables by chunk and by candidate — `../pq1024/results/`
    **Lower bound ([MATH-415](https://default.kaiku.tech/issue/MATH-415)):** a 2-group with
    $D_4 \ne \gamma_4$ has order $\ge 2^{11}$. Order $2^9$ by a sieve over SmallGroups
    ([`../magnus/README.md`](../magnus/README.md), `d4s9.g`, 4421 survivors), order $2^{10}$ by the
-   step-1 descendants of all 10 208 630 admissible parents of order 512, with $n \in D_4$ made a
+   step-1 descendants of all 10 208 630 possible parents of order 512 (class 2–3, 2-class $\ge 2$, cyclic $\gamma_3$), with $n \in D_4$ made a
    linear condition on the $p$-cover ([`../pq1024/README.md`](../pq1024/README.md), `run_d4lin.sh`,
    tm `d4lin-full`, 25 h). So $D_4(G) = \gamma_4(G)$ for every finite $G$ whose Sylow 2-subgroup has
    order $\le 2^{10}$.
