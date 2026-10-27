@@ -80,6 +80,8 @@ od;
 cases := [];;
 if IsBound(LEVEL0) and LEVEL0 then Add(cases, ["G", IdentityMapping(G)]); fi;
 for k in [1..Length(us)] do Add(cases, [Concatenation("G/<u", String(k), ">"), NaturalHomomorphismByNormalSubgroupNC(G, Group(us[k]))]); od;
+# ONLY := [i, ...];; restricts to those cases (1 = G when LEVEL0, then the G/<u>), for parallel jobs
+if IsBound(ONLY) then cases := cases{ONLY}; fi;
 nall := 0;; nobs := 0;;
 for c in cases do
   hom := c[2]; Q := Image(hom);
@@ -91,9 +93,10 @@ for c in cases do
   for M in Ms do
     nall := nall + 1;
     bad := Intersection(Check(M, ys{[1..4]}, ys{[5..8]}), NEED);
+    t1 := Runtime();
     ob := Obstruct(M, bad, ys, xs, wQ);
     if ob <> fail then nobs := nobs + 1; fi;
-    Print("  M: fails ", bad, ", obstruction [pos, place, a, b, e, log3 exp S] = ", ob, "\n");
+    Print("  M: fails ", bad, ", obstruction [pos, place, a, b, e, log3 exp S] = ", ob, " (", Int((Runtime() - t1) / 1000), " s)\n");
   od;
   Print("  sec ", Int((Runtime() - t) / 1000), "\n");
 od;

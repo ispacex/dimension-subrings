@@ -18,7 +18,9 @@ xs := List(XS, x -> Image(emb, x));; wQ := Image(emb, W);;
 t0 := Runtime();;
 Ms := MaxOver(D, xs);;
 Print("maximal subgroups containing x1..x4: ", Length(Ms), " (expected 121)\n");
-for v in [["A", tt], ["A'", xs[1] * tt]] do
+VARS := [["A", tt], ["A'", xs[1] * tt]];;
+if IsBound(ONLY) then VARS := VARS{ONLY}; fi;   # ONLY := [i];; for parallel jobs
+for v in VARS do
   ys := List(Concatenation(YS2, YS3), y -> Image(emb, y));
   ys[1] := v[2];
   Print("VARIANT ", v[1], "\n");
