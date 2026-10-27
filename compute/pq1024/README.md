@@ -468,3 +468,19 @@ true one: **count 0 is exact**. A positive count would be checked directly on $R
 * `MODE=main`: order 1024 from all `SmallGroup(512, i)`. Benchmark on the five chunks of
   `d4s10-bench`: 6603 parents, 145 with admissible $U$, $\dim K_D \le 1$, count 0 for all; 120 s GAP and
   16 s Python, against 288 s for the listing.
+
+**Controls and check** (commit `96bf134`): `d4lin-ctrl` as above. `d4lin-check` (tm, 4 cores,
+16 min): order 256 — 1868 parents, 509 with admissible $U$; order 512 — 47 956 parents, 8042 with
+admissible $U$; count 0 for all, $\dim K_D \in \{0, 1\}$, in agreement with `../magnus/d4s9.g`.
+
+**Result** (tm `d4lin-full`, kimmy, 8 cores, 25 h 19 min, commit `96bf134`): all 525 chunks of
+`SmallGroup(512, 1..10494213)`. Of the groups of class 2–3 and $p$-class $\ge 2$, 222 499 have
+non-cyclic $\gamma_3$ and are skipped; the other **10 208 630 parents** were processed, **1 253 329** of them
+have admissible $U$, and `d4lin.py` decided all 1 253 329 (245 155 s; $m \le 36$, $\dim K_D \in \{0,1\}$):
+**count 0 for every one**, no GAP errors. Hence no group of order $2^{10}$ has $D_4 \ne \gamma_4$, and
+
+> **a 2-group with $D_4 \ne \gamma_4$ has order $\ge 2^{11}$; $D_4(G) = \gamma_4(G)$ for every finite group
+> $G$ whose Sylow 2-subgroup has order $\le 2^{10}$** (by Passi, $D_4^2 \subseteq \gamma_4$ reduces a finite
+> $G$ to the Sylow 2-subgroup of $G/\gamma_4(G)$).
+
+The smallest known example is Rips's group, of order $2^{38}$.
