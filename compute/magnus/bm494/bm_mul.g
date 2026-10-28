@@ -20,6 +20,7 @@
 # from w notin N: w in H0 <= H, and A cap H is cyclic.  Every proper H containing x1..x4 lies in some M.
 # MATH-413 (SUBS := true;;): the same test as for the M, on every H with Phi(Q) <x1..x4> <= H < Q of index
 # >= 9 (preimages of the subspaces of Q/Phi(Q) = F_3^7 over the images of x1..x4, of codimension >= 2).
+# PART := [k, n];; tests only the subgroups with number = k mod n (short jobs).
 Read("../3group.gap");
 W := EvalString(w);;
 XS := [x1, x2, x3, x4];;
@@ -138,6 +139,8 @@ if IsBound(CTRLH) and CTRLH then
   cases := [["G x SmallGroup(81,7), x1 := x1 h", Embedding(DD, 1), DD, Image(Embedding(DD, 2), Pcgs(HH)[1])]];
 fi;
 nall := 0;; nobs := 0;;
+if IsBound(GAPInfo.SystemEnvironment.JOB_OUT) then OUTF := Concatenation(GAPInfo.SystemEnvironment.JOB_OUT, "/subs.txt");; fi;
+if IsBound(GAPInfo.SystemEnvironment.JOB_ROOT) then PROGF := Concatenation(GAPInfo.SystemEnvironment.JOB_ROOT, "/progress");; fi;
 for c in cases do
   hom := c[2]; if Length(c) >= 3 then Q := c[3]; else Q := Image(hom); fi;
   xs := List(XS, x -> Image(hom, x));
@@ -171,7 +174,10 @@ for c in cases do
   else
     Print(c[1], ": log3|Q| = ", Log(Size(Q), 3), ", maximal subgroups containing x1..x4: ", Length(Ms), "\n");
   fi;
-  for M in Ms{[1..Minimum(MAXM, Length(Ms))]} do
+  sel := [1..Minimum(MAXM, Length(Ms))];
+  if IsBound(PART) then sel := Filtered(sel, i -> i mod PART[2] = PART[1] mod PART[2]); fi;
+  for i in sel do
+    M := Ms[i];
     nall := nall + 1;
     bad := Intersection(Check(M, ys{[1..4]}, ys{[5..8]}), NEED);
     t1 := Runtime();
@@ -193,14 +199,19 @@ for c in cases do
     perlayer := List(data, d -> [d[1], Length(Passing([d], Tab, Length(Ks)))]);
     ob := pass = [];
     # positive control on the first M: c over gamma_j(Q) instead of gamma_j(M), every K must pass
-    if M = Ms[1] then
+    if i = sel[1] then
       dc := List(data, d -> [d[1], d[2], List(Reps(LQ[d[1]], LQ[d[1] + 1]), g -> Lam(g, gm, 6 - d[1], AL))]);
       Print("    control (c over gamma_j(Q)): K passing ", Length(Passing(dc, Tab, Length(Ks))), " of ", Length(Ks), "\n");
     fi;
     if ob then nobs := nobs + 1; fi;
     if Length(c) >= 3 then Print("    onto G: ", Size(Image(Projection(Q, 1), M)) = Size(G), "\n"); fi;
-    Print("  M: index 3^", Log(Index(Q, M), 3), ", fails ", bad, ", rank ", Length(gm), ", layers [j, #a, #c, #lam]: ", List(data, d -> [d[1], Length(d[2]), Length(d[3]), Length(d[2][1])]),
+    Print("  M #", i, ": index 3^", Log(Index(Q, M), 3), ", fails ", bad, ", rank ", Length(gm), ", layers [j, #a, #c, #lam]: ", List(data, d -> [d[1], Length(d[2]), Length(d[3]), Length(d[2][1])]),
       ", K passing: ", Length(pass), " (by layer alone: ", perlayer, "), Gam = gamma(Q): ", gq, ", obstruction: ", ob, " (", Int((t2 - t1) / 1000), " + ", Int((Runtime() - t2) / 1000), " s)\n");
+    # GAP's stdout to a pipe is block-buffered: one flushed line per subgroup, and progress for tm
+    if IsBound(OUTF) then
+      AppendTo(OUTF, c[1], " #", i, " of ", Length(Ms), ": index 3^", Log(Index(Q, M), 3), ", by layer alone ", perlayer, ", obstruction ", ob, "\n");
+    fi;
+    if IsBound(PROGF) then PrintTo(PROGF, Position(sel, i), "/", Length(sel), "\n"); fi;
   od;
   Print("  sec ", Int((Runtime() - t) / 1000), "\n");
 od;
