@@ -12,6 +12,12 @@
 # row (log lam(a) in A/K = Z/3^f)_lam lies in the span of the rows of the c in gamma_j(M) (HNF).  If
 # for every K some layer j and some a fail, w lies in every N with (C2) in M/N.  Layers JS (default
 # [3..6]; layer 2 has r^4 columns).
+# MATH-413 (UNIF := true;;): one test per M for every H with H0 = <x1..x4> <= H <= M and every N normal
+# in H.  Each term of the test is monotone in H: Gam_j(H0) <= Gam_j(H) (U grows with H), gamma_j(H) <=
+# gamma_j(M), and lam with x_i over x1..x4 (generators of H0, so in H) is among the lam of H.  So take
+# a over Gam_j(H0), c over gamma_j(M), x_i over x1..x4: if some a fails, its row fails for H as well
+# (restrict the lam of H to these), and w lies in every N with (C2) in H/N.  N cap A = 1 still follows
+# from w notin N: w in H0 <= H, and A cap H is cyclic.  Every proper H containing x1..x4 lies in some M.
 Read("../3group.gap");
 W := EvalString(w);;
 XS := [x1, x2, x3, x4];;
@@ -52,7 +58,8 @@ Gam := function(M, ys)
 end;;
 if not IsBound(JS) then JS := [3..6]; fi;
 if not IsBound(VERB) then VERB := false; fi;
-if not IsBound(MAXM) then MAXM := infinity; fi;   # only the first MAXM subgroups of each case
+if not IsBound(MAXM) then MAXM := infinity; fi;
+if not IsBound(UNIF) then UNIF := false; fi;   # only the first MAXM subgroups of each case
 # greedy representatives of H modulo the subgroup D (by the pcgs of H)
 Reps := function(H, D)
   local r, S, g;
@@ -136,6 +143,10 @@ for c in cases do
   end);
   Print("|A| = 3^", Log(Size(A), 3), ", kernels K: ", Length(Ks), ", orders of A/K: ", Collected(List(Tab, tb -> tb[1])), "\n");
   Ms := MaxOver(Q, xs);
+  if UNIF then
+    H0 := Subgroup(Q, xs); gH := Gam(H0, ys);
+    Print("UNIF: H0 = <x1..x4> of order 3^", Log(Size(H0), 3), ", |Gam_j(H0)| = 3^", List(gH{[1..7]}, X -> Log(Size(X), 3)), "\n");
+  fi;
   Print(c[1], ": log3|Q| = ", Log(Size(Q), 3), ", maximal subgroups containing x1..x4: ", Length(Ms), "\n");
   for M in Ms{[1..Minimum(MAXM, Length(Ms))]} do
     nall := nall + 1;
@@ -143,9 +154,9 @@ for c in cases do
     t1 := Runtime();
     LM := ShallowCopy(LowerCentralSeriesOfGroup(M));
     while Length(LM) < 8 do Add(LM, TrivialSubgroup(M)); od;
-    gm := Reps(M, FrattiniSubgroup(M));
+    if UNIF then gm := xs; else gm := Reps(M, FrattiniSubgroup(M)); fi;
     if VERB then Print("    rank ", Length(gm), " (", Int((Runtime() - t1) / 1000), " s)\n"); fi;
-    gg := Gam(M, ys); gq := ForAll([2..6], j -> Size(gg[j]) = Size(LQ[j]));
+    if UNIF then gg := gH; else gg := Gam(M, ys); fi; gq := ForAll([2..6], j -> Size(gg[j]) = Size(LQ[j]));
     data := [];
     for j in JS do
       ar := Reps(gg[j], ClosureGroup(LM[j], LQ[j + 1]));
