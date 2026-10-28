@@ -212,6 +212,8 @@ for c in cases do
       AppendTo(OUTF, c[1], " #", i, " of ", Length(Ms), ": index 3^", Log(Index(Q, M), 3), ", by layer alone ", perlayer, ", obstruction ", ob, "\n");
     fi;
     if IsBound(PROGF) then PrintTo(PROGF, Position(sel, i), "/", Length(sel), "\n"); fi;
+    # drop M with its cached series (171 of them do not fit in a few GB)
+    Ms[i] := fail; M := fail; LM := fail; gg := fail; data := fail; dc := fail;
   od;
   Print("  sec ", Int((Runtime() - t) / 1000), "\n");
 od;
