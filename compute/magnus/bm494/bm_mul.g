@@ -107,11 +107,21 @@ if IsBound(LEVEL0) and LEVEL0 then Add(cases, ["G", IdentityMapping(G)]); fi;
 for k in [1..Length(us)] do Add(cases, [Concatenation("G/<u", String(k), ">"), NaturalHomomorphismByNormalSubgroupNC(G, Group(us[k]))]); od;
 # ONLY := [i, ...];; restricts to those cases (1 = G when LEVEL0, then the G/<u>), for parallel jobs
 if IsBound(ONLY) then cases := cases{ONLY}; fi;
+# Negative control (CTRLH := true;;): D = G x H, H = SmallGroup(81, 7) of class 3, x1 replaced by x1 h
+# (h a generator of H).  N = M cap (1 x H) is normal in M, misses w, and if M projects onto G then
+# M/N = G satisfies (C2) (x1 h = x1 there): a section exists, so no obstruction may be reported for
+# such M ("onto G: true").  The layer-3 rows a = [x1 h, m] are not in gamma_3(M) gamma_4(D) in general,
+# while lam kills the H-part (class 3 < 6).
+if IsBound(CTRLH) and CTRLH then
+  HH := SmallGroup(81, 7);; DD := DirectProduct(G, HH);;
+  cases := [["G x SmallGroup(81,7), x1 := x1 h", Embedding(DD, 1), DD, Image(Embedding(DD, 2), Pcgs(HH)[1])]];
+fi;
 nall := 0;; nobs := 0;;
 for c in cases do
-  hom := c[2]; Q := Image(hom);
+  hom := c[2]; if Length(c) >= 3 then Q := c[3]; else Q := Image(hom); fi;
   xs := List(XS, x -> Image(hom, x));
   ys := List(Concatenation(YS2, YS3), y -> Image(hom, y)); wQ := Image(hom, W);
+  if Length(c) >= 4 then xs[1] := xs[1] * c[4]; ys[1] := ys[1] * c[4]; fi;
   t := Runtime();
   LQ := ShallowCopy(LowerCentralSeriesOfGroup(Q));
   while Length(LQ) < 8 do Add(LQ, TrivialSubgroup(Q)); od;
@@ -156,6 +166,7 @@ for c in cases do
       Print("    control (c over gamma_j(Q)): K passing ", Length(Passing(dc, Tab, Length(Ks))), " of ", Length(Ks), "\n");
     fi;
     if ob then nobs := nobs + 1; fi;
+    if Length(c) >= 3 then Print("    onto G: ", Size(Image(Projection(Q, 1), M)) = Size(G), "\n"); fi;
     Print("  M: fails ", bad, ", rank ", Length(gm), ", layers [j, #a, #c, #lam]: ", List(data, d -> [d[1], Length(d[2]), Length(d[3]), Length(d[2][1])]),
       ", K passing: ", Length(pass), ", Gam = gamma(Q): ", gq, ", obstruction: ", ob, " (", Int((t2 - t1) / 1000), " + ", Int((Runtime() - t2) / 1000), " s)\n");
   od;
