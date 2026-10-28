@@ -9,7 +9,7 @@
 # x_{6-j}] lies in A and is a homomorphism of gamma_j(Q) killing gamma_{j+1}(Q) (gamma_7(Q) = 1).
 # For a in Gam_j there is c in gamma_j(M) with a c in N, so lam(a) lam(c) in N cap A <= K for all lam
 # at once.  With x_i over generators of M mod Phi(M) (lam is multilinear mod gamma_7), this says: the
-# row (log lam(a) in A/K = Z/3^f)_lam lies in the span of the rows of the c in gamma_j(M) (HNF).  If
+# row (log lam(a) in A/K = Z/3^f)_lam lies in the span of the rows of the c in gamma_j(M) (LogSpan).  If
 # for every K some layer j and some a fail, w lies in every N with (C2) in M/N.  Layers JS (default
 # [3..6]; layer 2 has r^4 columns).
 # MATH-413 (UNIF := true;;): one test per M for every H with H0 = <x1..x4> <= H <= M and every N normal
@@ -105,18 +105,70 @@ InHNF := function(H, v)
   od;
   return IsZero(v1);
 end;;
-# self-test of HNF membership: rows [3,0], [0,1] mod 27 contain [6,5], not [1,0]
+# log_p of the order of the row span of M in (Z/p^e)^n.  Take a pivot of least valuation v among the
+# remaining rows, scale it to p^v and clear its column in the other remaining rows: every remaining entry
+# has valuation >= v, so the pivot row spans a cyclic group of order p^(e-v) meeting the span of the
+# others trivially (they vanish in the pivot column).  No identity block: n can be rank^3 ~ 10^4.
+LogSpan := function(M, p, e)
+  local q, val, R, total, best, bi, bj, i, j, v, x, u, piv, c;
+  q := p^e;
+  val := List([0..q - 1], function(x) local k; if x = 0 then return e; fi; k := 0;
+    while x mod p = 0 do x := x / p; k := k + 1; od; return k; end);
+  R := List(M, r -> List(r, x -> x mod q));
+  total := 0;
+  while R <> [] do
+    best := e; bi := 0; bj := 0;
+    for i in [1..Length(R)] do
+      for j in [1..Length(R[i])] do
+        v := val[R[i][j] + 1];
+        if v < best then best := v; bi := i; bj := j; if v = 0 then break; fi; fi;
+      od;
+      if best = 0 then break; fi;
+    od;
+    if bi = 0 then break; fi;
+    x := R[bi][bj]; u := (x / p^best) ^ -1 mod q;
+    piv := List(R[bi], y -> y * u mod q);
+    Remove(R, bi);
+    for i in [1..Length(R)] do
+      c := R[i][bj];
+      if c <> 0 then c := c / p^best; R[i] := List([1..Length(piv)], k -> (R[i][k] - c * piv[k]) mod q); fi;
+    od;
+    total := total + e - best;
+  od;
+  return total;
+end;;
+# v in the Z-row span of the HNF H (full column rank, upper triangular)?  Only for the self-test.
+InHNF := function(H, v)
+  local v1, row, p, q;
+  v1 := ShallowCopy(v);
+  for row in H do
+    p := PositionNonZero(row);
+    if p > Length(row) then continue; fi;
+    if v1[p] mod row[p] <> 0 then return false; fi;
+    q := v1[p] / row[p]; v1 := v1 - q * row;
+  od;
+  return IsZero(v1);
+end;;
+# self-test of span membership: rows [3,0], [0,1] mod 27 contain [6,5], not [1,0]; and LogSpan
+# against the integer HNF with p^e I appended on 300 random small cases mod 3^3
 XT := Concatenation([[3, 0], [0, 1]], 27 * IdentityMat(2));;
-SELFTEST := InHNF(HermiteNormalFormIntegerMat(XT), [6, 5]) and not InHNF(HermiteNormalFormIntegerMat(XT), [1, 0]);;
+SELFTEST := InHNF(HermiteNormalFormIntegerMat(XT), [6, 5]) and not InHNF(HermiteNormalFormIntegerMat(XT), [1, 0])
+  and LogSpan([[3, 0], [0, 1], [6, 5]], 3, 3) = 5 and LogSpan([[3, 0], [0, 1], [1, 0]], 3, 3) = 6;;
+for t in [1..300] do
+  nc := Random([1..5]);; C := List([1..Random([0..4])], i -> List([1..nc], j -> 3^Random([0..3]) * Random([0..26]) mod 27));;
+  av := List([1..nc], j -> 3^Random([0..3]) * Random([0..26]) mod 27);;
+  H := HermiteNormalFormIntegerMat(Concatenation(C, 27 * IdentityMat(nc)));;
+  if InHNF(H, av) <> (LogSpan(Concatenation(C, [av]), 3, 3) = LogSpan(C, 3, 3)) then SELFTEST := false; fi;
+od;
+Print("span self-test: ", SELFTEST, "\n");
 # the K (indices into Ks) for which every a of every layer of data is in the span of its c
 Passing := function(data, Tab, nK)
   return Filtered([1..nK], k -> ForAll(data, function(d)
-      local f, X, H;
-      f := Tab[k][1];
-      X := List(d[3], cv -> List(cv, p -> Tab[k][2][p]));
-      Append(X, f * IdentityMat(Length(d[2][1])));
-      H := HermiteNormalFormIntegerMat(X);
-      return ForAll(d[2], av -> InHNF(H, List(av, p -> Tab[k][2][p])));
+      local e, C, Aa;
+      e := Log(Tab[k][1], 3);
+      C := List(d[3], cv -> List(cv, p -> Tab[k][2][p]));
+      Aa := List(d[2], av -> List(av, p -> Tab[k][2][p]));
+      return LogSpan(Concatenation(C, Aa), 3, e) = LogSpan(C, 3, e);
     end));
 end;;
 ZG := Centre(G);; O := Omega(ZG, 3, 1);;
@@ -218,5 +270,5 @@ for c in cases do
   Print("  sec ", Int((Runtime() - t) / 1000), "\n");
 od;
 if SUBS then Print("subgroups: "); else Print("maximal subgroups: "); fi;
-Print(nall, ", with the multilinear obstruction: ", nobs, ", HNF self-test: ", SELFTEST, "\n");
+Print(nall, ", with the multilinear obstruction: ", nobs, ", span self-test: ", SELFTEST, "\n");
 QUIT;
