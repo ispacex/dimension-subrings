@@ -33,6 +33,21 @@ MaxOver := function(H, xs)
   res := Filtered(MaximalSubgroups(V), K -> IsSubgroup(K, S));
   return List(res, K -> PreImage(hom, K));
 end;;
+# the series Gam_1..Gam_7 of M for the elements ys (positions NEED)
+Gam := function(M, ys)
+  local L, g, j, i, P;
+  L := LowerCentralSeriesOfGroup(M);
+  g := [M, ClosureGroup(L[2], ys{Filtered(NEED, p -> LEV[p] = 2)})];
+  P := ClosureGroup(L[3], ys{Filtered(NEED, p -> LEV[p] = 3)});
+  P := NormalClosure(M, P);
+  g[3] := ClosureGroup(P, CommutatorSubgroup(g[2], M));
+  for j in [4..7] do
+    P := CommutatorSubgroup(g[j - 1], M);
+    for i in [2..QuoInt(j, 2)] do P := ClosureGroup(P, CommutatorSubgroup(g[i], g[j - i])); od;
+    g[j] := P;
+  od;
+  return g;
+end;;
 if not IsBound(JS) then JS := [3..6]; fi;
 if not IsBound(VERB) then VERB := false; fi;
 if not IsBound(MAXM) then MAXM := infinity; fi;   # only the first MAXM subgroups of each case
@@ -64,6 +79,20 @@ InHNF := function(H, v)
     q := v1[p] / row[p]; v1 := v1 - q * row;
   od;
   return IsZero(v1);
+end;;
+# self-test of HNF membership: rows [3,0], [0,1] mod 27 contain [6,5], not [1,0]
+X := Concatenation([[3, 0], [0, 1]], 27 * IdentityMat(2));;
+Print("InHNF self-test: ", InHNF(HermiteNormalFormIntegerMat(X), [6, 5]) and not InHNF(HermiteNormalFormIntegerMat(X), [1, 0]), "\n");
+# the K (indices into Ks) for which every a of every layer of data is in the span of its c
+Passing := function(data, Tab, nK)
+  return Filtered([1..nK], k -> ForAll(data, function(d)
+      local f, X, H;
+      f := Tab[k][1];
+      X := List(d[3], cv -> List(cv, p -> Tab[k][2][p]));
+      Append(X, f * IdentityMat(Length(d[2][1])));
+      H := HermiteNormalFormIntegerMat(X);
+      return ForAll(d[2], av -> InHNF(H, List(av, p -> Tab[k][2][p])));
+    end));
 end;;
 ZG := Centre(G);; O := Omega(ZG, 3, 1);;
 us := [];;
@@ -113,20 +142,18 @@ for c in cases do
       if VERB then Print("    layer ", j, ": #a ", Length(ar), ", #c ", Length(cr), " (", Int((Runtime() - t1) / 1000), " s)\n"); fi;
     od;
     t2 := Runtime();
-    # K passes if every a of every layer is in the span of the c
-    pass := Filtered([1..Length(Ks)], k -> ForAll(data, function(d)
-        local f, X, H;
-        f := Tab[k][1];
-        X := List(d[3], cv -> List(cv, p -> Tab[k][2][p]));
-        Append(X, f * IdentityMat(Length(d[2][1])));
-        H := HermiteNormalFormIntegerMat(X);
-        if VERB then Print("    K ", k, " layer ", d[1], ": HNF of ", Length(X), " x ", Length(X[1]), " (", Int((Runtime() - t2) / 1000), " s)\n"); fi;
-        return ForAll(d[2], av -> InHNF(H, List(av, p -> Tab[k][2][p])));
-      end));
-    ob := pass = [];
+    pass := Passing(data, Tab, Length(Ks));
+    # Gam_j = gamma_j(Q) (needed for gamma_j(Q) <= gamma_j(M) N)
+    gq := ForAll([2..6], j -> Size(Gam(M, ys)[j]) = Size(LQ[j]));
+    ob := pass = [] and gq;
+    # positive control on the first M: c over gamma_j(Q) instead of gamma_j(M), every K must pass
+    if M = Ms[1] then
+      dc := List(data, d -> [d[1], d[2], List(Reps(LQ[d[1]], LQ[d[1] + 1]), g -> Lam(g, gm, 6 - d[1], AL))]);
+      Print("    control (c over gamma_j(Q)): K passing ", Length(Passing(dc, Tab, Length(Ks))), " of ", Length(Ks), "\n");
+    fi;
     if ob then nobs := nobs + 1; fi;
     Print("  M: fails ", bad, ", rank ", Length(gm), ", layers [j, #a, #c, #lam]: ", List(data, d -> [d[1], Length(d[2]), Length(d[3]), Length(d[2][1])]),
-      ", K passing: ", Length(pass), ", obstruction: ", ob, " (", Int((t2 - t1) / 1000), " + ", Int((Runtime() - t2) / 1000), " s)\n");
+      ", K passing: ", Length(pass), ", Gam = gamma(Q): ", gq, ", obstruction: ", ob, " (", Int((t2 - t1) / 1000), " + ", Int((Runtime() - t2) / 1000), " s)\n");
   od;
   Print("  sec ", Int((Runtime() - t) / 1000), "\n");
 od;
