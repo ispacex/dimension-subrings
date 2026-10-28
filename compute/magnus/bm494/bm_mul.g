@@ -144,7 +144,7 @@ for c in cases do
     t2 := Runtime();
     pass := Passing(data, Tab, Length(Ks));
     # Gam_j = gamma_j(Q) (needed for gamma_j(Q) <= gamma_j(M) N)
-    gq := ForAll([2..6], j -> Size(Gam(M, ys)[j]) = Size(LQ[j]));
+    gg := Gam(M, ys); gq := ForAll([2..6], j -> Size(gg[j]) = Size(LQ[j]));
     ob := pass = [] and gq;
     # positive control on the first M: c over gamma_j(Q) instead of gamma_j(M), every K must pass
     if M = Ms[1] then
