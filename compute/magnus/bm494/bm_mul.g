@@ -18,6 +18,8 @@
 # a over Gam_j(H0), c over gamma_j(M), x_i over x1..x4: if some a fails, its row fails for H as well
 # (restrict the lam of H to these), and w lies in every N with (C2) in H/N.  N cap A = 1 still follows
 # from w notin N: w in H0 <= H, and A cap H is cyclic.  Every proper H containing x1..x4 lies in some M.
+# MATH-413 (SUBS := true;;): the same test as for the M, on every H with Phi(Q) <x1..x4> <= H < Q of index
+# >= 9 (preimages of the subspaces of Q/Phi(Q) = F_3^7 over the images of x1..x4, of codimension >= 2).
 Read("../3group.gap");
 W := EvalString(w);;
 XS := [x1, x2, x3, x4];;
@@ -41,6 +43,18 @@ MaxOver := function(H, xs)
   res := Filtered(MaximalSubgroups(V), K -> IsSubgroup(K, S));
   return List(res, K -> PreImage(hom, K));
 end;;
+# the K with Phi(H) <xs> <= K < H of index >= 9, largest first
+SubsOver := function(H, xs)
+  local Fr, hom, V, S, h2, res;
+  Fr := FrattiniSubgroup(H);
+  hom := NaturalHomomorphismByNormalSubgroupNC(H, Fr);
+  V := Image(hom); S := Subgroup(V, List(xs, x -> Image(hom, x)));
+  h2 := NaturalHomomorphismByNormalSubgroupNC(V, S);
+  res := Filtered(AllSubgroups(Image(h2)), K -> Index(Image(h2), K) >= 9);
+  res := List(res, K -> PreImage(hom, PreImage(h2, K)));
+  Sort(res, function(a, b) return Size(a) > Size(b); end);
+  return res;
+end;;
 # the series Gam_1..Gam_7 of M for the elements ys (positions NEED)
 Gam := function(M, ys)
   local L, g, j, i, P;
@@ -58,8 +72,9 @@ Gam := function(M, ys)
 end;;
 if not IsBound(JS) then JS := [3..6]; fi;
 if not IsBound(VERB) then VERB := false; fi;
-if not IsBound(MAXM) then MAXM := infinity; fi;
-if not IsBound(UNIF) then UNIF := false; fi;   # only the first MAXM subgroups of each case
+if not IsBound(MAXM) then MAXM := infinity; fi;   # only the first MAXM subgroups of each case
+if not IsBound(UNIF) then UNIF := false; fi;
+if not IsBound(SUBS) then SUBS := false; fi;
 # greedy representatives of H modulo the subgroup D (by the pcgs of H)
 Reps := function(H, D)
   local r, S, g;
@@ -142,12 +157,20 @@ for c in cases do
     return [Size(I), List(AL, y -> Position(zs, Image(h, y)) - 1)];
   end);
   Print("|A| = 3^", Log(Size(A), 3), ", kernels K: ", Length(Ks), ", orders of A/K: ", Collected(List(Tab, tb -> tb[1])), "\n");
-  Ms := MaxOver(Q, xs);
+  if SUBS then
+    Ms := SubsOver(Q, xs);
+  else
+    Ms := MaxOver(Q, xs);
+  fi;
   if UNIF then
     H0 := Subgroup(Q, xs); gH := Gam(H0, ys);
     Print("UNIF: H0 = <x1..x4> of order 3^", Log(Size(H0), 3), ", |Gam_j(H0)| = 3^", List(gH{[1..7]}, X -> Log(Size(X), 3)), "\n");
   fi;
-  Print(c[1], ": log3|Q| = ", Log(Size(Q), 3), ", maximal subgroups containing x1..x4: ", Length(Ms), "\n");
+  if SUBS then
+    Print(c[1], ": log3|Q| = ", Log(Size(Q), 3), ", subgroups over Phi(Q) <x1..x4> of index >= 9: ", Length(Ms), ", by log3 index: ", Collected(List(Ms, K -> Log(Index(Q, K), 3))), "\n");
+  else
+    Print(c[1], ": log3|Q| = ", Log(Size(Q), 3), ", maximal subgroups containing x1..x4: ", Length(Ms), "\n");
+  fi;
   for M in Ms{[1..Minimum(MAXM, Length(Ms))]} do
     nall := nall + 1;
     bad := Intersection(Check(M, ys{[1..4]}, ys{[5..8]}), NEED);
@@ -176,10 +199,11 @@ for c in cases do
     fi;
     if ob then nobs := nobs + 1; fi;
     if Length(c) >= 3 then Print("    onto G: ", Size(Image(Projection(Q, 1), M)) = Size(G), "\n"); fi;
-    Print("  M: fails ", bad, ", rank ", Length(gm), ", layers [j, #a, #c, #lam]: ", List(data, d -> [d[1], Length(d[2]), Length(d[3]), Length(d[2][1])]),
+    Print("  M: index 3^", Log(Index(Q, M), 3), ", fails ", bad, ", rank ", Length(gm), ", layers [j, #a, #c, #lam]: ", List(data, d -> [d[1], Length(d[2]), Length(d[3]), Length(d[2][1])]),
       ", K passing: ", Length(pass), " (by layer alone: ", perlayer, "), Gam = gamma(Q): ", gq, ", obstruction: ", ob, " (", Int((t2 - t1) / 1000), " + ", Int((Runtime() - t2) / 1000), " s)\n");
   od;
   Print("  sec ", Int((Runtime() - t) / 1000), "\n");
 od;
-Print("maximal subgroups: ", nall, ", with the multilinear obstruction: ", nobs, ", HNF self-test: ", SELFTEST, "\n");
+if SUBS then Print("subgroups: "); else Print("maximal subgroups: "); fi;
+Print(nall, ", with the multilinear obstruction: ", nobs, ", HNF self-test: ", SELFTEST, "\n");
 QUIT;
