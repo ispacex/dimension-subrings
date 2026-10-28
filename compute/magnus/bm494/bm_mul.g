@@ -34,6 +34,8 @@ MaxOver := function(H, xs)
   return List(res, K -> PreImage(hom, K));
 end;;
 if not IsBound(JS) then JS := [3..6]; fi;
+if not IsBound(VERB) then VERB := false; fi;
+if not IsBound(MAXM) then MAXM := infinity; fi;   # only the first MAXM subgroups of each case
 # greedy representatives of H modulo the subgroup D (by the pcgs of H)
 Reps := function(H, D)
   local r, S, g;
@@ -94,19 +96,21 @@ for c in cases do
   Print("|A| = 3^", Log(Size(A), 3), ", kernels K: ", Length(Ks), ", orders of A/K: ", Collected(List(Tab, tb -> tb[1])), "\n");
   Ms := MaxOver(Q, xs);
   Print(c[1], ": log3|Q| = ", Log(Size(Q), 3), ", maximal subgroups containing x1..x4: ", Length(Ms), "\n");
-  for M in Ms do
+  for M in Ms{[1..Minimum(MAXM, Length(Ms))]} do
     nall := nall + 1;
     bad := Intersection(Check(M, ys{[1..4]}, ys{[5..8]}), NEED);
     t1 := Runtime();
     LM := ShallowCopy(LowerCentralSeriesOfGroup(M));
     while Length(LM) < 8 do Add(LM, TrivialSubgroup(M)); od;
     gm := Reps(M, FrattiniSubgroup(M));
+    if VERB then Print("    rank ", Length(gm), " (", Int((Runtime() - t1) / 1000), " s)\n"); fi;
     data := [];
     for j in JS do
       ar := Reps(LQ[j], ClosureGroup(LM[j], LQ[j + 1]));
       if ar = [] then continue; fi;
       cr := Reps(LM[j], LQ[j + 1]);
       Add(data, [j, List(ar, g -> Lam(g, gm, 6 - j, AL)), List(cr, g -> Lam(g, gm, 6 - j, AL))]);
+      if VERB then Print("    layer ", j, ": #a ", Length(ar), ", #c ", Length(cr), " (", Int((Runtime() - t1) / 1000), " s)\n"); fi;
     od;
     t2 := Runtime();
     # K passes if every a of every layer is in the span of the c
@@ -116,6 +120,7 @@ for c in cases do
         X := List(d[3], cv -> List(cv, p -> Tab[k][2][p]));
         Append(X, f * IdentityMat(Length(d[2][1])));
         H := HermiteNormalFormIntegerMat(X);
+        if VERB then Print("    K ", k, " layer ", d[1], ": HNF of ", Length(X), " x ", Length(X[1]), " (", Int((Runtime() - t2) / 1000), " s)\n"); fi;
         return ForAll(d[2], av -> InHNF(H, List(av, p -> Tab[k][2][p])));
       end));
     ob := pass = [];
