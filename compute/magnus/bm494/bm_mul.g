@@ -1,25 +1,24 @@
-# MATH-412 (bm_mul.g): sections M/N of the maximal subgroups M of bm_sec.g, for every normal N.
-# (C2), (C3) in M/N say exactly: U2 = <x1, x2^9, x3^81, x4^729> gamma_2(M) <= gamma_2(M) N and
-# U3 = <y_ij>^M gamma_3(M) <= gamma_3(M) N (bm_sec.g: N0 covers only N containing the elements).
-# Only (C2) is used here (NEED = 1..4): the y_ij of (C3) are the file's witnesses and need not lie in M.
-# (C2) gives Gam_j <= gamma_j(M) N for the series Gam_2 = U2, Gam_3 = [Gam_2, M] gamma_3(M), ...
-# (bm_gam.g with NEED = 1..4; Gam_j <= gamma_j(Q)).
-# Multilinear obstruction.  Let A = gamma_6(Q) (central), K = a subgroup of A with A/K cyclic and
-# w notin K (every N cap A missing w lies in such a K).  For g in gamma_j(Q) and x_1..x_{6-j} in M,
-# lam(g) = [g, x_1, ..., x_{6-j}] lies in A and is a homomorphism of gamma_j(Q) killing gamma_{j+1}(Q)
-# (gamma_7(Q) = 1).  If a in Gam_j, then a c in N for some c in gamma_j(M), so lam(a) lam(c) in
-# N cap A <= K for all lam at once.  With x_i running over generators of M mod Phi(M) (lam is
-# multilinear mod gamma_7), this is: the row (log lam(a))_lam lies in the Z/3^f-span of the rows of
-# the c in gamma_j(M); a runs over Gam_j (bm_gam.g), the exact image of (C2), (C3).  If for every K some layer j and some a fail, no N exists: w in N for every
-# section M/N satisfying (C2), (C3).  Layers JS (default [3..6]; layer 2 has r^4 columns).
+# MATH-412 (bm_mul.g): sections M/N of the 160 maximal subgroups M of bm_sec.g, for every normal N.
+# In M/N, (C2) says U = <x1, x2^9, x3^81, x4^729> gamma_2(M) <= gamma_2(M) N (bm_sec.g: N0 covers only
+# N containing the elements themselves).  (C3) is not used: its y_ij are the file's witnesses and
+# need not lie in M.  Let Gam be the fastest series with Gam_1 = M, Gam_2 = U,
+# Gam_j = prod_{i < j} [Gam_i, Gam_{j-i}]; by induction its image in M/N lies in gamma_j(M/N), so
+# Gam_j <= gamma_j(M) N.  Gam_j <= gamma_j(Q) (Q = G or G/<u>), with equality for some M only.
+# Multilinear obstruction.  A = gamma_6(Q) is central; every N cap A missing w lies in a subgroup K of A
+# with A/K cyclic and w notin K.  For g in gamma_j(Q) and x_1..x_{6-j} in M, lam(g) = [g, x_1, ..,
+# x_{6-j}] lies in A and is a homomorphism of gamma_j(Q) killing gamma_{j+1}(Q) (gamma_7(Q) = 1).
+# For a in Gam_j there is c in gamma_j(M) with a c in N, so lam(a) lam(c) in N cap A <= K for all lam
+# at once.  With x_i over generators of M mod Phi(M) (lam is multilinear mod gamma_7), this says: the
+# row (log lam(a) in A/K = Z/3^f)_lam lies in the span of the rows of the c in gamma_j(M) (HNF).  If
+# for every K some layer j and some a fail, w lies in every N with (C2) in M/N.  Layers JS (default
+# [3..6]; layer 2 has r^4 columns).
 Read("../3group.gap");
 W := EvalString(w);;
 XS := [x1, x2, x3, x4];;
 YS2 := [x1, x2^9, x3^81, x4^729];;
 YS3 := [LeftNormedComm([z2,z4,z1]), LeftNormedComm([z2,z4,z2]), LeftNormedComm([z2,z4,z3]), LeftNormedComm([z2,z4,z4])];;
 LEV := [2, 2, 2, 2, 3, 3, 3, 3];;
-# (C2) only: the y_ij of (C3) are the file's witnesses and need not lie in M (README); x1..x4 lie in M
-NEED := [1, 2, 3, 4];;
+NEED := [1, 2, 3, 4];;   # (C2) only
 Check := function(H, y2, y3)
   local D, L3, bad;
   D := DerivedSubgroup(H);
@@ -85,7 +84,7 @@ InHNF := function(H, v)
 end;;
 # self-test of HNF membership: rows [3,0], [0,1] mod 27 contain [6,5], not [1,0]
 XT := Concatenation([[3, 0], [0, 1]], 27 * IdentityMat(2));;
-Print("InHNF self-test: ", InHNF(HermiteNormalFormIntegerMat(XT), [6, 5]) and not InHNF(HermiteNormalFormIntegerMat(XT), [1, 0]), "\n");
+SELFTEST := InHNF(HermiteNormalFormIntegerMat(XT), [6, 5]) and not InHNF(HermiteNormalFormIntegerMat(XT), [1, 0]);;
 # the K (indices into Ks) for which every a of every layer of data is in the span of its c
 Passing := function(data, Tab, nK)
   return Filtered([1..nK], k -> ForAll(data, function(d)
@@ -146,8 +145,6 @@ for c in cases do
     while Length(LM) < 8 do Add(LM, TrivialSubgroup(M)); od;
     gm := Reps(M, FrattiniSubgroup(M));
     if VERB then Print("    rank ", Length(gm), " (", Int((Runtime() - t1) / 1000), " s)\n"); fi;
-    # a over Gam_j (bm_gam.g): its image in M/N lies in gamma_j(M/N), so Gam_j <= gamma_j(M) N exactly;
-    # Gam_j <= gamma_j(Q), so lam is a homomorphism on it
     gg := Gam(M, ys); gq := ForAll([2..6], j -> Size(gg[j]) = Size(LQ[j]));
     data := [];
     for j in JS do
@@ -159,6 +156,7 @@ for c in cases do
     od;
     t2 := Runtime();
     pass := Passing(data, Tab, Length(Ks));
+    perlayer := List(data, d -> [d[1], Length(Passing([d], Tab, Length(Ks)))]);
     ob := pass = [];
     # positive control on the first M: c over gamma_j(Q) instead of gamma_j(M), every K must pass
     if M = Ms[1] then
@@ -168,9 +166,9 @@ for c in cases do
     if ob then nobs := nobs + 1; fi;
     if Length(c) >= 3 then Print("    onto G: ", Size(Image(Projection(Q, 1), M)) = Size(G), "\n"); fi;
     Print("  M: fails ", bad, ", rank ", Length(gm), ", layers [j, #a, #c, #lam]: ", List(data, d -> [d[1], Length(d[2]), Length(d[3]), Length(d[2][1])]),
-      ", K passing: ", Length(pass), ", Gam = gamma(Q): ", gq, ", obstruction: ", ob, " (", Int((t2 - t1) / 1000), " + ", Int((Runtime() - t2) / 1000), " s)\n");
+      ", K passing: ", Length(pass), " (by layer alone: ", perlayer, "), Gam = gamma(Q): ", gq, ", obstruction: ", ob, " (", Int((t2 - t1) / 1000), " + ", Int((Runtime() - t2) / 1000), " s)\n");
   od;
   Print("  sec ", Int((Runtime() - t) / 1000), "\n");
 od;
-Print("maximal subgroups: ", nall, ", with the multilinear obstruction: ", nobs, "\n");
+Print("maximal subgroups: ", nall, ", with the multilinear obstruction: ", nobs, ", HNF self-test: ", SELFTEST, "\n");
 QUIT;
