@@ -81,8 +81,8 @@ InHNF := function(H, v)
   return IsZero(v1);
 end;;
 # self-test of HNF membership: rows [3,0], [0,1] mod 27 contain [6,5], not [1,0]
-X := Concatenation([[3, 0], [0, 1]], 27 * IdentityMat(2));;
-Print("InHNF self-test: ", InHNF(HermiteNormalFormIntegerMat(X), [6, 5]) and not InHNF(HermiteNormalFormIntegerMat(X), [1, 0]), "\n");
+XT := Concatenation([[3, 0], [0, 1]], 27 * IdentityMat(2));;
+Print("InHNF self-test: ", InHNF(HermiteNormalFormIntegerMat(XT), [6, 5]) and not InHNF(HermiteNormalFormIntegerMat(XT), [1, 0]), "\n");
 # the K (indices into Ks) for which every a of every layer of data is in the span of its c
 Passing := function(data, Tab, nK)
   return Filtered([1..nK], k -> ForAll(data, function(d)
