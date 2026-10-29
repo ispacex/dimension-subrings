@@ -381,7 +381,72 @@ static void dfs(DFSCtx& C, const SV& u, int d, long long widx) {
   }
 }
 
-static void stage(int k) {  // PR = R_k (generators of weight <= k-1) -> R_{k+1}
+// Projection test at the last stage (GRNQ_PROJ=r): instead of the Howell form of all rows, for each test
+// element h with h - 1 in Delta^k (k = n - 1), y = its tail vector: h - 1 in Delta^n iff y lies in the row
+// lattice L.  For a set S of tail columns, y in L implies y|S in the span of the rows restricted to S (the
+// projection of L), so y|S outside that span proves h - 1 notin Delta^n.  S = the support of y, enlarged r
+// times by all columns of the rows meeting S.  A y|S inside the span decides nothing.
+static int PROJ = -1;
+static vector<string> PROJ_N; static vector<PEx> PROJ_T;
+static vector<Row> howell_stream(vector<Row>& rows, int ncol, vector<int>& pv, vector<int>& order);
+struct StageMod;
+static void proj_test(StageMod& sm, vector<Row>& rows, int ng, int k);
+
+
+static void proj_test(StageMod& sm, vector<Row>& rows, int ng, int k) {
+  vector<vector<int>> colrows(NT);
+  for (size_t r = 0; r < rows.size(); r++) for (int c : rows[r].i) colrows[c].push_back(r);
+  printf("projection test at stage %d: %zu rows, %d tails\n", k, rows.size(), NT);
+  for (size_t s = 0; s < PROJ_T.size(); s++) {
+    vector<vector<u64>> c1(1, FT->magnus(PROJ_T[s]));
+    c1[0][0] = (c1[0][0] + D - 1) % D;
+    vector<vector<u64>> save; save.swap(magnus); magnus.swap(c1);
+    vector<char> savel = live; live = subtree_nz(magnus);
+    vector<Acc> res(1); res[0].init(ng + NT);
+    SV u; u.i.push_back(0); u.v.push_back(1);
+    DFSCtx C{&sm, &res, k, 0};
+    dfs(C, u, 0, 0);
+    SV x = sm.nf(res[0].take());
+    magnus.swap(save); live = savel;
+    int wmin = NDEG; SV y;
+    for (size_t q = 0; q < x.size(); q++) { if (x.i[q] < ng) wmin = min(wmin, PR.wt[x.i[q]]); else { y.i.push_back(x.i[q] - ng); y.v.push_back(x.v[q]); } }
+    if (wmin < NDEG) { printf("test %s: h - 1 in Delta^%d, not in Delta^%d\n", PROJ_N[s].c_str(), wmin, wmin + 1); continue; }
+    if (!y.size()) { printf("test %s: tail vector 0, h - 1 in Delta^%d\n", PROJ_N[s].c_str(), NDEG); continue; }
+    vector<char> inS(NT, 0); vector<int> S;
+    for (int c : y.i) { inS[c] = 1; S.push_back(c); }
+    for (int r = 0; r < PROJ; r++) {
+      vector<int> add;
+      for (int c : S) for (int rr : colrows[c]) for (int cc : rows[rr].i) if (!inS[cc]) { inS[cc] = 1; add.push_back(cc); }
+      S.insert(S.end(), add.begin(), add.end());
+    }
+    sort(S.begin(), S.end());
+    vector<int> pos(NT, -1); for (size_t q = 0; q < S.size(); q++) pos[S[q]] = q;
+    vector<char> used(rows.size(), 0); vector<Row> pr;
+    for (int c : S) for (int rr : colrows[c]) if (!used[rr]) {
+      used[rr] = 1; Row t;
+      for (size_t q = 0; q < rows[rr].i.size(); q++) { int ps = pos[rows[rr].i[q]]; if (ps >= 0) { t.i.push_back(ps); t.v.push_back(rows[rr].v[q]); } }
+      pr.push_back(std::move(t));
+    }
+    size_t nr = pr.size();
+    vector<int> pv, order; double t0 = now();
+    vector<Row> piv = howell_stream(pr, S.size(), pv, order);
+    // reduce y|S in the column order
+    vector<u64> a(S.size(), 0); for (size_t q = 0; q < y.size(); q++) a[pos[y.i[q]]] = y.v[q];
+    bool inspan = true;
+    for (size_t c = 0; c < S.size(); c++) {
+      if (!a[c]) continue;
+      int va = val(a[c]);
+      if (pv[c] < 0 || va < pv[c]) { inspan = false; break; }
+      u64 nq = negm(a[c] / PP[pv[c]]);
+      for (size_t t = 0; t < piv[c].i.size(); t++) { int kk = piv[c].i[t]; a[kk] = addm(a[kk], mulm(piv[c].v[t], nq)); }
+    }
+    printf("test %s: tail vector with %zu entries; S = %zu tails (%d rounds), %zu rows; %s (%.1f s)\n", PROJ_N[s].c_str(), y.size(), S.size(), PROJ, nr,
+           inspan ? "y|S in the projection: undecided" : "y|S NOT in the projection: h - 1 notin Delta^n (exact)", now() - t0);
+    fflush(stdout);
+  }
+}
+
+static bool stage(int k) {  // PR = R_k (generators of weight <= k-1) -> R_{k+1}; true: stopped after the projection test
   double t0 = now();
   int ng = PR.ngen;
   tailP.assign(ng, -1); tailX.assign(ng, vector<int>(R, -1)); NT = 0;
@@ -450,6 +515,7 @@ static void stage(int k) {  // PR = R_k (generators of weight <= k-1) -> R_{k+1}
   if (badgen) { printf("ERROR stage %d: %lld nonzero generator entries in the equations (R_k inconsistent)\n", k, badgen); exit(3); }
   double t1 = now();
   vector<int> pv, order;
+  if (PROJ >= 0 && k == NDEG - 1) { proj_test(sm, rows, ng, k); return true; }
   long long nrow = rows.size(), nent = 0; for (auto& r : rows) nent += r.i.size();
   ST_ELIM = ST_FILL = 0;
   vector<Row> piv = HMETH == 2 ? howell_dyn(rows, NT, pv, order) : HMETH == 1 ? howell_fixed(rows, NT, pv, order) : howell_stream(rows, NT, pv, order);
@@ -506,6 +572,7 @@ static void stage(int k) {  // PR = R_k (generators of weight <= k-1) -> R_{k+1}
   printf("stage %d: %d tails, %zu + %zu equations, %d new generators of weight %d (%lld without power relation), log_%d |Delta^%d/Delta^%d| = %lld; %.1f + %.1f + %.1f s\n",
          k, (int)newidx.size(), ne1, ne2, nnew, k, nfree, P, k, k + 1, logv, t1 - t0, t2 - t1, t3 - t2);
   fflush(stdout);
+  return false;
 }
 
 // the final module (no tails)
@@ -537,6 +604,7 @@ int main(int argc, char** argv) {
   if (t == "spans") { int NS = atoi(tok().c_str());
     for (int s = 0; s < NS; s++) { sn.push_back(tok()); int k = atoi(tok().c_str()); vector<PEx> v; for (int q = 0; q < k; q++) v.push_back(parse()); spans.push_back(v); } }
   FT = new FreeT();
+  { const char* pj = getenv("GRNQ_PROJ"); if (pj) { PROJ = atoi(pj); PROJ_N = tn; PROJ_T = tests; } }
   printf("p = %d, E = %d, n = %d, r = %d, %d relators, %d tests; |T_<n| = %lld\n", P, E, NDEG, R, S, NTs, FT->size);
   double tm0 = now();
   for (auto& rho : rels) {
@@ -547,7 +615,7 @@ int main(int argc, char** argv) {
   live = subtree_nz(magnus);
   printf("Magnus expansions of %zu named subexpressions and %d relators: %.1f s\n", NAMES.size(), S, now() - tm0); fflush(stdout);
   PR.mu[0].assign(R, SV()); PR.ex[0] = E; PR.isdefX[0].assign(R, 0);
-  for (int k = 1; k < NDEG; k++) stage(k);
+  for (int k = 1; k < NDEG; k++) if (stage(k)) { printf("grnq done (projection test)\n"); return 0; }
   // weights
   { vector<int> cnt(NDEG, 0); for (int b = 0; b < PR.ngen; b++) cnt[PR.wt[b]]++;
     printf("generators by weight:"); for (int w = 0; w < NDEG; w++) printf(" %d", cnt[w]);

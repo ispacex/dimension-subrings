@@ -120,7 +120,7 @@ for c in cases do
   # a basis of Zbar/N (elementary abelian): grnq tests all combinations (spans, additive when the
   # weights are >= n/2 -- grnq checks that)
   span := List(Pcgs(Image(h2)), y -> PreImagesRepresentative(h2, y));
-  tests := [["w", W0], ["x1", Comm(fp[4], fp[5])], ["x2", fp[1]], ["a6", a6], ["a6^3", a6^3]];
+  tests := [["w", W0], ["x1", Comm(fp[4], fp[5])], ["x2", fp[1]], ["a6", a6], ["a6^3", a6^3], ["a6^27", a6^27], ["a6^81", a6^81]];
   for k in [1..Length(c[2])] do Add(tests, [Concatenation("u", String(k)), c[2][k]]); od;
   WriteCase(c[1], c[2], tests, span);
   Print(c[1], ": Omega_1(Z(Q/<w>)) has rank ", Length(span), " mod <w>; a6 = generator of gamma_6 (order ", Order(a6), ")\n");
