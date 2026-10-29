@@ -9,12 +9,16 @@ W := EvalString(w);;
 XS := [x1, x2, x3, x4];;
 NDEG := 7;;
 # M_1..M_NDEG by Lazard, M_n = [M_(n-1), H] M_(ceil(n/3))^3 (GAP's JenningsSeries runs to the end of the
-# series, millions of terms here: elements of order 3^15)
+# series, millions of terms here, and Agemo on H itself is slow).  K = normal closure of the 9th powers of
+# Pcgs(H) lies in H^9 <= M_7(H) (Lazard: gamma_1^9), and the Jennings series of H/K is the image of that of
+# H, so d_1..d_6 can be read off H/K (NDEG <= 9).
 JenDims := function(H)
-  local J, n;
-  J := [H];
+  local K, hom, B, J, n;
+  K := NormalClosure(H, Subgroup(H, List(Pcgs(H), g -> g^9)));
+  hom := NaturalHomomorphismByNormalSubgroupNC(H, K); B := Image(hom);
+  J := [B];
   for n in [2..NDEG] do
-    Add(J, ClosureGroup(CommutatorSubgroup(J[n - 1], H), Agemo(J[QuoInt(n + 2, 3)], 3)));
+    Add(J, ClosureGroup(CommutatorSubgroup(J[n - 1], B), Agemo(J[QuoInt(n + 2, 3)], 3)));
   od;
   return List([1..NDEG - 1], k -> LogInt(Index(J[k], J[k + 1]), 3));
 end;;
