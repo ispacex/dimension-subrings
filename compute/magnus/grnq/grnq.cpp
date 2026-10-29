@@ -10,6 +10,7 @@
 //   rels S   then S expressions
 //   tests T  then T lines: NAME expression
 // expression := g<i> (1-based) | (inv e) | (pow e INT) | (mul e e ...) | (comm e e)   [a,b] = a^-1 b^-1 a b
+// Usage: grnq [n] < input   (n overrides the n of the input)
 // Output: per stage the generators by weight and log_p |Delta^k / Delta^(k+1)|; the certificate;
 // per test the largest d < n with h - 1 in Delta^d, or "in Delta^n".
 #include <cstdio>
@@ -385,10 +386,11 @@ struct FinalMod {
   SV mulX(const SV& v, int j) { return sm.mulX(v, j); }
 };
 
-int main() {
+int main(int argc, char** argv) {
   string t;
   auto expect = [&](const char* w) { t = tok(); if (t != w) { fprintf(stderr, "expected %s got %s\n", w, t.c_str()); exit(2); } };
   expect("p"); P = atoi(tok().c_str()); expect("E"); E = atoi(tok().c_str()); expect("n"); NDEG = atoi(tok().c_str()); expect("r"); R = atoi(tok().c_str());
+  if (argc > 1) NDEG = atoi(argv[1]);  // override n of the input
   { u128 d = 1; for (int q = 0; q < E; q++) d *= P; if (d >= ((u128)1 << 62)) { fprintf(stderr, "p^E too large\n"); return 2; } D = (u64)d; }
   PP.assign(E + 1, 1); for (int q = 1; q <= E; q++) PP[q] = PP[q - 1] * P;
   t = tok();
