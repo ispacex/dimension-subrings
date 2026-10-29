@@ -18,22 +18,22 @@ if not IsBound(OUTDIR) then OUTDIR := "."; fi;
 if not IsBound(EGRNQ) then EGRNQ := 30; fi;
 G0 := Parent(G);; fp := FamilyPcgs(G0);; m := Length(fp);;
 W0 := EvalString(w);;
-# definitions and the nontrivial relations: [i] power, [j, i] commutator, with exponents of the rhs
+# definitions and all other relations (also [g_j, g_i] = 1): [i] power, [j, i] commutator, with exponents of the rhs
 def := List(fp, x -> fail);; rels := [];;
 for i in [1..m] do
   e := ExponentsOfRelativePower(fp, i);
   k := PositionNonZero(e);
   if k <= m and e[k] = 1 and Number(e, x -> x <> 0) = 1 and def[k] = fail then def[k] := [i];
-  elif not IsZero(e) then Add(rels, [[i], e]); fi;
+  else Add(rels, [[i], e]); fi;
 od;
 for j in [2..m] do for i in [1..j-1] do
   e := ExponentsOfCommutator(fp, j, i);
   k := PositionNonZero(e);
   if k <= m and e[k] = 1 and Number(e, x -> x <> 0) = 1 and def[k] = fail then def[k] := [j, i];
-  elif not IsZero(e) then Add(rels, [[j, i], e]); fi;
+  else Add(rels, [[j, i], e]); fi;
 od; od;
 if ForAny([8..m], k -> def[k] = fail) then Error("generator without definition"); fi;
-Print("pc relations: ", Length(rels), " nontrivial besides the ", m - 7, " definitions\n");
+Print("pc relations: ", Length(rels), " besides the ", m - 7, " definitions (trivial ones included: their tails count too)\n");
 # lifts in the p-cover by the definitions
 t := Runtime();;
 P := PqPCover(G0);; Pf := FamilyPcgs(P);; dM := LogInt(Size(P), 3) - m;;
