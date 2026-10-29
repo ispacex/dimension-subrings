@@ -52,9 +52,9 @@ while true do
   if Order(zc) <> 3 then
     hh := NaturalHomomorphismByNormalSubgroupNC(cur, Group(zc^3)); cur := Image(hh); zc := Image(hh, zc); steps := steps + 1; continue;
   fi;
-  Z := Centre(cur);
-  if IsCyclic(Z) then break; fi;
-  iso := IsomorphismPcGroup(Z); PZ := Image(iso);
+  ZC := Centre(cur);
+  if IsCyclic(ZC) then break; fi;
+  iso := IsomorphismPcGroup(ZC); PZ := Image(iso);
   chis := Filtered(LinearCharacters(PZ), chi -> not IsOne(Image(iso, zc)^chi));
   Sort(chis, function(a, b) return Order(a) < Order(b); end);
   K := PreImage(iso, KernelOfCharacter(chis[1]));
