@@ -32,12 +32,15 @@ typedef __uint128_t u128;
 typedef __int128 i128;
 
 static int P, E, NDEG, R;
-static bool HDYN = false;
-static long long ST_ELIM = 0, ST_FILL = 0;  // Howell statistics: eliminations, entries written  // GRNQ_HOWELL=dyn: dynamic pivot order (default: the fixed column order)
+static int HMETH = 0;  // GRNQ_HOWELL: stream (default), fixed, dyn
+static long long ST_ELIM = 0, ST_FILL = 0;  // Howell statistics: eliminations, entries written
 static u64 D;
 static vector<u64> PP;
 
-static inline u64 mulm(u64 a, u64 b) { return (u64)((u128)a * b % D); }
+static bool SMALLD = false;  // D < 2^32: products fit in 64 bits, Barrett reduction
+static u64 BARM = 0;          // floor(2^64 / D)
+static inline u64 modr(u64 x) { u64 q = (u64)(((u128)x * BARM) >> 64); u64 r = x - q * D; return r >= D ? r - D : r; }
+static inline u64 mulm(u64 a, u64 b) { return SMALLD ? modr(a * b) : (u64)((u128)a * b % D); }
 static inline u64 addm(u64 a, u64 b) { u64 c = a + b; return c >= D ? c - D : c; }
 static inline u64 negm(u64 a) { return a ? D - a : 0; }
 static int val(u64 a) { if (!a) return E; int v = 0; while (a % P == 0) { a /= P; v++; } return v; }
@@ -248,6 +251,49 @@ static vector<Row> howell_fixed(vector<Row>& rows, int ncol, vector<int>& pv, ve
   return piv;
 }
 
+// Howell form in the fixed column order, inserting the rows one by one into a dense accumulator (only the
+// pivot rows are kept: the rows of a stage need not fit in memory once they are dense).  A row is reduced
+// at each column where it has an entry and a pivot of no larger valuation exists; if its valuation there
+// is smaller, it becomes the pivot and the old pivot row is inserted again; a new pivot row p^v r adds
+// p^(E-v) r to the queue (the Howell closure).  Each column's pivot then has the least valuation among
+// the lattice elements leading there, and the closure rows give the Howell property.
+static vector<Row> howell_stream(vector<Row>& rows, int ncol, vector<int>& pv, vector<int>& order) {
+  vector<Row> piv(ncol); pv.assign(ncol, -1);
+  vector<u64> acc(ncol, 0);
+  vector<Row> pend; size_t next = 0;
+  auto extract = [&](int c, int hi, u64 u) {  // acc[c..hi] times u as a row; clears acc
+    Row r; for (int k = c; k <= hi; k++) if (acc[k]) { r.i.push_back(k); r.v.push_back(mulm(acc[k], u)); acc[k] = 0; }
+    return r;
+  };
+  auto closure = [&](const Row& r, int v) { if (v > 0) { Row s = r; scale(s, PP[E - v]); if (!s.i.empty()) pend.push_back(std::move(s)); } };
+  for (;;) {
+    Row x;
+    if (!pend.empty()) { x = std::move(pend.back()); pend.pop_back(); }
+    else if (next < rows.size()) { x = std::move(rows[next++]); }
+    else break;
+    if (x.i.empty()) continue;
+    for (size_t q = 0; q < x.i.size(); q++) acc[x.i[q]] = x.v[q];
+    int c = x.i[0], hi = x.i.back();
+    while (c <= hi) {
+      u64 a = acc[c];
+      if (!a) { c++; continue; }
+      int va = val(a);
+      if (pv[c] < 0 || va < pv[c]) {
+        Row r = extract(c, hi, invunit(a / PP[va]));
+        if (pv[c] >= 0) pend.push_back(std::move(piv[c]));
+        pv[c] = va; closure(r, va); piv[c] = std::move(r);
+        break;
+      }
+      u64 nq = negm(a / PP[pv[c]]); const Row& pr = piv[c]; ST_ELIM++; ST_FILL += pr.i.size();
+      for (size_t t = 0; t < pr.i.size(); t++) { int k = pr.i[t]; acc[k] = addm(acc[k], mulm(pr.v[t], nq)); if (k > hi) hi = k; }
+      c++;
+    }
+  }
+  rows.clear(); rows.shrink_to_fit();
+  order.clear(); for (int c = 0; c < ncol; c++) order.push_back(c);
+  return piv;
+}
+
 // Howell form with a dynamic pivot order (Markowitz-like), over columns [0, ncol).  Phase v = 0, 1, ...:
 // every remaining entry has valuation >= v; a pivot is an entry of valuation exactly v (shortest row
 // first, then the column in fewest rows), normalised to p^v, and its column is cleared from all other
@@ -406,11 +452,11 @@ static void stage(int k) {  // PR = R_k (generators of weight <= k-1) -> R_{k+1}
   vector<int> pv, order;
   long long nrow = rows.size(), nent = 0; for (auto& r : rows) nent += r.i.size();
   ST_ELIM = ST_FILL = 0;
-  vector<Row> piv = HDYN ? howell_dyn(rows, NT, pv, order) : howell_fixed(rows, NT, pv, order);
+  vector<Row> piv = HMETH == 2 ? howell_dyn(rows, NT, pv, order) : HMETH == 1 ? howell_fixed(rows, NT, pv, order) : howell_stream(rows, NT, pv, order);
   double t2 = now();
   { long long npiv = 0, plen = 0, pmax = 0; for (int c = 0; c < NT; c++) if (pv[c] >= 0) { npiv++; plen += piv[c].i.size(); pmax = max(pmax, (long long)piv[c].i.size()); }
     printf("  howell %s: %lld rows (%lld entries) x %d columns; %lld eliminations writing %lld entries; %lld pivots, length mean %.0f max %lld\n",
-           HDYN ? "dyn" : "fixed", nrow, nent, NT, ST_ELIM, ST_FILL, npiv, npiv ? (double)plen / npiv : 0.0, pmax); }
+           HMETH == 2 ? "dyn" : HMETH == 1 ? "fixed" : "stream", nrow, nent, NT, ST_ELIM, ST_FILL, npiv, npiv ? (double)plen / npiv : 0.0, pmax); }
   // rest[c]: the pivot row of c without its pivot entry, with the unit-pivot columns substituted
   // (last pivot first: the rows of later columns are already reduced, and contain none)
   vector<SV> rest(NT);
@@ -473,9 +519,10 @@ int main(int argc, char** argv) {
   auto expect = [&](const char* w) { t = tok(); if (t != w) { fprintf(stderr, "expected %s got %s\n", w, t.c_str()); exit(2); } };
   expect("p"); P = atoi(tok().c_str()); expect("E"); E = atoi(tok().c_str()); expect("n"); NDEG = atoi(tok().c_str()); expect("r"); R = atoi(tok().c_str());
   if (argc > 1) NDEG = atoi(argv[1]);  // override n of the input
-  { const char* h = getenv("GRNQ_HOWELL"); HDYN = h && string(h) == "dyn"; }
+  { const char* h = getenv("GRNQ_HOWELL"); string hs = h ? h : "stream"; HMETH = hs == "fixed" ? 1 : hs == "dyn" ? 2 : 0; }
   { u128 d = 1; for (int q = 0; q < E; q++) d *= P; if (d >= ((u128)1 << 62)) { fprintf(stderr, "p^E too large\n"); return 2; } D = (u64)d; }
   PP.assign(E + 1, 1); for (int q = 1; q <= E; q++) PP[q] = PP[q - 1] * P;
+  SMALLD = D < ((u64)1 << 32); if (SMALLD) BARM = (u64)((((u128)1) << 64) / D);
   t = tok();
   while (t == "let") { string nm = tok(); PEx e = parse(); NAMES.push_back({nm, e}); t = tok(); }
   if (t != "rels") { fprintf(stderr, "expected rels got %s\n", t.c_str()); exit(2); }
@@ -503,7 +550,9 @@ int main(int argc, char** argv) {
   for (int k = 1; k < NDEG; k++) stage(k);
   // weights
   { vector<int> cnt(NDEG, 0); for (int b = 0; b < PR.ngen; b++) cnt[PR.wt[b]]++;
-    printf("generators by weight:"); for (int w = 0; w < NDEG; w++) printf(" %d", cnt[w]); printf("\n"); }
+    printf("generators by weight:"); for (int w = 0; w < NDEG; w++) printf(" %d", cnt[w]);
+    int emax = 0; for (int b = 1; b < PR.ngen; b++) if (PR.ex[b] < E) emax = max(emax, PR.ex[b]);
+    printf("; largest exponent of a power relation %d (E = %d)\n", emax, E); }
   // certificate: p^(E-1) kills every generator of weight >= 1
   FinalMod fm; long long bad = 0;
   for (int b = 1; b < PR.ngen; b++) { SV s; s.i.push_back(b); s.v.push_back(PP[E - 1]); if (fm.sm.nf(s).size()) bad++; }
