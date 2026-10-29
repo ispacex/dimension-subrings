@@ -32,6 +32,7 @@ typedef __uint128_t u128;
 typedef __int128 i128;
 
 static int P, E, NDEG, R;
+static bool HDYN = false;  // GRNQ_HOWELL=dyn: dynamic pivot order (default: the fixed column order)
 static u64 D;
 static vector<u64> PP;
 
@@ -220,6 +221,32 @@ static Row axpy(const Row& a, const Row& b, u64 cb) {  // a + cb b
   }
   return s;
 }
+// Howell form in the fixed column order 0..ncol-1 (the p^(E-v) multiple of each pivot row is added back);
+// returns pivot rows indexed by pivot column (empty Row if none), entry p^v at the pivot
+static vector<Row> howell_fixed(vector<Row>& rows, int ncol, vector<int>& pv, vector<int>& order) {
+  vector<vector<Row>> bucket(ncol);
+  for (auto& r : rows) if (!r.i.empty()) bucket[lead(r)].push_back(std::move(r));
+  rows.clear();
+  vector<Row> piv(ncol); pv.assign(ncol, -1);
+  for (int c = 0; c < ncol; c++) {
+    auto& B = bucket[c]; if (B.empty()) continue;
+    size_t best = 0; int bv = E + 1;
+    for (size_t q = 0; q < B.size(); q++) { int v = val(B[q].v[0]); if (v < bv || (v == bv && B[q].i.size() < B[best].i.size())) { bv = v; best = q; } }
+    Row pr = std::move(B[best]); B.erase(B.begin() + best);
+    u64 u = pr.v[0] / PP[bv]; scale(pr, invunit(u));  // pivot entry p^bv
+    for (auto& r : B) {
+      u64 q = r.v[0] / PP[bv];  // r.v[0] = p^v' unit with v' >= bv
+      Row s = axpy(r, pr, negm(q));
+      if (!s.i.empty()) bucket[lead(s)].push_back(std::move(s));
+    }
+    vector<Row>().swap(B);
+    if (bv > 0) { Row s = pr; scale(s, PP[E - bv]); if (!s.i.empty()) bucket[lead(s)].push_back(std::move(s)); }
+    pv[c] = bv; piv[c] = std::move(pr);
+  }
+  order.clear(); for (int c = 0; c < ncol; c++) order.push_back(c);
+  return piv;
+}
+
 // Howell form with a dynamic pivot order (Markowitz-like), over columns [0, ncol).  Phase v = 0, 1, ...:
 // every remaining entry has valuation >= v; a pivot is an entry of valuation exactly v (shortest row
 // first, then the column in fewest rows), normalised to p^v, and its column is cleared from all other
@@ -356,13 +383,26 @@ static void stage(int k) {  // PR = R_k (generators of weight <= k-1) -> R_{k+1}
     SV u; u.i.push_back(b); u.v.push_back(1);
     DFSCtx C{&sm, &res, k, PR.wt[b]};
     dfs(C, u, 0, 0);
+    // the rows of b (one per relator) involve few tails: replace them by their Howell form, on their
+    // own columns (same lattice, at most as many rows as columns)
+    size_t r0 = rows.size();
     for (auto& a : res) { sm.acc.clear(); for (int x : a.t) if (a.a[x]) sm.acc.add(x, a.a[x]); a.clear(); push(sm.nf_acc()); }
+    if (rows.size() - r0 > 1) {
+      vector<int> cols; for (size_t q = r0; q < rows.size(); q++) cols.insert(cols.end(), rows[q].i.begin(), rows[q].i.end());
+      sort(cols.begin(), cols.end()); cols.erase(unique(cols.begin(), cols.end()), cols.end());
+      if (cols.size() < rows.size() - r0) {
+        vector<Row> loc(rows.begin() + r0, rows.end()); rows.resize(r0);
+        for (auto& r : loc) for (auto& c : r.i) c = lower_bound(cols.begin(), cols.end(), c) - cols.begin();
+        vector<int> lpv, lord; vector<Row> lp = howell_fixed(loc, cols.size(), lpv, lord);
+        for (auto& r : lp) { if (r.i.empty()) continue; for (auto& c : r.i) c = cols[c]; rows.push_back(std::move(r)); }
+      }
+    }
   }
   size_t ne2 = rows.size() - ne1;
   if (badgen) { printf("ERROR stage %d: %lld nonzero generator entries in the equations (R_k inconsistent)\n", k, badgen); exit(3); }
   double t1 = now();
   vector<int> pv, order;
-  vector<Row> piv = howell_dyn(rows, NT, pv, order);
+  vector<Row> piv = HDYN ? howell_dyn(rows, NT, pv, order) : howell_fixed(rows, NT, pv, order);
   double t2 = now();
   // rest[c]: the pivot row of c without its pivot entry, with the unit-pivot columns substituted
   // (last pivot first: the rows of later columns are already reduced, and contain none)
@@ -426,6 +466,7 @@ int main(int argc, char** argv) {
   auto expect = [&](const char* w) { t = tok(); if (t != w) { fprintf(stderr, "expected %s got %s\n", w, t.c_str()); exit(2); } };
   expect("p"); P = atoi(tok().c_str()); expect("E"); E = atoi(tok().c_str()); expect("n"); NDEG = atoi(tok().c_str()); expect("r"); R = atoi(tok().c_str());
   if (argc > 1) NDEG = atoi(argv[1]);  // override n of the input
+  { const char* h = getenv("GRNQ_HOWELL"); HDYN = h && string(h) == "dyn"; }
   { u128 d = 1; for (int q = 0; q < E; q++) d *= P; if (d >= ((u128)1 << 62)) { fprintf(stderr, "p^E too large\n"); return 2; } D = (u64)d; }
   PP.assign(E + 1, 1); for (int q = 1; q <= E; q++) PP[q] = PP[q - 1] * P;
   t = tok();
