@@ -1,7 +1,7 @@
 # MATH-414 (bm_z8.g): the elements of Zbar (bm_grnq.g) that grnq finds in D_6(Q), and small quotients
 # keeping them.  For Q = G or G/<u_k>: the basis of Zbar/N as in bm_grnq.g; for the index IDX (from the
 # grnq log, "span Zbar: in D_6"), z = that basis element: its order, z^3, whether z lies in gamma_6(Q), and
-# a descent Q -> Q/K, K the kernel of a linear character of Z(Q) not trivial on z, until Z is cyclic: the order of the quotient and its Jennings count (as bm_jen.g).  If it is <= 3^9, z is not
+# a descent Q -> Q/K, K <= Z(Q) with Z(Q)/K cyclic and z notin K, until Z is cyclic: the order of the quotient and its Jennings count (as bm_jen.g).  If it is <= 3^9, z is not
 # in D_7(Q) (MATH-403: D_n = gamma_n up to order 3^9, and gamma_7 = 1).
 Read("../3group.gap");;
 G0 := Parent(G);; fp := FamilyPcgs(G0);; W0 := EvalString(w);;
@@ -44,8 +44,8 @@ JenCount := function(d)
     od; c := new; od; od;
   return Sum(c);
 end;;
-# descent: each step kills the kernel K of a linear character chi of Z(cur) with chi(z) <> 1 (z notin K,
-# K central so normal), of least order; it stops when Z(cur) is cyclic (then every nontrivial subgroup of
+# descent: each step kills a subgroup K of Z(cur) with Z(cur)/K cyclic and z notin K (K central, so
+# normal); it stops when Z(cur) is cyclic (then every nontrivial subgroup of
 # Z(cur) contains z, as z has order 3)
 cur := Q;; zc := zQ;; steps := 0;; t := Runtime();;
 while true do
@@ -54,10 +54,14 @@ while true do
   fi;
   ZC := Centre(cur);
   if IsCyclic(ZC) then break; fi;
-  iso := IsomorphismPcGroup(ZC); PZ := Image(iso);
-  chis := Filtered(LinearCharacters(PZ), chi -> not IsOne(Image(iso, zc)^chi));
-  Sort(chis, function(a, b) return Order(a) < Order(b); end);
-  K := PreImage(iso, KernelOfCharacter(chis[1]));
+  # Z = sum of cyclic <e_i>, z = sum c_i e_i; for i with c_i <> 0 and e_i of least order, K = <e_j, j <> i>
+  # (Z/K cyclic, z notin K)
+  es := IndependentGeneratorsOfAbelianGroup(ZC);
+  cz := IndependentGeneratorExponents(ZC, zc);
+  cand := Filtered([1..Length(es)], i -> cz[i] mod Order(es[i]) <> 0);
+  Sort(cand, function(a, b) return Order(es[a]) < Order(es[b]); end);
+  K := Subgroup(ZC, es{Difference([1..Length(es)], [cand[1]])});
+  if zc in K then Error("z in K"); fi;
   hh := NaturalHomomorphismByNormalSubgroupNC(cur, K); cur := Image(hh); zc := Image(hh, zc); steps := steps + 1;
   Print("  step ", steps, ": order 3^", LogInt(Size(cur), 3), "\n");
 od;
