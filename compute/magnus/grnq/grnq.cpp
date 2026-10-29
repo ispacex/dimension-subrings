@@ -453,11 +453,12 @@ int main(int argc, char** argv) {
   // >= n), then prod e_i^a_i - 1 = sum_i (e_i^a_i - 1) mod Delta^n (expand the product: every term with
   // two or more factors vanishes), so the a in {0..p-1}^k with prod e_i^a_i in D_n are those with
   // sum_i x_i(a_i) = 0, x_i(a) the image of e_i^a - 1 (computed for each a); all p^k are tried.
+  vector<PEx> keep;  // FreeT::magnus memoizes by address: the nodes made here must outlive the run
   for (size_t s = 0; s < spans.size(); s++) {
     int k = spans[s].size(); vector<vector<SV>> x(k, vector<SV>(P)); vector<int> wv(k);
     printf("span %s: weights", sn[s].c_str());
     for (int q = 0; q < k; q++) {
-      for (int a = 1; a < P; a++) { auto e = make_shared<Ex>(); e->op = 2; e->n = a; e->c.push_back(spans[s][q]); x[q][a] = image(e); }
+      for (int a = 1; a < P; a++) { auto e = make_shared<Ex>(); e->op = 2; e->n = a; e->c.push_back(spans[s][q]); keep.push_back(e); x[q][a] = image(e); }
       wv[q] = weight(x[q][1]); printf(" %d", wv[q]);
     }
     printf("\n");
