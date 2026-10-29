@@ -449,22 +449,25 @@ int main(int argc, char** argv) {
     else printf("test %s: h - 1 in Delta^%d, not in Delta^%d\n", tn[s].c_str(), w, w + 1);
     fflush(stdout);
   }
-  // spans: if (e_i - 1)(e_j - 1) lies in Delta^n for all i, j (weights adding up to >= n), then
-  // prod e_i^a_i - 1 = sum a_i (e_i - 1) mod Delta^n for integers a_i >= 0 (the products of two or more
-  // factors e_i - 1 vanish), so the a in {0..p-1}^k with prod e_i^a_i in D_n are those with
-  // sum a_i x_i = 0, x_i the image of e_i - 1; all p^k of them are tried.
+  // spans: if (e_i^a - 1)(e_j^b - 1) lies in Delta^n for all i != j (the two smallest weights add up to
+  // >= n), then prod e_i^a_i - 1 = sum_i (e_i^a_i - 1) mod Delta^n (expand the product: every term with
+  // two or more factors vanishes), so the a in {0..p-1}^k with prod e_i^a_i in D_n are those with
+  // sum_i x_i(a_i) = 0, x_i(a) the image of e_i^a - 1 (computed for each a); all p^k are tried.
   for (size_t s = 0; s < spans.size(); s++) {
-    int k = spans[s].size(); vector<SV> x(k); vector<int> wv(k);
+    int k = spans[s].size(); vector<vector<SV>> x(k, vector<SV>(P)); vector<int> wv(k);
     printf("span %s: weights", sn[s].c_str());
-    for (int q = 0; q < k; q++) { x[q] = image(spans[s][q]); wv[q] = weight(x[q]); printf(" %d", wv[q]); }
-    int wmin = NDEG; for (int q = 0; q < k; q++) wmin = min(wmin, wv[q]);
+    for (int q = 0; q < k; q++) {
+      for (int a = 1; a < P; a++) { auto e = make_shared<Ex>(); e->op = 2; e->n = a; e->c.push_back(spans[s][q]); x[q][a] = image(e); }
+      wv[q] = weight(x[q][1]); printf(" %d", wv[q]);
+    }
     printf("\n");
-    if (2 * wmin < NDEG) { printf("span %s: not additive (2 * %d < %d), skipped\n", sn[s].c_str(), wmin, NDEG); continue; }
+    vector<int> sw = wv; sort(sw.begin(), sw.end());
+    if (k >= 2 && sw[0] + sw[1] < NDEG) { printf("span %s: not additive (%d + %d < %d), skipped\n", sn[s].c_str(), sw[0], sw[1], NDEG); continue; }
     long long tot = 1; for (int q = 0; q < k; q++) tot *= P;
     long long nker = 0; vector<int> a(k, 0);
     for (long long c = 0; c < tot; c++) {
       long long y = c; for (int q = 0; q < k; q++) { a[q] = y % P; y /= P; }
-      Acc acc; acc.init(PR.ngen); for (int q = 0; q < k; q++) acc.addsv(x[q], (u64)a[q]);
+      Acc acc; acc.init(PR.ngen); for (int q = 0; q < k; q++) if (a[q]) acc.addsv(x[q][a[q]], 1);
       SV z = acc.take(); z = fm.sm.nf(z);
       if (!z.size()) { nker++; if (c) { printf("span %s: in D_%d:", sn[s].c_str(), NDEG); for (int q = 0; q < k; q++) printf(" %d", a[q]); printf("\n"); } }
     }

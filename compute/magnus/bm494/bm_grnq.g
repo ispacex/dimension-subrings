@@ -111,6 +111,7 @@ LCS := LowerCentralSeriesOfGroup(G0);;
 a6 := MinimalGeneratingSet(LCS[6])[1];;
 cases := [["G", []]];;
 for k in [1..Length(us)] do Add(cases, [Concatenation("Gu", String(k)), [us[k]]]); od;
+if IsBound(ONLY) then cases := Filtered(cases, c -> c[1] in ONLY); fi;   # ONLY := ["Gu1"];; etc.
 for c in cases do
   N := NormalClosure(G0, Group(Concatenation(c[2], [W0])));    # <u, w> (or <w>)
   hom := NaturalHomomorphismByNormalSubgroupNC(G0, N);
