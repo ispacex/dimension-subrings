@@ -93,18 +93,6 @@ Lam := function(g, xs, k, AL)
   return List(cur, function(h) local p; p := PositionSorted(AL, h);
     if p > Length(AL) or AL[p] <> h then Error("commutator not in A"); fi; return p; end);
 end;;
-# v in the Z-row span of the HNF H (full column rank, upper triangular)?
-InHNF := function(H, v)
-  local v1, row, p, q;
-  v1 := ShallowCopy(v);
-  for row in H do
-    p := PositionNonZero(row);
-    if p > Length(row) then continue; fi;
-    if v1[p] mod row[p] <> 0 then return false; fi;
-    q := v1[p] / row[p]; v1 := v1 - q * row;
-  od;
-  return IsZero(v1);
-end;;
 # log_p of the order of the row span of M in (Z/p^e)^n.  Take a pivot of least valuation v among the
 # remaining rows, scale it to p^v and clear its column in the other remaining rows: every remaining entry
 # has valuation >= v, so the pivot row spans a cyclic group of order p^(e-v) meeting the span of the
@@ -204,6 +192,8 @@ for c in cases do
   A := LQ[6]; AL := AsSSortedList(A);
   iso := IsomorphismPcGroup(A); P := Image(iso);
   Ks := Set(List(Filtered(LinearCharacters(P), chi -> not IsOne(Image(iso, wQ)^chi)), chi -> PreImage(iso, KernelOfCharacter(chi))));
+  # no K would make every subgroup look obstructed
+  if Ks = [] then Error("no kernel K avoiding w"); fi;
   # log tables of A -> A/K = Z/3^f
   Tab := List(Ks, function(K)
     local h, I, z, zs;
