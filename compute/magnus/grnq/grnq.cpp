@@ -220,27 +220,57 @@ static Row axpy(const Row& a, const Row& b, u64 cb) {  // a + cb b
   }
   return s;
 }
-// rows over columns [0, ncol); returns pivot rows indexed by pivot column (empty Row if none), entry p^v at the pivot
-static vector<Row> howell(vector<Row>& rows, int ncol, vector<int>& pv) {
-  vector<vector<Row>> bucket(ncol);
-  for (auto& r : rows) if (!r.i.empty()) bucket[lead(r)].push_back(std::move(r));
-  rows.clear();
-  vector<Row> piv(ncol); pv.assign(ncol, -1);
-  for (int c = 0; c < ncol; c++) {
-    auto& B = bucket[c]; if (B.empty()) continue;
-    size_t best = 0; int bv = E + 1;
-    for (size_t q = 0; q < B.size(); q++) { int v = val(B[q].v[0]); if (v < bv || (v == bv && B[q].i.size() < B[best].i.size())) { bv = v; best = q; } }
-    Row pr = std::move(B[best]); B.erase(B.begin() + best);
-    u64 u = pr.v[0] / PP[bv]; scale(pr, invunit(u));  // pivot entry p^bv
-    for (auto& r : B) {
-      u64 q = r.v[0] / PP[bv];  // r.v[0] = p^v' unit with v' >= bv
-      Row s = axpy(r, pr, negm(q));
-      if (!s.i.empty()) bucket[lead(s)].push_back(std::move(s));
+// Howell form with a dynamic pivot order (Markowitz-like), over columns [0, ncol).  Phase v = 0, 1, ...:
+// every remaining entry has valuation >= v; a pivot is an entry of valuation exactly v (shortest row
+// first, then the column in fewest rows), normalised to p^v, and its column is cleared from all other
+// rows (exact: their entries there have valuation >= v).  Then the rows left span exactly the elements
+// of the lattice vanishing on the pivot columns (the multiple p^(E-v) of a pivot row, which the
+// fixed-order Howell form adds, is 0 here, as all its entries have valuation >= v).  So in the order
+// 'order' (pivot columns as chosen, then the columns without pivot) the pivot rows are triangular and
+// reduction by them in that order decides membership.  piv[c] holds the row (sorted by column) with
+// entry p^pv[c] at c; pv[c] = -1 for a column without pivot.
+static vector<Row> howell_dyn(vector<Row>& rows, int ncol, vector<int>& pv, vector<int>& order) {
+  int nr = rows.size();
+  vector<char> alive(nr, 1), colpiv(ncol, 0);
+  vector<vector<int>> colrows(ncol);
+  for (int r = 0; r < nr; r++) { if (rows[r].i.empty()) alive[r] = 0; for (int c : rows[r].i) colrows[c].push_back(r); }
+  vector<Row> piv(ncol); pv.assign(ncol, -1); order.clear();
+  auto getv = [&](const Row& r, int c) -> u64 { auto it = lower_bound(r.i.begin(), r.i.end(), c); return (it != r.i.end() && *it == c) ? r.v[it - r.i.begin()] : 0; };
+  for (int v = 0; v < E; v++) {
+    auto hasv = [&](const Row& r) { for (u64 x : r.v) if (val(x) == v) return true; return false; };
+    priority_queue<pair<size_t, int>, vector<pair<size_t, int>>, greater<pair<size_t, int>>> pq;
+    for (int r = 0; r < nr; r++) if (alive[r] && hasv(rows[r])) pq.push({rows[r].i.size(), r});
+    while (!pq.empty()) {
+      auto [len, r] = pq.top(); pq.pop();
+      if (!alive[r] || rows[r].i.size() != len) continue;
+      int bc = -1; size_t bcnt = SIZE_MAX; u64 bx = 0;
+      for (size_t q = 0; q < rows[r].i.size(); q++) if (val(rows[r].v[q]) == v) { int c = rows[r].i[q]; if (colrows[c].size() < bcnt) { bcnt = colrows[c].size(); bc = c; bx = rows[r].v[q]; } }
+      if (bc < 0) continue;
+      Row pr = std::move(rows[r]); alive[r] = 0;
+      scale(pr, invunit(bx / PP[v]));
+      vector<int> lst; lst.swap(colrows[bc]);
+      for (int rr : lst) {
+        if (rr == r || !alive[rr]) continue;
+        u64 a = getv(rows[rr], bc); if (!a) continue;
+        const Row& x = rows[rr]; u64 cb = negm(a / PP[v]);
+        Row y; y.i.reserve(x.i.size() + pr.i.size()); y.v.reserve(x.i.size() + pr.i.size());
+        size_t p1 = 0, p2 = 0;
+        while (p1 < x.i.size() || p2 < pr.i.size()) {
+          int k; u64 z;
+          if (p2 >= pr.i.size() || (p1 < x.i.size() && x.i[p1] < pr.i[p2])) { k = x.i[p1]; z = x.v[p1++]; }
+          else if (p1 >= x.i.size() || pr.i[p2] < x.i[p1]) { k = pr.i[p2]; z = mulm(pr.v[p2++], cb); if (z) colrows[k].push_back(rr); }
+          else { k = x.i[p1]; z = addm(x.v[p1++], mulm(pr.v[p2++], cb)); }
+          if (z) { y.i.push_back(k); y.v.push_back(z); }
+        }
+        rows[rr] = std::move(y);
+        if (rows[rr].i.empty()) alive[rr] = 0; else if (hasv(rows[rr])) pq.push({rows[rr].i.size(), rr});
+      }
+      colpiv[bc] = 1; pv[bc] = v; order.push_back(bc); piv[bc] = std::move(pr);
     }
-    vector<Row>().swap(B);
-    if (bv > 0) { Row s = pr; scale(s, PP[E - bv]); if (!s.i.empty()) bucket[lead(s)].push_back(std::move(s)); }
-    pv[c] = bv; piv[c] = std::move(pr);
   }
+  for (int r = 0; r < nr; r++) if (alive[r] && !rows[r].i.empty()) { fprintf(stderr, "howell_dyn: row left over\n"); exit(3); }
+  for (int c = 0; c < ncol; c++) if (!colpiv[c]) order.push_back(c);
+  rows.clear();
   return piv;
 }
 
@@ -296,6 +326,15 @@ static void stage(int k) {  // PR = R_k (generators of weight <= k-1) -> R_{k+1}
     for (size_t q = 0; q < s.size(); q++) { if (s.i[q] < ng) { badgen++; continue; } r.i.push_back(s.i[q] - ng); r.v.push_back(s.v[q]); }
     if (!r.i.empty()) rows.push_back(std::move(r));
   };
+  // (E0) p^(E-e_b) (pi_b + t^P_b) = 0: over Z/p^E the power relation p^e_b b = pi_b + t^P_b implies it,
+  // as p^E b = 0 (the Howell closure of the presentation; without it a relation such as
+  // 2^29 [X_2, X_1] = 0 that comes from 2 X_3 = [X_2, X_1] - X_3^2 and 2^30 X_3 = 0 is lost)
+  for (int b = 0; b < ng; b++) {
+    if (PR.ex[b] >= E) continue;
+    u64 c = PP[E - PR.ex[b]];
+    sm.acc.addsv(PR.pi[b], c); if (tailP[b] >= 0) sm.acc.add(tailP[b], c);
+    push(sm.nf_acc());
+  }
   // (E1) (p^e_b b - pi_b) X_j = 0
   for (int b = 0; b < ng; b++) {
     if (PR.ex[b] >= E) continue;
@@ -310,7 +349,7 @@ static void stage(int k) {  // PR = R_k (generators of weight <= k-1) -> R_{k+1}
       push(sm.nf_acc());
     }
   }
-  size_t ne1 = rows.size();
+  size_t ne1 = rows.size();  // (E0) and (E1)
   // (E2) b (rho - 1) = 0 for every generator b of weight <= k-1
   vector<Acc> res(magnus.size()); for (auto& a : res) a.init(ng + NT);
   for (int b = 0; b < ng; b++) {
@@ -322,57 +361,51 @@ static void stage(int k) {  // PR = R_k (generators of weight <= k-1) -> R_{k+1}
   size_t ne2 = rows.size() - ne1;
   if (badgen) { printf("ERROR stage %d: %lld nonzero generator entries in the equations (R_k inconsistent)\n", k, badgen); exit(3); }
   double t1 = now();
-  vector<int> pv;
-  vector<Row> piv = howell(rows, NT, pv);
+  vector<int> pv, order;
+  vector<Row> piv = howell_dyn(rows, NT, pv, order);
   double t2 = now();
-  // back-substitute the unit pivots (last to first), so that every row involves surviving tails only
-  for (int c = NT - 1; c >= 0; c--) {
-    if (pv[c] < 0) continue;
-    Row& r = piv[c]; Row out; out.i.push_back(r.i[0]); out.v.push_back(r.v[0]);
-    Row rest; rest.i.assign(r.i.begin() + 1, r.i.end()); rest.v.assign(r.v.begin() + 1, r.v.end());
-    // eliminate unit-pivot columns from rest (their rows are already reduced)
-    bool again = true;
-    while (again) {
-      again = false;
-      for (size_t q = 0; q < rest.i.size(); q++) {
-        int cc = rest.i[q];
-        if (pv[cc] == 0) { u64 a = rest.v[q]; Row tail; tail.i.assign(piv[cc].i.begin() + 1, piv[cc].i.end()); tail.v.assign(piv[cc].v.begin() + 1, piv[cc].v.end());
-          Row z; z.i.push_back(cc); z.v.push_back(a);
-          rest = axpy(rest, z, negm(1)); rest = axpy(rest, tail, negm(a)); again = true; break; }
-      }
-    }
-    out.i.insert(out.i.end(), rest.i.begin(), rest.i.end()); out.v.insert(out.v.end(), rest.v.begin(), rest.v.end());
-    r = std::move(out);
-  }
-  // new generators: surviving tail columns (no pivot, or pivot p^v with v > 0)
-  vector<int> newidx(NT, -1); int nnew = 0;
-  for (int c = 0; c < NT; c++) if (pv[c] != 0) newidx[c] = ng + nnew++;
-  // expression of each tail column over the new generators
-  auto texpr = [&](int c) {
-    SV s;
-    if (pv[c] == 0) {  // c = -(rest)
+  // rest[c]: the pivot row of c without its pivot entry, with the unit-pivot columns substituted
+  // (last pivot first: the rows of later columns are already reduced, and contain none)
+  vector<SV> rest(NT);
+  { Acc acc; acc.init(NT);
+    for (int q = (int)order.size() - 1; q >= 0; q--) {
+      int c = order[q]; if (pv[c] < 0) continue;
       const Row& r = piv[c];
-      for (size_t q = 1; q < r.i.size(); q++) { int nc = newidx[r.i[q]]; if (nc < 0) { printf("ERROR: unreduced\n"); exit(3); } s.i.push_back(nc); s.v.push_back(negm(r.v[q])); }
-    } else { s.i.push_back(newidx[c]); s.v.push_back(1); }
-    return s;
-  };
-  auto addsv = [&](const SV& a, const SV& b) { Acc t; t.init(ng + nnew); t.addsv(a, 1); t.addsv(b, 1); return t.take(); };
+      for (size_t t = 0; t < r.i.size(); t++) {
+        int cc = r.i[t]; if (cc == c) continue;
+        if (pv[cc] == 0) acc.addsv(rest[cc], negm(r.v[t]));  // cc = -rest[cc]
+        else acc.add(cc, r.v[t]);
+      }
+      rest[c] = acc.take();
+      Row().i.swap(piv[c].i); vector<u64>().swap(piv[c].v);
+    } }
+  // new generators: the surviving tail columns (no pivot, or pivot p^v with v > 0), in the order
+  vector<int> newidx(NT, -1); int nnew = 0;
+  for (int c : order) if (pv[c] != 0) newidx[c] = ng + nnew++;
   int ngnew = ng + nnew;
+  Acc acc2; acc2.init(ngnew);
+  auto mapsv = [&](const SV& r, bool neg) {  // over the new generators, sorted
+    for (size_t q = 0; q < r.size(); q++) { int nc = newidx[r.i[q]]; if (nc < 0) { printf("ERROR: unreduced\n"); exit(3); } acc2.add(nc, neg ? negm(r.v[q]) : r.v[q]); }
+    return acc2.take();
+  };
+  auto texpr = [&](int c) {  // expression of tail column c over the new generators
+    if (pv[c] == 0) return mapsv(rest[c], true);  // c + rest = 0
+    SV s; s.i.push_back(newidx[c]); s.v.push_back(1); return s;
+  };
+  auto addsv = [&](const SV& a, const SV& b) { acc2.addsv(a, 1); acc2.addsv(b, 1); return acc2.take(); };
   for (int b = 0; b < ng; b++) {
     if (tailP[b] >= 0) PR.pi[b] = addsv(PR.pi[b], texpr(tailP[b] - ng));
     for (int j = 0; j < R; j++) if (tailX[b][j] >= 0) PR.mu[b][j] = addsv(PR.mu[b][j], texpr(tailX[b][j] - ng));
   }
   long long logv = 0, nfree = 0;
-  for (int c = 0; c < NT; c++) {
+  for (int c : order) {
     if (pv[c] == 0) continue;
     PR.wt.push_back(k); PR.mu.push_back(vector<SV>(R));
     PR.defb.push_back(slotb[c]); PR.defj.push_back(slotj[c]); PR.isdefX.push_back(vector<char>(R, 0)); PR.isdefP.push_back(0);
     if (slotj[c] < 0) PR.isdefP[slotb[c]] = 1; else PR.isdefX[slotb[c]][slotj[c]] = 1;
     if (pv[c] < 0) { PR.ex.push_back(E); PR.pi.push_back(SV()); nfree++; logv += E; continue; }
     PR.ex.push_back(pv[c]); logv += pv[c];
-    SV s; const Row& r = piv[c];
-    for (size_t q = 1; q < r.i.size(); q++) { s.i.push_back(newidx[r.i[q]]); s.v.push_back(negm(r.v[q])); }
-    PR.pi.push_back(s);
+    PR.pi.push_back(mapsv(rest[c], true));  // p^v c = -rest
   }
   PR.ngen = ngnew;
   tailP.clear(); tailX.clear(); NT = 0;

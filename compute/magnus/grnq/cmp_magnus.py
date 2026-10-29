@@ -98,9 +98,14 @@ def main():
     bad = 0
     for it in range(count):
         p = rng.choice([2, 3])
-        r = rng.choice([1, 2, 2, 3])
-        n = rng.choice([3, 4, 4, 5]) if r <= 2 else rng.choice([3, 4])
-        rels = [("pow", ("g", g), p ** rng.choice([1, 2, 3])) for g in range(r)]
+        r = rng.choice([1, 2, 2, 3, 3, 4])
+        n = rng.choice([3, 4, 4, 5]) if r <= 2 else (rng.choice([3, 4]) if r == 3 else 3)
+        # some generators without a power relator (free summands modulo p^E: this is where the Howell
+        # closure of the power relations matters), relators x^(p^a) [y, z]^(+-1) and random words
+        rels = [("pow", ("g", g), p ** rng.choice([1, 2, 3])) for g in range(r) if rng.random() < 0.6]
+        rels += [("mul", ("pow", ("g", rng.randrange(r)), p ** rng.choice([1, 2])),
+                  ("pow", ("comm", ("g", rng.randrange(r)), ("g", rng.randrange(r))), rng.choice([1, -1])))
+                 for _ in range(rng.randrange(0, 3))]
         rels += [rand_word(rng, r) for _ in range(rng.randrange(0, 3))]
         tests = [rand_word(rng, r) for _ in range(4)]
         M = magnus_side(p, r, n, rels, tests)
