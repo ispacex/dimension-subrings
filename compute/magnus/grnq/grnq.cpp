@@ -32,7 +32,8 @@ typedef __uint128_t u128;
 typedef __int128 i128;
 
 static int P, E, NDEG, R;
-static bool HDYN = false;  // GRNQ_HOWELL=dyn: dynamic pivot order (default: the fixed column order)
+static bool HDYN = false;
+static long long ST_ELIM = 0, ST_FILL = 0;  // Howell statistics: eliminations, entries written  // GRNQ_HOWELL=dyn: dynamic pivot order (default: the fixed column order)
 static u64 D;
 static vector<u64> PP;
 
@@ -236,7 +237,7 @@ static vector<Row> howell_fixed(vector<Row>& rows, int ncol, vector<int>& pv, ve
     u64 u = pr.v[0] / PP[bv]; scale(pr, invunit(u));  // pivot entry p^bv
     for (auto& r : B) {
       u64 q = r.v[0] / PP[bv];  // r.v[0] = p^v' unit with v' >= bv
-      Row s = axpy(r, pr, negm(q));
+      Row s = axpy(r, pr, negm(q)); ST_ELIM++; ST_FILL += s.i.size();
       if (!s.i.empty()) bucket[lead(s)].push_back(std::move(s));
     }
     vector<Row>().swap(B);
@@ -289,6 +290,7 @@ static vector<Row> howell_dyn(vector<Row>& rows, int ncol, vector<int>& pv, vect
           else { k = x.i[p1]; z = addm(x.v[p1++], mulm(pr.v[p2++], cb)); }
           if (z) { y.i.push_back(k); y.v.push_back(z); }
         }
+        ST_ELIM++; ST_FILL += y.i.size();
         rows[rr] = std::move(y);
         if (rows[rr].i.empty()) alive[rr] = 0; else if (hasv(rows[rr])) pq.push({rows[rr].i.size(), rr});
       }
@@ -402,8 +404,13 @@ static void stage(int k) {  // PR = R_k (generators of weight <= k-1) -> R_{k+1}
   if (badgen) { printf("ERROR stage %d: %lld nonzero generator entries in the equations (R_k inconsistent)\n", k, badgen); exit(3); }
   double t1 = now();
   vector<int> pv, order;
+  long long nrow = rows.size(), nent = 0; for (auto& r : rows) nent += r.i.size();
+  ST_ELIM = ST_FILL = 0;
   vector<Row> piv = HDYN ? howell_dyn(rows, NT, pv, order) : howell_fixed(rows, NT, pv, order);
   double t2 = now();
+  { long long npiv = 0, plen = 0, pmax = 0; for (int c = 0; c < NT; c++) if (pv[c] >= 0) { npiv++; plen += piv[c].i.size(); pmax = max(pmax, (long long)piv[c].i.size()); }
+    printf("  howell %s: %lld rows (%lld entries) x %d columns; %lld eliminations writing %lld entries; %lld pivots, length mean %.0f max %lld\n",
+           HDYN ? "dyn" : "fixed", nrow, nent, NT, ST_ELIM, ST_FILL, npiv, npiv ? (double)plen / npiv : 0.0, pmax); }
   // rest[c]: the pivot row of c without its pivot entry, with the unit-pivot columns substituted
   // (last pivot first: the rows of later columns are already reduced, and contain none)
   vector<SV> rest(NT);
