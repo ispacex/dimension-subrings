@@ -9,9 +9,18 @@
 # x_{6-j}] lies in A and is a homomorphism of gamma_j(Q) killing gamma_{j+1}(Q) (gamma_7(Q) = 1).
 # For a in Gam_j there is c in gamma_j(M) with a c in N, so lam(a) lam(c) in N cap A <= K for all lam
 # at once.  With x_i over generators of M mod Phi(M) (lam is multilinear mod gamma_7), this says: the
-# row (log lam(a) in A/K = Z/3^f)_lam lies in the span of the rows of the c in gamma_j(M) (HNF).  If
+# row (log lam(a) in A/K = Z/3^f)_lam lies in the span of the rows of the c in gamma_j(M) (LogSpan).  If
 # for every K some layer j and some a fail, w lies in every N with (C2) in M/N.  Layers JS (default
 # [3..6]; layer 2 has r^4 columns).
+# MATH-413 (UNIF := true;;): one test per M for every H with H0 = <x1..x4> <= H <= M and every N normal
+# in H.  Each term of the test is monotone in H: Gam_j(H0) <= Gam_j(H) (U grows with H), gamma_j(H) <=
+# gamma_j(M), and lam with x_i over x1..x4 (generators of H0, so in H) is among the lam of H.  So take
+# a over Gam_j(H0), c over gamma_j(M), x_i over x1..x4: if some a fails, its row fails for H as well
+# (restrict the lam of H to these), and w lies in every N with (C2) in H/N.  N cap A = 1 still follows
+# from w notin N: w in H0 <= H, and A cap H is cyclic.  Every proper H containing x1..x4 lies in some M.
+# MATH-413 (SUBS := true;;): the same test as for the M, on every H with Phi(Q) <x1..x4> <= H < Q of index
+# >= 9 (preimages of the subspaces of Q/Phi(Q) = F_3^7 over the images of x1..x4, of codimension >= 2).
+# PART := [k, n];; tests only the subgroups with number = k mod n (short jobs).
 Read("../3group.gap");
 W := EvalString(w);;
 XS := [x1, x2, x3, x4];;
@@ -35,6 +44,18 @@ MaxOver := function(H, xs)
   res := Filtered(MaximalSubgroups(V), K -> IsSubgroup(K, S));
   return List(res, K -> PreImage(hom, K));
 end;;
+# the K with Phi(H) <xs> <= K < H of index >= 9, largest first
+SubsOver := function(H, xs)
+  local Fr, hom, V, S, h2, res;
+  Fr := FrattiniSubgroup(H);
+  hom := NaturalHomomorphismByNormalSubgroupNC(H, Fr);
+  V := Image(hom); S := Subgroup(V, List(xs, x -> Image(hom, x)));
+  h2 := NaturalHomomorphismByNormalSubgroupNC(V, S);
+  res := Filtered(AllSubgroups(Image(h2)), K -> Index(Image(h2), K) >= 9);
+  res := List(res, K -> PreImage(hom, PreImage(h2, K)));
+  Sort(res, function(a, b) return Size(a) > Size(b); end);
+  return res;
+end;;
 # the series Gam_1..Gam_7 of M for the elements ys (positions NEED)
 Gam := function(M, ys)
   local L, g, j, i, P;
@@ -53,6 +74,8 @@ end;;
 if not IsBound(JS) then JS := [3..6]; fi;
 if not IsBound(VERB) then VERB := false; fi;
 if not IsBound(MAXM) then MAXM := infinity; fi;   # only the first MAXM subgroups of each case
+if not IsBound(UNIF) then UNIF := false; fi;
+if not IsBound(SUBS) then SUBS := false; fi;
 # greedy representatives of H modulo the subgroup D (by the pcgs of H)
 Reps := function(H, D)
   local r, S, g;
@@ -70,7 +93,39 @@ Lam := function(g, xs, k, AL)
   return List(cur, function(h) local p; p := PositionSorted(AL, h);
     if p > Length(AL) or AL[p] <> h then Error("commutator not in A"); fi; return p; end);
 end;;
-# v in the Z-row span of the HNF H (full column rank, upper triangular)?
+# log_p of the order of the row span of M in (Z/p^e)^n.  Take a pivot of least valuation v among the
+# remaining rows, scale it to p^v and clear its column in the other remaining rows: every remaining entry
+# has valuation >= v, so the pivot row spans a cyclic group of order p^(e-v) meeting the span of the
+# others trivially (they vanish in the pivot column).  No identity block: n can be rank^3 ~ 10^4.
+LogSpan := function(M, p, e)
+  local q, val, R, total, best, bi, bj, i, j, v, x, u, piv, c;
+  q := p^e;
+  val := List([0..q - 1], function(x) local k; if x = 0 then return e; fi; k := 0;
+    while x mod p = 0 do x := x / p; k := k + 1; od; return k; end);
+  R := List(M, r -> List(r, x -> x mod q));
+  total := 0;
+  while R <> [] do
+    best := e; bi := 0; bj := 0;
+    for i in [1..Length(R)] do
+      for j in [1..Length(R[i])] do
+        v := val[R[i][j] + 1];
+        if v < best then best := v; bi := i; bj := j; if v = 0 then break; fi; fi;
+      od;
+      if best = 0 then break; fi;
+    od;
+    if bi = 0 then break; fi;
+    x := R[bi][bj]; u := (x / p^best) ^ -1 mod q;
+    piv := List(R[bi], y -> y * u mod q);
+    Remove(R, bi);
+    for i in [1..Length(R)] do
+      c := R[i][bj];
+      if c <> 0 then c := c / p^best; R[i] := List([1..Length(piv)], k -> (R[i][k] - c * piv[k]) mod q); fi;
+    od;
+    total := total + e - best;
+  od;
+  return total;
+end;;
+# v in the Z-row span of the HNF H (full column rank, upper triangular)?  Only for the self-test.
 InHNF := function(H, v)
   local v1, row, p, q;
   v1 := ShallowCopy(v);
@@ -82,18 +137,26 @@ InHNF := function(H, v)
   od;
   return IsZero(v1);
 end;;
-# self-test of HNF membership: rows [3,0], [0,1] mod 27 contain [6,5], not [1,0]
+# self-test of span membership: rows [3,0], [0,1] mod 27 contain [6,5], not [1,0]; and LogSpan
+# against the integer HNF with p^e I appended on 300 random small cases mod 3^3
 XT := Concatenation([[3, 0], [0, 1]], 27 * IdentityMat(2));;
-SELFTEST := InHNF(HermiteNormalFormIntegerMat(XT), [6, 5]) and not InHNF(HermiteNormalFormIntegerMat(XT), [1, 0]);;
+SELFTEST := InHNF(HermiteNormalFormIntegerMat(XT), [6, 5]) and not InHNF(HermiteNormalFormIntegerMat(XT), [1, 0])
+  and LogSpan([[3, 0], [0, 1], [6, 5]], 3, 3) = 5 and LogSpan([[3, 0], [0, 1], [1, 0]], 3, 3) = 6;;
+for t in [1..300] do
+  nc := Random([1..5]);; C := List([1..Random([0..4])], i -> List([1..nc], j -> 3^Random([0..3]) * Random([0..26]) mod 27));;
+  av := List([1..nc], j -> 3^Random([0..3]) * Random([0..26]) mod 27);;
+  H := HermiteNormalFormIntegerMat(Concatenation(C, 27 * IdentityMat(nc)));;
+  if InHNF(H, av) <> (LogSpan(Concatenation(C, [av]), 3, 3) = LogSpan(C, 3, 3)) then SELFTEST := false; fi;
+od;
+Print("span self-test: ", SELFTEST, "\n");
 # the K (indices into Ks) for which every a of every layer of data is in the span of its c
 Passing := function(data, Tab, nK)
   return Filtered([1..nK], k -> ForAll(data, function(d)
-      local f, X, H;
-      f := Tab[k][1];
-      X := List(d[3], cv -> List(cv, p -> Tab[k][2][p]));
-      Append(X, f * IdentityMat(Length(d[2][1])));
-      H := HermiteNormalFormIntegerMat(X);
-      return ForAll(d[2], av -> InHNF(H, List(av, p -> Tab[k][2][p])));
+      local e, C, Aa;
+      e := Log(Tab[k][1], 3);
+      C := List(d[3], cv -> List(cv, p -> Tab[k][2][p]));
+      Aa := List(d[2], av -> List(av, p -> Tab[k][2][p]));
+      return LogSpan(Concatenation(C, Aa), 3, e) = LogSpan(C, 3, e);
     end));
 end;;
 ZG := Centre(G);; O := Omega(ZG, 3, 1);;
@@ -116,6 +179,8 @@ if IsBound(CTRLH) and CTRLH then
   cases := [["G x SmallGroup(81,7), x1 := x1 h", Embedding(DD, 1), DD, Image(Embedding(DD, 2), Pcgs(HH)[1])]];
 fi;
 nall := 0;; nobs := 0;;
+if IsBound(GAPInfo.SystemEnvironment.JOB_OUT) then OUTF := Concatenation(GAPInfo.SystemEnvironment.JOB_OUT, "/subs.txt");; fi;
+if IsBound(GAPInfo.SystemEnvironment.JOB_ROOT) then PROGF := Concatenation(GAPInfo.SystemEnvironment.JOB_ROOT, "/progress");; fi;
 for c in cases do
   hom := c[2]; if Length(c) >= 3 then Q := c[3]; else Q := Image(hom); fi;
   xs := List(XS, x -> Image(hom, x));
@@ -127,6 +192,8 @@ for c in cases do
   A := LQ[6]; AL := AsSSortedList(A);
   iso := IsomorphismPcGroup(A); P := Image(iso);
   Ks := Set(List(Filtered(LinearCharacters(P), chi -> not IsOne(Image(iso, wQ)^chi)), chi -> PreImage(iso, KernelOfCharacter(chi))));
+  # no K would make every subgroup look obstructed
+  if Ks = [] then Error("no kernel K avoiding w"); fi;
   # log tables of A -> A/K = Z/3^f
   Tab := List(Ks, function(K)
     local h, I, z, zs;
@@ -135,17 +202,32 @@ for c in cases do
     return [Size(I), List(AL, y -> Position(zs, Image(h, y)) - 1)];
   end);
   Print("|A| = 3^", Log(Size(A), 3), ", kernels K: ", Length(Ks), ", orders of A/K: ", Collected(List(Tab, tb -> tb[1])), "\n");
-  Ms := MaxOver(Q, xs);
-  Print(c[1], ": log3|Q| = ", Log(Size(Q), 3), ", maximal subgroups containing x1..x4: ", Length(Ms), "\n");
-  for M in Ms{[1..Minimum(MAXM, Length(Ms))]} do
+  if SUBS then
+    Ms := SubsOver(Q, xs);
+  else
+    Ms := MaxOver(Q, xs);
+  fi;
+  if UNIF then
+    H0 := Subgroup(Q, xs); gH := Gam(H0, ys);
+    Print("UNIF: H0 = <x1..x4> of order 3^", Log(Size(H0), 3), ", |Gam_j(H0)| = 3^", List(gH{[1..7]}, X -> Log(Size(X), 3)), "\n");
+  fi;
+  if SUBS then
+    Print(c[1], ": log3|Q| = ", Log(Size(Q), 3), ", subgroups over Phi(Q) <x1..x4> of index >= 9: ", Length(Ms), ", by log3 index: ", Collected(List(Ms, K -> Log(Index(Q, K), 3))), "\n");
+  else
+    Print(c[1], ": log3|Q| = ", Log(Size(Q), 3), ", maximal subgroups containing x1..x4: ", Length(Ms), "\n");
+  fi;
+  sel := [1..Minimum(MAXM, Length(Ms))];
+  if IsBound(PART) then sel := Filtered(sel, i -> i mod PART[2] = PART[1] mod PART[2]); fi;
+  for i in sel do
+    M := Ms[i];
     nall := nall + 1;
     bad := Intersection(Check(M, ys{[1..4]}, ys{[5..8]}), NEED);
     t1 := Runtime();
     LM := ShallowCopy(LowerCentralSeriesOfGroup(M));
     while Length(LM) < 8 do Add(LM, TrivialSubgroup(M)); od;
-    gm := Reps(M, FrattiniSubgroup(M));
+    if UNIF then gm := xs; else gm := Reps(M, FrattiniSubgroup(M)); fi;
     if VERB then Print("    rank ", Length(gm), " (", Int((Runtime() - t1) / 1000), " s)\n"); fi;
-    gg := Gam(M, ys); gq := ForAll([2..6], j -> Size(gg[j]) = Size(LQ[j]));
+    if UNIF then gg := gH; else gg := Gam(M, ys); fi; gq := ForAll([2..6], j -> Size(gg[j]) = Size(LQ[j]));
     data := [];
     for j in JS do
       ar := Reps(gg[j], ClosureGroup(LM[j], LQ[j + 1]));
@@ -159,16 +241,24 @@ for c in cases do
     perlayer := List(data, d -> [d[1], Length(Passing([d], Tab, Length(Ks)))]);
     ob := pass = [];
     # positive control on the first M: c over gamma_j(Q) instead of gamma_j(M), every K must pass
-    if M = Ms[1] then
+    if i = sel[1] then
       dc := List(data, d -> [d[1], d[2], List(Reps(LQ[d[1]], LQ[d[1] + 1]), g -> Lam(g, gm, 6 - d[1], AL))]);
       Print("    control (c over gamma_j(Q)): K passing ", Length(Passing(dc, Tab, Length(Ks))), " of ", Length(Ks), "\n");
     fi;
     if ob then nobs := nobs + 1; fi;
     if Length(c) >= 3 then Print("    onto G: ", Size(Image(Projection(Q, 1), M)) = Size(G), "\n"); fi;
-    Print("  M: fails ", bad, ", rank ", Length(gm), ", layers [j, #a, #c, #lam]: ", List(data, d -> [d[1], Length(d[2]), Length(d[3]), Length(d[2][1])]),
+    Print("  M #", i, ": index 3^", Log(Index(Q, M), 3), ", fails ", bad, ", rank ", Length(gm), ", layers [j, #a, #c, #lam]: ", List(data, d -> [d[1], Length(d[2]), Length(d[3]), Length(d[2][1])]),
       ", K passing: ", Length(pass), " (by layer alone: ", perlayer, "), Gam = gamma(Q): ", gq, ", obstruction: ", ob, " (", Int((t2 - t1) / 1000), " + ", Int((Runtime() - t2) / 1000), " s)\n");
+    # GAP's stdout to a pipe is block-buffered: one flushed line per subgroup, and progress for tm
+    if IsBound(OUTF) then
+      AppendTo(OUTF, c[1], " #", i, " of ", Length(Ms), ": index 3^", Log(Index(Q, M), 3), ", by layer alone ", perlayer, ", obstruction ", ob, "\n");
+    fi;
+    if IsBound(PROGF) then PrintTo(PROGF, Position(sel, i), "/", Length(sel), "\n"); fi;
+    # drop M with its cached series (171 of them do not fit in a few GB)
+    Ms[i] := fail; M := fail; LM := fail; gg := fail; data := fail; dc := fail;
   od;
   Print("  sec ", Int((Runtime() - t) / 1000), "\n");
 od;
-Print("maximal subgroups: ", nall, ", with the multilinear obstruction: ", nobs, ", HNF self-test: ", SELFTEST, "\n");
+if SUBS then Print("subgroups: "); else Print("maximal subgroups: "); fi;
+Print(nall, ", with the multilinear obstruction: ", nobs, ", span self-test: ", SELFTEST, "\n");
 QUIT;
