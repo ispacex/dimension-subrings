@@ -9,6 +9,7 @@
 //   let NAME expression   (any number; NAME then stands for the expression, shared)
 //   rels S   then S expressions
 //   tests T  then T lines: NAME expression
+//   [spans S  then S lines: NAME k expr_1 .. expr_k]
 // expression := g<i> (1-based) | (inv e) | (pow e INT) | (mul e e ...) | (comm e e)   [a,b] = a^-1 b^-1 a b
 // Usage: grnq [n] < input   (n overrides the n of the input)
 // Output: per stage the generators by weight and log_p |Delta^k / Delta^(k+1)|; the certificate;
@@ -24,6 +25,7 @@
 #include <memory>
 #include <chrono>
 #include <map>
+#include <cmath>
 using namespace std;
 typedef unsigned long long u64;
 typedef __uint128_t u128;
@@ -401,6 +403,11 @@ int main(int argc, char** argv) {
   expect("tests"); int NTs = atoi(tok().c_str());
   vector<string> tn; vector<PEx> tests;
   for (int s = 0; s < NTs; s++) { tn.push_back(tok()); tests.push_back(parse()); }
+  // spans: NAME k e_1 .. e_k -- the set of a in F_p^k with prod e_i^a_i in D_n, by additivity (below)
+  vector<string> sn; vector<vector<PEx>> spans;
+  t = tok();
+  if (t == "spans") { int NS = atoi(tok().c_str());
+    for (int s = 0; s < NS; s++) { sn.push_back(tok()); int k = atoi(tok().c_str()); vector<PEx> v; for (int q = 0; q < k; q++) v.push_back(parse()); spans.push_back(v); } }
   FT = new FreeT();
   printf("p = %d, E = %d, n = %d, r = %d, %d relators, %d tests; |T_<n| = %lld\n", P, E, NDEG, R, S, NTs, FT->size);
   double tm0 = now();
@@ -420,9 +427,9 @@ int main(int argc, char** argv) {
   FinalMod fm; long long bad = 0;
   for (int b = 1; b < PR.ngen; b++) { SV s; s.i.push_back(b); s.v.push_back(PP[E - 1]); if (fm.sm.nf(s).size()) bad++; }
   printf("certificate (p^(E-1) Delta in Delta^%d + p^E): %s%s\n", NDEG, bad ? "FAILS" : "holds", bad ? " -- membership modulo p^E only, raise E" : "");
-  for (int s = 0; s < NTs; s++) {
-    // h - 1 = sum_m c_m m in T; its image is sum_m c_m (1 . m), by the same walk as (E2) with b = 1
-    vector<vector<u64>> c1(1, FT->magnus(tests[s]));
+  // h - 1 = sum_m c_m m in T; its image is sum_m c_m (1 . m), by the same walk as (E2) with b = 1
+  auto image = [&](const PEx& h) {
+    vector<vector<u64>> c1(1, FT->magnus(h));
     c1[0][0] = (c1[0][0] + D - 1) % D;
     vector<vector<u64>> save; save.swap(magnus); magnus.swap(c1);
     vector<char> savel = live; live = subtree_nz(magnus);
@@ -432,9 +439,36 @@ int main(int argc, char** argv) {
     dfs(C, u, 0, 0);
     SV x = res[0].take(); x = fm.sm.nf(x);
     magnus.swap(save); live = savel;
-    int w = NDEG; for (int q : x.i) w = min(w, PR.wt[q]);
+    return x;
+  };
+  auto weight = [&](const SV& x) { int w = NDEG; for (int q : x.i) w = min(w, PR.wt[q]); return w; };
+  for (int s = 0; s < NTs; s++) {
+    SV x = image(tests[s]);
+    int w = weight(x);
     if (w >= NDEG) printf("test %s: h - 1 in Delta^%d\n", tn[s].c_str(), NDEG);
     else printf("test %s: h - 1 in Delta^%d, not in Delta^%d\n", tn[s].c_str(), w, w + 1);
+    fflush(stdout);
+  }
+  // spans: if (e_i - 1)(e_j - 1) lies in Delta^n for all i, j (weights adding up to >= n), then
+  // prod e_i^a_i - 1 = sum a_i (e_i - 1) mod Delta^n for integers a_i >= 0 (the products of two or more
+  // factors e_i - 1 vanish), so the a in {0..p-1}^k with prod e_i^a_i in D_n are those with
+  // sum a_i x_i = 0, x_i the image of e_i - 1; all p^k of them are tried.
+  for (size_t s = 0; s < spans.size(); s++) {
+    int k = spans[s].size(); vector<SV> x(k); vector<int> wv(k);
+    printf("span %s: weights", sn[s].c_str());
+    for (int q = 0; q < k; q++) { x[q] = image(spans[s][q]); wv[q] = weight(x[q]); printf(" %d", wv[q]); }
+    int wmin = NDEG; for (int q = 0; q < k; q++) wmin = min(wmin, wv[q]);
+    printf("\n");
+    if (2 * wmin < NDEG) { printf("span %s: not additive (2 * %d < %d), skipped\n", sn[s].c_str(), wmin, NDEG); continue; }
+    long long tot = 1; for (int q = 0; q < k; q++) tot *= P;
+    long long nker = 0; vector<int> a(k, 0);
+    for (long long c = 0; c < tot; c++) {
+      long long y = c; for (int q = 0; q < k; q++) { a[q] = y % P; y /= P; }
+      Acc acc; acc.init(PR.ngen); for (int q = 0; q < k; q++) acc.addsv(x[q], (u64)a[q]);
+      SV z = acc.take(); z = fm.sm.nf(z);
+      if (!z.size()) { nker++; if (c) { printf("span %s: in D_%d:", sn[s].c_str(), NDEG); for (int q = 0; q < k; q++) printf(" %d", a[q]); printf("\n"); } }
+    }
+    printf("span %s: %lld of %lld combinations in D_%d (log_%d = %d)\n", sn[s].c_str(), nker, tot, NDEG, P, (int)round(log((double)nker) / log((double)P)));
     fflush(stdout);
   }
   printf("grnq done\n");

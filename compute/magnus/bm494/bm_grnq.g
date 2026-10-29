@@ -82,7 +82,7 @@ end;;
 LhsExpr := function(r) if Length(r[1]) = 1 then return Concatenation("(pow ", PName(r[1][1]), " 3)"); fi;
   return Concatenation("(comm ", PName(r[1][1]), " ", PName(r[1][2]), ")"); end;;
 RelExpr := r -> Concatenation("(mul ", LhsExpr(r), " (inv ", ExprOf(r[2]), "))");;
-WriteCase := function(name, extra, tests)
+WriteCase := function(name, extra, tests, span)
   local f, k, r;
   f := OutputTextFile(Concatenation(OUTDIR, "/bm_", name, ".in"), false); SetPrintFormattingStatus(f, false);
   PrintTo(f, "p 3 E ", EGRNQ, " n 7 r 7\n");
@@ -96,6 +96,9 @@ WriteCase := function(name, extra, tests)
   for r in extra do AppendTo(f, ExprOf(ExponentsOfPcElement(fp, r)), "\n"); od;
   AppendTo(f, "tests ", Length(tests), "\n");
   for r in tests do AppendTo(f, r[1], " ", ExprOf(ExponentsOfPcElement(fp, r[2])), "\n"); od;
+  AppendTo(f, "spans 1\nZbar ", Length(span));
+  for r in span do AppendTo(f, " ", ExprOf(ExponentsOfPcElement(fp, r))); od;
+  AppendTo(f, "\n");
   CloseStream(f);
 end;;
 # cases and tests
@@ -113,14 +116,13 @@ for c in cases do
   hom := NaturalHomomorphismByNormalSubgroupNC(G0, N);
   Zb := PreImage(hom, Omega(Centre(Image(hom)), 3, 1));
   h2 := NaturalHomomorphismByNormalSubgroupNC(Zb, N);
-  reps := []; seen := [];
-  for y in AsList(Image(h2)) do
-    if not IsOne(y) and not y in seen then Add(reps, PreImagesRepresentative(h2, y)); Append(seen, [y, y^2]); fi;
-  od;
+  # a basis of Zbar/N (elementary abelian): grnq tests all combinations (spans, additive when the
+  # weights are >= n/2 -- grnq checks that)
+  span := List(Pcgs(Image(h2)), y -> PreImagesRepresentative(h2, y));
   tests := [["w", W0], ["x1", Comm(fp[4], fp[5])], ["x2", fp[1]], ["a6", a6], ["a6^3", a6^3]];
-  for k in [1..Length(reps)] do Add(tests, [Concatenation("z", String(k)), reps[k]]); od;
-  WriteCase(c[1], c[2], tests);
-  Print(c[1], ": rank of Omega_1(Z(Q/<w>)) mod <w> ", LogInt(Size(Image(h2)), 3), ", ", Length(reps), " order-3 subgroups to test; a6 = generator of gamma_6 (order ", Order(a6), ")\n");
+  for k in [1..Length(c[2])] do Add(tests, [Concatenation("u", String(k)), c[2][k]]); od;
+  WriteCase(c[1], c[2], tests, span);
+  Print(c[1], ": Omega_1(Z(Q/<w>)) has rank ", Length(span), " mod <w>; a6 = generator of gamma_6 (order ", Order(a6), ")\n");
 od;
 Print("bm_grnq done\n");
 QUIT;
