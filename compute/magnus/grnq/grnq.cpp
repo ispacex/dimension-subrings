@@ -427,7 +427,7 @@ static void final_proj(int k, int ng) {
   };
   vector<Acc> rg(magnus.size()), rt(magnus.size()); for (auto& a : rg) a.init(ng); for (auto& a : rt) a.init(NT);
   // rows (E0), (E1), (E2) of generator b, on mask
-  auto rows_of_b = [&](int b, const vector<char>& mask, vector<Row>& out) {
+  auto rows_of_b = [&](int b, const vector<char>& mask, vector<Row>& out, bool local = true) {
     size_t r0 = out.size();
     if (PR.ex[b] < E) {
       { Acc& a = tt[0]; if (tailP[b] >= 0 && mask[tailP[b] - ng]) a.add(tailP[b] - ng, PP[E - PR.ex[b]]);
@@ -444,7 +444,7 @@ static void final_proj(int k, int ng) {
     SV g; g.i.push_back(b); g.v.push_back(1);
     lin_walk(g, 0, 0, magnus, live, mask, ng, rg, rt, tg, tt);
     for (size_t s = 0; s < magnus.size(); s++) { Row r = finish(rg[s].take(), rt[s].take(), mask); if (!r.i.empty()) out.push_back(std::move(r)); }
-    if (out.size() - r0 > 1) {  // local Howell of the rows of b
+    if (local && out.size() - r0 > 1) {  // local Howell of the rows of b
       vector<int> cols; for (size_t q = r0; q < out.size(); q++) cols.insert(cols.end(), out[q].i.begin(), out[q].i.end());
       sort(cols.begin(), cols.end()); cols.erase(unique(cols.begin(), cols.end()), cols.end());
       vector<Row> loc(out.begin() + r0, out.end()); out.resize(r0);
@@ -478,9 +478,9 @@ static void final_proj(int k, int ng) {
       printf("  test %s, round %d: |S| = %lld, %zu rows from %zu generators (%.1f s)\n", PROJ_N[s].c_str(), r, ns, rows.size(), touch.size(), now() - t0);
       fflush(stdout);
       if (r == PROJ) break;
-      vector<Row> full;
-      for (int b : touch) rows_of_b(b, all, full);
-      for (auto& rr : full) for (int c : rr.i) inS[c] = 1;
+      // the supports of the full rows of these generators, one generator at a time (all of them at once
+      // do not fit in memory; the Howell rows of b have support in that of its rows)
+      for (int b : touch) { vector<Row> full; rows_of_b(b, all, full, false); for (auto& rr : full) for (int c : rr.i) inS[c] = 1; }
     }
     if (badgen) { printf("ERROR: %lld nonzero generator entries in the rows (R_k inconsistent)\n", badgen); exit(3); }
     vector<int> S, pos(NT, -1); for (int c = 0; c < NT; c++) if (inS[c]) { pos[c] = S.size(); S.push_back(c); }
