@@ -1,8 +1,7 @@
 # MATH-414 (bm_z8.g): the elements of Zbar (bm_grnq.g) that grnq finds in D_6(Q), and small quotients
 # keeping them.  For Q = G or G/<u_k>: the basis of Zbar/N as in bm_grnq.g; for the index IDX (from the
 # grnq log, "span Zbar: in D_6"), z = that basis element: its order, z^3, whether z lies in gamma_6(Q), and
-# a descent Q -> Q/<c>, c central of order 3 with c notin <z> (last such c in Omega_1(Z)), until z spans
-# Omega_1(Z): the order of the quotient and its Jennings count (as bm_jen.g).  If it is <= 3^9, z is not
+# a descent Q -> Q/K, K the kernel of a linear character of Z(Q) not trivial on z, until Z is cyclic: the order of the quotient and its Jennings count (as bm_jen.g).  If it is <= 3^9, z is not
 # in D_7(Q) (MATH-403: D_n = gamma_n up to order 3^9, and gamma_7 = 1).
 Read("../3group.gap");;
 G0 := Parent(G);; fp := FamilyPcgs(G0);; W0 := EvalString(w);;
@@ -45,18 +44,22 @@ JenCount := function(d)
     od; c := new; od; od;
   return Sum(c);
 end;;
-# descent: kill central subgroups of order 3 avoiding <z> (z of order 3 in the current quotient)
+# descent: each step kills the kernel K of a linear character chi of Z(cur) with chi(z) <> 1 (z notin K,
+# K central so normal), of least order; it stops when Z(cur) is cyclic (then every nontrivial subgroup of
+# Z(cur) contains z, as z has order 3)
 cur := Q;; zc := zQ;; steps := 0;; t := Runtime();;
 while true do
   if Order(zc) <> 3 then
-    # z of order 9 (z^3 in <w>): pass to the quotient by <z^3> first, keeping z of order 3
     hh := NaturalHomomorphismByNormalSubgroupNC(cur, Group(zc^3)); cur := Image(hh); zc := Image(hh, zc); steps := steps + 1; continue;
   fi;
-  Om := Omega(Centre(cur), 3, 1);
-  if Size(Om) = 3 then break; fi;
-  c := First(Pcgs(Om), x -> not x in Group(zc));
-  if c = fail then c := First(AsList(Om), x -> not IsOne(x) and not x in Group(zc)); fi;
-  hh := NaturalHomomorphismByNormalSubgroupNC(cur, Group(c)); cur := Image(hh); zc := Image(hh, zc); steps := steps + 1;
+  Z := Centre(cur);
+  if IsCyclic(Z) then break; fi;
+  iso := IsomorphismPcGroup(Z); PZ := Image(iso);
+  chis := Filtered(LinearCharacters(PZ), chi -> not IsOne(Image(iso, zc)^chi));
+  Sort(chis, function(a, b) return Order(a) < Order(b); end);
+  K := PreImage(iso, KernelOfCharacter(chis[1]));
+  hh := NaturalHomomorphismByNormalSubgroupNC(cur, K); cur := Image(hh); zc := Image(hh, zc); steps := steps + 1;
+  Print("  step ", steps, ": order 3^", LogInt(Size(cur), 3), "\n");
 od;
 d := JenDims(cur);;
 Print(CASE, ": descent of ", steps, " steps (", Int((Runtime() - t) / 1000), " s) to order 3^", LogInt(Size(cur), 3),
