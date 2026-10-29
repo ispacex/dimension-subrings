@@ -8,10 +8,14 @@ Read("../3group.gap");
 W := EvalString(w);;
 XS := [x1, x2, x3, x4];;
 NDEG := 7;;
+# M_1..M_NDEG by Lazard, M_n = [M_(n-1), H] M_(ceil(n/3))^3 (GAP's JenningsSeries runs to the end of the
+# series, millions of terms here: elements of order 3^15)
 JenDims := function(H)
-  local J;
-  J := ShallowCopy(JenningsSeries(H));
-  while Length(J) < NDEG do Add(J, TrivialSubgroup(H)); od;
+  local J, n;
+  J := [H];
+  for n in [2..NDEG] do
+    Add(J, ClosureGroup(CommutatorSubgroup(J[n - 1], H), Agemo(J[QuoInt(n + 2, 3)], 3)));
+  od;
   return List([1..NDEG - 1], k -> LogInt(Index(J[k], J[k + 1]), 3));
 end;;
 # dim F_3[H]/I^NDEG from d_1..d_(NDEG-1): prod_w (1 + t^w + t^(2w))^(d_w) truncated below t^NDEG
