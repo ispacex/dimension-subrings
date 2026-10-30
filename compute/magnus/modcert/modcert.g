@@ -68,6 +68,7 @@ MC_RandomSub := function(Q, p, k, avoid)
   return H;
 end;
 
+if not IsBound(MC_DIMMAX) then MC_DIMMAX := 4096; fi;   # modcert.py is dense: dim^2 entries
 # The family run by mc_*.g: for each subgroup H in Hs (with a tag), the permutation module if h0 notin H,
 # else for each a in AS the induced chi with chi(h0) <> 0 (NCHI random ones, kinds in KINDS; "cyclo" only
 # when the rank phi(p^a)[Q:H] is at most CYMAX).  Returns the number of modules written.
@@ -76,6 +77,7 @@ MC_Family := function(out, Q, gens, p, tests, h0, Hs, AS, NCHI, KINDS, CYMAX)
   nmod := 0;
   for i in [1..Length(Hs)] do
     H := Hs[i][2]; tag := Hs[i][1]; idx := Index(Q, H);
+    if idx > MC_DIMMAX then continue; fi;
     if not h0 in H then
       MC_Write(out, Concatenation(tag, "-perm"), Q, gens, H, fail, p, 0, "zmod", tests); nmod := nmod + 1;
       continue;
