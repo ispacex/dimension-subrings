@@ -267,11 +267,9 @@ static vector<Row> howell_fixed(vector<Row>& rows, int ncol, vector<int>& pv, ve
 static vector<Row> howell_stream(vector<Row>& rows, int ncol, vector<int>& pv, vector<int>& order) {
   vector<Row> piv(ncol); pv.assign(ncol, -1);
   vector<u64> acc(ncol, 0);
-  Acc hacc; if (HMAX) hacc.init(HMAX);  // the history of the row being reduced
   vector<Row> pend; size_t next = 0;
   auto extract = [&](int c, int hi, u64 u) {  // acc[c..hi] times u as a row; clears acc
     Row r; for (int k = c; k <= hi; k++) if (acc[k]) { r.i.push_back(k); r.v.push_back(mulm(acc[k], u)); acc[k] = 0; }
-    if (HMAX) { r.h = hacc.take(); for (auto& x : r.h.v) x = mulm(x, u); }
     return r;
   };
   auto closure = [&](const Row& r, int v) { if (v > 0) { Row s = r; scale(s, PP[E - v]); if (!s.i.empty()) pend.push_back(std::move(s)); } };
@@ -282,7 +280,6 @@ static vector<Row> howell_stream(vector<Row>& rows, int ncol, vector<int>& pv, v
     else break;
     if (x.i.empty()) continue;
     for (size_t q = 0; q < x.i.size(); q++) acc[x.i[q]] = x.v[q];
-    if (HMAX) hacc.addsv(x.h, 1);
     int c = x.i[0], hi = x.i.back();
     while (c <= hi) {
       u64 a = acc[c];
@@ -296,13 +293,56 @@ static vector<Row> howell_stream(vector<Row>& rows, int ncol, vector<int>& pv, v
       }
       u64 nq = negm(a / PP[pv[c]]); const Row& pr = piv[c]; ST_ELIM++; ST_FILL += pr.i.size();
       for (size_t t = 0; t < pr.i.size(); t++) { int k = pr.i[t]; acc[k] = addm(acc[k], mulm(pr.v[t], nq)); if (k > hi) hi = k; }
-      if (HMAX) hacc.addsv(pr.h, nq);
       c++;
     }
-    if (HMAX && c > hi) hacc.clear();  // reduced to 0: a syzygy, its history is dropped
   }
   rows.clear(); rows.shrink_to_fit();
   order.clear(); for (int c = 0; c < ncol; c++) order.push_back(c);
+  return piv;
+}
+
+// howell_stream that also records how each pivot row arose (GRNQ_LAZY): node n stands for the vector
+// h_n (input rows by id) + sum coef * (node m), m < n.  An input row gets a node only once it becomes a pivot
+// (its history is its h); a pivot made from x reduced by pivots m_t with coefficients q_t and normalised by
+// u is u x + sum u q_t m_t; a closure row is p^(E-v) times its pivot.  pnode[c]: the node of the pivot row of c.
+struct HNode { SV h; vector<pair<int, u64>> parts; };
+static vector<Row> howell_stream_dag(vector<Row>& rows, int ncol, vector<int>& pv, vector<int>& pnode, vector<HNode>& nodes) {
+  vector<Row> piv(ncol); pv.assign(ncol, -1); pnode.assign(ncol, -1);
+  vector<u64> acc(ncol, 0);
+  vector<pair<Row, int>> pend; size_t next = 0;
+  vector<pair<int, u64>> ops;
+  for (;;) {
+    Row x; int xn;
+    if (!pend.empty()) { x = std::move(pend.back().first); xn = pend.back().second; pend.pop_back(); }
+    else if (next < rows.size()) { x = std::move(rows[next++]); xn = -1; }
+    else break;
+    if (x.i.empty()) continue;
+    for (size_t q = 0; q < x.i.size(); q++) acc[x.i[q]] = x.v[q];
+    int c = x.i[0], hi = x.i.back(); ops.clear();
+    while (c <= hi) {
+      u64 a = acc[c];
+      if (!a) { c++; continue; }
+      int va = val(a);
+      if (pv[c] < 0 || va < pv[c]) {
+        u64 u = invunit(a / PP[va]);
+        Row r; for (int k = c; k <= hi; k++) if (acc[k]) { r.i.push_back(k); r.v.push_back(mulm(acc[k], u)); acc[k] = 0; }
+        if (xn < 0) { nodes.push_back(HNode{std::move(x.h), {}}); xn = nodes.size() - 1; }
+        HNode nd; nd.parts.push_back({xn, u}); for (auto& o : ops) nd.parts.push_back({o.first, mulm(o.second, u)});
+        nodes.push_back(std::move(nd)); int rn = nodes.size() - 1;
+        if (pv[c] >= 0) pend.push_back({std::move(piv[c]), pnode[c]});
+        pv[c] = va; pnode[c] = rn;
+        if (va > 0) { Row s2 = r; scale(s2.i, s2.v, PP[E - va]);
+          if (!s2.i.empty()) { HNode cl; cl.parts.push_back({rn, PP[E - va]}); nodes.push_back(std::move(cl)); pend.push_back({std::move(s2), (int)nodes.size() - 1}); } }
+        piv[c] = std::move(r);
+        break;
+      }
+      u64 nq = negm(a / PP[pv[c]]); const Row& pr = piv[c]; ST_ELIM++; ST_FILL += pr.i.size();
+      for (size_t t = 0; t < pr.i.size(); t++) { int k = pr.i[t]; acc[k] = addm(acc[k], mulm(pr.v[t], nq)); if (k > hi) hi = k; }
+      ops.push_back({pnode[c], nq});
+      c++;
+    }
+  }
+  rows.clear(); rows.shrink_to_fit();
   return piv;
 }
 
@@ -507,9 +547,10 @@ static void final_proj(int k, int ng) {
       vector<int> S, pos(NT, -1); for (int c = 0; c < NT; c++) if (inS[c]) { pos[c] = S.size(); S.push_back(c); }
       for (auto& rr : rows) for (auto& c : rr.i) c = pos[c];
       size_t nr = rows.size();
-      vector<int> pv, order; vector<Row> piv = howell_stream(rows, S.size(), pv, order);
+      vector<int> pv, order, pnode; vector<HNode> nodes;
+      vector<Row> piv = HMAX ? howell_stream_dag(rows, S.size(), pv, pnode, nodes) : howell_stream(rows, S.size(), pv, order);
       vector<u64> a(S.size(), 0); for (size_t q = 0; q < y.size(); q++) if (pos[y.i[q]] >= 0) a[pos[y.i[q]]] = y.v[q];
-      Acc lam; if (HMAX) lam.init(HMAX);
+      vector<u64> kap(nodes.size(), 0);  // coefficient of each node in sum nq_c (pivot row of c)
       bool inspan = true;
       for (size_t c = 0; c < S.size(); c++) {
         if (!a[c]) continue;
@@ -517,9 +558,17 @@ static void final_proj(int k, int ng) {
         if (pv[c] < 0 || va < pv[c]) { inspan = false; break; }
         u64 nq = negm(a[c] / PP[pv[c]]);
         for (size_t t = 0; t < piv[c].i.size(); t++) { int kk = piv[c].i[t]; a[kk] = addm(a[kk], mulm(piv[c].v[t], nq)); }
-        if (HMAX) lam.addsv(piv[c].h, nq);
+        if (HMAX) kap[pnode[c]] = addm(kap[pnode[c]], nq);
       }
       vector<Row>().swap(piv);
+      Acc lam; if (HMAX && inspan) {  // back through the nodes: the coefficients of the input rows
+        lam.init(HMAX);
+        for (size_t n = nodes.size(); n-- > 0;) { u64 kk = kap[n]; if (!kk) continue;
+          for (auto& pt : nodes[n].parts) kap[pt.first] = addm(kap[pt.first], mulm(kk, pt.second));
+          lam.addsv(nodes[n].h, kk); }
+      }
+      if (HMAX) printf("  howell (lazy): %zu nodes\n", nodes.size());
+      vector<HNode>().swap(nodes);
       printf("test %s: y has %zu entries; |S| = %zu, %zu rows; %s (%.1f s)\n", PROJ_N[s].c_str(), y.size(), S.size(), nr,
              inspan ? "y|S in the span: undecided" : "y|S NOT in the span: h - 1 notin Delta^n (exact)", now() - t0);
       fflush(stdout);
