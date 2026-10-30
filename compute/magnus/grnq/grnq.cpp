@@ -1,8 +1,6 @@
-// MATH-414 grnq: Z[H]/varpi^n for a finite p-group H = <x_1..x_r | rho_1..rho_s> (any presentation
-// with gamma_n(F) <= N gamma_n... more precisely: Z[F/N]/varpi^n, so H may be given by the
-// relators of its class-(n-1) quotient), modulo p^E, by a nilpotent quotient algorithm for the
-// right module R_k = T/(J + T_{>=k}), T = Z<X_1..X_r>, x_i -> 1 + X_i, J the two-sided ideal of the
-// rho - 1.  See README.md in this directory for the algorithm and its correctness argument.
+// MATH-414 grnq: Z[F/N]/varpi^n, F free on x_1..x_r, N the normal closure of rho_1..rho_s, modulo
+// p^E, by a nilpotent quotient algorithm for the right module R_k = T/(J + T_{>=k}), T = Z<X_1..X_r>,
+// x_i -> 1 + X_i, J the two-sided ideal of the rho - 1.  See README.md in this directory for the algorithm and its correctness argument.
 //
 // Input (stdin), whitespace separated:
 //   p P  E E  n N  r R
