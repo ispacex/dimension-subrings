@@ -67,7 +67,7 @@ by the tails outside a set $S$) does not decide $a_6^{81}$ in $G$: on $S$ = the 
 rows, 24 min) $y|_S$ lies in the span (likewise $a_6^{27}$, and the control $w$, which must); one round of enlargement
 by the supports of the rows makes $S$ all 43 673 tails; the lazy enlargement's first residual has 39 675 entries
 outside $S$. Runs: tm `grnq-G7-p0-a81` (`GRNQ_PROJ=0 GRNQ_ONLY=a6^81,a6^27`, 1 h 10 min), `grnq-G7-p1-size`,
-`grnq-G7-lazy-a81` (stopped after the first residual). Open: whether $z \in D_7(Q)$, hence whether $D_7(Q) = \langle w\rangle$.
+`grnq-G7-lazy-a81` (stopped after the first residual). Open: whether $z \in D_7(Q)$, hence whether $D_7(Q) = \langle w\rangle$. Small module certificates ([MATH-423](https://default.kaiku.tech/issue/MATH-423), [`../modcert`](../modcert/README.md)) do not decide it: $z \in H'$ for $C_G(g)$, $g \in \gamma_5$, and for a subgroup of index $3^7$, and the same family fails its control on Rips's group.
 
 Run with `tm submit --untracked --cache mikh --cores 1 --mem 16G compute/magnus/bm494/run_check.sh`
 (likewise `run_final.sh`; `run_descent.sh` with `--cores 8`). Logs go to `$JOB_OUT` and are not kept.
