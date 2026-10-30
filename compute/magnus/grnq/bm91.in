@@ -1,0 +1,14 @@
+p 2 E 30 n 4 r 15
+rels 6
+(mul (pow g1 4) (inv (comm g4 g5)))
+(mul (pow g2 16) (inv (comm g6 g7)))
+(mul (pow g3 64) (inv (comm g10 g11)))
+(mul (pow g1 -64) (pow g2 -128) (pow (comm g8 g9) -64))
+(mul (pow g1 32) (pow g3 -128) (pow (comm g12 g13) -16))
+(mul (pow g2 32) (pow g3 64) (pow (comm g14 g15) -4))
+tests 5
+omega (mul (pow (comm g1 g2) 32) (pow (comm g1 g3) 64) (pow (comm g2 g3) 128))
+[x01,x02]^32 (pow (comm g1 g2) 32)
+x01 g1
+[x01,x02] (comm g1 g2)
+omega^2 (pow (mul (pow (comm g1 g2) 32) (pow (comm g1 g3) 64) (pow (comm g2 g3) 128)) 2)

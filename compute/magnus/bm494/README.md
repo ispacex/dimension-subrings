@@ -33,7 +33,41 @@ at $3^{494}$, since $w \in \Phi(Z(G))$, which is consistent with their stopping 
 
 Not checked: whether $w \in D_7(H)$ for a proper $H < G$ by some other argument (`bm_sub.g` excludes BM's), sections $H/N$ with $H < G$
 (there (C2) reads $x_2^9 \in \gamma_2(H)N$ etc.; for $H = M$ maximal, `bm_mul.g` excludes every $N$; for $\Phi(Q)\langle x_1..x_4\rangle \le H < Q$, `SUBS` excludes every $N$; for other non-maximal $H$ nothing is tested: the obstruction does not pass from $M$ to $H < M$, since $\gamma_j(H)$ may be smaller; other choices of the $e_i$ are MATH-414), and elements of $D_7(G/N)$ that are not
-images of $w$ ($D_7(G/N)$ may be larger than the image of $D_7(G)$). These would need a computation of $D_7$ itself, e.g. in $\mathbb Z[H]/\varpi^7$ (a proper subgroup may need up to 19 generators).
+images of $w$ ($D_7(G/N)$ may be larger than the image of $D_7(G)$). These would need a computation of $D_7$ itself, e.g. in $\mathbb Z[H]/\varpi^7$ (a proper subgroup may need up to 19 generators); the attempt is the next section.
+
+## $D_7$ directly ([MATH-414](https://default.kaiku.tech/issue/MATH-414))
+
+Aim: $D_7(Q) = \langle w\rangle$ for $Q = G$ and the three $G/\langle u\rangle$. Then every $H \le Q$ has $D_7(H) \subseteq \langle w\rangle$,
+so no subgroup has another witness, and the remaining question for $H$ is only whether $w \in D_7(H)$. Since
+$D_7(Q)/\langle w\rangle$ is normal in $Q/\langle w\rangle$, it is trivial iff it contains no central element of order 3 of
+$Q/\langle w\rangle$, so it suffices to decide $D_7$ on $\bar Z$, the preimage of $\Omega_1(Z(Q/\langle w\rangle))$. The engine is
+[`../grnq`](../grnq/README.md), which builds $\mathbb Z[Q]/\varpi^n$ layer by layer.
+
+| File | What |
+|---|---|
+| `bm_jen.g`, `run_jen.sh` | the size: the least number of generators of $\mathbb Z[H]/\varpi^7$ is $N = \dim \mathbb F_3[H]/I^7$, by Jennings from $d_w = \log_3|M_w/M_{w+1}|$ (Lazard's $M_n = [M_{n-1}, H]M_{\lceil n/3\rceil}^3$, computed in $H/\langle g^9\rangle^H$; self-test against `JenningsSeries`: 1304 groups, 0 mismatches). $N(G) = 18\,746$ ($d = 7, 13, 42, 11, 0, 13$), $N(G/\langle u_1\rangle) = 18\,487$; over the 211 subgroups of `bm_mul.g` per $Q$: maximal ones from $\approx N(Q)$ (rank 7) to $\approx 3.8 \cdot 10^5$ (rank 17), index 9 from $9 \cdot 10^4$ to $2.5 \cdot 10^6$, index 27 from $10^6$ to $6.9 \cdot 10^6$, index 81 about $1.2 \cdot 10^7$ (`EXTRA='ONLY:=[k];;'`, tm, 1 h each) |
+| `bm_grnq.g`, `run_grnq.sh` | the input of `grnq` for $Q$: the 494 pc generators by their definitions (powers and commutators, a DAG on $x_2..x_4, z_1..z_4$) and 185 relators whose tails span the multiplicator of `PqPCover` (the trivial relations $[g_j, g_i] = 1$ included), so the largest 3-quotient of the presented group is $G$ (header of the file); for $G/\langle u\rangle$ also $u$. Tests $w$, $x_1$, $x_2$, $a_6$ (a generator of $\gamma_6 \cong C_{729}$), $a_6^{3}$, $a_6^{27}$, $a_6^{81}$, $u$, and a basis of $\bar Z/\langle w\rangle$ (resp. $/\langle w, u\rangle$) as a span. `CASE=G N=6 E=20 run_grnq.sh` (tm, 16G) |
+| `bm_z8.g` | the element $z$ of $\bar Z$ found in $D_6$: its order and place, and a descent $Q \to Q/K$ ($K$ central, $z \notin K$) to cyclic centre, for the MATH-403 bound ($D_n = \gamma_n$ up to $3^9$) |
+
+Results at $n = 6$ (full computation, certificate holds at $E = 20$, largest power exponent 13; 25–50 min).
+$G$: layers $\log_3|\varpi^k/\varpi^{k+1}| = 59, 262, 1109, 4257, 15442$; $w, a_6, a_6^3 \in D_6$; $\bar Z/\langle w\rangle$ has rank 9
+(basis weights 3 4 5 5 5 5 5 6 5), and of its $3^9$ elements exactly 3 lie in $D_6$ (`span Zbar: 3 of 19683`): $0, \pm z$ with $z$
+the 8th basis element, so $D_6(G) \cap \bar Z = \langle w, z\rangle$.
+`bm_z8.g`: $z \in \gamma_6$ has order 9 and $z^3$ generates $\langle w\rangle$, so $\langle w, z\rangle = \langle z\rangle = \Omega_2(\gamma_6) = \langle a_6^{81}\rangle$.
+Each $G/\langle u\rangle$: layers $59, 262, 1108, 4250, 15401$; $\bar Z/\langle w, u\rangle$ has rank 8 and again exactly 3 of its $3^8$
+elements lie in $D_6$ ($0$ and $\pm$ the 7th basis element). So, as $D_7 \subseteq D_6$: **$D_7(Q) \cap \bar Z$ is $\langle w\rangle$ or $\langle w, z\rangle$, and $D_7(Q) = \langle w\rangle$ iff $z \notin D_7(Q)$**
+(in all four $Q$, $\gamma_6(Q) \cong C_{729}$ with $\Omega_1(\gamma_6) = \langle w\rangle$, so $z \equiv a_6^{\pm 81}$ mod $\langle w\rangle$: iff $a_6^{81} \notin D_7(Q)$).
+That $z$ itself lies in $D_6$ is automatic ($a_6^{81} \in \gamma_6 \subseteq D_6$); the content of the $n = 6$ run is that nothing else of
+$\bar Z$ does, i.e. $D_6(Q) \cap \bar Z = \gamma_6(Q) \cap \bar Z$. The descent of `bm_z8.g` does not help: the quotients keeping $z$ it reaches have order
+$3^{433}$ ($G$) and $3^{430}$ ($G/\langle u\rangle$), with $N = 17\,412$ and $17\,923$.
+
+At $n = 7$ (the question) the last stage has 43 673 tails, and its full Howell form is out of reach here (estimated ~100 h,
+> 100 GB; kimmy has 20 GB). The projection test of `grnq` (an exact sufficient test for $h \notin D_7$ on a quotient
+by the tails outside a set $S$) does not decide $a_6^{81}$ in $G$: on $S$ = the support of $y$ ($|S| = 3884$, 138 909
+rows, 24 min) $y|_S$ lies in the span (likewise $a_6^{27}$, and the control $w$, which must); one round of enlargement
+by the supports of the rows makes $S$ all 43 673 tails; the lazy enlargement's first residual has 39 675 entries
+outside $S$. Runs: tm `grnq-G7-p0-a81` (`GRNQ_PROJ=0 GRNQ_ONLY=a6^81,a6^27`, 1 h 10 min), `grnq-G7-p1-size`,
+`grnq-G7-lazy-a81` (stopped after the first residual). Open: whether $z \in D_7(Q)$, hence whether $D_7(Q) = \langle w\rangle$.
 
 Run with `tm submit --untracked --cache mikh --cores 1 --mem 16G compute/magnus/bm494/run_check.sh`
 (likewise `run_final.sh`; `run_descent.sh` with `--cores 8`). Logs go to `$JOB_OUT` and are not kept.
