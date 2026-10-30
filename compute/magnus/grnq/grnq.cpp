@@ -211,20 +211,27 @@ struct StageMod {
 };
 
 // ---------------- sparse Howell form over Z/p^E ----------------
-struct Row { vector<int> i; vector<u64> v; };
+// h: the history of the row (GRNQ_LAZY), a combination of the input rows by their ids; empty otherwise
+struct Row { vector<int> i; vector<u64> v; SV h; };
 static int lead(const Row& r) { return r.i.empty() ? INT32_MAX : r.i[0]; }
-static void scale(Row& r, u64 c) { size_t w = 0; for (size_t q = 0; q < r.i.size(); q++) { u64 x = mulm(r.v[q], c); if (x) { r.i[w] = r.i[q]; r.v[w++] = x; } } r.i.resize(w); r.v.resize(w); }
-static Row axpy(const Row& a, const Row& b, u64 cb) {  // a + cb b
-  Row s; size_t p = 0, q = 0; s.i.reserve(a.i.size() + b.i.size()); s.v.reserve(a.i.size() + b.i.size());
-  while (p < a.i.size() || q < b.i.size()) {
+static void scale(vector<int>& I, vector<u64>& V, u64 c) { size_t w = 0; for (size_t q = 0; q < I.size(); q++) { u64 x = mulm(V[q], c); if (x) { I[w] = I[q]; V[w++] = x; } } I.resize(w); V.resize(w); }
+static void scale(Row& r, u64 c) { scale(r.i, r.v, c); scale(r.h.i, r.h.v, c); }
+static void axpy(const vector<int>& ai, const vector<u64>& av, const vector<int>& bi, const vector<u64>& bv, u64 cb, vector<int>& si, vector<u64>& sv) {
+  size_t p = 0, q = 0; si.reserve(ai.size() + bi.size()); sv.reserve(ai.size() + bi.size());
+  while (p < ai.size() || q < bi.size()) {
     int k; u64 x;
-    if (q >= b.i.size() || (p < a.i.size() && a.i[p] < b.i[q])) { k = a.i[p]; x = a.v[p++]; }
-    else if (p >= a.i.size() || b.i[q] < a.i[p]) { k = b.i[q]; x = mulm(b.v[q++], cb); }
-    else { k = a.i[p]; x = addm(a.v[p++], mulm(b.v[q++], cb)); }
-    if (x) { s.i.push_back(k); s.v.push_back(x); }
+    if (q >= bi.size() || (p < ai.size() && ai[p] < bi[q])) { k = ai[p]; x = av[p++]; }
+    else if (p >= ai.size() || bi[q] < ai[p]) { k = bi[q]; x = mulm(bv[q++], cb); }
+    else { k = ai[p]; x = addm(av[p++], mulm(bv[q++], cb)); }
+    if (x) { si.push_back(k); sv.push_back(x); }
   }
+}
+static Row axpy(const Row& a, const Row& b, u64 cb) {  // a + cb b
+  Row s; axpy(a.i, a.v, b.i, b.v, cb, s.i, s.v);
+  if (a.h.size() || b.h.size()) axpy(a.h.i, a.h.v, b.h.i, b.h.v, cb, s.h.i, s.h.v);
   return s;
 }
+static int HMAX = 0;  // GRNQ_LAZY: number of row ids (the histories live in [0, HMAX))
 // Howell form in the fixed column order 0..ncol-1 (the p^(E-v) multiple of each pivot row is added back);
 // returns pivot rows indexed by pivot column (empty Row if none), entry p^v at the pivot
 static vector<Row> howell_fixed(vector<Row>& rows, int ncol, vector<int>& pv, vector<int>& order) {
@@ -260,9 +267,11 @@ static vector<Row> howell_fixed(vector<Row>& rows, int ncol, vector<int>& pv, ve
 static vector<Row> howell_stream(vector<Row>& rows, int ncol, vector<int>& pv, vector<int>& order) {
   vector<Row> piv(ncol); pv.assign(ncol, -1);
   vector<u64> acc(ncol, 0);
+  Acc hacc; if (HMAX) hacc.init(HMAX);  // the history of the row being reduced
   vector<Row> pend; size_t next = 0;
   auto extract = [&](int c, int hi, u64 u) {  // acc[c..hi] times u as a row; clears acc
     Row r; for (int k = c; k <= hi; k++) if (acc[k]) { r.i.push_back(k); r.v.push_back(mulm(acc[k], u)); acc[k] = 0; }
+    if (HMAX) { r.h = hacc.take(); for (auto& x : r.h.v) x = mulm(x, u); }
     return r;
   };
   auto closure = [&](const Row& r, int v) { if (v > 0) { Row s = r; scale(s, PP[E - v]); if (!s.i.empty()) pend.push_back(std::move(s)); } };
@@ -273,6 +282,7 @@ static vector<Row> howell_stream(vector<Row>& rows, int ncol, vector<int>& pv, v
     else break;
     if (x.i.empty()) continue;
     for (size_t q = 0; q < x.i.size(); q++) acc[x.i[q]] = x.v[q];
+    if (HMAX) hacc.addsv(x.h, 1);
     int c = x.i[0], hi = x.i.back();
     while (c <= hi) {
       u64 a = acc[c];
@@ -286,8 +296,10 @@ static vector<Row> howell_stream(vector<Row>& rows, int ncol, vector<int>& pv, v
       }
       u64 nq = negm(a / PP[pv[c]]); const Row& pr = piv[c]; ST_ELIM++; ST_FILL += pr.i.size();
       for (size_t t = 0; t < pr.i.size(); t++) { int k = pr.i[t]; acc[k] = addm(acc[k], mulm(pr.v[t], nq)); if (k > hi) hi = k; }
+      if (HMAX) hacc.addsv(pr.h, nq);
       c++;
     }
+    if (HMAX && c > hi) hacc.clear();  // reduced to 0: a syzygy, its history is dropped
   }
   rows.clear(); rows.shrink_to_fit();
   order.clear(); for (int c = 0; c < ncol; c++) order.push_back(c);
@@ -390,7 +402,7 @@ static void dfs(DFSCtx& C, const SV& u, int d, long long widx) {
 // power tails of the carries.  h - 1 = 0 in R/W iff its vector y|S lies in the span of the restricted rows.
 // S = the support of y, enlarged r times by the supports of the rows meeting S.  A y|S in the span decides
 // nothing.
-static int PROJ = -1;
+static int PROJ = -1, LAZY = 0;  // GRNQ_LAZY: at most this many enlargements of S by the residual
 static vector<string> PROJ_N; static vector<PEx> PROJ_T;
 static vector<Row> howell_stream(vector<Row>& rows, int ncol, vector<int>& pv, vector<int>& order);
 static vector<Row> howell_fixed(vector<Row>& rows, int ncol, vector<int>& pv, vector<int>& order);
@@ -427,23 +439,25 @@ static void final_proj(int k, int ng) {
   };
   vector<Acc> rg(magnus.size()), rt(magnus.size()); for (auto& a : rg) a.init(ng); for (auto& a : rt) a.init(NT);
   // rows (E0), (E1), (E2) of generator b, on mask
+  const int RAW = 1 + R + (int)magnus.size();  // GRNQ_LAZY: row id b * RAW + (0 power, 1 + j (E1), 1 + R + s (E2))
   auto rows_of_b = [&](int b, const vector<char>& mask, vector<Row>& out, bool local = true) {
     size_t r0 = out.size();
+    auto put = [&](Row&& r, int raw) { if (r.i.empty()) return; if (HMAX) { r.h.i.assign(1, b * RAW + raw); r.h.v.assign(1, 1); } out.push_back(std::move(r)); };
     if (PR.ex[b] < E) {
       { Acc& a = tt[0]; if (tailP[b] >= 0 && mask[tailP[b] - ng]) a.add(tailP[b] - ng, PP[E - PR.ex[b]]);
         SV pg = PR.pi[b]; for (auto& v : pg.v) v = mulm(v, PP[E - PR.ex[b]]);
-        Row r = finish(pg, a.take(), mask); if (!r.i.empty()) out.push_back(std::move(r)); }
+        put(finish(pg, a.take(), mask), 0); }
       for (int j = 0; j < R; j++) {
         Acc& ag = tg[0]; Acc& a = tt[0]; u64 pe = PP[PR.ex[b]];
         ag.addsv(PR.mu[b][j], pe); int t = tailX[b][j]; if (t >= 0 && mask[t - ng]) a.add(t - ng, pe);
         for (size_t q = 0; q < PR.pi[b].size(); q++) { int c = PR.pi[b].i[q]; u64 m = negm(PR.pi[b].v[q]);
           ag.addsv(PR.mu[c][j], m); int tc = tailX[c][j]; if (tc >= 0 && mask[tc - ng]) a.add(tc - ng, m); }
-        Row r = finish(ag.take(), a.take(), mask); if (!r.i.empty()) out.push_back(std::move(r));
+        put(finish(ag.take(), a.take(), mask), 1 + j);
       }
     }
     SV g; g.i.push_back(b); g.v.push_back(1);
     lin_walk(g, 0, 0, magnus, live, mask, ng, rg, rt, tg, tt);
-    for (size_t s = 0; s < magnus.size(); s++) { Row r = finish(rg[s].take(), rt[s].take(), mask); if (!r.i.empty()) out.push_back(std::move(r)); }
+    for (size_t s = 0; s < magnus.size(); s++) put(finish(rg[s].take(), rt[s].take(), mask), 1 + R + (int)s);
     if (local && out.size() - r0 > 1) {  // local Howell of the rows of b
       vector<int> cols; for (size_t q = r0; q < out.size(); q++) cols.insert(cols.end(), out[q].i.begin(), out[q].i.end());
       sort(cols.begin(), cols.end()); cols.erase(unique(cols.begin(), cols.end()), cols.end());
@@ -454,6 +468,7 @@ static void final_proj(int k, int ng) {
     }
   };
   vector<char> all(NT, 1);
+  HMAX = LAZY ? ng * RAW : 0;
   printf("projection test at stage %d: %d tails\n", k, NT);
   for (size_t s = 0; s < PROJ_T.size(); s++) {
     double t0 = now();
@@ -486,23 +501,46 @@ static void final_proj(int k, int ng) {
       if (const char* sm = getenv("GRNQ_SMAX")) if (ns1 > atoll(sm)) { printf("test %s: |S| > GRNQ_SMAX, stopped\n", PROJ_N[s].c_str()); stop = true; break; }
     }
     if (stop) continue;
-    if (badgen) { printf("ERROR: %lld nonzero generator entries in the rows (R_k inconsistent)\n", badgen); exit(3); }
-    vector<int> S, pos(NT, -1); for (int c = 0; c < NT; c++) if (inS[c]) { pos[c] = S.size(); S.push_back(c); }
-    for (auto& rr : rows) for (auto& c : rr.i) c = pos[c];
-    size_t nr = rows.size();
-    vector<int> pv, order; vector<Row> piv = howell_stream(rows, S.size(), pv, order);
-    vector<u64> a(S.size(), 0); for (size_t q = 0; q < y.size(); q++) if (pos[y.i[q]] >= 0) a[pos[y.i[q]]] = y.v[q];
-    bool inspan = true;
-    for (size_t c = 0; c < S.size(); c++) {
-      if (!a[c]) continue;
-      int va = val(a[c]);
-      if (pv[c] < 0 || va < pv[c]) { inspan = false; break; }
-      u64 nq = negm(a[c] / PP[pv[c]]);
-      for (size_t t = 0; t < piv[c].i.size(); t++) { int kk = piv[c].i[t]; a[kk] = addm(a[kk], mulm(piv[c].v[t], nq)); }
+    for (int it = 0;; it++) {
+      if (it > 0) { rows.clear(); for (int b = 0; b < ng; b++) rows_of_b(b, inS, rows); }
+      if (badgen) { printf("ERROR: %lld nonzero generator entries in the rows (R_k inconsistent)\n", badgen); exit(3); }
+      vector<int> S, pos(NT, -1); for (int c = 0; c < NT; c++) if (inS[c]) { pos[c] = S.size(); S.push_back(c); }
+      for (auto& rr : rows) for (auto& c : rr.i) c = pos[c];
+      size_t nr = rows.size();
+      vector<int> pv, order; vector<Row> piv = howell_stream(rows, S.size(), pv, order);
+      vector<u64> a(S.size(), 0); for (size_t q = 0; q < y.size(); q++) if (pos[y.i[q]] >= 0) a[pos[y.i[q]]] = y.v[q];
+      Acc lam; if (HMAX) lam.init(HMAX);
+      bool inspan = true;
+      for (size_t c = 0; c < S.size(); c++) {
+        if (!a[c]) continue;
+        int va = val(a[c]);
+        if (pv[c] < 0 || va < pv[c]) { inspan = false; break; }
+        u64 nq = negm(a[c] / PP[pv[c]]);
+        for (size_t t = 0; t < piv[c].i.size(); t++) { int kk = piv[c].i[t]; a[kk] = addm(a[kk], mulm(piv[c].v[t], nq)); }
+        if (HMAX) lam.addsv(piv[c].h, nq);
+      }
+      vector<Row>().swap(piv);
+      printf("test %s: y has %zu entries; |S| = %zu, %zu rows; %s (%.1f s)\n", PROJ_N[s].c_str(), y.size(), S.size(), nr,
+             inspan ? "y|S in the span: undecided" : "y|S NOT in the span: h - 1 notin Delta^n (exact)", now() - t0);
+      fflush(stdout);
+      if (!inspan || !HMAX) break;
+      // y|S + sum lam_i row_i|S = 0; u = y + sum lam_i row_i on all tails (supported outside S) is 0 iff y
+      // lies in the span of all the rows; otherwise S grows by the support of u
+      SV L = lam.take(); Acc u; u.init(NT); u.addsv(y, 1);
+      for (size_t q = 0; q < L.size();) {
+        int b = L.i[q] / RAW; size_t q1 = q; while (q1 < L.size() && L.i[q1] / RAW == b) q1++;
+        vector<Row> full; rows_of_b(b, all, full, false);
+        for (auto& rr : full) { int id = rr.h.i[0]; size_t z = lower_bound(L.i.begin() + q, L.i.begin() + q1, id) - L.i.begin();
+          if (z < q1 && L.i[z] == id) for (size_t t = 0; t < rr.i.size(); t++) u.add(rr.i[t], mulm(rr.v[t], L.v[z])); }
+        q = q1;
+      }
+      SV U = u.take(); long long grow = 0;
+      for (int c : U.i) { if (inS[c]) { printf("ERROR: residual on S\n"); exit(3); } inS[c] = 1; grow++; }
+      printf("  test %s, lazy %d: lambda has %zu entries, residual %lld entries outside S (%.1f s)\n", PROJ_N[s].c_str(), it, L.size(), grow, now() - t0);
+      fflush(stdout);
+      if (!grow) { printf("test %s: y in the span of all the rows: h - 1 in Delta^n (mod p^E)\n", PROJ_N[s].c_str()); break; }
+      if (it + 1 >= LAZY) { printf("test %s: lazy limit reached, undecided\n", PROJ_N[s].c_str()); break; }
     }
-    printf("test %s: y has %zu entries; |S| = %zu, %zu rows; %s (%.1f s)\n", PROJ_N[s].c_str(), y.size(), S.size(), nr,
-           inspan ? "y|S in the span: undecided" : "y|S NOT in the span: h - 1 notin Delta^n (exact)", now() - t0);
-    fflush(stdout);
   }
 }
 
@@ -665,6 +703,7 @@ int main(int argc, char** argv) {
     for (int s = 0; s < NS; s++) { sn.push_back(tok()); int k = atoi(tok().c_str()); vector<PEx> v; for (int q = 0; q < k; q++) v.push_back(parse()); spans.push_back(v); } }
   FT = new FreeT();
   { const char* pj = getenv("GRNQ_PROJ"); if (pj) { PROJ = atoi(pj); PROJ_N = tn; PROJ_T = tests; } }
+  if (const char* lz = getenv("GRNQ_LAZY")) LAZY = atoi(lz);
   // GRNQ_ONLY=a,b,..: the projection test runs only these tests, in this order
   if (const char* on = getenv("GRNQ_ONLY")) {
     vector<string> nn; vector<PEx> tt; string o(on); size_t q0 = 0;

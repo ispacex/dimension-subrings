@@ -1,7 +1,8 @@
 """Safety of grnq's projection test (GRNQ_PROJ, MATH-414): on random presentations (as cmp_magnus.py),
 the full computation decides each test h (h - 1 in Delta^n or not); the projection test may say
 "NOT in the span" only for h - 1 notin Delta^n, and with S = all tails (enough rounds) it must say it for
-every such h whose h - 1 lies in Delta^(n-1).  Usage: python cmp_proj.py SEED COUNT [GRNQ]."""
+every such h whose h - 1 lies in Delta^(n-1).  The lazy mode (GRNQ_PROJ=0, GRNQ_LAZY large) must decide
+every such h, both ways, as the full computation.  Usage: python cmp_proj.py SEED COUNT [GRNQ]."""
 import os
 import random
 import subprocess
@@ -22,7 +23,7 @@ def main():
     seed, count = int(sys.argv[1]), int(sys.argv[2])
     exe = sys.argv[3] if len(sys.argv) > 3 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "grnq")
     rng = random.Random(seed)
-    bad = unsafe = decided = tested = 0
+    bad = unsafe = decided = tested = lazybad = 0
     for it in range(count):
         p = rng.choice([2, 3])
         r = rng.choice([2, 2, 3])
@@ -47,7 +48,17 @@ def main():
             if line.startswith("test "):
                 nm = line.split()[1].rstrip(":")
                 prj[nm] = "NOT" if "NOT in the span" in line else ("weight" if "not in Delta" in line else "undecided")
+        lz = {}
+        for line in run(exe, inp, {"GRNQ_PROJ": "0", "GRNQ_LAZY": "100000"}).splitlines():
+            if line.startswith("ERROR"):
+                raise RuntimeError(line)
+            if line.startswith("test ") and "lazy" not in line:
+                nm = line.split()[1].rstrip(":")
+                lz[nm] = "NOT" if "NOT in the span" in line else ("weight" if "not in Delta" in line else ("in" if "in Delta^n" in line or "y = 0" in line else lz.get(nm)))
         for nm, inn in full.items():
+            if prj.get(nm) != "weight" and lz.get(nm) != ("in" if inn else "NOT"):
+                lazybad += 1
+                print(f"#{it} LAZY {nm}: full {'in' if inn else 'notin'}, lazy {lz.get(nm)}", flush=True)
             tested += 1
             pr = prj.get(nm)
             if pr == "NOT" and inn:
@@ -58,8 +69,8 @@ def main():
             if pr == "undecided" and not inn:
                 bad += 1
                 print(f"#{it} MISSED {nm}: notin Delta^{n} but projection with all tails undecided", flush=True)
-    print(f"cmp_proj: {count} presentations, {tested} tests, {decided} decided NOT, {unsafe} unsafe, {bad} missed")
-    sys.exit(1 if unsafe or bad else 0)
+    print(f"cmp_proj: {count} presentations, {tested} tests, {decided} decided NOT, {unsafe} unsafe, {bad} missed, {lazybad} lazy mismatches")
+    sys.exit(1 if unsafe or bad or lazybad else 0)
 
 
 if __name__ == "__main__":
