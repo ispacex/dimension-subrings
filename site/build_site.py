@@ -1077,7 +1077,8 @@ def braced(s, i):
 KERNEL_PDF = {"en": "analysis.pdf", "ru": "analysis-ru.pdf"}
 # The document names the tasks of the internal tracker (MATH-43); the reader gets their public twins on the
 # board of the project (https://math.kaiku.tech/board/D5). A MATH key missing here stops the build.
-KERNEL_TASKS = {"MATH-41": "D5-2", "MATH-43": "D5-7", "MATH-144": "D5-9", "MATH-170": "D5-10", "MATH-171": "D5-11"}
+KERNEL_TASKS = {"MATH-41": "D5-2", "MATH-43": "D5-7", "MATH-144": "D5-9", "MATH-170": "D5-10", "MATH-171": "D5-11",
+                "MATH-314": "D5-21"}
 TASK_URL = "https://math.kaiku.tech/issue/"
 
 
