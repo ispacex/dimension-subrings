@@ -661,6 +661,14 @@ int main(int argc, char** argv) {
     for (int s = 0; s < NS; s++) { sn.push_back(tok()); int k = atoi(tok().c_str()); vector<PEx> v; for (int q = 0; q < k; q++) v.push_back(parse()); spans.push_back(v); } }
   FT = new FreeT();
   { const char* pj = getenv("GRNQ_PROJ"); if (pj) { PROJ = atoi(pj); PROJ_N = tn; PROJ_T = tests; } }
+  // GRNQ_ONLY=a,b,..: the projection test runs only these tests, in this order
+  if (const char* on = getenv("GRNQ_ONLY")) {
+    vector<string> nn; vector<PEx> tt; string o(on); size_t q0 = 0;
+    while (q0 <= o.size()) { size_t q1 = o.find(',', q0); if (q1 == string::npos) q1 = o.size();
+      string nm = o.substr(q0, q1 - q0); q0 = q1 + 1;
+      for (int s = 0; s < NTs; s++) if (tn[s] == nm) { nn.push_back(nm); tt.push_back(tests[s]); } }
+    PROJ_N = nn; PROJ_T = tt;
+  }
   printf("p = %d, E = %d, n = %d, r = %d, %d relators, %d tests; |T_<n| = %lld\n", P, E, NDEG, R, S, NTs, FT->size);
   double tm0 = now();
   for (auto& rho : rels) {
