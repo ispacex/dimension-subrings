@@ -23,9 +23,9 @@ Hs := [];;
 for i in [1..NCENT] do g := Random(L[2]); Add(Hs, [Concatenation("C", String(i)), Centralizer(P, g)]); od;
 for k in KS do for i in [1..NSUB] do Add(Hs, [Concatenation("S", String(k), "_", String(i)), MC_RandomSub(P, 2, k, fail)]); od; od;
 for k in KS do for i in [1..NSUB] do Add(Hs, [Concatenation("A", String(k), "_", String(i)), MC_RandomSub(P, 2, k, y1^64)]); od; od;
-if not IsBound(NGREEDY) then NGREEDY := 4; fi;
+if not IsBound(NGREEDY) then NGREEDY := 4; fi; if not IsBound(GNC) then GNC := 12; fi;
 for i in [1..NGREEDY] do
-  res := MC_GreedySee(P, 2, Maximum(AS), y1^64, y1, 12, 20, false);
+  res := MC_GreedySee(P, 2, Maximum(AS), y1^64, y1, GNC, 12, false);
   if res[3] then Add(Hs, [Concatenation("G", String(i)), res[1]]); fi;
 od;
 Print("subgroups: indices ", List(Hs, h -> LogInt(Index(P, h[2]), 2)), "; y1^64 in H: ", List(Hs, h -> y1^64 in h[2]), "\n");
