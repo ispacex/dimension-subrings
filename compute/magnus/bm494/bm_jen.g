@@ -1,6 +1,6 @@
 # MATH-414 (bm_jen.g): size of Z[H]/varpi^7 for Q = G, G/<u> and the subgroups H of bm_mul.g.
 # (varpi^7 + 3 Z[H]) / 3 Z[H] = I^7, I the augmentation ideal of F_3[H], so the least number of additive
-# generators of the finite 3-group Z[H]/varpi^7 is dim F_3[H]/I^7.  By Jennings this is the number of
+# generators of Z[H]/varpi^7 (Z plus a finite 3-group; the Z is the weight-0 monomial) is dim F_3[H]/I^7.  By Jennings this is the number of
 # monomials prod (g_i - 1)^(e_i), 0 <= e_i < 3, of weight sum e_i w_i < 7, with d_w of the g_i of weight w
 # (d_w = log_3 |M_w / M_(w+1)|, M the Jennings series).  The truncated Magnus algebra on r = d_1
 # generators has sum_(k<7) r^k monomials (dnz.py).  One line per group: index, rank, d_1..d_6, both counts.

@@ -538,7 +538,7 @@ static void final_proj(int k, int ng) {
       printf("  test %s, round %d: S enlarged to %lld of %d tails (%.1f s)\n", PROJ_N[s].c_str(), r + 1, ns1, NT, now() - t0); fflush(stdout);
       if (const char* sm = getenv("GRNQ_SMAX")) if (ns1 > atoll(sm)) { printf("test %s: |S| > GRNQ_SMAX, stopped\n", PROJ_N[s].c_str()); stop = true; break; }
     }
-    if (stop) continue;
+    if (stop) { if (badgen) { printf("ERROR: %lld nonzero generator entries in the rows (R_k inconsistent)\n", badgen); exit(3); } continue; }
     for (int it = 0;; it++) {
       if (it > 0) { rows.clear(); for (int b = 0; b < ng; b++) rows_of_b(b, inS, rows); }
       if (badgen) { printf("ERROR: %lld nonzero generator entries in the rows (R_k inconsistent)\n", badgen); exit(3); }
@@ -581,12 +581,15 @@ static void final_proj(int k, int ng) {
           if (z < q1 && L.i[z] == id) for (size_t t = 0; t < rr.i.size(); t++) u.add(rr.i[t], mulm(rr.v[t], L.v[z])); }
         q = q1;
       }
+      if (badgen) { printf("ERROR: %lld nonzero generator entries in the rows (R_k inconsistent)\n", badgen); exit(3); }
       SV U = u.take(); long long grow = 0;
       for (int c : U.i) { if (inS[c]) { printf("ERROR: residual on S\n"); exit(3); } inS[c] = 1; grow++; }
       printf("  test %s, lazy %d: lambda has %zu entries, residual %lld entries outside S (%.1f s)\n", PROJ_N[s].c_str(), it, L.size(), grow, now() - t0);
       fflush(stdout);
       if (!grow) { printf("test %s: y in the span of all the rows: h - 1 in Delta^n (mod p^E)\n", PROJ_N[s].c_str()); break; }
       if (it + 1 >= LAZY) { printf("test %s: lazy limit reached, undecided\n", PROJ_N[s].c_str()); break; }
+      if (const char* sm = getenv("GRNQ_SMAX")) { long long ns2 = count(inS.begin(), inS.end(), 1);
+        if (ns2 > atoll(sm)) { printf("test %s: |S| = %lld > GRNQ_SMAX, stopped, undecided\n", PROJ_N[s].c_str(), ns2); break; } }
     }
   }
 }
@@ -750,13 +753,15 @@ int main(int argc, char** argv) {
     for (int s = 0; s < NS; s++) { sn.push_back(tok()); int k = atoi(tok().c_str()); vector<PEx> v; for (int q = 0; q < k; q++) v.push_back(parse()); spans.push_back(v); } }
   FT = new FreeT();
   { const char* pj = getenv("GRNQ_PROJ"); if (pj) { PROJ = atoi(pj); PROJ_N = tn; PROJ_T = tests; } }
-  if (const char* lz = getenv("GRNQ_LAZY")) LAZY = atoi(lz);
+  if (const char* lz = getenv("GRNQ_LAZY")) { LAZY = atoi(lz); if (PROJ < 0) { printf("ERROR: GRNQ_LAZY needs GRNQ_PROJ (e.g. 0)\n"); exit(2); } }
   // GRNQ_ONLY=a,b,..: the projection test runs only these tests, in this order
   if (const char* on = getenv("GRNQ_ONLY")) {
     vector<string> nn; vector<PEx> tt; string o(on); size_t q0 = 0;
     while (q0 <= o.size()) { size_t q1 = o.find(',', q0); if (q1 == string::npos) q1 = o.size();
       string nm = o.substr(q0, q1 - q0); q0 = q1 + 1;
-      for (int s = 0; s < NTs; s++) if (tn[s] == nm) { nn.push_back(nm); tt.push_back(tests[s]); } }
+      bool found = false;
+      for (int s = 0; s < NTs; s++) if (tn[s] == nm) { nn.push_back(nm); tt.push_back(tests[s]); found = true; }
+      if (!found) { printf("ERROR: GRNQ_ONLY: no test %s\n", nm.c_str()); exit(2); } }
     PROJ_N = nn; PROJ_T = tt;
   }
   printf("p = %d, E = %d, n = %d, r = %d, %d relators, %d tests; |T_<n| = %lld\n", P, E, NDEG, R, S, NTs, FT->size);

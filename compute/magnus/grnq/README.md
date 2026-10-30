@@ -58,8 +58,8 @@ lowest weight in normal form is the largest $d$ with $h - 1 \in \varpi^d$.
 
 Precision. The answer is that of $R \otimes \mathbb Z/p^E$. The certificate checks that $p^{E-1}$ kills every
 generator of weight $\ge 1$, i.e. $p^{E-1}\varpi \subseteq \varpi^n + p^E$: then $\varpi/\varpi^n$ has exponent $< p^E$
-so $\varpi/\varpi^n$ is its own reduction modulo $p^E$ and the answers hold over $\mathbb Z$ (the run also prints the largest $e_b$: 13 for
-`../bm494` at $n = 6$, so $E = 20$ is enough).
+so $\varpi/\varpi^n$ is its own reduction modulo $p^E$ and the answers hold over $\mathbb Z$ (for `../bm494` at $n = 6$ it holds at $E = 20$; the largest
+$e_b$ the run prints, 13 there, is only a hint, as $\pi_b$ chains may give $b$ a larger order).
 
 Spans. For an elementary abelian section with basis $e_1..e_k$ (all in $\varpi^w$ with the two smallest
 weights adding up to $\ge n$), $\prod e_i^{a_i} - 1 \equiv \sum (e_i^{a_i} - 1)$ modulo $\varpi^n$, so the set of $a$ with
@@ -71,23 +71,26 @@ The full last stage is too large for `../bm494` at $n = 7$ (43 673 tails; estima
 `GRNQ_PROJ=r`: at stage $n - 1$ every tail lies in $\varpi^{n-1}/\varpi^n$, which $\varpi$ kills on both sides, so any
 subgroup $W$ of the tails is a two-sided ideal and $R/W$ a quotient ring; $h - 1 \ne 0$ in $R/W$ proves
 $h - 1 \notin \varpi^n$ (exact). With $W$ the span of the tails outside a set $S$, only the rows restricted to $S$
-are needed (the walk then uses the linear action: per generator and relator the generator part and the
-tails on $S$ are summed and one normal form at the end supplies the power tails of the carries).
+are needed, and a row built on $S$ is the restriction of the full row (the walk keeps the whole generator
+part and masks only the tails it adds; the normal form comes after). The walk uses the linear action: per
+generator and relator the generator part and the tails on $S$ are summed, and one normal form at the end supplies
+the power tails of the carries; these rows differ from those of the walk with a normal form per node by
+combinations of the (E0) and (E1) rows, which are in the system, so the span is the same.
 $h - 1 = 0$ in $R/W$ iff its vector $y|_S$ lies in the span of the restricted rows; then nothing is decided.
-$S$ = the support of $y$, enlarged $r$ times by the supports of the rows meeting $S$.
+$S$ = the support of $y$, enlarged $r$ times by the supports of all the full rows of every generator having a row that meets $S$.
 
 `GRNQ_LAZY=m` (with `GRNQ_PROJ=0`): the global Howell form records how each pivot row arose (a DAG of
 row versions; rows reducing to 0 are not recorded), so $y|_S$ in the span gives $\lambda$ with
 $\sum \lambda_i \mathrm{row}_i|_S = y|_S$; then $u = y - \sum\lambda_i \mathrm{row}_i$ over all tails is supported outside $S$:
 $u = 0$ proves $h - 1 \in \varpi^n$ (modulo $p^E$), otherwise $S$ grows by the support of $u$, at most $m$ times.
-`GRNQ_ONLY=a,b`: only these tests, in this order. `GRNQ_SMAX`: stop a test once $|S|$ exceeds it.
+`GRNQ_ONLY=a,b`: only these tests, in this order (an unknown name is an error). `GRNQ_SMAX`: stop a test once $|S|$ exceeds it (both modes). `GRNQ_LAZY` needs `GRNQ_PROJ`.
 
 ## Validation
 
 | File | What |
 |---|---|
 | `cmp_magnus.py` | against `../magnus.py` (dense Howell form) on random presentations, $p = 2, 3$, $r \le 4$, $n \le 5$, with free generators and relators $x^{p^a}[y,z]^{\pm 1}$: the order of $R$ and, per test word and $d \le n$, whether $h - 1 \in \varpi^d$. on tm, seeds 100–109 and 300–304 at 150 presentations each (2250), 0 mismatches; the version without (E0) fails it |
-| `cmp_proj.py` | the projection test against the full computation: never `NOT` for $h - 1 \in \varpi^n$ (unsafe), always `NOT` with enough rounds for $h - 1 \notin \varpi^n$ (missed), and the lazy mode deciding every test both ways. On tm, seeds 200–239 at 150 presentations (30 000 tests): 0 unsafe, 0 missed; the lazy check (seeds 220–239, 15 000 tests): 0 mismatches |
+| `cmp_proj.py` | the projection test against the full computation: never `NOT` for $h - 1 \in \varpi^n$ (unsafe), always `NOT` with enough rounds for $h - 1 \notin \varpi^n$ (missed), and the lazy mode deciding every test both ways. On tm, seeds 200–239 at 150 presentations (30 000 tests): 0 unsafe, 0 missed; the lazy check (seeds 220–239, 15 000 tests): 0 mismatches. Many of these tests are easy (in a sample about 45 % have $y = 0$ and 23 % are decided by weight), but the lazy loop does run, with up to a few nonzero residuals per test |
 | `rips.in` | Rips's group (8 generators): $y_1^{128} \in D_4$, $y_1^{64} \notin D_4$ (as `../ripsd4.g`) |
 | `bm91.in` | the group of BM §9.1 (as `../bm91.py`): $\omega \in D_4$, $\log_2|R|$ as the dense computation (60 833 at $n = 4$) |
 

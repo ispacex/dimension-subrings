@@ -51,11 +51,14 @@ $Q/\langle w\rangle$, so it suffices to decide $D_7$ on $\bar Z$, the preimage o
 
 Results at $n = 6$ (full computation, certificate holds at $E = 20$, largest power exponent 13; 25–50 min).
 $G$: layers $\log_3|\varpi^k/\varpi^{k+1}| = 59, 262, 1109, 4257, 15442$; $w, a_6, a_6^3 \in D_6$; $\bar Z/\langle w\rangle$ has rank 9
-(basis weights 3 4 5 5 5 5 5 6 5) and exactly one basis element $z$ (the 8th) with $z \in D_6$: $D_6(G) \cap \bar Z = \langle w, z\rangle$.
+(basis weights 3 4 5 5 5 5 5 6 5), and of its $3^9$ elements exactly 3 lie in $D_6$ (`span Zbar: 3 of 19683`): $0, \pm z$ with $z$
+the 8th basis element, so $D_6(G) \cap \bar Z = \langle w, z\rangle$.
 `bm_z8.g`: $z \in \gamma_6$ has order 9 and $z^3$ generates $\langle w\rangle$, so $\langle w, z\rangle = \langle z\rangle = \Omega_2(\gamma_6) = \langle a_6^{81}\rangle$.
-Each $G/\langle u\rangle$: layers $59, 262, 1108, 4250, 15401$; $\bar Z/\langle w, u\rangle$ has rank 8 and again exactly one basis
-element (the 7th) in $D_6$. So, as $D_7 \subseteq D_6$: **$D_7(Q) \cap \bar Z$ is $\langle w\rangle$ or $\langle w, z\rangle$, and $D_7(Q) = \langle w\rangle$ iff $z \notin D_7(Q)$**
-(for $G$: iff $a_6^{81} \notin D_7(G)$). The descent of `bm_z8.g` does not help: the quotients keeping $z$ it reaches have order
+Each $G/\langle u\rangle$: layers $59, 262, 1108, 4250, 15401$; $\bar Z/\langle w, u\rangle$ has rank 8 and again exactly 3 of its $3^8$
+elements lie in $D_6$ ($0$ and $\pm$ the 7th basis element). So, as $D_7 \subseteq D_6$: **$D_7(Q) \cap \bar Z$ is $\langle w\rangle$ or $\langle w, z\rangle$, and $D_7(Q) = \langle w\rangle$ iff $z \notin D_7(Q)$**
+(in all four $Q$, $\gamma_6(Q) \cong C_{729}$ with $\Omega_1(\gamma_6) = \langle w\rangle$, so $z \equiv a_6^{\pm 81}$ mod $\langle w\rangle$: iff $a_6^{81} \notin D_7(Q)$).
+That $z$ itself lies in $D_6$ is automatic ($a_6^{81} \in \gamma_6 \subseteq D_6$); the content of the $n = 6$ run is that nothing else of
+$\bar Z$ does, i.e. $D_6(Q) \cap \bar Z = \gamma_6(Q) \cap \bar Z$. The descent of `bm_z8.g` does not help: the quotients keeping $z$ it reaches have order
 $3^{433}$ ($G$) and $3^{430}$ ($G/\langle u\rangle$), with $N = 17\,412$ and $17\,923$.
 
 At $n = 7$ (the question) the last stage has 43 673 tails, and its full Howell form is out of reach here (estimated ~100 h,
