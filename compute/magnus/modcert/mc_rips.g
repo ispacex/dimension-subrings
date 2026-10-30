@@ -2,7 +2,8 @@
 # D_4(P) = {1, y1^128} (../ripsd4.g), so every module must give y1^128 depth >= 4, and the family is
 # useful only if some module certifies y1^64 notin D_4.  Subgroups: C_P(g) for random g in gamma_2 (index
 # <= |gamma_3| = 2^6, the analogue of C_G(g), g in gamma_5, for the BM group) and random subgroups of index
-# 2^k, k in KS (S: unrestricted chains, A: chains dropping y1^64 as early as possible).  Writes OUT (modules for modcert.py).
+# 2^k, k in KS (S: unrestricted chains, A: chains dropping y1^64 as early as possible), and NGREEDY subgroups
+# by MC_GreedySee (y1^64 notin H'H^(2^max AS), so that a monomial module can see it).  Writes OUT (modules for modcert.py).
 Read("../tah.g"); Read("modcert.g");
 if not IsBound(SEED) then SEED := 1; fi;
 if not IsBound(NCENT) then NCENT := 10; fi;
@@ -22,6 +23,11 @@ Hs := [];;
 for i in [1..NCENT] do g := Random(L[2]); Add(Hs, [Concatenation("C", String(i)), Centralizer(P, g)]); od;
 for k in KS do for i in [1..NSUB] do Add(Hs, [Concatenation("S", String(k), "_", String(i)), MC_RandomSub(P, 2, k, fail)]); od; od;
 for k in KS do for i in [1..NSUB] do Add(Hs, [Concatenation("A", String(k), "_", String(i)), MC_RandomSub(P, 2, k, y1^64)]); od; od;
+if not IsBound(NGREEDY) then NGREEDY := 4; fi;
+for i in [1..NGREEDY] do
+  res := MC_GreedySee(P, 2, Maximum(AS), y1^64, y1, 12, 20, false);
+  if res[3] then Add(Hs, [Concatenation("G", String(i)), res[1]]); fi;
+od;
 Print("subgroups: indices ", List(Hs, h -> LogInt(Index(P, h[2]), 2)), "; y1^64 in H: ", List(Hs, h -> y1^64 in h[2]), "\n");
 for h in Hs do
   Print("  ", h[1], ": log2 index ", LogInt(Index(P, h[2]), 2), ", y1^64 in H': ", y1^64 in DerivedSubgroup(h[2]),

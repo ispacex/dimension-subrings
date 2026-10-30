@@ -97,3 +97,40 @@ MC_Family := function(out, Q, gens, p, tests, h0, Hs, AS, NCHI, KINDS, CYMAX)
   od;
   return nmod;
 end;
+
+# Greedy walk to a subgroup H with h0 notin H' H^(p^A) (so that a chi : H -> Z/p^A with chi(h0) <> 0
+# exists): from Q, step to a maximal subgroup M containing h0 (NC random candidates among the kernels of
+# functionals on H/Phi(H) vanishing on h0) with the largest order of h0 modulo M' M^(p^A), then of r modulo
+# M' (0 if r notin M); stop when h0 survives or at index p^KMAX.  Returns [H, log_p index, survives].
+MC_GreedySee := function(Q, p, A, h0, r, NC, KMAX, verbose)
+  local OrdMod, Score, CandMax, H, s, k, cs, bs;
+  OrdMod := function(H, K, x) local hm; hm := NaturalHomomorphismByNormalSubgroupNC(H, K);
+    return Order(ImagesRepresentative(hm, x)); end;
+  Score := function(H) local K;
+    K := ClosureGroup(DerivedSubgroup(H), Agemo(H, p, A));
+    if not r in H then return [OrdMod(H, K, h0), 0]; fi;
+    return [OrdMod(H, K, h0), OrdMod(H, DerivedSubgroup(H), r)];
+  end;
+  CandMax := function(H)
+    local hm, B, pc, e, c, i, res, gens;
+    hm := NaturalHomomorphismByNormalSubgroupNC(H, FrattiniSubgroup(H)); B := Image(hm); pc := Pcgs(B);
+    e := ExponentsOfPcElement(pc, ImagesRepresentative(hm, h0));
+    res := [];
+    for i in [1..NC] do
+      repeat c := List(pc, x -> Random([0..p - 1])); until not IsZero(c) and (e * c) mod p = 0;
+      gens := List(NullspaceMat(TransposedMat([c * One(GF(p))])), v -> PcElementByExponents(pc, List(v, Int)));
+      Add(res, PreImage(hm, Subgroup(B, gens)));
+    od;
+    return res;
+  end;
+  H := Q; s := Score(H); k := 0;
+  while s[1] = 1 and k < KMAX do
+    cs := List(CandMax(H), M -> [Score(M), M]);
+    bs := Maximum(List(cs, c -> c[1]));
+    H := First(cs, c -> c[1] = bs)[2]; s := bs; k := k + 1;
+    if verbose then
+      Print("  index ", p, "^", k, ": |h0 mod H'H^p^A| = ", s[1], ", |r mod H'| = ", s[2], ", rank ", RankPGroup(H), "\n");
+    fi;
+  od;
+  return [H, k, s[1] > 1];
+end;
