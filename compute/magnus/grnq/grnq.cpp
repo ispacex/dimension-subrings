@@ -469,7 +469,7 @@ static void final_proj(int k, int ng) {
     if (wmin < NDEG) { printf("test %s: h - 1 in Delta^%d, not in Delta^%d\n", PROJ_N[s].c_str(), wmin, wmin + 1); continue; }
     if (!y.size()) { printf("test %s: y = 0: h - 1 in Delta^%d\n", PROJ_N[s].c_str(), NDEG); continue; }
     vector<char> inS(NT, 0); for (int c : y.i) inS[c] = 1;
-    vector<Row> rows;
+    vector<Row> rows; bool stop = false;
     for (int r = 0; r <= PROJ; r++) {
       rows.clear();
       vector<int> touch;  // generators whose rows meet S
@@ -481,7 +481,11 @@ static void final_proj(int k, int ng) {
       // the supports of the full rows of these generators, one generator at a time (all of them at once
       // do not fit in memory; the Howell rows of b have support in that of its rows)
       for (int b : touch) { vector<Row> full; rows_of_b(b, all, full, false); for (auto& rr : full) for (int c : rr.i) inS[c] = 1; }
+      long long ns1 = count(inS.begin(), inS.end(), 1);
+      printf("  test %s, round %d: S enlarged to %lld of %d tails (%.1f s)\n", PROJ_N[s].c_str(), r + 1, ns1, NT, now() - t0); fflush(stdout);
+      if (const char* sm = getenv("GRNQ_SMAX")) if (ns1 > atoll(sm)) { printf("test %s: |S| > GRNQ_SMAX, stopped\n", PROJ_N[s].c_str()); stop = true; break; }
     }
+    if (stop) continue;
     if (badgen) { printf("ERROR: %lld nonzero generator entries in the rows (R_k inconsistent)\n", badgen); exit(3); }
     vector<int> S, pos(NT, -1); for (int c = 0; c < NT; c++) if (inS[c]) { pos[c] = S.size(); S.push_back(c); }
     for (auto& rr : rows) for (auto& c : rr.i) c = pos[c];
