@@ -2,13 +2,13 @@
 # D_4(P) = {1, y1^128} (../ripsd4.g), so every module must give y1^128 depth >= 4, and the family is
 # useful only if some module certifies y1^64 notin D_4.  Subgroups: C_P(g) for random g in gamma_2 (index
 # <= |gamma_3| = 2^6, the analogue of C_G(g), g in gamma_5, for the BM group) and random subgroups of index
-# 2^k, k in KS.  Writes OUT (modules for modcert.py).
+# 2^k, k in KS (S: unrestricted chains, A: chains dropping y1^64 as early as possible).  Writes OUT (modules for modcert.py).
 Read("../tah.g"); Read("modcert.g");
 if not IsBound(SEED) then SEED := 1; fi;
 if not IsBound(NCENT) then NCENT := 10; fi;
 if not IsBound(KS) then KS := [4..8]; fi;
 if not IsBound(NSUB) then NSUB := 4; fi;
-if not IsBound(AS) then AS := [1..3]; fi;
+if not IsBound(AS) then AS := [1..8]; fi;
 if not IsBound(NCHI) then NCHI := 2; fi;
 if not IsBound(CYMAX) then CYMAX := 1024; fi;
 Reset(GlobalMersenneTwister, SEED);; Reset(GlobalRandomSource, SEED);;
@@ -20,7 +20,8 @@ Print("P: log2 = ", Log(Size(P), 2), ", rank ", Length(gens), ", class ", Length
       ", central: ", y1^64 in Centre(P), ", order ", Order(y1^64), "\n");
 Hs := [];;
 for i in [1..NCENT] do g := Random(L[2]); Add(Hs, [Concatenation("C", String(i)), Centralizer(P, g)]); od;
-for k in KS do for i in [1..NSUB] do Add(Hs, [Concatenation("S", String(k), "_", String(i)), MC_RandomSub(P, 2, k)]); od; od;
+for k in KS do for i in [1..NSUB] do Add(Hs, [Concatenation("S", String(k), "_", String(i)), MC_RandomSub(P, 2, k, fail)]); od; od;
+for k in KS do for i in [1..NSUB] do Add(Hs, [Concatenation("A", String(k), "_", String(i)), MC_RandomSub(P, 2, k, y1^64)]); od; od;
 Print("subgroups: indices ", List(Hs, h -> LogInt(Index(P, h[2]), 2)), "; y1^64 in H: ", List(Hs, h -> y1^64 in h[2]), "\n");
 out := OutputTextFile(OUT, false);; SetPrintFormattingStatus(out, false);;
 n := MC_Family(out, P, gens, 2, tests, y1^64, Hs, AS, NCHI, ["zmod", "cyclo"], CYMAX);;

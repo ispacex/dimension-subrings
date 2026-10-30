@@ -42,21 +42,29 @@ MC_RandomChar := function(H, p, a, z)
 end;
 
 # a random maximal subgroup of the p-group H (kernel of a random nonzero functional on H/Phi(H))
-MC_RandomMaximal := function(H, p)
-  local hom, B, pc, c, gens;
+# avoid <> fail: if avoid in H has nonzero image in H/Phi(H), the functional is nonzero on it (avoid notin M)
+MC_RandomMaximal := function(H, p, avoid)
+  local hom, B, pc, c, gens, ea;
   hom := NaturalHomomorphismByNormalSubgroupNC(H, FrattiniSubgroup(H)); B := Image(hom);
   pc := Pcgs(B);
-  repeat c := List(pc, x -> Random([0..p - 1])); until not IsZero(c);
+  ea := fail;
+  if avoid <> fail and avoid in H then
+    ea := ExponentsOfPcElement(pc, ImagesRepresentative(hom, avoid));
+    if IsZero(ea) then ea := fail; fi;
+  fi;
+  repeat c := List(pc, x -> Random([0..p - 1]));
+  until not IsZero(c) and (ea = fail or (ea * c) mod p <> 0);
   # basis of the kernel of v -> v.c on GF(p)^r, as elements of B
   gens := List(NullspaceMat(TransposedMat([c * One(GF(p))])), v -> PcElementByExponents(pc, List(v, Int)));
   return PreImage(hom, Subgroup(B, gens));
 end;
 
-# a subgroup of index p^k by a random chain of maximal subgroups
-MC_RandomSub := function(Q, p, k)
+# a subgroup of index p^k by a random chain of maximal subgroups; avoid (or fail): dropped at the first
+# step where it is not in the Frattini subgroup
+MC_RandomSub := function(Q, p, k, avoid)
   local H, i;
   H := Q;
-  for i in [1..k] do H := MC_RandomMaximal(H, p); od;
+  for i in [1..k] do H := MC_RandomMaximal(H, p, avoid); od;
   return H;
 end;
 
