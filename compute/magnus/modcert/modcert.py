@@ -60,12 +60,15 @@ class Module:
         self.R = Ring(p, E)
         D = self.R.D
         self.d = (p - 1) * p ** (a - 1) if (kind == "cyclo" and a > 0) else 1
+        if self.d > 1 and self.d * (D - 1) ** 2 >= 2 ** 63:
+            raise ValueError(f"{label}: cyclo sums of {self.d} products overflow int64 at E = {E}")
         self.dim = m * self.d
         self.gens = [(nm, k, e) for nm, kd, k, e in elts if kd == "gen"]
         self.tests = [(nm, k, e) for nm, kd, k, e in elts if kd == "test"]
         self.checks = [(nm, k, e) for nm, kd, k, e in elts if kd == "check"]
         if self.d == 1:
-            z = zeta_zmod(p, a, E)
+            # cyclo with d = 1 (p = 2, a = 1) is Z[zeta_2] = Z: zeta = -1, not the zmod element 1 + 2^(E-1)
+            z = (D - 1) if (kind == "cyclo" and a == 1) else zeta_zmod(p, a, E)
             self.scal = np.array([pow(z, i, D) for i in range(max(1, p ** a))], dtype=np.int64)
         else:
             self.cp = cyclo_powers(p, a, D)

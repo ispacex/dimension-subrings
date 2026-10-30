@@ -1,6 +1,7 @@
 # MATH-423 control (mc_rips.g): Rips's group P (Tahara k = 2, l = 0, order 2^38, class 3; ../tah.g) has
 # D_4(P) = {1, y1^128} (../ripsd4.g), so every module must give y1^128 depth >= 4, and the family is
-# useful only if some module certifies y1^64 notin D_4.  Subgroups: C_P(g) for random g in gamma_2 (index
+# useful only if some module certifies y1^64 notin D_4.  y1^4, y1, gens[1]: positive controls (depth < 4 must
+# show up somewhere; gens[1] is not in Phi(P), so it has depth 1 already on M/M varpi).  Subgroups: C_P(g) for random g in gamma_2 (index
 # <= |gamma_3| = 2^6, the analogue of C_G(g), g in gamma_5, for the BM group) and random subgroups of index
 # 2^k, k in KS (S: unrestricted chains, A: chains dropping y1^64 as early as possible), and NGREEDY subgroups
 # by MC_GreedySee (y1^64 notin H'H^(2^max AS), so that a monomial module can see it).  Writes OUT (modules for modcert.py).
@@ -16,7 +17,7 @@ Reset(GlobalMersenneTwister, SEED);; Reset(GlobalRandomSource, SEED);;
 F := TahGroup(2, 0);; hom := EpimorphismPGroup(F, 2, 60);; P := Image(hom);;
 y1 := Image(hom, F.5);; L := LowerCentralSeriesOfGroup(P);;
 gens := MinimalGeneratingSet(P);;
-tests := [["y1^128", y1^128], ["y1^64", y1^64], ["y1^32", y1^32]];;
+tests := [["y1^128", y1^128], ["y1^64", y1^64], ["y1^32", y1^32], ["y1^4", y1^4], ["y1", y1], ["g0", gens[1]]];;
 Print("P: log2 = ", Log(Size(P), 2), ", rank ", Length(gens), ", class ", Length(L) - 1, "; y1^64 in gamma_3: ", y1^64 in L[3],
       ", central: ", y1^64 in Centre(P), ", order ", Order(y1^64), "\n");
 Hs := [];;
