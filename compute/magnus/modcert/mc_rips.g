@@ -23,6 +23,10 @@ for i in [1..NCENT] do g := Random(L[2]); Add(Hs, [Concatenation("C", String(i))
 for k in KS do for i in [1..NSUB] do Add(Hs, [Concatenation("S", String(k), "_", String(i)), MC_RandomSub(P, 2, k, fail)]); od; od;
 for k in KS do for i in [1..NSUB] do Add(Hs, [Concatenation("A", String(k), "_", String(i)), MC_RandomSub(P, 2, k, y1^64)]); od; od;
 Print("subgroups: indices ", List(Hs, h -> LogInt(Index(P, h[2]), 2)), "; y1^64 in H: ", List(Hs, h -> y1^64 in h[2]), "\n");
+for h in Hs do
+  Print("  ", h[1], ": log2 index ", LogInt(Index(P, h[2]), 2), ", y1^64 in H': ", y1^64 in DerivedSubgroup(h[2]),
+        ", in Phi(H): ", y1^64 in FrattiniSubgroup(h[2]), "\n");
+od;
 out := OutputTextFile(OUT, false);; SetPrintFormattingStatus(out, false);;
 n := MC_Family(out, P, gens, 2, tests, y1^64, Hs, AS, NCHI, ["zmod", "cyclo"], CYMAX);;
 CloseStream(out);;
