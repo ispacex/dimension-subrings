@@ -1094,6 +1094,103 @@ KERNEL_TEX_HEAD = r"""\directlua{luaotfload.add_fallback("fb", {"STIX Two Math:"
 \setmainfont{STIX Two Text}[RawFeature={fallback=fb}]
 \setmonofont{Menlo}[Scale=0.85,RawFeature={fallback=fb}]
 """
+# Nothing of the PDF runs past the margin: a pandoc filter lets inline code break after / _ . - , =
+# and an inline formula after a comma outside braces, and gives a table too wide for the page column
+# widths (each column at least its longest word, the rest by how much text it has; set smaller if the
+# words alone do not fit), so its cells wrap. Without it gfm tables are set at their natural width.
+KERNEL_LUA = r"""-- Inline code may break after / _ . - , = ; a table too wide for the page gets column widths, so
+-- its cells wrap: each column at least as wide as its longest word, the rest shared by how much
+-- text a column has; a table whose words alone do not fit is set smaller.
+local function split_code(el)
+  local parts, pieces, last = {}, {}, 1
+  local s = el.text
+  for i = 1, #s do
+    if s:sub(i, i):match("[/_%.%-,=]") and i - last >= 2 and i < #s then
+      table.insert(pieces, s:sub(last, i)); last = i + 1
+    end
+  end
+  table.insert(pieces, s:sub(last))
+  if #pieces == 1 then return nil end
+  for k, p in ipairs(pieces) do
+    if k > 1 then table.insert(parts, pandoc.RawInline("latex", "\\allowbreak{}")) end
+    table.insert(parts, pandoc.Code(p))
+  end
+  return parts
+end
+
+-- An inline formula may break after a comma outside braces (a list of numbers or of commutators).
+local function math_breaks(m)
+  if m.mathtype ~= "InlineMath" or m.text:find("\\left[^%a]") then return nil end
+  local out, depth = {}, 0
+  for i = 1, #m.text do
+    local c = m.text:sub(i, i)
+    table.insert(out, c)
+    if c == "{" then depth = depth + 1 elseif c == "}" then depth = depth - 1
+    elseif c == "," and depth == 0 and m.text:sub(i - 1, i - 1) ~= "\\" then table.insert(out, "\\allowbreak ") end
+  end
+  m.text = table.concat(out)
+  return m
+end
+
+-- What a cell shows, roughly: a TeX command of a formula is one glyph; a break point of code splits a word.
+local function shown(blocks)
+  local b = pandoc.Blocks(blocks):walk {
+    Math = function(m)
+      local t = m.text:gsub("\\allowbreak ", "\1"):gsub("\\[%a]+", "x"):gsub("[{}%^_%s]", ""):gsub("\\.", "x"):gsub("\1", " ")
+      return pandoc.Str(t)
+    end,
+    RawInline = function(r) if r.text == "\\allowbreak{}" then return pandoc.Space() end end,
+  }
+  return pandoc.utils.stringify(b)
+end
+
+local SIZES = {{"", 95}, {"\\small", 105}, {"\\footnotesize", 118}}  -- font, characters across the text
+
+local function table_widths(tbl)
+  local n = #tbl.colspecs
+  local len, word = {}, {}
+  for i = 1, n do len[i], word[i] = 0, 0 end
+  local function visit(rows)
+    for _, row in ipairs(rows) do
+      local col = 1
+      for _, cell in ipairs(row.cells) do
+        if col <= n and (cell.col_span or 1) == 1 then
+          local s = shown(cell.contents)
+          len[col] = math.max(len[col], utf8.len(s) or #s)
+          for w in s:gmatch("%S+") do word[col] = math.max(word[col], utf8.len(w) or #w) end
+        end
+        col = col + (cell.col_span or 1)
+      end
+    end
+  end
+  visit(tbl.head.rows)
+  for _, b in ipairs(tbl.bodies) do visit(b.head); visit(b.body) end
+  for i = 1, n do word[i] = math.min(word[i], 40) end
+  local font, text
+  for _, s in ipairs(SIZES) do
+    font, text = s[1], s[2]
+    local want, least = 0, 0
+    for i = 1, n do want = want + len[i] + 3; least = least + word[i] + 3 end
+    if font == "" and want <= text then return nil end
+    if least <= text then break end
+  end
+  local w, least, extra = {}, 0, 0
+  for i = 1, n do least = least + (word[i] + 3) / text; extra = extra + (len[i] - word[i]) end
+  local rest = math.max(1 - least, 0)
+  local total = 0
+  for i = 1, n do
+    w[i] = (word[i] + 3) / text + (extra > 0 and rest * (len[i] - word[i]) / extra or 0)
+    total = total + w[i]
+  end
+  for i = 1, n do tbl.colspecs[i] = {tbl.colspecs[i][1], w[i] * 0.99 / math.max(total, 0.99)} end
+  if font == "" then return tbl end
+  return {pandoc.RawBlock("latex", "\\begingroup" .. font), tbl, pandoc.RawBlock("latex", "\\endgroup")}
+end
+
+-- A heading is left alone: its text is also the PDF bookmark, where \allowbreak would show.
+return {{traverse = "topdown", Header = function(h) return h, false end, Code = split_code, Math = math_breaks},
+        {Table = table_widths}}
+"""
 
 
 def kernel_tex(tex):
@@ -1117,8 +1214,11 @@ def kernel_pdf(lang, md):
     with tempfile.TemporaryDirectory() as tmp:
         head = pathlib.Path(tmp) / "head.tex"
         head.write_text(KERNEL_TEX_HEAD)
+        lua = pathlib.Path(tmp) / "wrap.lua"
+        lua.write_text(KERNEL_LUA)
         run = subprocess.run(["pandoc", "-f", "gfm+tex_math_dollars", "-o", str(dest / KERNEL_PDF[lang]),
-                              "--pdf-engine=lualatex", "--toc", "-H", str(head), "-V", "mathfont=STIX Two Math", "-V", "geometry:margin=2cm", "-V", "colorlinks"],
+                              "--pdf-engine=lualatex", "--toc", "-H", str(head), "-V", "mathfont=STIX Two Math", "-V", "geometry:margin=2cm", "-V", "colorlinks",
+                              "--lua-filter", str(lua)],
                              input=body, capture_output=True, text=True, cwd=tmp)
     if run.returncode:
         sys.exit(f"PDF of {KERNEL_DOC[lang]}: {run.stderr[-2000:]}")
