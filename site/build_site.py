@@ -1120,7 +1120,7 @@ end
 
 -- An inline formula may break after a comma outside braces (a list of numbers or of commutators).
 local function math_breaks(m)
-  if m.mathtype ~= "InlineMath" or m.text:find("\\left") then return nil end
+  if m.mathtype ~= "InlineMath" or m.text:find("\\left[^%a]") then return nil end
   local out, depth = {}, 0
   for i = 1, #m.text do
     local c = m.text:sub(i, i)
@@ -1165,6 +1165,7 @@ local function table_widths(tbl)
   end
   visit(tbl.head.rows)
   for _, b in ipairs(tbl.bodies) do visit(b.head); visit(b.body) end
+  for i = 1, n do word[i] = math.min(word[i], 40) end
   local font, text
   for _, s in ipairs(SIZES) do
     font, text = s[1], s[2]
@@ -1174,7 +1175,6 @@ local function table_widths(tbl)
     if least <= text then break end
   end
   local w, least, extra = {}, 0, 0
-  for i = 1, n do word[i] = math.min(word[i], 40) end
   for i = 1, n do least = least + (word[i] + 3) / text; extra = extra + (len[i] - word[i]) end
   local rest = math.max(1 - least, 0)
   local total = 0
@@ -1187,7 +1187,9 @@ local function table_widths(tbl)
   return {pandoc.RawBlock("latex", "\\begingroup" .. font), tbl, pandoc.RawBlock("latex", "\\endgroup")}
 end
 
-return {{Code = split_code, Math = math_breaks}, {Table = table_widths}}
+-- A heading is left alone: its text is also the PDF bookmark, where \allowbreak would show.
+return {{traverse = "topdown", Header = function(h) return h, false end, Code = split_code, Math = math_breaks},
+        {Table = table_widths}}
 """
 
 
