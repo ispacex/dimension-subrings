@@ -144,8 +144,11 @@ struct FreeT {
     }
     return acc;
   }
+  // expansions of the shared nodes (the let-bound names: more than one owner) met so far; each is dense
+  // over T_{<n} (|T_{<n}| u64), so the thousands of nodes used once are not kept; forget() after use
   map<const Ex*, V> memo;
-  const V& magnus(const PEx& h) {
+  void forget() { map<const Ex*, V>().swap(memo); }
+  V magnus(const PEx& h) {
     auto it = memo.find(h.get()); if (it != memo.end()) return it->second;
     V r;
     switch (h->op) {
@@ -156,7 +159,8 @@ struct FreeT {
       case 4: { const V& a = magnus(h->c[0]); const V& b = magnus(h->c[1]);
         r = mul(mul(power(a, -1), power(b, -1)), mul(a, b)); break; }
     }
-    return memo[h.get()] = r;
+    if (h.use_count() > 1) memo[h.get()] = r;
+    return r;
   }
 };
 
@@ -511,6 +515,7 @@ static void final_proj(int k, int ng) {
   for (size_t s = 0; s < PROJ_T.size(); s++) {
     double t0 = now();
     vector<vector<u64>> c1(1, FT->magnus(PROJ_T[s])); c1[0][0] = (c1[0][0] + D - 1) % D;
+    FT->forget();
     vector<char> lv1 = subtree_nz(c1);
     vector<Acc> yg(1), yt(1); yg[0].init(ng); yt[0].init(NT);
     SV g0; g0.i.push_back(0); g0.v.push_back(1);
@@ -771,6 +776,7 @@ int main(int argc, char** argv) {
     m[0] = (m[0] + D - 1) % D;  // rho - 1
     magnus.push_back(std::move(m));
   }
+  FT->forget();
   live = subtree_nz(magnus);
   printf("Magnus expansions of %zu named subexpressions and %d relators: %.1f s\n", NAMES.size(), S, now() - tm0); fflush(stdout);
   PR.mu[0].assign(R, SV()); PR.ex[0] = E; PR.isdefX[0].assign(R, 0);
@@ -786,7 +792,7 @@ int main(int argc, char** argv) {
   printf("certificate (p^(E-1) Delta in Delta^%d + p^E): %s%s\n", NDEG, bad ? "FAILS" : "holds", bad ? " -- membership modulo p^E only, raise E" : "");
   // h - 1 = sum_m c_m m in T; its image is sum_m c_m (1 . m), by the same walk as (E2) with b = 1
   auto image = [&](const PEx& h) {
-    vector<vector<u64>> c1(1, FT->magnus(h));
+    vector<vector<u64>> c1(1, FT->magnus(h));  // memo (shared names only) kept for the next tests
     c1[0][0] = (c1[0][0] + D - 1) % D;
     vector<vector<u64>> save; save.swap(magnus); magnus.swap(c1);
     vector<char> savel = live; live = subtree_nz(magnus);
@@ -810,7 +816,7 @@ int main(int argc, char** argv) {
   // >= n), then prod e_i^a_i - 1 = sum_i (e_i^a_i - 1) mod Delta^n (expand the product: every term with
   // two or more factors vanishes), so the a in {0..p-1}^k with prod e_i^a_i in D_n are those with
   // sum_i x_i(a_i) = 0, x_i(a) the image of e_i^a - 1 (computed for each a); all p^k are tried.
-  vector<PEx> keep;  // FreeT::magnus memoizes by address: the nodes made here must outlive the run
+  vector<PEx> keep;  // FreeT::magnus memoizes by address (the memo is kept from here on): the nodes made here must outlive the run
   for (size_t s = 0; s < spans.size(); s++) {
     int k = spans[s].size(); vector<vector<SV>> x(k, vector<SV>(P)); vector<int> wv(k);
     printf("span %s: weights", sn[s].c_str());
