@@ -792,8 +792,7 @@ int main(int argc, char** argv) {
   printf("certificate (p^(E-1) Delta in Delta^%d + p^E): %s%s\n", NDEG, bad ? "FAILS" : "holds", bad ? " -- membership modulo p^E only, raise E" : "");
   // h - 1 = sum_m c_m m in T; its image is sum_m c_m (1 . m), by the same walk as (E2) with b = 1
   auto image = [&](const PEx& h) {
-    vector<vector<u64>> c1(1, FT->magnus(h));
-    FT->forget();
+    vector<vector<u64>> c1(1, FT->magnus(h));  // memo (shared names only) kept for the next tests
     c1[0][0] = (c1[0][0] + D - 1) % D;
     vector<vector<u64>> save; save.swap(magnus); magnus.swap(c1);
     vector<char> savel = live; live = subtree_nz(magnus);
@@ -817,7 +816,7 @@ int main(int argc, char** argv) {
   // >= n), then prod e_i^a_i - 1 = sum_i (e_i^a_i - 1) mod Delta^n (expand the product: every term with
   // two or more factors vanishes), so the a in {0..p-1}^k with prod e_i^a_i in D_n are those with
   // sum_i x_i(a_i) = 0, x_i(a) the image of e_i^a - 1 (computed for each a); all p^k are tried.
-  vector<PEx> keep;  // FreeT::magnus memoizes by address: the nodes made here must outlive the run
+  vector<PEx> keep;  // FreeT::magnus memoizes by address (the memo is kept from here on): the nodes made here must outlive the run
   for (size_t s = 0; s < spans.size(); s++) {
     int k = spans[s].size(); vector<vector<SV>> x(k, vector<SV>(P)); vector<int> wv(k);
     printf("span %s: weights", sn[s].c_str());
