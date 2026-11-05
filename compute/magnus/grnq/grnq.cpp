@@ -317,7 +317,7 @@ static void ck_save(int ncol, u64 nrows, u64 hash, size_t next, const vector<int
   u64 np = pend.size(); ok = ok && fwrite(&np, 8, 1, f) == 1;
   for (auto& r : pend) { ck_w(f, r.i, ok); ck_w(f, r.v, ok); }
   ok = ok && fwrite(CK_END, 8, 1, f) == 1;
-  long long bytes = ftello(f); H.bytes = bytes;
+  long long bytes = ftello(f); H.bytes = bytes; ok = ok && bytes > 0;
   ok = ok && fseeko(f, 0, SEEK_SET) == 0 && fwrite(&H, sizeof H, 1, f) == 1 && fflush(f) == 0 && fsync(fileno(f)) == 0;
   ok = (fclose(f) == 0) && ok;
   if (!ok || rename(tmp.c_str(), CKPT)) { fprintf(stderr, "[ckpt] writing %s failed\n", CKPT); remove(tmp.c_str()); return; }

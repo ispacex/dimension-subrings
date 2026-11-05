@@ -15,4 +15,4 @@ if [ -n "$JOB_CACHE" ] && [ -z "${GRNQ_CKPT+set}" ]; then
 fi
 "$OUTD/grnq" ${N:-7} < "$OUTD/bm_${CASE:-G}.in" 2>&1 | tee "$OUTD/grnq_${CASE:-G}_n${N:-7}.log"
 grep -q "^grnq done" "$OUTD/grnq_${CASE:-G}_n${N:-7}.log"
-if [ -n "$GRNQ_CKPT" ]; then rm -f "$GRNQ_CKPT"; fi  # done: the checkpoint (as large as the pivot rows) is not needed
+if [ -n "$GRNQ_CKPT" ]; then rm -f "$GRNQ_CKPT" "$GRNQ_CKPT.tmp"; fi  # done: the checkpoint (as large as the pivot rows) is not needed
