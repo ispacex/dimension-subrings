@@ -26,12 +26,18 @@
 #include <csignal>
 #include <unistd.h>
 #include <cmath>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 using namespace std;
 typedef unsigned long long u64;
 typedef __uint128_t u128;
 typedef __int128 i128;
 
 static int P, E, NDEG, R;
+// GRNQ_THREADS: threads of howell_stream (default: all cpus this process may use; with OpenMP only);
+// GRNQ_BLOCK: its column block (default 256); a block's tails are split between the threads from HPAR entries on
+static int HTHREADS = 1, HW = 256; static long long HPAR = 1 << 15;  // GRNQ_PAR_MIN: HPAR (tests)
 static int HMETH = 0;  // GRNQ_HOWELL: stream (default), fixed, dyn
 static long long ST_ELIM = 0, ST_FILL = 0;  // Howell statistics: eliminations, entries written
 static u64 D;
@@ -380,9 +386,9 @@ static vector<Row> howell_stream(vector<Row>& rows, int ncol, vector<int>& pv, v
     double dt = t - tp, rate = dt > 0 ? (next - nextp) / dt : 0, done = nrows ? (double)next / nrows : 1;
     double avg = t > ts ? (next - next0) / (t - ts) : 0;
     fprintf(stderr, "[howell stage %d] %.2f h: rows %zu/%llu (%.2f%%), queue %zu, pivots %lld/%d; %lld eliminations, "
-            "%.3g entries written (%.3g/s); %.3g rows/s now, %.3g on average; ETA by the average rate %.1f h\n",
+            "%.3g entries written (%.3g/s), %d threads; %.3g rows/s now, %.3g on average; ETA by the average rate %.1f h\n",
             CUR_STAGE, (t - ts) / 3600, next, (unsigned long long)nrows, 100 * done, pend.size(), npiv, ncol, ST_ELIM,
-            (double)ST_FILL, dt > 0 ? (ST_FILL - fillp) / dt : 0, rate, avg, avg > 0 ? (nrows - next) / avg / 3600 : -1.0);
+            (double)ST_FILL, dt > 0 ? (ST_FILL - fillp) / dt : 0, HTHREADS, rate, avg, avg > 0 ? (nrows - next) / avg / 3600 : -1.0);
     if (PFILE) if (FILE* f = fopen(PFILE, "w")) { fprintf(f, "%zu/%llu\n", next, (unsigned long long)nrows); fclose(f); }
     tp = t; fillp = ST_FILL; nextp = next;
   };
@@ -391,6 +397,25 @@ static vector<Row> howell_stream(vector<Row>& rows, int ncol, vector<int>& pv, v
     return r;
   };
   auto closure = [&](const Row& r, int v) { if (v > 0) { Row s = r; scale(s, PP[E - v]); if (!s.i.empty()) pend.push_back(std::move(s)); } };
+  struct Tail { const Row* r; size_t t; u64 q; };  // pivot row, first entry at or after the block end, factor
+  vector<Tail> tails;
+  auto apply = [&](int lo, int up) {  // the tails at the columns [lo, up)
+    for (auto& T : tails) {
+      const vector<int>& I = T.r->i; const vector<u64>& V = T.r->v;
+      size_t t = lower_bound(I.begin() + T.t, I.end(), lo) - I.begin();
+      for (; t < I.size() && I[t] < up; t++) acc[I[t]] = addm(acc[I[t]], mulm(V[t], T.q));
+    }
+  };
+  auto flush = [&](int lo, int hi, long long tw) {
+    if (tails.empty()) return;
+    int nt = HTHREADS, span = hi + 1 - lo;
+    if (nt <= 1 || tw < HPAR || span < (HPAR ? 64 : 1) * nt) { apply(lo, hi + 1); return; }
+    int nch = 4 * nt;  // more chunks than threads: the tails are denser near some columns
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1) num_threads(nt)
+#endif
+    for (int q = 0; q < nch; q++) apply(lo + (int)((long long)span * q / nch), lo + (int)((long long)span * (q + 1) / nch));
+  };
   for (unsigned it = 0;; it++) {
     double t = (it & 15) == 0 || SIG_CKPT || SIG_TERM ? now() : tp;  // the clock every 16 rows
     if (PEVERY > 0 && t - tp >= PEVERY) report(t);
@@ -405,19 +430,31 @@ static vector<Row> howell_stream(vector<Row>& rows, int ncol, vector<int>& pv, v
     if (x.i.empty()) continue;
     for (size_t q = 0; q < x.i.size(); q++) acc[x.i[q]] = x.v[q];
     int c = x.i[0], hi = x.i.back();
+    // blocks of HW columns: inside the block [c, bend) each elimination is applied at once; its part at
+    // columns >= bend (the tail) is deferred to tails and applied for the whole block by the threads, each
+    // on its own range of columns (flush).  The sums mod p^E are the same, so the result is that of one thread.
     while (c <= hi) {
-      u64 a = acc[c];
-      if (!a) { c++; continue; }
-      int va = val(a);
-      if (pv[c] < 0 || va < pv[c]) {
+      const int bend = c + HW; tails.clear(); long long tw = 0;
+      bool stop = false;
+      for (; c < bend && c <= hi; c++) {
+        u64 a = acc[c];
+        if (!a) continue;
+        int va = val(a);
+        if (pv[c] < 0 || va < pv[c]) { stop = true; break; }
+        u64 nq = negm(a / PP[pv[c]]); const Row& pr = piv[c]; ST_ELIM++; ST_FILL += pr.i.size();
+        size_t t = 0, n = pr.i.size();
+        for (; t < n && pr.i[t] < bend; t++) { int k = pr.i[t]; acc[k] = addm(acc[k], mulm(pr.v[t], nq)); }
+        if (n && pr.i[n - 1] > hi) hi = pr.i[n - 1];
+        if (t < n) { tails.push_back({&pr, t, nq}); tw += n - t; }
+      }
+      flush(bend, hi, tw);
+      if (stop) {
+        u64 a = acc[c]; int va = val(a);
         Row r = extract(c, hi, invunit(a / PP[va]));
         if (pv[c] >= 0) pend.push_back(std::move(piv[c])); else npiv++;
         pv[c] = va; closure(r, va); piv[c] = std::move(r);
         break;
       }
-      u64 nq = negm(a / PP[pv[c]]); const Row& pr = piv[c]; ST_ELIM++; ST_FILL += pr.i.size();
-      for (size_t t = 0; t < pr.i.size(); t++) { int k = pr.i[t]; acc[k] = addm(acc[k], mulm(pr.v[t], nq)); if (k > hi) hi = k; }
-      c++;
     }
   }
   IN_HOWELL = 0; if (SIG_TERM) _exit(143);
@@ -863,6 +900,11 @@ int main(int argc, char** argv) {
   auto expect = [&](const char* w) { t = tok(); if (t != w) { fprintf(stderr, "expected %s got %s\n", w, t.c_str()); exit(2); } };
   expect("p"); P = atoi(tok().c_str()); expect("E"); E = atoi(tok().c_str()); expect("n"); NDEG = atoi(tok().c_str()); expect("r"); R = atoi(tok().c_str());
   if (argc > 1) NDEG = atoi(argv[1]);  // override n of the input
+#ifdef _OPENMP
+  HTHREADS = getenv("GRNQ_THREADS") ? max(1, atoi(getenv("GRNQ_THREADS"))) : omp_get_max_threads();
+#endif
+  if (getenv("GRNQ_PAR_MIN")) HPAR = atoll(getenv("GRNQ_PAR_MIN"));
+  if (getenv("GRNQ_BLOCK")) HW = max(1, atoi(getenv("GRNQ_BLOCK")));
   { const char* h = getenv("GRNQ_HOWELL"); string hs = h ? h : "stream"; HMETH = hs == "fixed" ? 1 : hs == "dyn" ? 2 : 0; }
   { u128 d = 1; for (int q = 0; q < E; q++) d *= P; if (d >= ((u128)1 << 62)) { fprintf(stderr, "p^E too large\n"); return 2; } D = (u64)d; }
   PP.assign(E + 1, 1); for (int q = 1; q <= E; q++) PP[q] = PP[q - 1] * P;

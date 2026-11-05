@@ -4,7 +4,7 @@
 set -eo pipefail
 cd "$(dirname "$0")"
 OUTD=${JOB_OUT:-out}; mkdir -p "$OUTD"
-c++ -O2 -std=c++17 -o "$OUTD/grnq" ../grnq/grnq.cpp
+c++ -O2 -std=c++17 -fopenmp -o "$OUTD/grnq" ../grnq/grnq.cpp
 echo "OUTDIR := \"$OUTD\";; ONLY := [\"${CASE:-G}\"];; EGRNQ := ${E:-30};;" | cat - bm_grnq.g | ${GAP:-$JOB_CACHE/gap/gap} -q -b --quitonbreak -o ${GAPMEM:-7g} 2>&1 | tee "$OUTD/bm_grnq.log"
 grep -q "^bm_grnq done" "$OUTD/bm_grnq.log"
 # under tm: the rows of the running Howell form as tm's progress (tm shows an ETA), and a checkpoint of it in
