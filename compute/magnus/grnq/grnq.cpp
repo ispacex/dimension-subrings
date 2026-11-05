@@ -229,9 +229,17 @@ typedef uint32_t rv_t;
 #else
 typedef u64 rv_t;
 #endif
+// every entry of a row goes in through RV: in a GRNQ_V32 build it stops the run if an entry does not fit
+// (it cannot when all entries are reduced mod D < 2^32: the check guards that invariant against later changes)
+static inline rv_t RV(u64 x) {
+#ifdef GRNQ_V32
+  if (x >> 32) { fprintf(stderr, "ERROR: GRNQ_V32: row entry %llu >= 2^32 (D = %llu)\n", (unsigned long long)x, (unsigned long long)D); abort(); }
+#endif
+  return (rv_t)x;
+}
 struct Row { vector<int> i; vector<rv_t> v; SV h; };
 static int lead(const Row& r) { return r.i.empty() ? INT32_MAX : r.i[0]; }
-template <class V_> static void scale(vector<int>& I, vector<V_>& V, u64 c) { size_t w = 0; for (size_t q = 0; q < I.size(); q++) { u64 x = mulm(V[q], c); if (x) { I[w] = I[q]; V[w++] = x; } } I.resize(w); V.resize(w); }
+template <class V_> static void scale(vector<int>& I, vector<V_>& V, u64 c) { size_t w = 0; for (size_t q = 0; q < I.size(); q++) { u64 x = mulm(V[q], c); if (x) { I[w] = I[q]; V[w++] = (V_)RV(x); } } I.resize(w); V.resize(w); }
 static void scale(Row& r, u64 c) { scale(r.i, r.v, c); scale(r.h.i, r.h.v, c); }
 template <class V_> static void axpy(const vector<int>& ai, const vector<V_>& av, const vector<int>& bi, const vector<V_>& bv, u64 cb, vector<int>& si, vector<V_>& sv) {
   size_t p = 0, q = 0; si.reserve(ai.size() + bi.size()); sv.reserve(ai.size() + bi.size());
@@ -240,7 +248,7 @@ template <class V_> static void axpy(const vector<int>& ai, const vector<V_>& av
     if (q >= bi.size() || (p < ai.size() && ai[p] < bi[q])) { k = ai[p]; x = av[p++]; }
     else if (p >= ai.size() || bi[q] < ai[p]) { k = bi[q]; x = mulm(bv[q++], cb); }
     else { k = ai[p]; x = addm(av[p++], mulm(bv[q++], cb)); }
-    if (x) { si.push_back(k); sv.push_back(x); }
+    if (x) { si.push_back(k); sv.push_back((V_)RV(x)); }
   }
 }
 static Row axpy(const Row& a, const Row& b, u64 cb) {  // a + cb b
@@ -365,6 +373,9 @@ static bool ck_load(vector<Row>& rows, int ncol, u64 hash, size_t* next, vector<
   if (ok) pend.resize(np);
   for (u64 q = 0; ok && q < np; q++) { ck_r(f, pend[q].i, ok); ck_r(f, pend[q].v, ok); }
   if (f) fclose(f);
+  // entries reduced mod D (in a GRNQ_V32 build this is what keeps them below 2^32): a file that breaks it is not ours
+  auto below = [&](const vector<Row>& R) { for (auto& r : R) for (auto x : r.v) if ((u64)x >= D) return false; return true; };
+  ok = ok && below(piv) && below(pend);
   // the input rows before next are gone: a body that cannot be read now (it was complete a moment ago) is fatal
   if (!ok) { fprintf(stderr, "ERROR: %s could not be read; delete it and run again\n", CKPT); exit(2); }
   *next = H.next; ST_ELIM = H.elim; ST_FILL = H.fill;
@@ -404,7 +415,7 @@ static vector<Row> howell_stream(vector<Row>& rows, int ncol, vector<int>& pv, v
     tp = t; fillp = ST_FILL; nextp = next;
   };
   auto extract = [&](int c, int hi, u64 u) {  // acc[c..hi] times u as a row; clears acc
-    Row r; for (int k = c; k <= hi; k++) if (acc[k]) { r.i.push_back(k); r.v.push_back(mulm(acc[k], u)); acc[k] = 0; }
+    Row r; for (int k = c; k <= hi; k++) if (acc[k]) { r.i.push_back(k); r.v.push_back(RV(mulm(acc[k], u))); acc[k] = 0; }
     return r;
   };
   auto closure = [&](const Row& r, int v) { if (v > 0) { Row s = r; scale(s, PP[E - v]); if (!s.i.empty()) pend.push_back(std::move(s)); } };
@@ -499,7 +510,7 @@ static vector<Row> howell_stream_dag(vector<Row>& rows, int ncol, vector<int>& p
       int va = val(a);
       if (pv[c] < 0 || va < pv[c]) {
         u64 u = invunit(a / PP[va]);
-        Row r; for (int k = c; k <= hi; k++) if (acc[k]) { r.i.push_back(k); r.v.push_back(mulm(acc[k], u)); acc[k] = 0; }
+        Row r; for (int k = c; k <= hi; k++) if (acc[k]) { r.i.push_back(k); r.v.push_back(RV(mulm(acc[k], u))); acc[k] = 0; }
         if (xn < 0) { nodes.push_back(HNode{std::move(x.h), {}}); xn = nodes.size() - 1; }
         HNode nd; nd.parts.push_back({xn, u}); for (auto& o : ops) nd.parts.push_back({o.first, mulm(o.second, u)});
         nodes.push_back(std::move(nd)); int rn = nodes.size() - 1;
@@ -560,7 +571,7 @@ static vector<Row> howell_dyn(vector<Row>& rows, int ncol, vector<int>& pv, vect
           if (p2 >= pr.i.size() || (p1 < x.i.size() && x.i[p1] < pr.i[p2])) { k = x.i[p1]; z = x.v[p1++]; }
           else if (p1 >= x.i.size() || pr.i[p2] < x.i[p1]) { k = pr.i[p2]; z = mulm(pr.v[p2++], cb); if (z) colrows[k].push_back(rr); }
           else { k = x.i[p1]; z = addm(x.v[p1++], mulm(pr.v[p2++], cb)); }
-          if (z) { y.i.push_back(k); y.v.push_back(z); }
+          if (z) { y.i.push_back(k); y.v.push_back(RV(z)); }
         }
         ST_ELIM++; ST_FILL += y.i.size();
         rows[rr] = std::move(y);
@@ -648,7 +659,7 @@ static void final_proj(int k, int ng) {
   auto finish = [&](const SV& g, const SV& t, const vector<char>& mask) {
     sm.acc.addsv(g, 1); for (size_t q = 0; q < t.size(); q++) sm.acc.add(ng + t.i[q], t.v[q]);
     SV x = sm.nf_acc(); Row r;
-    for (size_t q = 0; q < x.size(); q++) { if (x.i[q] < ng) { badgen++; continue; } int c = x.i[q] - ng; if (mask[c]) { r.i.push_back(c); r.v.push_back(x.v[q]); } }
+    for (size_t q = 0; q < x.size(); q++) { if (x.i[q] < ng) { badgen++; continue; } int c = x.i[q] - ng; if (mask[c]) { r.i.push_back(c); r.v.push_back(RV(x.v[q])); } }
     return r;
   };
   vector<Acc> rg(magnus.size()), rt(magnus.size()); for (auto& a : rg) a.init(ng); for (auto& a : rt) a.init(NT);
@@ -789,7 +800,7 @@ static bool stage(int k) {  // PR = R_k (generators of weight <= k-1) -> R_{k+1}
   long long badgen = 0;
   auto push = [&](const SV& s) {
     Row r;
-    for (size_t q = 0; q < s.size(); q++) { if (s.i[q] < ng) { badgen++; continue; } r.i.push_back(s.i[q] - ng); r.v.push_back(s.v[q]); }
+    for (size_t q = 0; q < s.size(); q++) { if (s.i[q] < ng) { badgen++; continue; } r.i.push_back(s.i[q] - ng); r.v.push_back(RV(s.v[q])); }
     if (!r.i.empty()) rows.push_back(std::move(r));
   };
   // (E0) p^(E-e_b) (pi_b + t^P_b) = 0: over Z/p^E the power relation p^e_b b = pi_b + t^P_b implies it,

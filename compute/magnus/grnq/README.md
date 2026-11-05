@@ -31,7 +31,7 @@ the state between two input rows (pivot rows, queue, next row, statistics) is wr
 `GRNQ_CKPT_EVERY` seconds (default 7200), on `SIGUSR1` (only with `GRNQ_CKPT`), and on `SIGTERM`, after which grnq
 exits with code 4 (`SIGTERM` outside a Howell form: exit 143 at once). tm stops a job within 90 s, so the save on
 `SIGTERM` is best effort; the periodic one is what a resume relies on. The file is about as large as the pivot
-rows (8 + 4 bytes an entry), and a save needs room for the old file and the new one. A run on the same input with
+rows (4 + 8 bytes an entry, 4 + 4 with `GRNQ_V32`), and a save needs room for the old file and the new one. A run on the same input with
 the same `GRNQ_CKPT` recomputes the earlier stages and continues that stage from the file: it is taken only by the
 stage of its number, and only with the same column and row counts and hash of the input rows; a file that does not
 match or is incomplete is ignored (a line on stderr) and the stage starts from its first row. The result,
@@ -39,6 +39,24 @@ statistics included, is that of an uninterrupted run. A stage never overwrites t
 Not used with `GRNQ_PROJ` (several Howell forms in one stage). `bm494/run_grnq.sh` under tm sets both to the job's
 progress file and to `$JOB_CACHE/grnq-ckpt/<CASE>_n<N>_E<E>.ckpt`, and removes the file after a finished run.
 For $p^E < 2^{32}$ the arithmetic is 64-bit with Barrett reduction ($E \le 20$ for $p = 3$).
+
+Threads and 32-bit rows (MATH-424). `GRNQ_THREADS` (default: the cpus the process may use; build with
+`-fopenmp`, without it one thread): the `stream` Howell form eliminates in blocks of `GRNQ_BLOCK` columns (default
+256); inside a block every elimination is applied at once, its tail beyond the block is applied for the whole
+block by the threads, each on its own range of columns. The sums mod $p^E$ are exact, so the output, statistics
+included, is that of one thread (checked: `G` at $n = 5, 6$ and `rips` against the one-thread run). On kimmy 4
+threads gave 1.4× at stage 5 of `G`: the elimination is bound by memory traffic more than by arithmetic.
+
+`-DGRNQ_V32` (compile time) keeps the entries of the Howell rows in 32 bits, 8 bytes an entry with the column
+instead of 12: a third less memory for the pivot rows and less traffic. **It is valid only for $p^E < 2^{32}$,
+with little room**: $3^{20} = 3486784401$, $\log_2 3^{20} \approx 31.70$, so $E \le 20$ for $p = 3$
+($3^{21} > 2^{33}$); $E \le 31$ for $p = 2$, $E \le 13$ for $p = 5$, $E \le 11$ for $p = 7$. Guards: a `GRNQ_V32`
+build refuses an input with $p^E \ge 2^{32}$ at the start (exit 2); every entry stored into a row goes through
+`RV()`, which stops the run (`abort`) if it is $\ge 2^{32}$ (cannot happen while all entries are reduced mod $p^E$;
+the check is there for later changes of the code); a checkpoint's entries are checked to be $< p^E$ when it is read,
+and a 32-bit checkpoint has its own magic, so a 64-bit build ignores it and vice versa. The arithmetic itself stays
+64-bit (products of two entries $< p^{2E} < 2^{64}$). `bm494/run_grnq.sh` uses `GRNQ_V32` for $E \le 20$ (its
+groups are 3-groups), the Modal image (`modal_grnq.py`, E = 20) always. A run with larger $E$ needs the 64-bit build.
 
 ## Algorithm
 
