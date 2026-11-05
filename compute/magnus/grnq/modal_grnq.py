@@ -50,7 +50,7 @@ gap_image = (
 )
 
 
-@app.function(image=gap_image, cpu=1, memory=8192, volumes={"/w": vol}, timeout=4 * 3600)
+@app.function(image=gap_image, cpu=1, memory=8192, volumes={"/w": vol}, timeout=4 * 3600, max_inputs=1)
 def gen(case: str, then_run: bool = True, n: int = 7, E: int = 20) -> str:
     """bm_<case>.in by bm494/bm_grnq.g (GAP with anupq) into the Volume; then run(case, n) unless then_run is false."""
     d = f"/w/{case}"
@@ -70,7 +70,9 @@ def gen(case: str, then_run: bool = True, n: int = 7, E: int = 20) -> str:
     return f"{case}: input written"
 
 
-@app.function(image=image, cpu=CPU, memory=MEM_MB, volumes={"/w": vol}, timeout=24 * 3600)
+# one input per container: a cancelled call takes its container, and its grnq, down with it (a reused container
+# would keep the old grnq running with the Volume's files open, and the next call's reload fails)
+@app.function(image=image, cpu=CPU, memory=MEM_MB, volumes={"/w": vol}, timeout=24 * 3600, max_inputs=1)
 def run(case: str, n: int = 7, threads: int = CPU, life_s: int = LIFE) -> str:
     vol.reload()
     d = f"/w/{case}"
