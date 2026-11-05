@@ -22,6 +22,19 @@ expression := g<i> | (inv e) | (pow e INT) | (mul e e ...) | (comm e e)      [a,
 $\log_p|\varpi^k/\varpi^{k+1}|$, the certificate, and per test the largest $d < n$ with $h - 1 \in \varpi^d$, or
 `in Delta^n`. Environment: `GRNQ_HOWELL` = `stream` (default), `fixed` or `dyn` (three implementations of
 the Howell form, same result); `GRNQ_PROJ`, `GRNQ_LAZY`, `GRNQ_ONLY`, `GRNQ_SMAX` for the projection test below.
+
+Progress and checkpoint (the `stream` Howell form only, MATH-424). `GRNQ_PROGRESS=s` (default 300; 0: off): every
+$s$ seconds of a stage's Howell form a line `[howell stage k]` on stderr: input rows done of all, the queue, the
+pivots found, eliminations, entries written and their rate, rows per second now and on average, and the ETA at the
+average rate. `GRNQ_PROGRESS_FILE`: the same rows as `done/total` (tm's `$JOB_ROOT/progress`). `GRNQ_CKPT=path`:
+the state between two input rows (pivot rows, queue, next row, statistics) is written to `path` every
+`GRNQ_CKPT_EVERY` seconds (default 21600), on `SIGUSR1`, and on `SIGTERM`, after which grnq exits with code 4
+(`SIGTERM` outside a Howell form: exit 143 at once). The file is about as large as the pivot rows (8 + 4 bytes
+an entry). A run on the same input with the same `GRNQ_CKPT` recomputes the earlier stages and continues that
+stage from the file: it is taken only by the stage of its number, and only with the same column and row counts
+and hash of the input rows (otherwise an error); the result, statistics included, is that of an uninterrupted
+run. A stage never overwrites the checkpoint of a later one. `bm494/run_grnq.sh` under tm sets both to the job's
+progress file and to `$JOB_CACHE/grnq-ckpt/<CASE>_n<N>_E<E>.ckpt`, and removes the file after a finished run.
 For $p^E < 2^{32}$ the arithmetic is 64-bit with Barrett reduction ($E \le 20$ for $p = 3$).
 
 ## Algorithm
