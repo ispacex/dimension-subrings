@@ -4,7 +4,8 @@
 set -eo pipefail
 cd "$(dirname "$0")"
 OUTD=${JOB_OUT:-out}; mkdir -p "$OUTD"
-V32=; [ "${E:-30}" -le 20 ] && V32=-DGRNQ_V32  # p^E < 2^32 for p = 3: the rows in 32 bits
+# the rows in 32 bits needs p^E < 2^32: E <= 20 for the 3-groups here (grnq refuses a larger p^E at the start; ../grnq/README.md)
+V32=; [ "${E:-30}" -le 20 ] && V32=-DGRNQ_V32
 c++ -O2 -std=c++17 -fopenmp $V32 -o "$OUTD/grnq" ../grnq/grnq.cpp
 echo "OUTDIR := \"$OUTD\";; ONLY := [\"${CASE:-G}\"];; EGRNQ := ${E:-30};;" | cat - bm_grnq.g | ${GAP:-$JOB_CACHE/gap/gap} -q -b --quitonbreak -o ${GAPMEM:-7g} 2>&1 | tee "$OUTD/bm_grnq.log"
 grep -q "^bm_grnq done" "$OUTD/bm_grnq.log"
