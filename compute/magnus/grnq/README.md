@@ -28,12 +28,15 @@ $s$ seconds of a stage's Howell form a line `[howell stage k]` on stderr: input 
 pivots found, eliminations, entries written and their rate, rows per second now and on average, and the ETA at the
 average rate. `GRNQ_PROGRESS_FILE`: the same rows as `done/total` (tm's `$JOB_ROOT/progress`). `GRNQ_CKPT=path`:
 the state between two input rows (pivot rows, queue, next row, statistics) is written to `path` every
-`GRNQ_CKPT_EVERY` seconds (default 21600), on `SIGUSR1`, and on `SIGTERM`, after which grnq exits with code 4
-(`SIGTERM` outside a Howell form: exit 143 at once). The file is about as large as the pivot rows (8 + 4 bytes
-an entry). A run on the same input with the same `GRNQ_CKPT` recomputes the earlier stages and continues that
-stage from the file: it is taken only by the stage of its number, and only with the same column and row counts
-and hash of the input rows (otherwise an error); the result, statistics included, is that of an uninterrupted
-run. A stage never overwrites the checkpoint of a later one. `bm494/run_grnq.sh` under tm sets both to the job's
+`GRNQ_CKPT_EVERY` seconds (default 7200), on `SIGUSR1` (only with `GRNQ_CKPT`), and on `SIGTERM`, after which grnq
+exits with code 4 (`SIGTERM` outside a Howell form: exit 143 at once). tm stops a job within 90 s, so the save on
+`SIGTERM` is best effort; the periodic one is what a resume relies on. The file is about as large as the pivot
+rows (8 + 4 bytes an entry), and a save needs room for the old file and the new one. A run on the same input with
+the same `GRNQ_CKPT` recomputes the earlier stages and continues that stage from the file: it is taken only by the
+stage of its number, and only with the same column and row counts and hash of the input rows; a file that does not
+match or is incomplete is ignored (a line on stderr) and the stage starts from its first row. The result,
+statistics included, is that of an uninterrupted run. A stage never overwrites the checkpoint of a later one.
+Not used with `GRNQ_PROJ` (several Howell forms in one stage). `bm494/run_grnq.sh` under tm sets both to the job's
 progress file and to `$JOB_CACHE/grnq-ckpt/<CASE>_n<N>_E<E>.ckpt`, and removes the file after a finished run.
 For $p^E < 2^{32}$ the arithmetic is 64-bit with Barrett reduction ($E \le 20$ for $p = 3$).
 

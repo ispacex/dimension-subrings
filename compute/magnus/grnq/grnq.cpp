@@ -268,15 +268,19 @@ static vector<Row> howell_fixed(vector<Row>& rows, int ncol, vector<int>& pv, ve
 // the same rows as "done/total" (tm's $JOB_ROOT/progress, from which tm shows its own ETA).
 // GRNQ_CKPT=path: the state of howell_stream between two rows (pivot rows, queue, next input row,
 // statistics; the accumulator is zero there) is written to path every GRNQ_CKPT_EVERY seconds (default
-// 21600), on SIGUSR1, and on SIGTERM (then exit 4).  A run with the same input resumes from it: the earlier
-// stages are recomputed (they are fast) and the file is taken by the stage whose number, column count, row
-// count and hash of the input rows it carries; a stage never overwrites the checkpoint of a later stage.
+// 7200), on SIGUSR1, and on SIGTERM (then exit 4; under tm's 90 s stop timeout this save is best effort, the
+// periodic one is what counts).  A run with the same input resumes from it: the earlier stages are
+// recomputed (they are fast) and the file is taken by the stage whose number, column count, row count and
+// hash of the input rows it carries; a file that does not match, or is incomplete (its length is in the
+// header, a trailer ends it), is ignored and the stage starts from its first row.  A stage never overwrites
+// the checkpoint of a later stage.  Not with GRNQ_PROJ, which runs several Howell forms in one stage.
 static int CUR_STAGE = 0;
 static const char* CKPT = nullptr;
 static volatile sig_atomic_t SIG_CKPT = 0, SIG_TERM = 0, IN_HOWELL = 0;
 static void on_usr1(int) { SIG_CKPT = 1; }
 static void on_term(int) { if (!IN_HOWELL) _exit(143); SIG_TERM = 1; }  // outside the Howell form: nothing to save
-struct CkHead { char magic[8]; int32_t p, e, stage, ncol; u64 nrows, hash, next; long long elim, fill; };
+struct CkHead { char magic[8]; int32_t p, e, stage, ncol; u64 nrows, hash, next; long long elim, fill; u64 bytes; };
+static const char CK_MAGIC[9] = "GRNQCK02", CK_END[9] = "GRNQEND2";
 static u64 rows_hash(const vector<Row>& rows) {
   u64 h = 1469598103934665603ULL;
   auto mix = [&](u64 x) { h ^= x; h *= 1099511628211ULL; };
@@ -285,7 +289,11 @@ static u64 rows_hash(const vector<Row>& rows) {
 }
 static bool ck_read_head(const char* path, CkHead& H) {
   FILE* f = fopen(path, "rb"); if (!f) return false;
-  bool ok = fread(&H, sizeof H, 1, f) == 1 && !memcmp(H.magic, "GRNQCK01", 8); fclose(f); return ok;
+  bool ok = fread(&H, sizeof H, 1, f) == 1 && !memcmp(H.magic, CK_MAGIC, 8);
+  // complete: the length written last into the header, and the trailer at the end
+  char tr[8]; ok = ok && fseeko(f, 0, SEEK_END) == 0 && (u64)ftello(f) == H.bytes && fseeko(f, -8, SEEK_END) == 0 &&
+                  fread(tr, 8, 1, f) == 1 && !memcmp(tr, CK_END, 8);
+  fclose(f); return ok;
 }
 template <class T> static void ck_w(FILE* f, const vector<T>& v, bool& ok) {
   u64 n = v.size(); ok = ok && fwrite(&n, 8, 1, f) == 1 && (!n || fwrite(v.data(), sizeof(T), n, f) == n);
@@ -301,39 +309,50 @@ static void ck_save(int ncol, u64 nrows, u64 hash, size_t next, const vector<int
   }
   double t0 = now(); string tmp = string(CKPT) + ".tmp";
   FILE* f = fopen(tmp.c_str(), "wb"); if (!f) { fprintf(stderr, "[ckpt] cannot write %s\n", tmp.c_str()); return; }
-  CkHead H{}; memcpy(H.magic, "GRNQCK01", 8); H.p = P; H.e = E; H.stage = CUR_STAGE; H.ncol = ncol;
+  CkHead H{}; memcpy(H.magic, CK_MAGIC, 8); H.p = P; H.e = E; H.stage = CUR_STAGE; H.ncol = ncol;
   H.nrows = nrows; H.hash = hash; H.next = next; H.elim = ST_ELIM; H.fill = ST_FILL;
   bool ok = fwrite(&H, sizeof H, 1, f) == 1;
   ck_w(f, pv, ok);
   for (int c = 0; c < ncol; c++) if (pv[c] >= 0) { ck_w(f, piv[c].i, ok); ck_w(f, piv[c].v, ok); }
   u64 np = pend.size(); ok = ok && fwrite(&np, 8, 1, f) == 1;
   for (auto& r : pend) { ck_w(f, r.i, ok); ck_w(f, r.v, ok); }
-  long long bytes = ftell(f);
+  ok = ok && fwrite(CK_END, 8, 1, f) == 1;
+  long long bytes = ftello(f); H.bytes = bytes;
+  ok = ok && fseeko(f, 0, SEEK_SET) == 0 && fwrite(&H, sizeof H, 1, f) == 1 && fflush(f) == 0 && fsync(fileno(f)) == 0;
   ok = (fclose(f) == 0) && ok;
   if (!ok || rename(tmp.c_str(), CKPT)) { fprintf(stderr, "[ckpt] writing %s failed\n", CKPT); remove(tmp.c_str()); return; }
   fprintf(stderr, "[ckpt] stage %d: %zu/%llu rows done, %.2f GB written to %s in %.0f s\n", CUR_STAGE, next,
           (unsigned long long)nrows, bytes / 1e9, CKPT, now() - t0);
 }
-// true: the state was loaded (pv, piv, pend, ST_*; *next = the first input row still to do)
-static bool ck_load(int ncol, u64 nrows, u64 hash, size_t* next, vector<int>& pv, vector<Row>& piv, vector<Row>& pend) {
-  CkHead H; if (!ck_read_head(CKPT, H)) return false;
-  if (H.p != P || H.e != E || H.stage != CUR_STAGE) return false;
-  if (H.ncol != ncol || H.nrows != nrows || H.hash != hash) {
-    fprintf(stderr, "ERROR: %s is for stage %d with other input (columns %d/%d, rows %llu/%llu, hash %s)\n", CKPT,
-            H.stage, H.ncol, ncol, (unsigned long long)H.nrows, (unsigned long long)nrows, H.hash == hash ? "same" : "differs");
-    exit(2);
+// true: the state was loaded (pv, piv, pend, ST_*; *next = the first input row still to do).  The input rows
+// before *next are freed before the body is read, as in an uninterrupted run, so a resume needs no more memory.
+static bool ck_load(vector<Row>& rows, int ncol, u64 hash, size_t* next, vector<int>& pv, vector<Row>& piv, vector<Row>& pend) {
+  CkHead H;
+  if (!ck_read_head(CKPT, H)) {
+    static bool said = false;
+    if (FILE* f = fopen(CKPT, "rb")) { fclose(f); if (!said) fprintf(stderr, "[ckpt] %s is incomplete or of another version: ignored\n", CKPT); said = true; }
+    return false;
   }
-  double t0 = now(); FILE* f = fopen(CKPT, "rb"); bool ok = fseek(f, sizeof H, SEEK_SET) == 0;
-  ck_r(f, pv, ok); ok = ok && pv.size() == (size_t)ncol;
+  if (H.p != P || H.e != E || H.stage != CUR_STAGE) return false;
+  if (H.ncol != ncol || H.nrows != rows.size() || H.hash != hash || H.next > rows.size()) {
+    fprintf(stderr, "[ckpt] %s is for stage %d with other input (columns %d/%d, rows %llu/%zu, hash %s): ignored, the stage starts from row 0\n",
+            CKPT, H.stage, H.ncol, ncol, (unsigned long long)H.nrows, rows.size(), H.hash == hash ? "same" : "differs");
+    return false;
+  }
+  for (size_t q = 0; q < H.next; q++) { Row().i.swap(rows[q].i); vector<u64>().swap(rows[q].v); }
+  double t0 = now(); FILE* f = fopen(CKPT, "rb"); bool ok = f && fseeko(f, sizeof H, SEEK_SET) == 0;
+  if (ok) ck_r(f, pv, ok);
+  ok = ok && pv.size() == (size_t)ncol;
   for (int c = 0; ok && c < ncol; c++) if (pv[c] >= 0) { ck_r(f, piv[c].i, ok); ck_r(f, piv[c].v, ok); }
   u64 np = 0; ok = ok && fread(&np, 8, 1, f) == 1;
   if (ok) pend.resize(np);
   for (u64 q = 0; ok && q < np; q++) { ck_r(f, pend[q].i, ok); ck_r(f, pend[q].v, ok); }
-  fclose(f);
-  if (!ok) { fprintf(stderr, "ERROR: %s is truncated or unreadable\n", CKPT); exit(2); }
+  if (f) fclose(f);
+  // the input rows before next are gone: a body that cannot be read now (it was complete a moment ago) is fatal
+  if (!ok) { fprintf(stderr, "ERROR: %s could not be read; delete it and run again\n", CKPT); exit(2); }
   *next = H.next; ST_ELIM = H.elim; ST_FILL = H.fill;
   fprintf(stderr, "[ckpt] stage %d resumed from %s: %llu/%llu rows done, %zu queued (read in %.0f s)\n", CUR_STAGE, CKPT,
-          (unsigned long long)H.next, (unsigned long long)nrows, pend.size(), now() - t0);
+          (unsigned long long)H.next, (unsigned long long)H.nrows, pend.size(), now() - t0);
   return true;
 }
 
@@ -349,11 +368,10 @@ static vector<Row> howell_stream(vector<Row>& rows, int ncol, vector<int>& pv, v
   vector<Row> pend; size_t next = 0;
   // progress and checkpoint (see above)
   static const double PEVERY = getenv("GRNQ_PROGRESS") ? atof(getenv("GRNQ_PROGRESS")) : 300;
-  static const double CEVERY = getenv("GRNQ_CKPT_EVERY") ? atof(getenv("GRNQ_CKPT_EVERY")) : 21600;
+  static const double CEVERY = getenv("GRNQ_CKPT_EVERY") ? atof(getenv("GRNQ_CKPT_EVERY")) : 7200;
   static const char* PFILE = getenv("GRNQ_PROGRESS_FILE");
   const u64 nrows = rows.size(), hash = CKPT ? rows_hash(rows) : 0;
-  if (CKPT && ck_load(ncol, nrows, hash, &next, pv, piv, pend))
-    for (size_t q = 0; q < next; q++) { Row().i.swap(rows[q].i); vector<u64>().swap(rows[q].v); }
+  if (CKPT) ck_load(rows, ncol, hash, &next, pv, piv, pend);
   long long npiv = 0; for (int c = 0; c < ncol; c++) npiv += pv[c] >= 0;
   const double ts = now(); const size_t next0 = next;
   double tp = ts, tc = ts; long long fillp = ST_FILL; size_t nextp = next;
@@ -373,8 +391,8 @@ static vector<Row> howell_stream(vector<Row>& rows, int ncol, vector<int>& pv, v
     return r;
   };
   auto closure = [&](const Row& r, int v) { if (v > 0) { Row s = r; scale(s, PP[E - v]); if (!s.i.empty()) pend.push_back(std::move(s)); } };
-  for (;;) {
-    double t = now();
+  for (unsigned it = 0;; it++) {
+    double t = (it & 15) == 0 || SIG_CKPT || SIG_TERM ? now() : tp;  // the clock every 16 rows
     if (PEVERY > 0 && t - tp >= PEVERY) report(t);
     if (CKPT && (SIG_CKPT || SIG_TERM || (CEVERY > 0 && t - tc >= CEVERY))) {
       SIG_CKPT = 0; ck_save(ncol, nrows, hash, next, pv, piv, pend); tc = now();
@@ -845,8 +863,6 @@ int main(int argc, char** argv) {
   auto expect = [&](const char* w) { t = tok(); if (t != w) { fprintf(stderr, "expected %s got %s\n", w, t.c_str()); exit(2); } };
   expect("p"); P = atoi(tok().c_str()); expect("E"); E = atoi(tok().c_str()); expect("n"); NDEG = atoi(tok().c_str()); expect("r"); R = atoi(tok().c_str());
   if (argc > 1) NDEG = atoi(argv[1]);  // override n of the input
-  if ((CKPT = getenv("GRNQ_CKPT")) && !*CKPT) CKPT = nullptr;
-  if (CKPT) { signal(SIGUSR1, on_usr1); signal(SIGTERM, on_term); signal(SIGPIPE, SIG_IGN); }  // SIGPIPE: tee may die first
   { const char* h = getenv("GRNQ_HOWELL"); string hs = h ? h : "stream"; HMETH = hs == "fixed" ? 1 : hs == "dyn" ? 2 : 0; }
   { u128 d = 1; for (int q = 0; q < E; q++) d *= P; if (d >= ((u128)1 << 62)) { fprintf(stderr, "p^E too large\n"); return 2; } D = (u64)d; }
   PP.assign(E + 1, 1); for (int q = 1; q <= E; q++) PP[q] = PP[q - 1] * P;
@@ -866,6 +882,9 @@ int main(int argc, char** argv) {
     for (int s = 0; s < NS; s++) { sn.push_back(tok()); int k = atoi(tok().c_str()); vector<PEx> v; for (int q = 0; q < k; q++) v.push_back(parse()); spans.push_back(v); } }
   FT = new FreeT();
   { const char* pj = getenv("GRNQ_PROJ"); if (pj) { PROJ = atoi(pj); PROJ_N = tn; PROJ_T = tests; } }
+  if ((CKPT = getenv("GRNQ_CKPT")) && !*CKPT) CKPT = nullptr;
+  if (CKPT && PROJ >= 0) { printf("note: GRNQ_CKPT is not used with GRNQ_PROJ\n"); CKPT = nullptr; }
+  if (CKPT) { signal(SIGUSR1, on_usr1); signal(SIGTERM, on_term); signal(SIGPIPE, SIG_IGN); }  // SIGPIPE: tee may die first
   if (const char* lz = getenv("GRNQ_LAZY")) { LAZY = atoi(lz); if (PROJ < 0) { printf("ERROR: GRNQ_LAZY needs GRNQ_PROJ (e.g. 0)\n"); exit(2); } }
   // GRNQ_ONLY=a,b,..: the projection test runs only these tests, in this order
   if (const char* on = getenv("GRNQ_ONLY")) {
