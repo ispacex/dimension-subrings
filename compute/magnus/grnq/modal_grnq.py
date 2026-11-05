@@ -29,7 +29,7 @@ image = (
     modal.Image.debian_slim(python_version="3.12")
     .apt_install("g++")
     .add_local_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "grnq.cpp"), "/src/grnq.cpp", copy=True)
-    .run_commands("g++ -O2 -std=c++17 -fopenmp -o /usr/local/bin/grnq /src/grnq.cpp")
+    .run_commands("g++ -O2 -std=c++17 -fopenmp -DGRNQ_V32 -o /usr/local/bin/grnq /src/grnq.cpp")
 )
 
 

@@ -222,11 +222,18 @@ struct StageMod {
 
 // ---------------- sparse Howell form over Z/p^E ----------------
 // h: the history of the row (GRNQ_LAZY), a combination of the input rows by their ids; empty otherwise
-struct Row { vector<int> i; vector<u64> v; SV h; };
+// GRNQ_V32 (compile time): the entries of the rows of the Howell forms in 32 bits (8 bytes per entry, not 12),
+// for p^E < 2^32 (checked at the start); the arithmetic stays 64-bit.  The checkpoint is of the width it was written with.
+#ifdef GRNQ_V32
+typedef uint32_t rv_t;
+#else
+typedef u64 rv_t;
+#endif
+struct Row { vector<int> i; vector<rv_t> v; SV h; };
 static int lead(const Row& r) { return r.i.empty() ? INT32_MAX : r.i[0]; }
-static void scale(vector<int>& I, vector<u64>& V, u64 c) { size_t w = 0; for (size_t q = 0; q < I.size(); q++) { u64 x = mulm(V[q], c); if (x) { I[w] = I[q]; V[w++] = x; } } I.resize(w); V.resize(w); }
+template <class V_> static void scale(vector<int>& I, vector<V_>& V, u64 c) { size_t w = 0; for (size_t q = 0; q < I.size(); q++) { u64 x = mulm(V[q], c); if (x) { I[w] = I[q]; V[w++] = x; } } I.resize(w); V.resize(w); }
 static void scale(Row& r, u64 c) { scale(r.i, r.v, c); scale(r.h.i, r.h.v, c); }
-static void axpy(const vector<int>& ai, const vector<u64>& av, const vector<int>& bi, const vector<u64>& bv, u64 cb, vector<int>& si, vector<u64>& sv) {
+template <class V_> static void axpy(const vector<int>& ai, const vector<V_>& av, const vector<int>& bi, const vector<V_>& bv, u64 cb, vector<int>& si, vector<V_>& sv) {
   size_t p = 0, q = 0; si.reserve(ai.size() + bi.size()); sv.reserve(ai.size() + bi.size());
   while (p < ai.size() || q < bi.size()) {
     int k; u64 x;
@@ -286,7 +293,11 @@ static volatile sig_atomic_t SIG_CKPT = 0, SIG_TERM = 0, IN_HOWELL = 0;
 static void on_usr1(int) { SIG_CKPT = 1; }
 static void on_term(int) { if (!IN_HOWELL) _exit(143); SIG_TERM = 1; }  // outside the Howell form: nothing to save
 struct CkHead { char magic[8]; int32_t p, e, stage, ncol; u64 nrows, hash, next; long long elim, fill; u64 bytes; };
+#ifdef GRNQ_V32
+static const char CK_MAGIC[9] = "GRNQCK32", CK_END[9] = "GRNQEN32";  // entries in 32 bits: not the file of a 64-bit build
+#else
 static const char CK_MAGIC[9] = "GRNQCK02", CK_END[9] = "GRNQEND2";
+#endif
 static u64 rows_hash(const vector<Row>& rows) {
   u64 h = 1469598103934665603ULL;
   auto mix = [&](u64 x) { h ^= x; h *= 1099511628211ULL; };
@@ -345,7 +356,7 @@ static bool ck_load(vector<Row>& rows, int ncol, u64 hash, size_t* next, vector<
             CKPT, H.stage, H.ncol, ncol, (unsigned long long)H.nrows, rows.size(), H.hash == hash ? "same" : "differs");
     return false;
   }
-  for (size_t q = 0; q < H.next; q++) { Row().i.swap(rows[q].i); vector<u64>().swap(rows[q].v); }
+  for (size_t q = 0; q < H.next; q++) { Row().i.swap(rows[q].i); vector<rv_t>().swap(rows[q].v); }
   double t0 = now(); FILE* f = fopen(CKPT, "rb"); bool ok = f && fseeko(f, sizeof H, SEEK_SET) == 0;
   if (ok) ck_r(f, pv, ok);
   ok = ok && pv.size() == (size_t)ncol;
@@ -401,7 +412,7 @@ static vector<Row> howell_stream(vector<Row>& rows, int ncol, vector<int>& pv, v
   vector<Tail> tails;
   auto apply = [&](int lo, int up) {  // the tails at the columns [lo, up)
     for (auto& T : tails) {
-      const vector<int>& I = T.r->i; const vector<u64>& V = T.r->v;
+      const vector<int>& I = T.r->i; const vector<rv_t>& V = T.r->v;
       size_t t = lower_bound(I.begin() + T.t, I.end(), lo) - I.begin();
       for (; t < I.size() && I[t] < up; t++) acc[I[t]] = addm(acc[I[t]], mulm(V[t], T.q));
     }
@@ -850,7 +861,7 @@ static bool stage(int k) {  // PR = R_k (generators of weight <= k-1) -> R_{k+1}
         else acc.add(cc, r.v[t]);
       }
       rest[c] = acc.take();
-      Row().i.swap(piv[c].i); vector<u64>().swap(piv[c].v);
+      Row().i.swap(piv[c].i); vector<rv_t>().swap(piv[c].v);
     } }
   // new generators: the surviving tail columns (no pivot, or pivot p^v with v > 0), in the order
   vector<int> newidx(NT, -1); int nnew = 0;
@@ -909,6 +920,9 @@ int main(int argc, char** argv) {
   { u128 d = 1; for (int q = 0; q < E; q++) d *= P; if (d >= ((u128)1 << 62)) { fprintf(stderr, "p^E too large\n"); return 2; } D = (u64)d; }
   PP.assign(E + 1, 1); for (int q = 1; q <= E; q++) PP[q] = PP[q - 1] * P;
   SMALLD = D < ((u64)1 << 32); if (SMALLD) BARM = (u64)((((u128)1) << 64) / D);
+#ifdef GRNQ_V32
+  if (!SMALLD) { fprintf(stderr, "this build (GRNQ_V32) needs p^E < 2^32\n"); return 2; }
+#endif
   t = tok();
   while (t == "let") { string nm = tok(); PEx e = parse(); NAMES.push_back({nm, e}); t = tok(); }
   if (t != "rels") { fprintf(stderr, "expected rels got %s\n", t.c_str()); exit(2); }
