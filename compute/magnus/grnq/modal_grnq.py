@@ -74,6 +74,8 @@ def gen(case: str, then_run: bool = True, n: int = 7, E: int = 20) -> str:
 # would keep the old grnq running with the Volume's files open, and the next call's reload fails)
 @app.function(image=image, cpu=CPU, memory=MEM_MB, volumes={"/w": vol}, timeout=24 * 3600, max_inputs=1)
 def run(case: str, n: int = 7, threads: int = CPU, life_s: int = LIFE) -> str:
+    """grnq n on <case>/bm_<case>.in; life_s: SIGTERM after so long in this container (tests: the respawned one
+    gets the full LIFE, else a run whose tail after its last checkpoint is longer than life_s would loop)"""
     vol.reload()
     d = f"/w/{case}"
     used_f = f"{d}/hours_used"
@@ -109,6 +111,6 @@ def run(case: str, n: int = 7, threads: int = CPU, life_s: int = LIFE) -> str:
     open(f"{d}/exit", "w").write(f"{rc}\n")
     vol.commit()
     if rc in (4, 143) and used < MAX_HOURS:  # stopped at the limit: go on in a new container
-        run.spawn(case, n, threads, life_s)
+        run.spawn(case, n, threads)  # life_s (a test's short life) is for the first container only
         return f"{case}: stopped after {used:.1f} h (exit {rc}), respawned"
     return f"{case}: exit {rc} after {used:.1f} h"
