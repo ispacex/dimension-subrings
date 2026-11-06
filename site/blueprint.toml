@@ -192,8 +192,8 @@ title_ru = "Хигмен, Рис, Пасси"
 statement = '''$D_3(G)=\gamma_3(G)$ for every group $G$.'''
 lean = ["GroupDimension.DThreeEqGammaThree", "GroupDimension.dThreeEqGammaThree"]
 proved = true
-note = "For finite groups through Tahara's Theorem 4.1 (his §§2–4, formalized with Theorem 6.1), then by reduction."
-note_ru = "Для конечных групп — через теорему 4.1 Тахары (его §§2–4, формализованы вместе с теоремой 6.1), затем сведением."
+note = "For finite groups through Tahara's Theorem 4.1 (his §§2–4, formalized with his Theorem 6.1), then by reduction."
+note_ru = "Для конечных групп — через теорему 4.1 Тахары (его §§2–4, формализованы вместе с его теоремой 6.1), затем сведением."
 
 [nodes."ext:passi"]
 title = "Passi"
@@ -202,8 +202,8 @@ statement = '''$D_4(G)^2\subseteq\gamma_4(G)$ for every group $G$.'''
 lean = ["GroupDimension.PassiDFourSquare", "GroupDimension.passiDFourSquare"]
 proved = true
 uses = ["ext:gruenberg"]
-note = "Not Passi's argument: through Tahara's map ψ_3 (his §5, formalized with Theorem 6.1), for finite p-groups of class ≤ 3, then by reduction."
-note_ru = "Не рассуждение Пасси: через отображение ψ_3 Тахары (его §5, формализован вместе с теоремой 6.1) для конечных p-групп ступени ≤ 3, затем сведением."
+note = "Not Passi's argument: through Tahara's map ψ_3 (his §5, formalized with his Theorem 6.1), for finite p-groups of class ≤ 3, then by reduction."
+note_ru = "Не рассуждение Пасси: через отображение ψ_3 Тахары (его §5, формализован вместе с его теоремой 6.1) для конечных p-групп ступени ≤ 3, затем сведением."
 
 [nodes."ext:gruenberg"]
 title = "Gruenberg"

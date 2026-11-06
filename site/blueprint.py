@@ -283,6 +283,8 @@ def check(data, index, tex=None):
                 errors.append(f"node {x}: {name} is not a declaration of groups/")
         if x.startswith("ext:") and not (n.get("statement") and n.get("title") and n.get("title_ru")):
             errors.append(f"node {x}: a result of the literature needs its statement, title and title_ru")
+        if "[[" in NOTE_REF.sub("", n["note"] + n["note_ru"]):
+            errors.append(f"node {x}: a note refers to the paper otherwise than as [[label|#]]")
         if bool(n["note"]) != bool(n["note_ru"]):
             errors.append(f"node {x}: note and note_ru go together")
     names = {y for n in nodes.values() for y in n["lean"]}
