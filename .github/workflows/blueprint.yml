@@ -45,9 +45,14 @@ jobs:
           lake build $(sed -n 's/^public import //p' BlueprintDecls.lean)
           lake env lean BlueprintDecls.lean 2>&1 | tee decls.log
           want=$(grep -c '^#check @' BlueprintDecls.lean)
-          got=$(grep -c '^@\?[A-Za-z_]' decls.log || true)
           if grep -q ': error' decls.log; then echo "::error::a declaration of the blueprint is not in the package"; exit 1; fi
-          echo "blueprint: all $want declarations exist (lean printed $got lines)"
+          echo "blueprint: all $want declarations exist"
+      - name: negative control (a name that is not a declaration must fail)
+        working-directory: groups
+        run: |
+          printf 'module\n\npublic import GroupDimension.Statements\n\n#check @GroupDimension.no_such_declaration_324\n' > BlueprintNeg.lean
+          if lake env lean BlueprintNeg.lean; then echo "::error::the check passes a missing declaration"; exit 1; fi
+          echo "negative control: a missing declaration fails, as it should"
   web:
     runs-on: ubuntu-latest
     steps:

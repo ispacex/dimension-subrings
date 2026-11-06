@@ -1609,7 +1609,7 @@ def copy_blueprint(tex):
     if not (BLUEPRINT / "web" / "index.html").exists() or not (BLUEPRINT / "web" / "dep_graph_document.html").exists():
         sys.exit(f"{BLUEPRINT}/web: no index.html or dep_graph_document.html (has plasTeX run?)")
     shutil.copytree(BLUEPRINT / "web", OUT / "blueprint")
-    (OUT / "blueprint" / "docs" / "find").mkdir(parents=True)
+    (OUT / "blueprint" / "docs" / "find").mkdir(parents=True, exist_ok=True)
     shutil.copy(BLUEPRINT / "find.html", OUT / "blueprint" / "docs" / "find" / "index.html")
 
 
@@ -1782,7 +1782,8 @@ Magnus algebra, with the exactness certificate); <span class="tag p">paper</span
         given = ", ".join(f'<a href="#b-{re.sub(r"[:.]", "-", y)}">{bp_name(y, False)}</a>' for y in st["given"])
         words = {"lean": ("l", t("Lean", "Lean")),
                  "lean-given": ("l", t(f"Lean при условии: {given}", f"Lean, given {given}")),
-                 "lean-statement": ("l", t("Lean: формулировка", "Lean: statement")),
+                 "lean-statement": ("l", t("Lean: часть", "Lean: part") if n["computer"]
+                                    else t("Lean: формулировка", "Lean: statement")),
                  "computer": ("c", t("компьютер", "computer")),
                  "paper": ("p", t("на бумаге", "paper"))}[st["status"]]
         extra = t(" + компьютер", " + computer") if n["computer"] and st["status"].startswith("lean") else ""
