@@ -40,6 +40,7 @@ ENVS = ("theorem", "proposition", "lemma", "question", "remark")
 NAMES = {"theorem": "Theorem", "proposition": "Proposition", "lemma": "Lemma", "question": "Question",
          "remark": "Remark"}
 LEAN_REF = re.compile(r"\{\{lean:([^|}]+)\|([^}]*)\}\}")
+NOTE_REF = re.compile(r"\[\[([A-Za-z0-9:._-]+)\|#\]\]")  # a number of the paper in a note
 
 
 def load():
@@ -300,9 +301,13 @@ def check(data, index, tex=None):
         if row["status"] not in ("l", "p", "c", "cp", "o"):
             errors.append(f"results row {k}: unknown status {row['status']!r}")
     if tex is not None:
-        stmts, _ = statements(tex)
+        stmts, sections = statements(tex)
         sec = lean_section(tex)
         said = mentioned(sec)
+        for x, n in nodes.items():
+            for lab in NOTE_REF.findall(n["note"] + n["note_ru"]):
+                if lab not in stmts and lab not in sections:
+                    errors.append(f"node {x}: the note refers to [[{lab}|#]], which is not a label of the paper")
         for x in stmts:
             if x not in nodes:
                 errors.append(f"the paper's {x} has no node in blueprint.toml")
@@ -458,6 +463,18 @@ def src(data, index, out, tex=None, pin=None, paper_url=SITE + "viewer.html"):
                  "the statement is in Lean; a green background, that its proof is too, from the statements it uses. "
                  "The last section lists results of the literature that the formalization proves as well.\n")
 
+    def note_tex(s):
+        """A note as LaTeX text: [[label|#]] becomes the paper's number (the label, without the paper)."""
+        parts = NOTE_REF.split(s)
+        out = ""
+        for k, part in enumerate(parts):
+            if k % 2 == 0:
+                out += tex_inline(part)
+            else:
+                num = stmts.get(part, sections.get(part, {})).get("number")
+                out += num if num else f"\\texttt{{{tex_inline(part)}}}"
+        return out
+
     def lean_links(n):
         if not n["lean"]:
             return ""
@@ -474,7 +491,7 @@ def src(data, index, out, tex=None, pin=None, paper_url=SITE + "viewer.html"):
             head += "\\lean{" + ", ".join(n["lean"]) + "}\\leanok\n"
         stat = body + lean_links(n)
         if n["note"]:
-            stat += f"\n\n\\textit{{{tex_inline(n['note'])}}}"
+            stat += f"\n\n\\textit{{{note_tex(n['note'])}}}"
         proof = ""
         if True:  # every node has a proof block: it carries \\leanok, \\uses and the pointer to the paper
             proof = "\\begin{proof}\n" + ("\\leanok\n" if n["proved"] else "")
