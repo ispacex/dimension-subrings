@@ -17,7 +17,8 @@
 #   not_in_paper  declarations that the paper's section on the formalization does not name (the
 #            check that it names every declaration of a node skips them);
 #   note     what the Lean version differs in, or what is not formalized (shown in the blueprint
-#            and on blueprint.html), and note_ru, the same in Russian; title, title_ru and statement
+#            and on blueprint.html), and note_ru, the same in Russian; a number of the paper is
+#            written [[label|#]] (the build puts in the number and checks the label); title, title_ru and statement
 #            (LaTeX, English) of an ext: node.
 #
 # [[results]]: the rows of results.html (they were RESULTS in build_site.py): status ("l" Lean, "p"
@@ -32,7 +33,6 @@ section4_not_nodes = ["LieRings.Publication.corollaryD"]
 
 [nodes."q:main"]
 lean = ["GroupDimension.DimensionQuestion5"]
-not_in_paper = ["GroupDimension.DimensionQuestion5"]
 note = "Stated in Lean as a proposition, not proved: it is open."
 note_ru = "В Lean сформулирован как утверждение, не доказан: вопрос открыт."
 
@@ -41,8 +41,8 @@ lean = ["GroupDimension.dimensionQuestion5_iff_finite_two_groups'", "GroupDimens
         "GroupDimension.dimensionQuestion5_iff_finite_two_groups", "GroupDimension.dimensionQuestion5_iff_class_three"]
 proved = true
 uses = ["ext:dthree", "ext:passi", "ext:gruenberg"]
-note = "Without “metabelian” (Remark 2.2). The unprimed versions take Passi's and Gruenberg's theorems as hypotheses; the primed ones discharge them."
-note_ru = "Без «метабелевой» (замечание 2.2). Версии без штриха берут теоремы Пасси и Грюнберга гипотезами, версии со штрихом их снимают."
+note = "Without “metabelian” (Remark [[rem:metab|#]]). The unprimed versions take Passi's and Gruenberg's theorems as hypotheses; the primed ones discharge them."
+note_ru = "Без «метабелевой» (замечание [[rem:metab|#]]). Версии без штриха берут теоремы Пасси и Грюнберга гипотезами, версии со штрихом их снимают."
 
 [nodes."rem:metab"]
 lean = ["GroupDimension.metabelian_of_class_three"]
@@ -68,8 +68,8 @@ note_ru = "M_n — произведение Дженнингса ∏ γ_i^{p^j};
 lean = ["GroupDimension.Cert1024.D_five_cand", "GroupDimension.Cert1024.D_four_cand", "GroupDimension.Cert1024.card_cand",
         "GroupDimension.Cert1024.prop_1024'", "GroupDimension.Cert1024.prop_1024"]
 computer = true
-note = "Certificates for the 3400 candidates (native_decide: they trust the compiler, not only the kernel); prop_1024' derives the proposition from Proposition 5.1 at order 2^9 and the completeness of the list, both explicit hypotheses (the completeness is Lemma 5.2(d) and the ANUPQ search)."
-note_ru = "Сертификаты для 3400 кандидатов (native_decide: доверяют компилятору, а не только ядру); prop_1024' выводит предложение из предложения 5.1 для порядка 2^9 и полноты списка, обе — явные гипотезы (полнота — это лемма 5.2(d) и перебор ANUPQ)."
+note = "Certificates for the 3400 candidates (native_decide: they trust the compiler, not only the kernel); prop_1024' derives the proposition from Proposition [[prop:computer|#]] at order 2^9 and the completeness of the list, both explicit hypotheses (the completeness is Lemma [[lem:mincex|#]](d) and the ANUPQ search)."
+note_ru = "Сертификаты для 3400 кандидатов (native_decide: доверяют компилятору, а не только ядру); prop_1024' выводит предложение из предложения [[prop:computer|#]] для порядка 2^9 и полноты списка, обе — явные гипотезы (полнота — это лемма [[lem:mincex|#]](d) и перебор ANUPQ)."
 
 [nodes."thm:small"]
 computer = true
@@ -87,8 +87,8 @@ lean = ["GroupDimension.not_isCandidate_of_rank", "GroupDimension.false_of_card_
 proved = true
 computer = true
 uses = ["lem:mincex", "ext:dthree"]
-note = "The second statement (|Φ(Q)| ≥ 16 for candidates) and the deduction of the first from it and Proposition 5.3 are in Lean; through Proposition 5.3 the first statement is computer-assisted."
-note_ru = "В Lean — второе утверждение (|Φ(Q)| ≥ 16 у кандидатов) и вывод первого из него и предложения 5.3; через предложение 5.3 первое утверждение опирается на компьютер."
+note = "The second statement (|Φ(Q)| ≥ 16 for candidates) and the deduction of the first from it and Proposition [[prop:1024|#]] are in Lean; through Proposition [[prop:1024|#]] the first statement is computer-assisted."
+note_ru = "В Lean — второе утверждение (|Φ(Q)| ≥ 16 у кандидатов) и вывод первого из него и предложения [[prop:1024|#]]; через предложение [[prop:1024|#]] первое утверждение опирается на компьютер."
 
 [nodes."prop:central"]
 lean = ["GroupDimension.D_n_eq_of_central_product", "GroupDimension.D_n_eq_of_dihedral", "GroupDimension.D_n_eq_of_sqrt"]
@@ -128,8 +128,8 @@ note_ru = "Работает в G/γ_5(G) вместо кольца Ли L(G)."
 lean = ["GroupDimension.LieThreeThree.exists_lie_three_three", "GroupDimension.LieThreeThree.lieSpan_eq_top",
         "GroupDimension.LieThreeThree.lcs_eq", "GroupDimension.LieThreeThree.finrank_lcs", "GroupDimension.LieThreeThree.lie_lcs_one_ne_bot"]
 computer = true
-note = "Only the algebra of Appendix A in (2) is in Lean (over any commutative ring, its type over any field); the counts in (1)–(3) are computations."
-note_ru = "В Lean только алгебра приложения A из (2) (над любым коммутативным кольцом, её тип — над любым полем); подсчёты в (1)–(3) — вычисления."
+note = "Only the algebra of Appendix [[app:lie|#]] in (2) is in Lean (over any commutative ring, its type over any field); the counts in (1)–(3) are computations."
+note_ru = "В Lean только алгебра приложения [[app:lie|#]] из (2) (над любым коммутативным кольцом, её тип — над любым полем); подсчёты в (1)–(3) — вычисления."
 
 [nodes."prop:metab"]
 lean = ["GroupDimension.card_ge_of_not_metabelian", "GroupDimension.metabelian_of_card_le", "GroupDimension.rank_of_card_nine",
@@ -173,8 +173,8 @@ lean = ["GroupDimension.nonterminal_necessary", "GroupDimension.nonterminal_suff
 proved = true
 uses = ["thm:pcover"]
 uses_drop = ["rem:nonterm"]
-note = "“Nonterminal” is stated in the form of Lemma C.1 (a central extension by a subgroup of order p with γ_4 ≠ 1); Lemma C.1, that this means having immediate descendants, is not formalized; the normal form of Step 3 is given, not constructed."
-note_ru = "«Нетерминальна» сформулировано в форме леммы C.1 (центральное расширение подгруппой порядка p с γ_4 ≠ 1); сама лемма C.1 (что это и есть наличие непосредственных потомков) не формализована; нормальная форма шага 3 дана, а не построена."
+note = "“Nonterminal” is stated in the form of Lemma [[lem:ntQ|#]] (a central extension by a subgroup of order p with γ_4 ≠ 1); Lemma [[lem:ntQ|#]], that this means having immediate descendants, is not formalized; the normal form of Step 3 is given, not constructed."
+note_ru = "«Нетерминальна» сформулировано в форме леммы [[lem:ntQ|#]] (центральное расширение подгруппой порядка p с γ_4 ≠ 1); сама лемма [[lem:ntQ|#]] (что это и есть наличие непосредственных потомков) не формализована; нормальная форма шага 3 дана, а не построена."
 
 [nodes."rem:nonterm"]
 computer = true
@@ -192,8 +192,8 @@ title_ru = "Хигмен, Рис, Пасси"
 statement = '''$D_3(G)=\gamma_3(G)$ for every group $G$.'''
 lean = ["GroupDimension.DThreeEqGammaThree", "GroupDimension.dThreeEqGammaThree"]
 proved = true
-note = "For finite groups through Tahara's Theorem 4.1 (his §§2–4, formalized with Theorem 6.1), then by reduction."
-note_ru = "Для конечных групп — через теорему 4.1 Тахары (его §§2–4, формализованы вместе с теоремой 6.1), затем сведением."
+note = "For finite groups through Tahara's Theorem 4.1 (his §§2–4, formalized with his Theorem 6.1), then by reduction."
+note_ru = "Для конечных групп — через теорему 4.1 Тахары (его §§2–4, формализованы вместе с его теоремой 6.1), затем сведением."
 
 [nodes."ext:passi"]
 title = "Passi"
@@ -202,8 +202,8 @@ statement = '''$D_4(G)^2\subseteq\gamma_4(G)$ for every group $G$.'''
 lean = ["GroupDimension.PassiDFourSquare", "GroupDimension.passiDFourSquare"]
 proved = true
 uses = ["ext:gruenberg"]
-note = "Not Passi's argument: through Tahara's map ψ_3 (his §5, formalized with Theorem 6.1), for finite p-groups of class ≤ 3, then by reduction."
-note_ru = "Не рассуждение Пасси: через отображение ψ_3 Тахары (его §5, формализован вместе с теоремой 6.1) для конечных p-групп ступени ≤ 3, затем сведением."
+note = "Not Passi's argument: through Tahara's map ψ_3 (his §5, formalized with his Theorem 6.1), for finite p-groups of class ≤ 3, then by reduction."
+note_ru = "Не рассуждение Пасси: через отображение ψ_3 Тахары (его §5, формализован вместе с его теоремой 6.1) для конечных p-групп ступени ≤ 3, затем сведением."
 
 [nodes."ext:gruenberg"]
 title = "Gruenberg"

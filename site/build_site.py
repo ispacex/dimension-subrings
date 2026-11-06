@@ -1803,7 +1803,8 @@ Magnus algebra, with the exactness certificate); <span class="tag p">paper</span
                               and "cite" not in stmts[x]["title"] else ""))
         lean = ", ".join(lean_link(name, f"<code>{name.removeprefix('GroupDimension.')}</code>") for name in n["lean"])
         uses = ", ".join(bp_name(y) for y in bst[x]["uses"])
-        brows.append(((what, "l"), bp_status(x), (lean + (f'<br><span class="muted">{html.escape(t(n["note_ru"], n["note"]))}</span>' if n["note"] else ""), "l"),
+        brows.append(((what, "l"), bp_status(x), (lean + (f'<br><span class="muted">{expand_refs(html.escape(t(n["note_ru"], n["note"])), lang)}</span>'
+                       if n["note"] else ""), "l"),
                       (uses, "l")))
         bids.append("b-" + re.sub(r"[:.]", "-", x))
     counts = {}
