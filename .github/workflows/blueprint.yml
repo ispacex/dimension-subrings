@@ -51,7 +51,9 @@ jobs:
         working-directory: groups
         run: |
           printf 'module\n\npublic import GroupDimension.Statements\n\n#check @GroupDimension.no_such_declaration_324\n' > BlueprintNeg.lean
-          if lake env lean BlueprintNeg.lean; then echo "::error::the check passes a missing declaration"; exit 1; fi
+          if lake env lean BlueprintNeg.lean > neg.log 2>&1; then echo "::error::the check passes a missing declaration"; exit 1; fi
+          cat neg.log
+          grep -q "unknown constant\|unknown identifier" neg.log || { echo "::error::the negative control failed for another reason"; exit 1; }
           echo "negative control: a missing declaration fails, as it should"
   web:
     runs-on: ubuntu-latest
@@ -67,6 +69,10 @@ jobs:
           python3 site/blueprint.py src out
           cd out/src && plastex -c plastex.cfg web.tex
           test -s ../web/index.html && test -s ../web/dep_graph_document.html
+          # every node is in the graph (plastexdepgraph draws only the theorem types it is told)
+          for x in $(python3 -c "import sys,tomllib; print(' '.join(tomllib.load(open('../../site/blueprint.toml','rb'))['nodes']))"); do
+            grep -q "\"$x\"" ../web/dep_graph_document.html || { echo "::error::$x is not in the dependency graph"; exit 1; }
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: blueprint-web

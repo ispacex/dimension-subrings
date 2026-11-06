@@ -1608,6 +1608,10 @@ def copy_blueprint(tex):
                  "(run site/blueprint.py src --paper ... again and plasTeX on it)")
     if not (BLUEPRINT / "web" / "index.html").exists() or not (BLUEPRINT / "web" / "dep_graph_document.html").exists():
         sys.exit(f"{BLUEPRINT}/web: no index.html or dep_graph_document.html (has plasTeX run?)")
+    graph = (BLUEPRINT / "web" / "dep_graph_document.html").read_text()
+    missing = [x for x in BP["nodes"] if f'"{x}"' not in graph]
+    if missing:
+        sys.exit(f"{BLUEPRINT}/web/dep_graph_document.html: no node for {', '.join(missing)}")
     shutil.copytree(BLUEPRINT / "web", OUT / "blueprint")
     (OUT / "blueprint" / "docs" / "find").mkdir(parents=True, exist_ok=True)
     shutil.copy(BLUEPRINT / "find.html", OUT / "blueprint" / "docs" / "find" / "index.html")

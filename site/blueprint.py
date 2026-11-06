@@ -438,7 +438,7 @@ def src(data, index, out, tex=None, pin=None, paper_url=SITE + "viewer.html"):
     (srcdir / "web.tex").write_text(f"""\\documentclass{{article}}
 \\usepackage{{amssymb,amsthm,mathtools}}
 \\usepackage{{hyperref}}
-\\usepackage[showmore, dep_graph]{{blueprint}}
+\\usepackage[showmore, dep_graph, thms={"+".join(ENVS)}+known]{{blueprint}}
 \\newtheorem{{theorem}}{{Theorem}}[section]
 {common}
 \\home{{{SITE}blueprint.html}}
