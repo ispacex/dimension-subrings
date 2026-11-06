@@ -53,7 +53,7 @@ jobs:
           printf 'module\n\npublic import GroupDimension.Statements\n\n#check @GroupDimension.no_such_declaration_324\n' > BlueprintNeg.lean
           if lake env lean BlueprintNeg.lean > neg.log 2>&1; then echo "::error::the check passes a missing declaration"; exit 1; fi
           cat neg.log
-          grep -q "unknown constant\|unknown identifier" neg.log || { echo "::error::the negative control failed for another reason"; exit 1; }
+          grep -qi "unknown constant\|unknown identifier" neg.log || { echo "::error::the negative control failed for another reason"; exit 1; }
           echo "negative control: a missing declaration fails, as it should"
   web:
     runs-on: ubuntu-latest
