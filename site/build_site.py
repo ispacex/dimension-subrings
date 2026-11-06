@@ -16,8 +16,10 @@ KERNEL_DIR is a checkout of gitlab.com/ispacex/cflint-fast-core: its docs/analys
 docs/analysis.ru.md become kernel.html, converted with pandoc. GitLab draws only the first 50
 formulas of a page and hides every other one behind a "performance issues" box, and that document
 has about three thousand; here KaTeX draws them all. The
-results, the runs and the timeline are written down in this file, in RESULTS, RUNS, FUNNELS and
-TIMELINE below: they are the paper's numbers, and a change in the paper means a change here. The
+runs and the timeline are written down in this file, in RUNS, FUNNELS and TIMELINE below: they are the
+paper's numbers, and a change in the paper means a change here. The results (results.html) and the
+status of every statement of the paper (blueprint.html, and the leanblueprint pages in blueprint/) are
+in site/blueprint.toml, read and checked by site/blueprint.py (MATH-324). The
 coverage maps are computed from the rules in cover2() and cover3(), which say which theorem or run
 settles each (order, rank); nothing is computed anew. The output is a static site (HTML, inline
 SVG, KaTeX from jsDelivr, the two PDFs) published from the public repository ispacex/d5 via GitHub
@@ -57,14 +59,26 @@ import subprocess
 import sys
 import tempfile
 
+import blueprint  # site/blueprint.py
+
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parent
 
 args = sys.argv[1:]
 DIRS = {}
+# --blueprint BLUEPRINT_DIR (optional): the leanblueprint pages built by plasTeX from
+# `site/blueprint.py src --paper PAPER_DIR BLUEPRINT_DIR` (BLUEPRINT_DIR/web/, find.html); they go to
+# blueprint/ of the site. Without it blueprint.html has no link to them.
+BLUEPRINT = None
+if "--blueprint" in args:
+    i = args.index("--blueprint")
+    if i + 1 >= len(args):
+        sys.exit("usage: build_site.py --paper PAPER_DIR --kernel KERNEL_DIR [--blueprint BLUEPRINT_DIR] [OUT_DIR]")
+    BLUEPRINT = pathlib.Path(args[i + 1]).resolve()
+    del args[i:i + 2]
 for flag in ("--paper", "--kernel"):
     if flag not in args or args.index(flag) + 1 >= len(args):
-        sys.exit("usage: build_site.py --paper PAPER_DIR --kernel KERNEL_DIR [OUT_DIR]")
+        sys.exit("usage: build_site.py --paper PAPER_DIR --kernel KERNEL_DIR [--blueprint BLUEPRINT_DIR] [OUT_DIR]")
     i = args.index(flag)
     DIRS[flag] = pathlib.Path(args[i + 1]).resolve()
     del args[i:i + 2]
@@ -139,7 +153,8 @@ def gh(path, text, symbol=None):
     return f'<a href="{href}">{text}</a>'
 
 NAV = [("index.html", "Сводка", "Summary"), ("coverage.html", "Карта покрытия", "Coverage map"),
-       ("results.html", "Результаты", "Results"), ("computations.html", "Вычисления", "Computations"),
+       ("results.html", "Результаты", "Results"), ("blueprint.html", "Blueprint", "Blueprint"),
+       ("computations.html", "Вычисления", "Computations"),
        ("kernel.html", "Быстрое ядро", "Fast kernel"),
        ("timeline.html", "Хронология", "Timeline"), ("open.html", "Открытые вопросы", "Open questions"),
        ("paper.html", "Статья", "Paper"), ("search.html", "Поиск", "Search")]
@@ -655,79 +670,38 @@ def num(n, lang):
 STATUS = {"c": ("компьютер", "computer"), "p": ("на бумаге", "paper"), "cp": ("компьютер + бумага", "computer + paper"),
           "o": ("открыто", "open"), "l": ("Lean", "Lean")}
 
-RESULTS = [  # (status, ru, en, ref): ref is a str or (ru, en); [[label]] is a link to the statement
-    # in the paper, the other links go to what backs a number: a funnel or table of computations.html,
-    # the code and data at PIN, the Lean file, open.html or timeline.html. One link per claim.
-    ("l", "Сведение: $D_5(G)\\subseteq\\gamma_4(G)$ для всех групп $\\iff$ $D_5(Q)=1$ для всех конечных $2$-групп ступени $3$. Для конечных $G$ порядок не растёт: достаточно $2$-групп порядка не больше $2$-части $|G|$. Доказано в Lean без гипотез: теоремы Пасси ($D_4^2\\subseteq\\gamma_4$) и Грюнберга и $D_3=\\gamma_3$ там тоже доказаны.",
-     "Reduction: $D_5(G)\\subseteq\\gamma_4(G)$ for all groups $\\iff$ $D_5(Q)=1$ for all finite $2$-groups of class $3$. For finite $G$ the order does not grow: $2$-groups up to the $2$-part of $|G|$ suffice. Proved in Lean without hypotheses: Passi's theorem ($D_4^2\\subseteq\\gamma_4$), Gruenberg's theorem and $D_3=\\gamma_3$ are proved there too.",
-     ("[[prop:reduction]], [[rem:bounded]]; " + gh("groups/GroupDimension/DThreeCorollaries.lean", "Lean", "dimensionQuestion5_iff_class_three'"),
-      "[[prop:reduction]], [[rem:bounded]]; " + gh("groups/GroupDimension/DThreeCorollaries.lean", "Lean", "dimensionQuestion5_iff_class_three'"))),
-    ("l", "Для колец Ли $D_5(L)\\subseteq\\gamma_4(L)$ (<a href=\"https://arxiv.org/abs/2610.02042\">Ионин, Михайлов, Петров, 2026</a>); "
-          + gh("notes/formalization-audit.ru.md", "формализация проверена") + ", групповой вопрос "
-          + gh("groups/GroupDimension/Statements.lean", "сформулирован в Lean", "DimensionQuestion5") + " рядом.",
-     "For Lie rings $D_5(L)\\subseteq\\gamma_4(L)$ (<a href=\"https://arxiv.org/abs/2610.02042\">Ionin, Mikhailov, Petrov, 2026</a>); "
-          + gh("notes/formalization-audit.md", "the formalization audited") + ", the group question "
-          + gh("groups/GroupDimension/Statements.lean", "stated in Lean", "DimensionQuestion5") + " next to it.",
-     "[[sec:lie]], [[sec:lean]]"),
-    ("cp", "$D_5(G)\\subseteq\\gamma_4(G)$ для всякой конечной $G$ с силовской $2$-подгруппой <a href=\"computations.html#f210\">порядка $\\le2^{10}$</a>, в частности для всех групп порядка $<2048$. Что у всех $3400$ кандидатов порядка $2^{10}$ $D_4=D_5=1$, проверено и в Lean, сертификатами (через <code>native_decide</code>); полнота списка — лемма [[lem:mincex|#]](d) и вычисление ANUPQ.",
-     "$D_5(G)\\subseteq\\gamma_4(G)$ for every finite $G$ with Sylow $2$-subgroup <a href=\"computations.html#f210\">of order $\\le2^{10}$</a>, in particular for all groups of order $<2048$. That all $3400$ candidates of order $2^{10}$ have $D_4=D_5=1$ is also checked in Lean, by certificates (via <code>native_decide</code>); the completeness of the list is Lemma [[lem:mincex|#]](d) and the ANUPQ computation.",
-     "[[thm:small]](1); [[prop:1024]]; " + gh("groups/GroupDimension/Cert1024/Prop1024.lean", "Lean", "D_five_cand")),
-    ("cp", "Порядок $2^{11}$, ступень $3$: $D_5=1$ при всех рангах — <a href=\"computations.html#f211\">ранги $2$–$7$ перебором</a>, $\\ge8$ без перебора (у всякого кандидата $|\\Phi(Q)|\\ge16$: на бумаге, а в Lean в виде «у кандидата не бывает $|P_2(Q)|\\le8$»; переход к кандидатам — через предложение [[prop:1024|#]]; в предположении $D_3=\\gamma_3$ и этого предложения утверждение о $D_5$ доказано и в Lean, с нужным включением из теоремы Дженнингса ($p=2$, $n=5$, ступень $\\le3$)). Контрпример, если он есть, имеет порядок $\\ge2^{12}$. Поиск $2^{10}$ и ранги $2$–$4$, $7$, $8$ повторены на ANUPQ с исправлениями аудита: результаты совпали полностью.",
-     "Order $2^{11}$, class $3$: $D_5=1$ for every rank — <a href=\"computations.html#f211\">ranks $2$–$7$ by search</a>, $\\ge8$ without search (every candidate has $|\\Phi(Q)|\\ge16$ on paper, and in Lean as: no candidate has $|P_2(Q)|\\le8$; the passage to candidates is via Prop. [[prop:1024|#]]; given $D_3=\\gamma_3$ and that proposition, the $D_5$ statement is also proved in Lean, with the inclusion of Jennings' theorem that is needed ($p=2$, $n=5$, class $\\le3$)). A counterexample, if any, has order $\\ge2^{12}$. The $2^{10}$ search and ranks $2$–$4$, $7$, $8$ were repeated with ANUPQ with the audit fixes: the results agree exactly.",
-     ("[[prop:2048]], [[prop:rank8]]; " + gh("groups/GroupDimension/Candidate.lean", "Lean", "false_of_card_expCentral_two_le")
-      + "; " + gh("groups/GroupDimension/MinimalCounterexample.lean", "Lean ($D_5$)", "D_five_eq_bot_of_rank"),
-      "[[prop:2048]], [[prop:rank8]]; " + gh("groups/GroupDimension/Candidate.lean", "Lean", "false_of_card_expCentral_two_le")
-      + "; " + gh("groups/GroupDimension/MinimalCounterexample.lean", "Lean ($D_5$)", "D_five_eq_bot_of_rank"))),
-    ("l", "Центральные произведения: $D_n(H\\circ E)=D_n(H)$ при $E\\in\\{D_8,Q_8\\}$ и $t\\in\\gamma_2(H)$, а для $E=M_{2^{k+2}}$ — при условии на $g^{-2}s$ (например, $s=g^2$). "
-          + gh("compute/central", "Все $386$ кандидатов") + " порядков $2^6$–$2^9$ ему удовлетворяют, так что разложимость $H\\circ E$ с $E\\in\\{D_8,Q_8,M_{16}\\}$ контрпримера не даёт. "
-          "Склейка по собственной подгруппе $Z(E)$ закрыта при $\\sigma=g^{2^{j+1}}$ (центральный корень любой степени; <a href=\"open.html#q-central\">остальное открыто</a>); у каждого из $20$ раскладывающихся кандидатов есть разложение, покрытое предложением [[prop:central|#]]. " + gh("groups/GroupDimension/CentralProduct.lean", "Предложение [[prop:central|##]]", "D_n_eq_of_central_product") + " и " + gh("groups/GroupDimension/CentralRoot.lean", "лемма [[lem:root|##]]", "D_n_eq_of_index") + " доказаны в Lean; проверка кандидатов — вычислением.",
-     "Central products: $D_n(H\\circ E)=D_n(H)$ for $E\\in\\{D_8,Q_8\\}$ and $t\\in\\gamma_2(H)$, and for $E=M_{2^{k+2}}$ under a condition on $g^{-2}s$ (e.g. $s=g^2$). "
-          + gh("compute/central", "All $386$ candidates") + " of orders $2^6$–$2^9$ satisfy it, so splitting off $E\\in\\{D_8,Q_8,M_{16}\\}$ gives no counterexample. "
-          "Gluing along a proper subgroup of $Z(E)$ is closed when $\\sigma=g^{2^{j+1}}$ (a central root of any degree; <a href=\"open.html#q-central\">the rest is open</a>); each of the $20$ split candidates has a splitting covered by Prop. [[prop:central|#]]. " + gh("groups/GroupDimension/CentralProduct.lean", "Prop. [[prop:central|##]]", "D_n_eq_of_central_product") + " and " + gh("groups/GroupDimension/CentralRoot.lean", "Lemma [[lem:root|##]]", "D_n_eq_of_index") + " are proved in Lean; the check of the candidates is by computer.",
-     "[[prop:central]], [[lem:root]]"),
-    ("c", "$D_n(G)=\\gamma_n(G)$ при всех $n$ для всякой конечной группы <a href=\"computations.html#runs\">порядка $<512$</a>.",
-     "$D_n(G)=\\gamma_n(G)$ for all $n$ and every finite group <a href=\"computations.html#runs\">of order $<512$</a>.", "[[thm:small]](2)"),
-    ("cp", "Нет $3$-кручения в $D_5(G)/\\gamma_5(G)$, если силовская $3$-подгруппа $G$ имеет порядок $\\le3^9$; $D_5=\\gamma_5$ для <a href=\"computations.html#f39\">всех $3$-групп порядка $\\le3^9$</a>.",
-     "No $3$-torsion in $D_5(G)/\\gamma_5(G)$ when the Sylow $3$-subgroup of $G$ has order $\\le3^9$; $D_5=\\gamma_5$ for <a href=\"computations.html#f39\">all $3$-groups of order $\\le3^9$</a>.",
-     "[[thm:3e9]]"),
-    ("l", "$D_5(G)=\\gamma_5(G)$, если $G/\\gamma_2(G)$ конечна и имеет экспоненту $3$ — при любом ранге и порядке. Доказано в Lean вместе с теоремой 6.1 Тахары, на которую опирается доказательство.",
-     "$D_5(G)=\\gamma_5(G)$ whenever $G/\\gamma_2(G)$ is finite of exponent $3$, of any rank and order. Proved in Lean, together with Tahara's Theorem 6.1 on which the proof relies.",
-     ("[[thm:exp3]]; " + gh("groups/GroupDimension/TaharaTheorem.lean", "Lean", "D_five_eq_gamma_five_of_exp_three"),
-      "[[thm:exp3]]; " + gh("groups/GroupDimension/TaharaTheorem.lean", "Lean", "D_five_eq_gamma_five_of_exp_three"))),
-    ("l", "Более общо: $D_5(G)=\\gamma_5(G)$, если $G/\\gamma_2(G)\\cong C_{3^a}\\times C_3^{s-1}$, т.е. у неё не больше одного инварианта больше $3$ (в том числе $C_9\\times C_3^{s-1}$). <a href=\"timeline.html#d2026-10-18\">Проверено независимой рецензией</a> и доказано в Lean вместе с теоремой 6.1 Тахары.",
-     "More generally: $D_5(G)=\\gamma_5(G)$ whenever $G/\\gamma_2(G)\\cong C_{3^a}\\times C_3^{s-1}$, i.e. it has at most one invariant larger than $3$ (including $C_9\\times C_3^{s-1}$). <a href=\"timeline.html#d2026-10-18\">Checked by an independent review</a> and proved in Lean, together with Tahara's Theorem 6.1.",
-     ("[[thm:exp3plus]]; " + gh("groups/GroupDimension/TaharaTheorem.lean", "Lean", "D_five_eq_gamma_five_of_cubes_cyclic"),
-      "[[thm:exp3plus]]; " + gh("groups/GroupDimension/TaharaTheorem.lean", "Lean", "D_five_eq_gamma_five_of_cubes_cyclic"))),
-    ("l", "$p$ нечётно, $|\\gamma_3/\\gamma_4|=p$, у $\\gamma_2/\\gamma_3$ не больше двух порождающих $\\Rightarrow$ $[\\gamma_2,\\gamma_2]\\subseteq\\gamma_5$. Отсюда: неметабелева $p$-группа ступени $4$ ранга $d$ имеет порядок $\\ge p^{d+5}$.",
-     "$p$ odd, $|\\gamma_3/\\gamma_4|=p$, $\\gamma_2/\\gamma_3$ with at most two generators $\\Rightarrow$ $[\\gamma_2,\\gamma_2]\\subseteq\\gamma_5$. Hence a non-metabelian $p$-group of class $4$ and rank $d$ has order $\\ge p^{d+5}$.",
-     ("[[lem:lie]], [[prop:metab]]; " + gh("groups/GroupDimension/ClassFourOrder.lean", "Lean", "card_ge_of_not_metabelian"),
-      "[[lem:lie]], [[prop:metab]]; " + gh("groups/GroupDimension/ClassFourOrder.lean", "Lean", "card_ge_of_not_metabelian"))),
-    ("l", "$p$ нечётно, $P$ ступени $3$ с $|\\gamma_2/\\gamma_3|=p^2$, $|\\gamma_3|=p$ $\\Rightarrow$ у $p$-накрывающей группы $P^{*\\prime\\prime}=1$: все шаг-$1$ потомки метабелевы. В Lean — для любого центрального расширения $P$ подгруппой экспоненты $p$ (в Mathlib нет $p$-накрывающей группы).",
-     "$p$ odd, $P$ of class $3$ with $|\\gamma_2/\\gamma_3|=p^2$, $|\\gamma_3|=p$ $\\Rightarrow$ the $p$-covering group has $P^{*\\prime\\prime}=1$: all step-$1$ descendants are metabelian. In Lean for every central extension of $P$ by a subgroup of exponent $p$ (Mathlib has no $p$-covering group).",
-     ("[[thm:pcover]]; " + gh("groups/GroupDimension/PCover.lean", "Lean", "metabelian_of_central_elementary"),
-      "[[thm:pcover]]; " + gh("groups/GroupDimension/PCover.lean", "Lean", "metabelian_of_central_elementary"))),
-    ("cp", "$p$ нечётно, $P$ типа $(d,2,1)$ с элементарной $P/\\gamma_2$: $P$ нетерминальна (у неё есть непосредственные потомки) ровно тогда, когда выполнены условия N1–N3 и система (E)+(J) разрешима с $c\\ne0$. Проверено вычислением: при $3^8$ критерий выделяет ровно $190$ нетерминальных из $7\\,824$, при $3^7$, $5^7$, $7^7$ — ровно $102$, $110$, $118$.",
-     "$p$ odd, $P$ of type $(d,2,1)$ with $P/\\gamma_2$ elementary: $P$ is nonterminal (has immediate descendants) exactly when N1–N3 hold and the system (E)+(J) is solvable with $c\\ne0$. Checked by computer: at $3^8$ the criterion picks out exactly the $190$ nonterminal groups among $7\\,824$; at $3^7$, $5^7$, $7^7$ exactly $102$, $110$, $118$.",
-     "[[thm:nonterm]]"),
-    ("c", "Факторы ступени $3$ групп рипсовского типа порядков $2^{40}$–$2^{107}$: везде $D_5=1$, в трёх из них $D_4\\ne1$ (" + gh("compute/magnus/README.md", "с сертификатом точности") + ").",
-     "Class-$3$ quotients of Rips-type groups of orders $2^{40}$–$2^{107}$: $D_5=1$ in all, $D_4\\ne1$ in three of them (" + gh("compute/magnus/README.md", "with the exactness certificate") + ").",
-     ("[[sec:open]], вопрос [[oq:main|#]]", "[[sec:open]], question [[oq:main|#]]")),
-    ("c", "Группа Рипса (порядок $2^{38}$, по копредставлению Тахары 1978): $D_4=\\{1,y_1^{128}\\}$, у всех собственных подгрупп $D_4=1$; у $26\\,147$ случайных факторов (с повторениями) тоже $D_4=1$, а эвристический подъём по показателям копредставления ничего меньше $2^{38}$ не дал. Проверенные секции калибровки ниже $2^{38}$ не дают (секции $H/N$ с $H\\lt G$, $N\\ne1$ не проверялись; " + gh("compute/magnus/README.md", "код") + ").",
-     "Rips's group (order $2^{38}$, from Tahara's 1978 presentation): $D_4=\\{1,y_1^{128}\\}$, and every proper subgroup has $D_4=1$; $26\\,147$ random quotients (with repetitions) also have $D_4=1$, and a heuristic hill climb over the exponents of Tahara's presentation found nothing below $2^{38}$. The sections checked give no calibration below $2^{38}$ (proper sections $H/N$ with $H\\lt G$, $N\\ne1$ not checked; " + gh("compute/magnus/README.md", "code") + ").",
-     ("[[sec:computations]]", "[[sec:computations]]")),
-    ("c", "$3$-кручение: $3$-группа Бартольди–Михайлова с $D_7\\ne\\gamma_7$ имеет порядок $3^{494}$, но три её фактора по центральным подгруппам порядка $3$, не содержащим свидетеля $\\omega$, имеют порядок $3^{493}$ и $D_7\\ne\\gamma_7$, так что $3^{494}$ — не наименьший порядок $3$-группы с $D_7\\ne\\gamma_7$; всякий собственный фактор этих трёх групп убивает $\\omega$. Что $\\omega\\in D_7$, следует из предложения 9.2 Бартольди–Михайлова через отображение их группы (9.2) в $G$ (не сюръективное). Подгруппы проверены лишь против довода BM и лишь при $H\\ge\\Phi(Q)\\langle x_1,\\dots,x_4\\rangle$; прочие подгруппы, другие рассуждения и новые свидетели в факторах не проверялись (" + gh("compute/magnus/bm494/README.md", "код") + ").",
-     "$3$-torsion: the Bartholdi–Mikhailov $3$-group with $D_7\\ne\\gamma_7$ has order $3^{494}$, but its three quotients by central subgroups of order $3$ not containing the witness $\\omega$ have order $3^{493}$ and $D_7\\ne\\gamma_7$, so $3^{494}$ is not the least order of a $3$-group with $D_7\\ne\\gamma_7$; every proper quotient of these three groups kills $\\omega$. That $\\omega\\in D_7$ follows from Bartholdi–Mikhailov's Prop. 9.2 via the map (not onto) from their group (9.2) to $G$. Subgroups of either group are checked only against BM's argument and only for $H\\ge\\Phi(Q)\\langle x_1,\\dots,x_4\\rangle$; other subgroups, other arguments, and new witnesses in quotients, not checked (" + gh("compute/magnus/bm494/README.md", "code") + ").",
-     ("[[sec:computations]]", "[[sec:computations]]")),
-    ("c", "$3$-кручение: $3$-группа с $D_n\\ne\\gamma_n$ (при каком-либо $n$) имеет порядок $\\ge3^{10}$. Пример наименьшего порядка имеет циклический центр, его цоколь лежит в $D_{c+1}\\cap Q''\\cap M_{c+1}$ ($c$ — ступень); ступень $4$ закрыта до $3^9$ теоремой о $D_5$, а у всех $1035$ групп порядков $3^6$–$3^8$ ступени $\\ge5$, удовлетворяющих этим условиям, и у всех $27\\,547$ таких групп порядка $3^9$ (потомки шага $1$ групп порядка $3^8$) $D_{c+1}=1$ (" + gh("compute/magnus/README.md", "код") + ").",
-     "$3$-torsion: a $3$-group with $D_n\\ne\\gamma_n$ (for some $n$) has order $\\ge3^{10}$. A least-order example has cyclic centre and its socle lies in $D_{c+1}\\cap Q''\\cap M_{c+1}$ ($c$ the class); class $4$ is settled up to $3^9$ by the $D_5$ theorem, and all $1035$ groups of order $3^6$–$3^8$ and class $\\ge5$ that meet these conditions, and all $27\\,547$ such groups of order $3^9$ (step-$1$ descendants of groups of order $3^8$), have $D_{c+1}=1$ (" + gh("compute/magnus/README.md", "code") + ").",
-     ("[[sec:open]], вопрос [[oq:torsion|#]]", "[[sec:open]], question [[oq:torsion|#]]")),
-    ("c", "Групповой аналог теоремы C при $c=4$: у группы плато $D_6\\ne1$, но $D_7=1$, так что $2c-2$ достигается и аналог, если верен, точен (<a href=\"open.html#q-theoremc\">открытый вопрос</a>).",
-     "The group analogue of Theorem C at $c=4$: the plateau group has $D_6\\ne1$ but $D_7=1$, so $2c-2$ is attained and the analogue, if true, is sharp (<a href=\"open.html#q-theoremc\">an open question</a>).",
-     ("[[sec:open]], вопрос [[oq:theoremc|#]]", "[[sec:open]], question [[oq:theoremc|#]]")),
-    ("c", "Нижняя оценка для $D_4\\ne\\gamma_4$: такая $2$-группа имеет порядок $\\ge2^{11}$, так что $D_4(G)=\\gamma_4(G)$ для всякой конечной $G$ с силовской $2$-подгруппой порядка $\\le2^{10}$. Наименьший известный пример — группа Рипса порядка $2^{38}$. Порядок $2^{10}$: условие $n\\in D_4$ на $p$-накрывающей группе линейно по гиперплоскости $U$ (лемма Накаямы), и ни у одного из $10\\,208\\,630$ родителей порядка $2^9$ нет $U$ с $n\\in D_4$ (" + gh("compute/pq1024/README.md", "код") + ").",
-     "A lower bound for $D_4\\ne\\gamma_4$: such a $2$-group has order $\\ge2^{11}$, so $D_4(G)=\\gamma_4(G)$ for every finite $G$ with Sylow $2$-subgroup of order $\\le2^{10}$. The smallest known example is Rips's group, of order $2^{38}$. Order $2^{10}$: the condition $n\\in D_4$ on the $p$-covering group is linear in the hyperplane $U$ (Nakayama's lemma), and none of the $10\\,208\\,630$ parents of order $2^9$ has a $U$ with $n\\in D_4$ (" + gh("compute/pq1024/README.md", "code") + ").",
-     ("[[sec:computations]]", "[[sec:computations]]")),
-]
+# The rows of results.html, and the status of every statement of the paper, are in site/blueprint.toml
+# (MATH-324): the blueprint pages and blueprint.html are built from the same data, and site/blueprint.py
+# checks them against the paper and the Lean package. In a row, [[label]] is a link to the statement
+# in the paper, {{lean:Name|text}} a link to the Lean declaration (at the pinned commit of groups/), and
+# {{gh:path|text}}, {{gh:path|text|symbol}} a link to this repository at PIN (gh()); the other links go
+# to what backs a number: a funnel or table of computations.html, open.html or timeline.html. One link
+# per claim.
+BP = blueprint.load()
+if subprocess.run(["git", "-C", str(ROOT / "groups"), "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip() \
+        != (git("ls-tree", PIN, "groups").stdout.split() or ["", "", ""])[2]:
+    sys.exit("groups/ is not checked out at the commit pinned at PIN: git submodule update --init groups")
+LEAN = blueprint.lean_index(ROOT / "groups")
+GH_REF = re.compile(r"\{\{gh:([^|}]+)\|([^|}]*)(?:\|([^|}]*))?\}\}")
+
+
+def lean_link(name, text):
+    """A link to the Lean declaration name of a blueprint node, at the pinned commit of groups/."""
+    if name not in LEAN:
+        sys.exit(f"lean_link(): {name} is not a declaration of groups/")
+    return gh("groups/" + LEAN[name][0], text, name.split(".")[-1])
+
+
+def markup(s):
+    """{{gh:...}} and {{lean:...}} of blueprint.toml -> the links."""
+    s = GH_REF.sub(lambda m: gh(m.group(1), m.group(2), m.group(3)), s)
+    return blueprint.LEAN_REF.sub(lambda m: lean_link(m.group(1), m.group(2)), s)
+
+
+ROWS = [  # (status, ru, en, ref) of results.html: ref is a str or (ru, en)
+    (r["status"], markup(r["ru"]), markup(r["en"]),
+     markup(r["where"]) if "where" in r else (markup(r["where_ru"]), markup(r["where_en"])))
+    for r in BP["results"]]
 
 OPEN = [  # (id, ru, en, task): the id is the anchor on open.html; task is the D5 issue in the tracker
     ("q-main", "Сам вопрос 20.84: $D_5(Q)=1$ для всех конечных $2$-групп ступени $3$? Контрпример обязан иметь $D_4(Q)\\ne1$ и порядок $\\ge2^{12}$; при порядке $2^{12}$ он — кандидат ранга $\\le8$. (Для одного лишь $D_4\\ne\\gamma_4$ оценка $2^{11}$; наименьший известный пример имеет порядок $2^{38}$.)",
@@ -1050,7 +1024,7 @@ def svg_text(s):
 
 
 def ref(s, lang):
-    """A reference of RESULTS or FUNNELS: one string for both languages, or (ru, en)."""
+    """A reference of ROWS or FUNNELS: one string for both languages, or (ru, en)."""
     return s if isinstance(s, str) else s[0 if lang == "ru" else 1]
 
 
@@ -1622,6 +1596,27 @@ def fmt_date(iso):
 
 # ---------------------------------------------------------------------------------------------
 
+def copy_blueprint(tex):
+    """The leanblueprint pages of BLUEPRINT into blueprint/, after checking that they were made from this
+    paper, these data and this groups/: their content.tex is the one blueprint.py writes now."""
+    with tempfile.TemporaryDirectory() as tmp:
+        blueprint.src(BP, LEAN, pathlib.Path(tmp), tex, git("ls-tree", PIN, "groups").stdout.split()[2])
+        want = (pathlib.Path(tmp) / "src" / "content.tex").read_text()
+    have = BLUEPRINT / "src" / "content.tex"
+    if not have.exists() or have.read_text() != want:
+        sys.exit(f"{BLUEPRINT}: not built from this paper, site/blueprint.toml and groups/ "
+                 "(run site/blueprint.py src --paper ... again and plasTeX on it)")
+    if not (BLUEPRINT / "web" / "index.html").exists() or not (BLUEPRINT / "web" / "dep_graph_document.html").exists():
+        sys.exit(f"{BLUEPRINT}/web: no index.html or dep_graph_document.html (has plasTeX run?)")
+    graph = (BLUEPRINT / "web" / "dep_graph_document.html").read_text()
+    missing = [x for x in BP["nodes"] if f'"{x}"' not in graph]
+    if missing:
+        sys.exit(f"{BLUEPRINT}/web/dep_graph_document.html: no node for {', '.join(missing)}")
+    shutil.copytree(BLUEPRINT / "web", OUT / "blueprint")
+    (OUT / "blueprint" / "docs" / "find").mkdir(parents=True, exist_ok=True)
+    shutil.copy(BLUEPRINT / "find.html", OUT / "blueprint" / "docs" / "find" / "index.html")
+
+
 def main():
     if OUT.exists():
         shutil.rmtree(OUT)
@@ -1631,6 +1626,15 @@ def main():
         pdfs[name] = n
         if aux:
             PAPERS[next(l for l in LANGS if PDF[l] == name)] = aux
+    tex = (PAPER / f"{PDF['en']}.tex").read_text()
+    blueprint.check(BP, LEAN, tex)
+    stmts, sections = blueprint.statements(tex)
+    for label, st in list(stmts.items()) + list(sections.items()):
+        aux = PAPERS["en"]["labels"].get(label, ("?",))[0]
+        if st["number"] != aux:
+            sys.exit(f"blueprint.py numbers {label} {st['number']}, the .aux of {PDF['en']}.tex {aux}")
+    if BLUEPRINT:
+        copy_blueprint(tex)
     pdate = paper_date()
     date = fmt_date(max(pdate, TIMELINE[-1][0]))
     paper = {lang: read_abstract(PAPER / f"{PDF[lang]}.tex") for lang in LANGS}
@@ -1748,9 +1752,9 @@ Open cells are hatched: there the case of $Q/\\gamma_2$ with at most one invaria
       + grid(range(4, 13), range(2, 9), cover3, 3, lang) + legend(lang, three=True))
 
     # ---------- results ----------
-    rows = [(tag(k, lang), (r[li], "l"), (ref(where, lang), "l")) for k, *r, where in RESULTS]
+    rows = [(tag(k, lang), (r[li], "l"), (ref(where, lang), "l")) for k, *r, where in ROWS]
     rids = []  # row anchors, by the first label of the row: results.html#r-thm-small, #r-thm-small-2
-    for *_, where in RESULTS:
+    for *_, where in ROWS:
         rid = "r-" + re.sub(r"[:.]", "-", PAPER_REF.search(ref(where, "en")).group(1))
         rids.append(rid if rid not in rids else f"{rid}-{sum(1 for x in rids if x.startswith(rid))+1}")
     P("results.html", t("Результаты", "Results"), t(f"""
@@ -1765,6 +1769,71 @@ a number opens the paper at the statement, and the links in the text lead to the
 <span class="tag c">computer</span>: checked by an exact computation (lattices modulo $p^E$ in Howell form, or the truncated
 Magnus algebra, with the exactness certificate); <span class="tag p">paper</span>: proved; <span class="tag l">Lean</span>: formally verified.</p>""")
       + table([t("Статус", "Status"), (t("Утверждение", "Statement"), "l"), (t("Где", "Where"), "l")], rows, rids))
+
+    # ---------- blueprint ----------
+    stmts, _ = blueprint.statements((PAPER / f"{PDF['en']}.tex").read_text())
+    bst = blueprint.statuses(BP, stmts)
+
+    def bp_name(x, link=True):
+        n = BP["nodes"][x]
+        if x.startswith("ext:"):
+            name = t(n["title_ru"], n["title"])
+            return f'<a href="#b-{re.sub(r"[:.]", "-", x)}">{name}</a>' if link else name
+        return paper_link(x, lang) if link else paper_text(x, lang)
+
+    def bp_status(x):
+        st, n = bst[x], BP["nodes"][x]
+        given = ", ".join(f'<a href="#b-{re.sub(r"[:.]", "-", y)}">{bp_name(y, False)}</a>' for y in st["given"])
+        words = {"lean": ("l", t("Lean", "Lean")),
+                 "lean-given": ("l", t(f"Lean при условии: {given}", f"Lean, given {given}")),
+                 "lean-statement": ("l", t("Lean: часть", "Lean: part") if n["computer"]
+                                    else t("Lean: формулировка", "Lean: statement")),
+                 "computer": ("c", t("компьютер", "computer")),
+                 "paper": ("p", t("на бумаге", "paper"))}[st["status"]]
+        extra = t(" + компьютер", " + computer") if n["computer"] and st["status"].startswith("lean") else ""
+        return f'<span class="tag {words[0]}">{words[1]}{extra}</span>'
+
+    order = [x for x in stmts if x in BP["nodes"]] + [x for x in BP["nodes"] if x.startswith("ext:")]
+    brows, bids = [], []
+    for x in order:
+        n = BP["nodes"][x]
+        what = bp_name(x) + (f"<br>{n['statement']}" if x.startswith("ext:") else
+                             (f" <span class=\"muted\">({tex_inline(PAPERS[lang]['titles'].get(x, ''))})</span>"
+                              if PAPERS[lang]["titles"].get(x) and "Computer" not in stmts[x]["title"]
+                              and "cite" not in stmts[x]["title"] else ""))
+        lean = ", ".join(lean_link(name, f"<code>{name.removeprefix('GroupDimension.')}</code>") for name in n["lean"])
+        uses = ", ".join(bp_name(y) for y in bst[x]["uses"])
+        brows.append(((what, "l"), bp_status(x), (lean + (f'<br><span class="muted">{html.escape(t(n["note_ru"], n["note"]))}</span>' if n["note"] else ""), "l"),
+                      (uses, "l")))
+        bids.append("b-" + re.sub(r"[:.]", "-", x))
+    counts = {}
+    for x in order:
+        counts[bst[x]["status"]] = counts.get(bst[x]["status"], 0) + 1
+    paper_nodes = sum(1 for x in order if not x.startswith("ext:"))
+    full = sum(1 for x in order if not x.startswith("ext:") and bst[x]["status"] == "lean")
+    given = sum(1 for x in order if not x.startswith("ext:") and bst[x]["status"] == "lean-given")
+    graph = (t('<p><a href="blueprint/dep_graph_document.html"><b>Граф зависимостей</b></a> и <a href="blueprint/index.html">blueprint</a> '
+               '(leanblueprint, по-английски: формулировки из статьи, декларации Lean, что использует доказательство).</p>',
+               '<p><a href="blueprint/dep_graph_document.html"><b>Dependency graph</b></a> and the <a href="blueprint/index.html">blueprint</a> '
+               '(leanblueprint: the statements of the paper, their Lean declarations, what each proof uses).</p>')
+             if BLUEPRINT else "")
+    P("blueprint.html", t("Blueprint: статья и Lean", "Blueprint: the paper and Lean"), t(f"""
+<p>Каждое утверждение черновика с меткой&nbsp;— с его статусом, декларациями Lean пакета
+<a href="https://github.com/ispacex/group-dimension">group-dimension</a> (коммит, на который указывает <code>groups/</code>),
+и утверждениями, на которые опирается доказательство. Из {paper_nodes} утверждений статьи {full} доказаны в Lean
+целиком, вместе со всем, на что опираются, ещё {given}&nbsp;— в Lean при утверждениях, которых там нет
+(они названы). В конце&nbsp;— результаты литературы, которые формализация тоже доказывает.
+Таблица строится из того же файла <code>site/blueprint.toml</code>, что и <a href="results.html">результаты</a>;
+сборка проверяет его по статье, а CI&nbsp;— что каждая декларация есть в Lean.</p>""", f"""
+<p>Every labelled statement of the draft with its status, the Lean declarations of
+<a href="https://github.com/ispacex/group-dimension">group-dimension</a> (at the commit <code>groups/</code> points to) that state or
+prove it, and the statements its proof uses. Of the {paper_nodes} statements of the paper, {full} are proved in Lean together
+with everything they rest on, and {given} more in Lean from statements that are not (named in the status). At the end,
+results of the literature that the formalization proves too. The table is built from the same file,
+<code>site/blueprint.toml</code>, as the <a href="results.html">results</a>; the build checks it against the paper, and CI that
+every declaration exists in Lean.</p>""") + graph
+      + table([(t("Утверждение", "Statement"), "l"), t("Статус", "Status"), (t("Lean", "Lean"), "l"), (t("Использует", "Uses"), "l")],
+              brows, bids))
 
     # ---------- computations ----------
     body = t("""

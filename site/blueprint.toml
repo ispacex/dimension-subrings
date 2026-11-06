@@ -1,0 +1,361 @@
+# The blueprint of the paper (MATH-324) and the rows of results.html: the one place where the status
+# of a statement is written down. site/blueprint.py reads it; build_site.py builds results.html and
+# blueprint.html from it, and the leanblueprint web pages (blueprint/) come from it and the paper.
+#
+# [nodes."<label>"]: one per labelled statement of paper/d5.tex (every one must be here), and a few
+# results of the literature that the formalization proves too ("ext:..." labels, with their own
+# statement). Fields:
+#   lean     the Lean declarations (full names) that state or prove it; CI checks that each exists
+#            (.github/workflows/blueprint.yml) and the build that each is named in the paper's
+#            section on the formalization;
+#   proved   true if the proof is formalized, from the statements it uses (leanblueprint's \leanok on
+#            the proof); a statement with `lean` but not `proved` has only its statement (or a part)
+#            in Lean;
+#   computer true if the proof rests on a computation (the paper's "Computer-assisted");
+#   uses     statements the proof uses besides those the paper's proof refers to (\ref in the proof
+#            are taken from the paper); uses_drop: references of the proof that are not dependencies;
+#   not_in_paper  declarations that the paper's section on the formalization does not name (the
+#            check that it names every declaration of a node skips them);
+#   note     what the Lean version differs in, or what is not formalized (shown in the blueprint
+#            and on blueprint.html), and note_ru, the same in Russian; title, title_ru and statement
+#            (LaTeX, English) of an ext: node.
+#
+# [[results]]: the rows of results.html (they were RESULTS in build_site.py): status ("l" Lean, "p"
+# paper, "c" computer, "cp" computer + paper, "o" open), the text in both languages, and where it is.
+# [[label]] links to the paper; {{lean:Name|text}} to the declaration (the name must be in a node);
+# {{gh:path|text}} and {{gh:path|text|symbol}} to this repository at the pinned commit. A row marked
+# "l" may cite only statements whose proof is in Lean.
+
+# Declarations that the paper's section on the formalization names but that belong to no node: the
+# authors' Lie-ring theorem, imported only by the version lean-v4.29.
+section4_not_nodes = ["LieRings.Publication.corollaryD"]
+
+[nodes."q:main"]
+lean = ["GroupDimension.DimensionQuestion5"]
+not_in_paper = ["GroupDimension.DimensionQuestion5"]
+note = "Stated in Lean as a proposition, not proved: it is open."
+note_ru = "В Lean сформулирован как утверждение, не доказан: вопрос открыт."
+
+[nodes."prop:reduction"]
+lean = ["GroupDimension.dimensionQuestion5_iff_finite_two_groups'", "GroupDimension.dimensionQuestion5_iff_class_three'",
+        "GroupDimension.dimensionQuestion5_iff_finite_two_groups", "GroupDimension.dimensionQuestion5_iff_class_three"]
+proved = true
+uses = ["ext:dthree", "ext:passi", "ext:gruenberg"]
+note = "Without “metabelian” (Remark 2.2). The unprimed versions take Passi's and Gruenberg's theorems as hypotheses; the primed ones discharge them."
+note_ru = "Без «метабелевой» (замечание 2.2). Версии без штриха берут теоремы Пасси и Грюнберга гипотезами, версии со штрихом их снимают."
+
+[nodes."rem:metab"]
+lean = ["GroupDimension.metabelian_of_class_three"]
+proved = true
+
+[nodes."rem:bounded"]
+lean = ["GroupDimension.D_five_le_of_bounded'", "GroupDimension.D_five_le_of_bounded_class_three'",
+        "GroupDimension.D_five_le_of_bounded", "GroupDimension.D_five_le_of_bounded_class_three"]
+proved = true
+uses = ["prop:reduction", "ext:passi", "ext:dthree"]
+
+[nodes."prop:computer"]
+computer = true
+
+[nodes."lem:mincex"]
+lean = ["GroupDimension.isCandidate_of_minimal'", "GroupDimension.isCandidate_of_minimal", "GroupDimension.isDescendant_of_minimal"]
+proved = true
+uses = ["ext:dthree", "ext:jennings"]
+note = "M_n is Jennings' product ∏ γ_i^{p^j}; the inclusion of Q ∩ (1+Δ_{F_2}^5) into it is proved (Jennings' inclusion, below), so (b) holds in the product sense."
+note_ru = "M_n — произведение Дженнингса ∏ γ_i^{p^j}; включение в него Q ∩ (1+Δ_{F_2}^5) доказано (включение Дженнингса ниже), так что (b) — в смысле произведения."
+
+[nodes."prop:1024"]
+lean = ["GroupDimension.Cert1024.D_five_cand", "GroupDimension.Cert1024.D_four_cand", "GroupDimension.Cert1024.card_cand",
+        "GroupDimension.Cert1024.prop_1024'", "GroupDimension.Cert1024.prop_1024"]
+computer = true
+note = "Certificates for the 3400 candidates (native_decide: they trust the compiler, not only the kernel); prop_1024' derives the proposition from Proposition 5.1 at order 2^9 and the completeness of the list, both explicit hypotheses (the completeness is Lemma 5.2(d) and the ANUPQ search)."
+note_ru = "Сертификаты для 3400 кандидатов (native_decide: доверяют компилятору, а не только ядру); prop_1024' выводит предложение из предложения 5.1 для порядка 2^9 и полноты списка, обе — явные гипотезы (полнота — это лемма 5.2(d) и перебор ANUPQ)."
+
+[nodes."thm:small"]
+computer = true
+
+[nodes."rem:prune"]
+
+[nodes."lem:z4"]
+lean = ["GroupDimension.not_isCandidate_of_quotient_z4"]
+proved = true
+
+[nodes."prop:rank8"]
+lean = ["GroupDimension.not_isCandidate_of_rank", "GroupDimension.false_of_card_expCentral_two_le", "GroupDimension.D_five_eq_bot_of_rank'",
+        "GroupDimension.D_five_eq_bot_of_rank", "GroupDimension.Cert1024.D_five_eq_bot_of_rank_of_complete'",
+        "GroupDimension.Cert1024.D_five_eq_bot_of_rank_of_complete"]
+proved = true
+computer = true
+uses = ["lem:mincex", "ext:dthree"]
+note = "The second statement (|Φ(Q)| ≥ 16 for candidates) and the deduction of the first from it and Proposition 5.3 are in Lean; through Proposition 5.3 the first statement is computer-assisted."
+note_ru = "В Lean — второе утверждение (|Φ(Q)| ≥ 16 у кандидатов) и вывод первого из него и предложения 5.3; через предложение 5.3 первое утверждение опирается на компьютер."
+
+[nodes."prop:central"]
+lean = ["GroupDimension.D_n_eq_of_central_product", "GroupDimension.D_n_eq_of_dihedral", "GroupDimension.D_n_eq_of_sqrt"]
+proved = true
+uses = ["lem:root"]
+note = "For Q = H⟨a,b⟩ with a, b centralising H and a, b, ab ∉ H; the passage from (H × E)/{(φ(z), z⁻¹)} to this form and the classification of E are not formalized."
+note_ru = "Для Q = H⟨a,b⟩, где a, b централизуют H и a, b, ab ∉ H; переход от (H × E)/{(φ(z), z⁻¹)} к этому виду и классификация E не формализованы."
+
+[nodes."lem:root"]
+lean = ["GroupDimension.D_n_eq_of_index"]
+proved = true
+
+[nodes."prop:2048"]
+computer = true
+
+[nodes."lem:qpp"]
+lean = ["GroupDimension.D_le_derivedSeries_two", "GroupDimension.mem_of_mem_D_add_two", "GroupDimension.rank_ge_three_of_D_five_ne_bot"]
+proved = true
+uses = ["ext:guptatahara"]
+note = "Gupta–Tahara's D_{p+2} = γ_{p+2} for metabelian p-groups is an explicit hypothesis."
+note_ru = "Теорема Гупты–Тахары D_{p+2} = γ_{p+2} для метабелевых p-групп — явная гипотеза."
+
+[nodes."lem:mincex3"]
+lean = ["GroupDimension.minimal_three'", "GroupDimension.minimal_three", "GroupDimension.minimal_three_of_quotients"]
+proved = true
+uses = ["ext:guptatahara", "ext:passi"]
+note = "“Least order” as: D_5(R) = γ_5(R) for every 3-group R with |R| < |Q|; Gupta–Tahara's theorem is an explicit hypothesis."
+note_ru = "«Наименьший порядок» в виде: D_5(R) = γ_5(R) для всякой 3-группы R с |R| < |Q|; теорема Гупты–Тахары — явная гипотеза."
+
+[nodes."lem:lie"]
+lean = ["GroupDimension.commutator_gamma_two_le_gamma_five", "GroupDimension.metabelian_of_class_four"]
+proved = true
+note = "Works in G/γ_5(G) instead of the Lie ring L(G)."
+note_ru = "Работает в G/γ_5(G) вместо кольца Ли L(G)."
+
+[nodes."rem:lie"]
+lean = ["GroupDimension.LieThreeThree.exists_lie_three_three", "GroupDimension.LieThreeThree.lieSpan_eq_top",
+        "GroupDimension.LieThreeThree.lcs_eq", "GroupDimension.LieThreeThree.finrank_lcs", "GroupDimension.LieThreeThree.lie_lcs_one_ne_bot"]
+computer = true
+note = "Only the algebra of Appendix A in (2) is in Lean (over any commutative ring, its type over any field); the counts in (1)–(3) are computations."
+note_ru = "В Lean только алгебра приложения A из (2) (над любым коммутативным кольцом, её тип — над любым полем); подсчёты в (1)–(3) — вычисления."
+
+[nodes."prop:metab"]
+lean = ["GroupDimension.card_ge_of_not_metabelian", "GroupDimension.metabelian_of_card_le", "GroupDimension.rank_of_card_nine",
+        "GroupDimension.type_of_card_nine"]
+proved = true
+note = "Class ≤ 4 instead of = 4; that both types occur for p = 3 is a computation and is not formalized."
+note_ru = "Ступень ≤ 4 вместо = 4; что при p = 3 встречаются оба типа — вычисление, не формализовано."
+
+[nodes."thm:exp3"]
+lean = ["GroupDimension.D_five_eq_gamma_five_of_exp_three", "GroupDimension.ExpThree.D_five_eq_gamma_five"]
+proved = true
+uses = ["ext:tahara61"]
+
+[nodes."rem:exp3"]
+computer = true
+
+[nodes."thm:exp3plus"]
+lean = ["GroupDimension.D_five_eq_gamma_five_of_cubes_cyclic", "GroupDimension.ExpThree.D_five_eq_gamma_five_cyclic"]
+proved = true
+uses = ["ext:tahara61"]
+note = "“The cubes of G/γ_2 form a cyclic group”: for some t, every x³ is congruent modulo γ_2 to a power of t³."
+note_ru = "«Кубы G/γ_2 образуют циклическую группу»: для некоторого t всякий x³ сравним по модулю γ_2 со степенью t³."
+
+[nodes."lem:filter"]
+lean = ["GroupDimension.filter_on_parents"]
+proved = true
+note = "For Q = E/U with U ≤ M subgroups of any group E and the nucleus replaced by any subgroup N ⊄ U."
+note_ru = "Для Q = E/U, где U ≤ M — подгруппы любой группы E, и ядро заменено любой подгруппой N ⊄ U."
+
+[nodes."thm:pcover"]
+lean = ["GroupDimension.metabelian_of_central_elementary", "GroupDimension.metabelian_of_central_quotient"]
+proved = true
+note = "For every central extension of P by a subgroup of exponent p (Mathlib has no p-covering group)."
+note_ru = "Для любого центрального расширения P подгруппой экспоненты p (в Mathlib нет p-накрывающей группы)."
+
+[nodes."rem:pcover"]
+computer = true
+
+[nodes."thm:nonterm"]
+lean = ["GroupDimension.nonterminal_necessary", "GroupDimension.nonterminal_sufficient", "GroupDimension.nonterminal_iff"]
+proved = true
+uses = ["thm:pcover"]
+uses_drop = ["rem:nonterm"]
+note = "“Nonterminal” is stated in the form of Lemma C.1 (a central extension by a subgroup of order p with γ_4 ≠ 1); Lemma C.1, that this means having immediate descendants, is not formalized; the normal form of Step 3 is given, not constructed."
+note_ru = "«Нетерминальна» сформулировано в форме леммы C.1 (центральное расширение подгруппой порядка p с γ_4 ≠ 1); сама лемма C.1 (что это и есть наличие непосредственных потомков) не формализована; нормальная форма шага 3 дана, а не построена."
+
+[nodes."rem:nonterm"]
+computer = true
+
+[nodes."thm:3e9"]
+computer = true
+
+[nodes."lem:ntQ"]
+
+# Results of the literature that the formalization proves too.
+
+[nodes."ext:dthree"]
+title = "Higman, Rees, Passi"
+title_ru = "Хигмен, Рис, Пасси"
+statement = '''$D_3(G)=\gamma_3(G)$ for every group $G$.'''
+lean = ["GroupDimension.DThreeEqGammaThree", "GroupDimension.dThreeEqGammaThree"]
+proved = true
+note = "For finite groups through Tahara's Theorem 4.1 (his §§2–4, formalized with Theorem 6.1), then by reduction."
+note_ru = "Для конечных групп — через теорему 4.1 Тахары (его §§2–4, формализованы вместе с теоремой 6.1), затем сведением."
+
+[nodes."ext:passi"]
+title = "Passi"
+title_ru = "Пасси"
+statement = '''$D_4(G)^2\subseteq\gamma_4(G)$ for every group $G$.'''
+lean = ["GroupDimension.PassiDFourSquare", "GroupDimension.passiDFourSquare"]
+proved = true
+uses = ["ext:gruenberg"]
+note = "Not Passi's argument: through Tahara's map ψ_3 (his §5, formalized with Theorem 6.1), for finite p-groups of class ≤ 3, then by reduction."
+note_ru = "Не рассуждение Пасси: через отображение ψ_3 Тахары (его §5, формализован вместе с теоремой 6.1) для конечных p-групп ступени ≤ 3, затем сведением."
+
+[nodes."ext:gruenberg"]
+title = "Gruenberg"
+title_ru = "Грюнберг"
+statement = '''In a finitely generated nilpotent group an element none of whose odd powers is trivial survives in some finite $2$-group quotient.'''
+lean = ["GroupDimension.GruenbergResidualTwo", "GroupDimension.gruenbergResidualTwo", "GroupDimension.Gruenberg.residuallyFinite"]
+proved = true
+
+[nodes."ext:tahara61"]
+title = "Tahara, Theorem 6.1, the inclusion"
+title_ru = "Тахара, теорема 6.1, включение"
+statement = '''For a finite group of class $\le4$ and any uniqueness bases with their structure constants, $D_5$ lies in the subgroup generated by the elements $g$ over the integer families satisfying Tahara's conditions (A)--(F).'''
+lean = ["GroupDimension.TaharaFiveOne", "GroupDimension.taharaFiveOne"]
+proved = true
+
+[nodes."ext:jennings"]
+title = "Jennings, the inclusion for $p=2$, $n=5$"
+title_ru = "Дженнингс, включение при $p=2$, $n=5$"
+statement = '''For a finite $2$-group $Q$ of class $\le3$, $D_5(Q)\subseteq Q\cap(1+\Delta_{\mathbb F_2}(Q)^5)\subseteq Q^8\gamma_2(Q)^4\gamma_3(Q)^2$.'''
+lean = ["GroupDimension.D_five_le_jennings"]
+proved = true
+note = "The general theorem of Jennings and Lazard's description of the series are not formalized."
+note_ru = "Общая теорема Дженнингса и описание ряда Лазаром не формализованы."
+
+[nodes."ext:guptatahara"]
+title = "Gupta–Tahara"
+title_ru = "Гупта–Тахара"
+statement = '''$D_{p+2}(G)=\gamma_{p+2}(G)$ for every finite metabelian $p$-group $G$, $p$ odd.'''
+lean = ["GroupDimension.GuptaTaharaMetabelian"]
+note = "Stated in Lean, not proved; an explicit hypothesis where it is used."
+note_ru = "В Lean сформулирована, не доказана; там, где используется, — явная гипотеза."
+
+
+# ---------------------------------------------------------------------------------------------
+# The rows of results.html, in their order.
+
+[[results]]
+status = "l"
+ru = '''Сведение: $D_5(G)\subseteq\gamma_4(G)$ для всех групп $\iff$ $D_5(Q)=1$ для всех конечных $2$-групп ступени $3$. Для конечных $G$ порядок не растёт: достаточно $2$-групп порядка не больше $2$-части $|G|$. Доказано в Lean без гипотез: теоремы Пасси ($D_4^2\subseteq\gamma_4$) и Грюнберга и $D_3=\gamma_3$ там тоже доказаны.'''
+en = '''Reduction: $D_5(G)\subseteq\gamma_4(G)$ for all groups $\iff$ $D_5(Q)=1$ for all finite $2$-groups of class $3$. For finite $G$ the order does not grow: $2$-groups up to the $2$-part of $|G|$ suffice. Proved in Lean without hypotheses: Passi's theorem ($D_4^2\subseteq\gamma_4$), Gruenberg's theorem and $D_3=\gamma_3$ are proved there too.'''
+where_ru = '''[[prop:reduction]], [[rem:bounded]]; {{lean:GroupDimension.dimensionQuestion5_iff_class_three'|Lean}}'''
+where_en = '''[[prop:reduction]], [[rem:bounded]]; {{lean:GroupDimension.dimensionQuestion5_iff_class_three'|Lean}}'''
+
+[[results]]
+status = "l"
+ru = '''Для колец Ли $D_5(L)\subseteq\gamma_4(L)$ (<a href="https://arxiv.org/abs/2610.02042">Ионин, Михайлов, Петров, 2026</a>); {{gh:notes/formalization-audit.ru.md|формализация проверена}}, групповой вопрос {{lean:GroupDimension.DimensionQuestion5|сформулирован в Lean}} рядом.'''
+en = '''For Lie rings $D_5(L)\subseteq\gamma_4(L)$ (<a href="https://arxiv.org/abs/2610.02042">Ionin, Mikhailov, Petrov, 2026</a>); {{gh:notes/formalization-audit.md|the formalization audited}}, the group question {{lean:GroupDimension.DimensionQuestion5|stated in Lean}} next to it.'''
+where = '''[[sec:lie]], [[sec:lean]]'''
+
+[[results]]
+status = "cp"
+ru = '''$D_5(G)\subseteq\gamma_4(G)$ для всякой конечной $G$ с силовской $2$-подгруппой <a href="computations.html#f210">порядка $\le2^{10}$</a>, в частности для всех групп порядка $<2048$. Что у всех $3400$ кандидатов порядка $2^{10}$ $D_4=D_5=1$, проверено и в Lean, сертификатами (через <code>native_decide</code>); полнота списка — лемма [[lem:mincex|#]](d) и вычисление ANUPQ.'''
+en = '''$D_5(G)\subseteq\gamma_4(G)$ for every finite $G$ with Sylow $2$-subgroup <a href="computations.html#f210">of order $\le2^{10}$</a>, in particular for all groups of order $<2048$. That all $3400$ candidates of order $2^{10}$ have $D_4=D_5=1$ is also checked in Lean, by certificates (via <code>native_decide</code>); the completeness of the list is Lemma [[lem:mincex|#]](d) and the ANUPQ computation.'''
+where = '''[[thm:small]](1); [[prop:1024]]; {{lean:GroupDimension.Cert1024.D_five_cand|Lean}}'''
+
+[[results]]
+status = "cp"
+ru = '''Порядок $2^{11}$, ступень $3$: $D_5=1$ при всех рангах — <a href="computations.html#f211">ранги $2$–$7$ перебором</a>, $\ge8$ без перебора (у всякого кандидата $|\Phi(Q)|\ge16$: на бумаге, а в Lean в виде «у кандидата не бывает $|P_2(Q)|\le8$»; переход к кандидатам — через предложение [[prop:1024|#]]; в предположении $D_3=\gamma_3$ и этого предложения утверждение о $D_5$ доказано и в Lean, с нужным включением из теоремы Дженнингса ($p=2$, $n=5$, ступень $\le3$)). Контрпример, если он есть, имеет порядок $\ge2^{12}$. Поиск $2^{10}$ и ранги $2$–$4$, $7$, $8$ повторены на ANUPQ с исправлениями аудита: результаты совпали полностью.'''
+en = '''Order $2^{11}$, class $3$: $D_5=1$ for every rank — <a href="computations.html#f211">ranks $2$–$7$ by search</a>, $\ge8$ without search (every candidate has $|\Phi(Q)|\ge16$ on paper, and in Lean as: no candidate has $|P_2(Q)|\le8$; the passage to candidates is via Prop. [[prop:1024|#]]; given $D_3=\gamma_3$ and that proposition, the $D_5$ statement is also proved in Lean, with the inclusion of Jennings' theorem that is needed ($p=2$, $n=5$, class $\le3$)). A counterexample, if any, has order $\ge2^{12}$. The $2^{10}$ search and ranks $2$–$4$, $7$, $8$ were repeated with ANUPQ with the audit fixes: the results agree exactly.'''
+where_ru = '''[[prop:2048]], [[prop:rank8]]; {{lean:GroupDimension.false_of_card_expCentral_two_le|Lean}}; {{lean:GroupDimension.D_five_eq_bot_of_rank|Lean ($D_5$)}}'''
+where_en = '''[[prop:2048]], [[prop:rank8]]; {{lean:GroupDimension.false_of_card_expCentral_two_le|Lean}}; {{lean:GroupDimension.D_five_eq_bot_of_rank|Lean ($D_5$)}}'''
+
+[[results]]
+status = "l"
+ru = '''Центральные произведения: $D_n(H\circ E)=D_n(H)$ при $E\in\{D_8,Q_8\}$ и $t\in\gamma_2(H)$, а для $E=M_{2^{k+2}}$ — при условии на $g^{-2}s$ (например, $s=g^2$). {{gh:compute/central|Все $386$ кандидатов}} порядков $2^6$–$2^9$ ему удовлетворяют, так что разложимость $H\circ E$ с $E\in\{D_8,Q_8,M_{16}\}$ контрпримера не даёт. Склейка по собственной подгруппе $Z(E)$ закрыта при $\sigma=g^{2^{j+1}}$ (центральный корень любой степени; <a href="open.html#q-central">остальное открыто</a>); у каждого из $20$ раскладывающихся кандидатов есть разложение, покрытое предложением [[prop:central|#]]. {{lean:GroupDimension.D_n_eq_of_central_product|Предложение [[prop:central|##]]}} и {{lean:GroupDimension.D_n_eq_of_index|лемма [[lem:root|##]]}} доказаны в Lean; проверка кандидатов — вычислением.'''
+en = '''Central products: $D_n(H\circ E)=D_n(H)$ for $E\in\{D_8,Q_8\}$ and $t\in\gamma_2(H)$, and for $E=M_{2^{k+2}}$ under a condition on $g^{-2}s$ (e.g. $s=g^2$). {{gh:compute/central|All $386$ candidates}} of orders $2^6$–$2^9$ satisfy it, so splitting off $E\in\{D_8,Q_8,M_{16}\}$ gives no counterexample. Gluing along a proper subgroup of $Z(E)$ is closed when $\sigma=g^{2^{j+1}}$ (a central root of any degree; <a href="open.html#q-central">the rest is open</a>); each of the $20$ split candidates has a splitting covered by Prop. [[prop:central|#]]. {{lean:GroupDimension.D_n_eq_of_central_product|Prop. [[prop:central|##]]}} and {{lean:GroupDimension.D_n_eq_of_index|Lemma [[lem:root|##]]}} are proved in Lean; the check of the candidates is by computer.'''
+where = '''[[prop:central]], [[lem:root]]'''
+
+[[results]]
+status = "c"
+ru = '''$D_n(G)=\gamma_n(G)$ при всех $n$ для всякой конечной группы <a href="computations.html#runs">порядка $<512$</a>.'''
+en = '''$D_n(G)=\gamma_n(G)$ for all $n$ and every finite group <a href="computations.html#runs">of order $<512$</a>.'''
+where = '''[[thm:small]](2)'''
+
+[[results]]
+status = "cp"
+ru = '''Нет $3$-кручения в $D_5(G)/\gamma_5(G)$, если силовская $3$-подгруппа $G$ имеет порядок $\le3^9$; $D_5=\gamma_5$ для <a href="computations.html#f39">всех $3$-групп порядка $\le3^9$</a>.'''
+en = '''No $3$-torsion in $D_5(G)/\gamma_5(G)$ when the Sylow $3$-subgroup of $G$ has order $\le3^9$; $D_5=\gamma_5$ for <a href="computations.html#f39">all $3$-groups of order $\le3^9$</a>.'''
+where = '''[[thm:3e9]]'''
+
+[[results]]
+status = "l"
+ru = '''$D_5(G)=\gamma_5(G)$, если $G/\gamma_2(G)$ конечна и имеет экспоненту $3$ — при любом ранге и порядке. Доказано в Lean вместе с теоремой 6.1 Тахары, на которую опирается доказательство.'''
+en = '''$D_5(G)=\gamma_5(G)$ whenever $G/\gamma_2(G)$ is finite of exponent $3$, of any rank and order. Proved in Lean, together with Tahara's Theorem 6.1 on which the proof relies.'''
+where_ru = '''[[thm:exp3]]; {{lean:GroupDimension.D_five_eq_gamma_five_of_exp_three|Lean}}'''
+where_en = '''[[thm:exp3]]; {{lean:GroupDimension.D_five_eq_gamma_five_of_exp_three|Lean}}'''
+
+[[results]]
+status = "l"
+ru = '''Более общо: $D_5(G)=\gamma_5(G)$, если $G/\gamma_2(G)\cong C_{3^a}\times C_3^{s-1}$, т.е. у неё не больше одного инварианта больше $3$ (в том числе $C_9\times C_3^{s-1}$). <a href="timeline.html#d2026-10-18">Проверено независимой рецензией</a> и доказано в Lean вместе с теоремой 6.1 Тахары.'''
+en = '''More generally: $D_5(G)=\gamma_5(G)$ whenever $G/\gamma_2(G)\cong C_{3^a}\times C_3^{s-1}$, i.e. it has at most one invariant larger than $3$ (including $C_9\times C_3^{s-1}$). <a href="timeline.html#d2026-10-18">Checked by an independent review</a> and proved in Lean, together with Tahara's Theorem 6.1.'''
+where_ru = '''[[thm:exp3plus]]; {{lean:GroupDimension.D_five_eq_gamma_five_of_cubes_cyclic|Lean}}'''
+where_en = '''[[thm:exp3plus]]; {{lean:GroupDimension.D_five_eq_gamma_five_of_cubes_cyclic|Lean}}'''
+
+[[results]]
+status = "l"
+ru = '''$p$ нечётно, $|\gamma_3/\gamma_4|=p$, у $\gamma_2/\gamma_3$ не больше двух порождающих $\Rightarrow$ $[\gamma_2,\gamma_2]\subseteq\gamma_5$. Отсюда: неметабелева $p$-группа ступени $4$ ранга $d$ имеет порядок $\ge p^{d+5}$.'''
+en = '''$p$ odd, $|\gamma_3/\gamma_4|=p$, $\gamma_2/\gamma_3$ with at most two generators $\Rightarrow$ $[\gamma_2,\gamma_2]\subseteq\gamma_5$. Hence a non-metabelian $p$-group of class $4$ and rank $d$ has order $\ge p^{d+5}$.'''
+where_ru = '''[[lem:lie]], [[prop:metab]]; {{lean:GroupDimension.card_ge_of_not_metabelian|Lean}}'''
+where_en = '''[[lem:lie]], [[prop:metab]]; {{lean:GroupDimension.card_ge_of_not_metabelian|Lean}}'''
+
+[[results]]
+status = "l"
+ru = '''$p$ нечётно, $P$ ступени $3$ с $|\gamma_2/\gamma_3|=p^2$, $|\gamma_3|=p$ $\Rightarrow$ у $p$-накрывающей группы $P^{*\prime\prime}=1$: все шаг-$1$ потомки метабелевы. В Lean — для любого центрального расширения $P$ подгруппой экспоненты $p$ (в Mathlib нет $p$-накрывающей группы).'''
+en = '''$p$ odd, $P$ of class $3$ with $|\gamma_2/\gamma_3|=p^2$, $|\gamma_3|=p$ $\Rightarrow$ the $p$-covering group has $P^{*\prime\prime}=1$: all step-$1$ descendants are metabelian. In Lean for every central extension of $P$ by a subgroup of exponent $p$ (Mathlib has no $p$-covering group).'''
+where_ru = '''[[thm:pcover]]; {{lean:GroupDimension.metabelian_of_central_elementary|Lean}}'''
+where_en = '''[[thm:pcover]]; {{lean:GroupDimension.metabelian_of_central_elementary|Lean}}'''
+
+[[results]]
+status = "cp"
+ru = '''$p$ нечётно, $P$ типа $(d,2,1)$ с элементарной $P/\gamma_2$: $P$ нетерминальна (у неё есть непосредственные потомки) ровно тогда, когда выполнены условия N1–N3 и система (E)+(J) разрешима с $c\ne0$. Проверено вычислением: при $3^8$ критерий выделяет ровно $190$ нетерминальных из $7\,824$, при $3^7$, $5^7$, $7^7$ — ровно $102$, $110$, $118$.'''
+en = '''$p$ odd, $P$ of type $(d,2,1)$ with $P/\gamma_2$ elementary: $P$ is nonterminal (has immediate descendants) exactly when N1–N3 hold and the system (E)+(J) is solvable with $c\ne0$. Checked by computer: at $3^8$ the criterion picks out exactly the $190$ nonterminal groups among $7\,824$; at $3^7$, $5^7$, $7^7$ exactly $102$, $110$, $118$.'''
+where = '''[[thm:nonterm]]'''
+
+[[results]]
+status = "c"
+ru = '''Факторы ступени $3$ групп рипсовского типа порядков $2^{40}$–$2^{107}$: везде $D_5=1$, в трёх из них $D_4\ne1$ ({{gh:compute/magnus/README.md|с сертификатом точности}}).'''
+en = '''Class-$3$ quotients of Rips-type groups of orders $2^{40}$–$2^{107}$: $D_5=1$ in all, $D_4\ne1$ in three of them ({{gh:compute/magnus/README.md|with the exactness certificate}}).'''
+where_ru = '''[[sec:open]], вопрос [[oq:main|#]]'''
+where_en = '''[[sec:open]], question [[oq:main|#]]'''
+
+[[results]]
+status = "c"
+ru = '''Группа Рипса (порядок $2^{38}$, по копредставлению Тахары 1978): $D_4=\{1,y_1^{128}\}$, у всех собственных подгрупп $D_4=1$; у $26\,147$ случайных факторов (с повторениями) тоже $D_4=1$, а эвристический подъём по показателям копредставления ничего меньше $2^{38}$ не дал. Проверенные секции калибровки ниже $2^{38}$ не дают (секции $H/N$ с $H\lt G$, $N\ne1$ не проверялись; {{gh:compute/magnus/README.md|код}}).'''
+en = '''Rips's group (order $2^{38}$, from Tahara's 1978 presentation): $D_4=\{1,y_1^{128}\}$, and every proper subgroup has $D_4=1$; $26\,147$ random quotients (with repetitions) also have $D_4=1$, and a heuristic hill climb over the exponents of Tahara's presentation found nothing below $2^{38}$. The sections checked give no calibration below $2^{38}$ (proper sections $H/N$ with $H\lt G$, $N\ne1$ not checked; {{gh:compute/magnus/README.md|code}}).'''
+where_ru = '''[[sec:computations]]'''
+where_en = '''[[sec:computations]]'''
+
+[[results]]
+status = "c"
+ru = '''$3$-кручение: $3$-группа Бартольди–Михайлова с $D_7\ne\gamma_7$ имеет порядок $3^{494}$, но три её фактора по центральным подгруппам порядка $3$, не содержащим свидетеля $\omega$, имеют порядок $3^{493}$ и $D_7\ne\gamma_7$, так что $3^{494}$ — не наименьший порядок $3$-группы с $D_7\ne\gamma_7$; всякий собственный фактор этих трёх групп убивает $\omega$. Что $\omega\in D_7$, следует из предложения 9.2 Бартольди–Михайлова через отображение их группы (9.2) в $G$ (не сюръективное). Подгруппы проверены лишь против довода BM и лишь при $H\ge\Phi(Q)\langle x_1,\dots,x_4\rangle$; прочие подгруппы, другие рассуждения и новые свидетели в факторах не проверялись ({{gh:compute/magnus/bm494/README.md|код}}).'''
+en = '''$3$-torsion: the Bartholdi–Mikhailov $3$-group with $D_7\ne\gamma_7$ has order $3^{494}$, but its three quotients by central subgroups of order $3$ not containing the witness $\omega$ have order $3^{493}$ and $D_7\ne\gamma_7$, so $3^{494}$ is not the least order of a $3$-group with $D_7\ne\gamma_7$; every proper quotient of these three groups kills $\omega$. That $\omega\in D_7$ follows from Bartholdi–Mikhailov's Prop. 9.2 via the map (not onto) from their group (9.2) to $G$. Subgroups of either group are checked only against BM's argument and only for $H\ge\Phi(Q)\langle x_1,\dots,x_4\rangle$; other subgroups, other arguments, and new witnesses in quotients, not checked ({{gh:compute/magnus/bm494/README.md|code}}).'''
+where_ru = '''[[sec:computations]]'''
+where_en = '''[[sec:computations]]'''
+
+[[results]]
+status = "c"
+ru = '''$3$-кручение: $3$-группа с $D_n\ne\gamma_n$ (при каком-либо $n$) имеет порядок $\ge3^{10}$. Пример наименьшего порядка имеет циклический центр, его цоколь лежит в $D_{c+1}\cap Q''\cap M_{c+1}$ ($c$ — ступень); ступень $4$ закрыта до $3^9$ теоремой о $D_5$, а у всех $1035$ групп порядков $3^6$–$3^8$ ступени $\ge5$, удовлетворяющих этим условиям, и у всех $27\,547$ таких групп порядка $3^9$ (потомки шага $1$ групп порядка $3^8$) $D_{c+1}=1$ ({{gh:compute/magnus/README.md|код}}).'''
+en = '''$3$-torsion: a $3$-group with $D_n\ne\gamma_n$ (for some $n$) has order $\ge3^{10}$. A least-order example has cyclic centre and its socle lies in $D_{c+1}\cap Q''\cap M_{c+1}$ ($c$ the class); class $4$ is settled up to $3^9$ by the $D_5$ theorem, and all $1035$ groups of order $3^6$–$3^8$ and class $\ge5$ that meet these conditions, and all $27\,547$ such groups of order $3^9$ (step-$1$ descendants of groups of order $3^8$), have $D_{c+1}=1$ ({{gh:compute/magnus/README.md|code}}).'''
+where_ru = '''[[sec:open]], вопрос [[oq:torsion|#]]'''
+where_en = '''[[sec:open]], question [[oq:torsion|#]]'''
+
+[[results]]
+status = "c"
+ru = '''Групповой аналог теоремы C при $c=4$: у группы плато $D_6\ne1$, но $D_7=1$, так что $2c-2$ достигается и аналог, если верен, точен (<a href="open.html#q-theoremc">открытый вопрос</a>).'''
+en = '''The group analogue of Theorem C at $c=4$: the plateau group has $D_6\ne1$ but $D_7=1$, so $2c-2$ is attained and the analogue, if true, is sharp (<a href="open.html#q-theoremc">an open question</a>).'''
+where_ru = '''[[sec:open]], вопрос [[oq:theoremc|#]]'''
+where_en = '''[[sec:open]], question [[oq:theoremc|#]]'''
+
+[[results]]
+status = "c"
+ru = '''Нижняя оценка для $D_4\ne\gamma_4$: такая $2$-группа имеет порядок $\ge2^{11}$, так что $D_4(G)=\gamma_4(G)$ для всякой конечной $G$ с силовской $2$-подгруппой порядка $\le2^{10}$. Наименьший известный пример — группа Рипса порядка $2^{38}$. Порядок $2^{10}$: условие $n\in D_4$ на $p$-накрывающей группе линейно по гиперплоскости $U$ (лемма Накаямы), и ни у одного из $10\,208\,630$ родителей порядка $2^9$ нет $U$ с $n\in D_4$ ({{gh:compute/pq1024/README.md|код}}).'''
+en = '''A lower bound for $D_4\ne\gamma_4$: such a $2$-group has order $\ge2^{11}$, so $D_4(G)=\gamma_4(G)$ for every finite $G$ with Sylow $2$-subgroup of order $\le2^{10}$. The smallest known example is Rips's group, of order $2^{38}$. Order $2^{10}$: the condition $n\in D_4$ on the $p$-covering group is linear in the hyperplane $U$ (Nakayama's lemma), and none of the $10\,208\,630$ parents of order $2^9$ has a $U$ with $n\in D_4$ ({{gh:compute/pq1024/README.md|code}}).'''
+where_ru = '''[[sec:computations]]'''
+where_en = '''[[sec:computations]]'''

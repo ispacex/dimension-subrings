@@ -1,0 +1,79 @@
+# The blueprint of the paper (MATH-324, site/blueprint.py, site/blueprint.toml).
+#   data: the checks that need neither the paper nor Lean (nodes, uses, rows of results.html, every
+#         declaration found in the sources of groups/);
+#   lean: every Lean declaration the blueprint names exists, checked by Lean itself (the equivalent of
+#         `leanblueprint checkdecls`): a generated file #checks each of them against the package
+#         pinned in groups/;
+#   web:  the leanblueprint pages build (plasTeX, versions pinned in site/blueprint-requirements.txt).
+#         The paper is not in this repository, so here the statements are placeholders; the pages
+#         on the site are built with the paper (site/build_site.py --blueprint).
+name: blueprint
+on:
+  pull_request:
+    paths: ['site/blueprint*', 'groups', '.github/workflows/blueprint.yml']
+  push:
+    branches: [main]
+    paths: ['site/blueprint*', 'groups', '.github/workflows/blueprint.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: git submodule update --init groups
+      - run: python3 site/blueprint.py check
+  lean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: git submodule update --init groups
+      - name: the declarations, as a Lean file
+        run: python3 site/blueprint.py lean groups/BlueprintDecls.lean && cat groups/BlueprintDecls.lean
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: groups
+          build: false
+          test: false
+          lint: false
+          use-mathlib-cache: true
+      - name: build the modules and check every declaration
+        working-directory: groups
+        run: |
+          set -o pipefail
+          lake build $(sed -n 's/^public import //p' BlueprintDecls.lean)
+          lake env lean BlueprintDecls.lean 2>&1 | tee decls.log
+          want=$(grep -c '^#check @' BlueprintDecls.lean)
+          if grep -q ': error' decls.log; then echo "::error::a declaration of the blueprint is not in the package"; exit 1; fi
+          echo "blueprint: all $want declarations exist"
+      - name: negative control (a name that is not a declaration must fail)
+        working-directory: groups
+        run: |
+          printf 'module\n\npublic import GroupDimension.Statements\n\n#check @GroupDimension.no_such_declaration_324\n' > BlueprintNeg.lean
+          if lake env lean BlueprintNeg.lean > neg.log 2>&1; then echo "::error::the check passes a missing declaration"; exit 1; fi
+          cat neg.log
+          grep -qi "unknown constant\|unknown identifier" neg.log || { echo "::error::the negative control failed for another reason"; exit 1; }
+          echo "negative control: a missing declaration fails, as it should"
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: git submodule update --init groups
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r site/blueprint-requirements.txt
+      - name: leanblueprint pages (placeholders for the statements)
+        run: |
+          python3 site/blueprint.py src out
+          cd out/src && plastex -c plastex.cfg web.tex
+          test -s ../web/index.html && test -s ../web/dep_graph_document.html
+          # every node is in the graph (plastexdepgraph draws only the theorem types it is told)
+          for x in $(python3 -c "import sys,tomllib; print(' '.join(tomllib.load(open('../../site/blueprint.toml','rb'))['nodes']))"); do
+            grep -q "\"$x\"" ../web/dep_graph_document.html || { echo "::error::$x is not in the dependency graph"; exit 1; }
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: blueprint-web
+          path: out/web
