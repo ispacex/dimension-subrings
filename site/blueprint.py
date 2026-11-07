@@ -380,6 +380,7 @@ split-level=1
 [html5]
 localtoc-level=0
 extra-css=extra_styles.css
+extra-js=copy_tex.js
 mathjax-dollars=False
 """
 
@@ -388,6 +389,32 @@ EXTRA_CSS = """.lean-src { font-size: 90%; }
 .bp-note { font-size: 90%; color: #555; }
 """
 
+
+# Copying a selection with formulas puts their TeX source into the clipboard, $...$ inline and $$...$$
+# displayed, as KaTeX's copy-tex does on the other pages of the site (these pages have MathJax 3).
+COPY_TEX_JS = r"""document.addEventListener("copy", function (event) {
+  var sel = window.getSelection(), doc = window.MathJax && MathJax.startup && MathJax.startup.document;
+  if (!sel || sel.isCollapsed || !sel.rangeCount || !event.clipboardData || !doc || !doc.math) return;
+  for (var item of doc.math) {
+    if (!item.typesetRoot) continue;
+    item.typesetRoot.setAttribute("data-tex", item.math);
+    item.typesetRoot.toggleAttribute("data-tex-display", !!item.display);
+  }
+  var range = sel.getRangeAt(0), node = range.commonAncestorContainer;
+  if (node.nodeType !== 1) node = node.parentNode;
+  var inside = node && node.closest("mjx-container[data-tex]"), box = document.createElement("div");
+  box.appendChild(inside ? inside.cloneNode(true) : range.cloneContents());
+  var found = box.querySelectorAll("mjx-container[data-tex]");
+  if (!found.length) return;
+  found.forEach(function (c) {
+    var d = c.hasAttribute("data-tex-display") ? "$$" : "$";
+    c.replaceWith(document.createTextNode(d + c.getAttribute("data-tex") + d));
+  });
+  event.clipboardData.setData("text/plain", box.textContent);
+  event.clipboardData.setData("text/html", box.innerHTML);
+  event.preventDefault();
+});
+"""
 
 TEX_SPECIAL = {"\\": "\\textbackslash{}", "&": "\\&", "%": "\\%", "#": "\\#", "_": "\\_", "{": "\\{", "}": "\\}",
                "$": "\\$", "^": "\\^{}", "~": "\\~{}"}
@@ -442,6 +469,7 @@ def src(data, index, out, tex=None, pin=None, paper_url=SITE + "viewer.html"):
     (srcdir / "macros" / "common.tex").write_text(common)
     (srcdir / "plastex.cfg").write_text(PLASTEX_CFG)
     (srcdir / "extra_styles.css").write_text(EXTRA_CSS)
+    (srcdir / "copy_tex.js").write_text(COPY_TEX_JS)
     (srcdir / "web.tex").write_text(f"""\\documentclass{{article}}
 \\usepackage{{amssymb,amsthm,mathtools}}
 \\usepackage{{hyperref}}
