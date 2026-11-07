@@ -22,20 +22,22 @@ for key in sorted(by):
         for name, (lat, bad) in r["ctl"]:
             c["ctl_" + name] += bad > 0
         c["adapt_bad"] += not r["adapted"]
-        c["fbad"] += r["fbad"] != "[  ]"
+        c["fbad"] += r["fbad"] not in ("", "[  ]")
         c["gbad"] += r["gbad"] > 0
         c["psi>0"] += r["psi"] > 0
         c["e23>=2"] += r["e23"] >= 2
         c["nonmet"] += r["nonmet"]
         c["zcyc"] += r["zcyc"]
-        c["noC_nontriv"] += r["f_noC"] != "[  ]"
-        c["noD_nontriv"] += r["f_noD"] != "[  ]"
     tot.update(c)
     print(key, dict(c), "| Q_ab:", dict(ab), "| logord", min(r["logord"] for r in rs), max(r["logord"] for r in rs))
-    fc = Counter(); fd = Counter()
+    fc = defaultdict(Counter)
     for r in rs:
-        for x in re.findall(r"'(T\d [^']*)'", r["f_noC"]): fc[x] += 1
-        for x in re.findall(r"'(T\d [^']*)'", r["f_noD"]): fd[x] += 1
-    print("   factors != 1 without (C):", dict(fc))
-    print("   factors != 1 without (D):", dict(fd))
+        for part in r.get("fctl", "").split(";"):
+            if ":" in part:
+                dr, fx = part.split(":")
+                fc[dr]["groups"] += fx != ""
+                for x in fx.split(","):
+                    if x: fc[dr][x] += 1
+    for dr in fc:
+        print("   factors != 1 with %s dropped:" % dr, dict(fc[dr]))
 print("TOTAL", dict(tot))

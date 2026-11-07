@@ -213,12 +213,15 @@ for it in [1..NG] do
   od;
   if fbad <> [] then stats.factbad := stats.factbad + 1; Print("FACTOR FAILS ", SEED, ".", it, " ", fbad, "\n"); fi;
   if gbad > 0 then stats.gbad := stats.gbad + 1; Print("G FAILS ", SEED, ".", it, "\n"); fi;
-  # the factors on the lattice without C (to see that C is what kills T1/T2) and without D (T3/T4)
-  fnoC := []; fnoD := [];
-  for tau in TaharaLattice(TA, VA, TaharaConds(TA, VA, rec(drop := ["C"]))) do
-    for f in StarFactors(TA, VA, tau) do if not IsOne(f[2]) then AddSet(fnoC, f[1]); fi; od; od;
-  for tau in TaharaLattice(TA, VA, TaharaConds(TA, VA, rec(drop := ["D"]))) do
-    for f in StarFactors(TA, VA, tau) do if not IsOne(f[2]) then AddSet(fnoD, f[1]); fi; od; od;
+  # controls for the vanishing: factors not 1 on lattices with some conditions dropped (the source of
+  # (c1) is C, of (c2) B, of (c3) D)
+  fctl := [];
+  for dr in [["B"], ["C"], ["D"], ["A", "C"], ["B", "C", "D"], ["A", "B", "C", "D", "E", "F"]] do
+    fx := [];
+    for tau in TaharaLattice(TA, VA, TaharaConds(TA, VA, rec(drop := dr))) do
+      for f in StarFactors(TA, VA, tau) do if not IsOne(f[2]) then AddSet(fx, f[1]{[1, 2]}); fi; od; od;
+    Add(fctl, Concatenation(Concatenation(dr), ":", JoinStringsWithSeparator(fx, ",")));
+  od;
   stats.nrec := stats.nrec + 1;
   WriteAll(OUTS, Concatenation("{\"id\":\"", String(SEED), ".", String(it), "\",\"mode\":\"", MODE,
     "\",\"ab\":", String(AbelianInvariants(Pb)), ",\"logord\":", String(Log(Size(Pb), 3)),
@@ -227,7 +230,7 @@ for it in [1..NG] do
     ",\"zcyc\":", String(IsCyclic(Centre(Pb))), ",\"nonmet\":", String(not IsTrivial(DerivedSubgroup(Lb[2]))),
     ",\"nvars\":", String(V.n), ",\"star\":", String(st), ",\"ctl\":", String(ctl),
     ",\"adapted\":", String(adapt), ",\"latA\":", String(Length(latA)), ",\"gbad\":", String(gbad),
-    ",\"fbad\":\"", String(fbad), "\",\"f_noC\":\"", String(fnoC), "\",\"f_noD\":\"", String(fnoD),
+    ",\"fbad\":\"", JoinStringsWithSeparator(fbad, ";"), "\",\"fctl\":\"", JoinStringsWithSeparator(fctl, ";"),
     "\",\"ms\":", String(Runtime() - t1), "}\n"));
 od;
 CloseStream(OUTS);
