@@ -2,7 +2,9 @@
 basis, factors not 1 on the admissible lattice (adapted basis), g not 1, factors not 1 without (C) / without (D)."""
 import json, sys, re
 from collections import Counter, defaultdict
-R = [json.loads(l) for l in sys.stdin if l.strip()]
+def fix(l):   # the GAP writer puts lists of strings inside a JSON string (fbad, f_noC, f_noD): escape their quotes
+    return re.sub(r'"(fbad|f_noC|f_noD)":"(\[.*?\])"(?=,"|})', lambda m: '"%s":"%s"' % (m.group(1), m.group(2).replace('"', "'")), l)
+R = [json.loads(fix(l)) for l in sys.stdin if l.strip()]
 by = defaultdict(list)
 for r in R:
     g4 = r.get("g4", [])
@@ -32,8 +34,8 @@ for key in sorted(by):
     print(key, dict(c), "| Q_ab:", dict(ab), "| logord", min(r["logord"] for r in rs), max(r["logord"] for r in rs))
     fc = Counter(); fd = Counter()
     for r in rs:
-        for x in re.findall(r'"(T\d [^"]*)"', r["f_noC"]): fc[x] += 1
-        for x in re.findall(r'"(T\d [^"]*)"', r["f_noD"]): fd[x] += 1
+        for x in re.findall(r"'(T\d [^']*)'", r["f_noC"]): fc[x] += 1
+        for x in re.findall(r"'(T\d [^']*)'", r["f_noD"]): fd[x] += 1
     print("   factors != 1 without (C):", dict(fc))
     print("   factors != 1 without (D):", dict(fd))
 print("TOTAL", dict(tot))
