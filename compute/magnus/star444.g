@@ -103,20 +103,20 @@ StarFactors := function(T, V, tau)
   s := T.s; X := V.idx; x := T.x1; Y := T.Y; d := T.d; F := [];
   q := function(i, j) return QuoInt(d[j], d[i]); end;
   for i in [1..s] do for h in [i+1..s] do
-    Add(F, [Concatenation("T1 ", String([i, h])), (Comm(x[i]^d[h], x[h]) * Comm(x[h]^d[h], x[i]))^tau[X.u[i][h]]]);
+    Add(F, [Concatenation("T1 ", String([d[i], d[h]])), (Comm(x[i]^d[h], x[h]) * Comm(x[h]^d[h], x[i]))^tau[X.u[i][h]]]);
   od; od;
   for h in [1..s] do for i in [h+1..s] do
-    Add(F, [Concatenation("T2 ", String([h, i])), Comm(Comm(Y[h], x[i]), x[i])^(-tau[X.u[h][i]] * q(h, i))]);
+    Add(F, [Concatenation("T2 ", String([d[h], d[i]])), Comm(Comm(Y[h], x[i]), x[i])^(-tau[X.u[h][i]] * q(h, i))]);
   od; od;
   for i in [1..s] do for g in [i+1..s] do for h in [g..s] do
-    Add(F, [Concatenation("T3 ", String([i, g, h])), Comm(Comm(Y[g], x[i]), x[h])^(-tau[X.wp[i][g][h]])]);
+    Add(F, [Concatenation("T3 ", String([d[i], d[g], d[h]])), Comm(Comm(Y[g], x[i]), x[h])^(-tau[X.wp[i][g][h]])]);
   od; od; od;
   for j in [1..s] do for k in [j+1..s] do for h in [k+1..s] do
-    Add(F, [Concatenation("T4 ", String([j, k, h])), Comm(Y[h], Comm(x[j], x[k]))^(-tau[X.wpp[j][k][h]])]);
+    Add(F, [Concatenation("T4 ", String([d[j], d[k], d[h]])), Comm(Y[h], Comm(x[j], x[k]))^(-tau[X.wpp[j][k][h]])]);
   od; od; od;
   for i in [1..s] do
     R := Product(List([1..T.t], k -> T.x2[k]^tau[X.v[i][k]]), One(T.P));
-    Add(F, [Concatenation("T5 ", String([i])), Comm(Comm(R, x[i]), x[i])^(-Binomial(d[i], 2))]);
+    Add(F, [Concatenation("T5 ", String([d[i]])), Comm(Comm(R, x[i]), x[i])^(-Binomial(d[i], 2))]);
   od;
   return F;
 end;
@@ -160,10 +160,10 @@ for it in [1..NG] do
   if MODE = "raw" then
     Pb := Image(NaturalHomomorphismByNormalSubgroup(P, Agemo(L[4], 3)));
   elif MODE = "raw9" then
-    Pb := Image(NaturalHomomorphismByNormalSubgroup(P, Agemo(L[4], 9)));
+    Pb := Image(NaturalHomomorphismByNormalSubgroup(P, Agemo(L[4], 3, 2)));
   else
     DD := DerivedSubgroup(L[2]);
-    if MODE = "cut9" then A3 := Agemo(L[4], 9); else A3 := Agemo(L[4], 3); fi;
+    if MODE = "cut9" then A3 := Agemo(L[4], 3, 2); else A3 := Agemo(L[4], 3); fi;
     u := fail;
     for c in [1..50] do
       x := Random(L[4]);
@@ -197,6 +197,7 @@ for it in [1..NG] do
   if V.n > TAHMAX then stats.skipbig := stats.skipbig + 1; continue; fi;
   st := StarCheck(T, V, ["A", "C"]);
   ctl := List(["B", "D", "E", "F"], z -> [z, StarCheck(T, V, ["A", "C", z])]);
+  Add(ctl, ["all", StarCheck(T, V, ["A", "B", "C", "D", "E", "F"])]);
   if st[2] > 0 then stats.starbad := stats.starbad + 1; Print("STAR FAILS ", SEED, ".", it, "\n"); fi;
   # (2) adapted basis: rows of b mod 3 zero or independent; every factor of (*) is 1 on the admissible lattice
   x1 := AdaptedX1(Pb, Lb);
@@ -208,16 +209,16 @@ for it in [1..NG] do
   fbad := []; gbad := 0;
   for tau in latA do
     if not IsOne(TaharaGen(TA, VA, tau).g) then gbad := gbad + 1; fi;
-    for f in StarFactors(TA, VA, tau) do if not IsOne(f[2]) then AddSet(fbad, f[1]{[1, 2]}); fi; od;
+    for f in StarFactors(TA, VA, tau) do if not IsOne(f[2]) then AddSet(fbad, f[1]); fi; od;
   od;
   if fbad <> [] then stats.factbad := stats.factbad + 1; Print("FACTOR FAILS ", SEED, ".", it, " ", fbad, "\n"); fi;
   if gbad > 0 then stats.gbad := stats.gbad + 1; Print("G FAILS ", SEED, ".", it, "\n"); fi;
   # the factors on the lattice without C (to see that C is what kills T1/T2) and without D (T3/T4)
   fnoC := []; fnoD := [];
   for tau in TaharaLattice(TA, VA, TaharaConds(TA, VA, rec(drop := ["C"]))) do
-    for f in StarFactors(TA, VA, tau) do if not IsOne(f[2]) then AddSet(fnoC, f[1]{[1, 2]}); fi; od; od;
+    for f in StarFactors(TA, VA, tau) do if not IsOne(f[2]) then AddSet(fnoC, f[1]); fi; od; od;
   for tau in TaharaLattice(TA, VA, TaharaConds(TA, VA, rec(drop := ["D"]))) do
-    for f in StarFactors(TA, VA, tau) do if not IsOne(f[2]) then AddSet(fnoD, f[1]{[1, 2]}); fi; od; od;
+    for f in StarFactors(TA, VA, tau) do if not IsOne(f[2]) then AddSet(fnoD, f[1]); fi; od; od;
   stats.nrec := stats.nrec + 1;
   WriteAll(OUTS, Concatenation("{\"id\":\"", String(SEED), ".", String(it), "\",\"mode\":\"", MODE,
     "\",\"ab\":", String(AbelianInvariants(Pb)), ",\"logord\":", String(Log(Size(Pb), 3)),
