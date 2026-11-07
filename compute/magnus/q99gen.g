@@ -24,10 +24,12 @@
 # element of order 3 of Z ∩ D_5, with no assumption D_5 <= Q'').  zs = one generator of each
 # subgroup of order 3 of S (the first nzS entries), then of each subgroup of order 3 of S4 not in S
 # (only when |S4| <= 3^S4MAX, default 4; s4skip otherwise).  d5s.py decides z in D_5 for each.
+# NCYC > 0 adds, per group, up to NCYC records "cyc":true of quotients with cyclic centre (below).
 LoadPackage("anupq");
 Read("presgens.g");
 if not IsBound(EXTRAW) then EXTRAW := [2, 3, 3, 4]; fi;
 if not IsBound(S4MAX) then S4MAX := 4; fi;
+if not IsBound(NCYC) then NCYC := 0; fi;
 Reset(GlobalMersenneTwister, SEED); Reset(GlobalRandomSource, SEED);
 RW := function(F, wt)   # random left-normed commutator of weight wt in the generators
   local g, c, i;
@@ -54,7 +56,7 @@ Order3Reps := function(A, B)   # one generator of each subgroup of order 3 of A 
 end;
 OUTS := OutputTextFile(OUT, false); SetPrintFormattingStatus(OUTS, false);
 stats := rec(tried := 0, ok := 0, nonmet := 0, eps0 := 0, e23is2 := 0, nonmete23is2 := 0,
-             Snontriv := 0, S4nontriv := 0, zcyc := 0, pqunstable := 0, skipS := 0, s4skip := 0);
+             Snontriv := 0, S4nontriv := 0, zcyc := 0, pqunstable := 0, skipS := 0, s4skip := 0, cyc := 0);
 T0 := NanosecondsSinceEpoch();
 for it in [1..NG] do
   tops := Random(TOPS); t := Length(tops);
@@ -125,7 +127,49 @@ for it in [1..NG] do
     ",\"pclass\":", String(Length(PCentralSeries(P0, 3)) - 1), ",\"pqc\":", String(pqc),
     ",\"pq_stable\":", String(pqstable),
     ",\"dd\":", String(Log(Size(DD), 3)), ",\"S\":", String(Log(Size(S), 3)),
-    ",\"S4\":", String(Log(Size(S4), 3)), ",\"s4skip\":", String(s4skip), "}\n"));
+    ",\"S4\":", String(Log(Size(S4), 3)), ",\"s4skip\":", String(s4skip), ",\"cyc\":false}\n"));
+  # Cyclic-centre reductions (NCYC targets, default 0): for a target u (order 3, from S, else from
+  # S4), pass to Qb = Q/N with N central, N ∩ <u> = 1, chosen step by step inside gamma_2 when
+  # possible, until Z(Qb) has a unique subgroup of order 3, namely <ub>.  Qb has cyclic centre,
+  # class 4 (ub in gamma_4(Qb), ub != 1) and ub in Qb'' ∩ M_5(Qb) (resp. gamma_4 ∩ M_5); the record
+  # tests z = ub in D_5(Qb), which z notin D_5(Q) does not decide.
+  targ := Concatenation(zS, zX);
+  for c in [1..Minimum(NCYC, Length(targ))] do
+    u := targ[c];
+    hom := IdentityMapping(P); Pb := P; nstep := 0; outside := false;
+    while true do
+      ub := Image(hom, u); Ob := Omega(Centre(Pb), 3, 1);
+      if Size(Ob) = 3 then break; fi;
+      U := Subgroup(Pb, [ub]); O2 := Intersection(Ob, DerivedSubgroup(Pb));
+      if IsSubgroup(U, O2) then O2 := Ob; outside := true; fi;
+      repeat v := Random(O2); until not v in U;
+      hom := hom * NaturalHomomorphismByNormalSubgroup(Pb, NormalClosure(Pb, Subgroup(Pb, [v])));
+      Pb := Image(hom); nstep := nstep + 1;
+    od;
+    gb := List(gens, x -> Image(hom, x)); ub := Image(hom, u);
+    Lb := LowerCentralSeriesOfGroup(Pb); abb := AbelianInvariants(Pb);
+    DDb := DerivedSubgroup(Lb[2]); Jb := JenningsSeries(Pb);
+    prb := PresOnGens(Pb, gb);
+    WriteAll(OUTS, Concatenation("{\"id\":\"", String(SEED), ".", String(it), ".c", String(c),
+      "\",\"k\":", String(k),
+      ",\"rels\":", String(List(prb.rels, ExtRepOfObj)), ",\"zs\":", String([ExtRepOfObj(prb.word(ub))]),
+      ",\"nzS\":", String(Number([ub], x -> x in DDb)), ",\"tops\":", String(tops),
+      ",\"logord\":", String(Log(Size(Pb), 3)),
+      ",\"lcs\":", String(List([1..Length(Lb)-1], j -> Log(Index(Lb[j], Lb[j+1]), 3))),
+      ",\"ab\":", String(abb), ",\"eps0\":", String(eps0),
+      ",\"e23\":", String(LogExp(Lb[2], Lb[3])), ",\"e34\":", String(LogExp(Lb[3], Lb[4])),
+      ",\"e4\":", String(LogExp(Lb[4], TrivialSubgroup(Pb))),
+      ",\"nonmet\":", String(not IsTrivial(DDb)), ",\"zcyc\":", String(IsCyclic(Centre(Pb))),
+      ",\"logZ\":", String(Log(Size(Centre(Pb)), 3)),
+      ",\"pclass\":", String(Length(PCentralSeries(Pb, 3)) - 1), ",\"pqc\":", String(pqc),
+      ",\"pq_stable\":true,\"dd\":", String(Log(Size(DDb), 3)),
+      ",\"S\":", String(Number([ub], x -> x in DDb)), ",\"S4\":1,\"s4skip\":false",
+      ",\"cyc\":true,\"cyc_class4\":", String(Length(Lb) - 1 = 4),
+      ",\"cyc_inM5\":", String(Length(Jb) >= 5 and ub in Jb[5]),
+      ",\"cyc_steps\":", String(nstep), ",\"cyc_outside_g2\":", String(outside),
+      ",\"cyc_two_big\":", String(Number(abb, d -> d >= 9) >= 2), "}\n"));
+    stats.cyc := stats.cyc + 1;
+  od;
 od;
 CloseStream(OUTS);
 Print("stats ", stats, "\n");
