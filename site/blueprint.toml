@@ -169,8 +169,8 @@ note_ru = "«γ_2/γ_3 имеет экспоненту не больше 3»: a�
 lean = ["GroupDimension.D_five_eq_gamma_five_of_g4_cube_g2_nine", "GroupDimension.D_five_eq_bot_of_class_four_g4_cube_g2_nine", "GroupDimension.ExpThree.D_five_eq_gamma_five_g4_cube_g2_nine", "GroupDimension.ExpThree.D_five_eq_bot_of_class_four_g4_cube_g2_nine"]
 proved = true
 uses = ["ext:tahara61"]
-note = "Hypotheses: c³ ∈ γ_5 for every c ∈ γ_4, and a⁹ ∈ γ_4 for every a ∈ γ_2. The Lean proof differs from the paper's only in bookkeeping: the basis of Ω_1(Q/γ_2) is adapted to the heights and to ker P̄ only, the bases of L_2 and L_3 are arbitrary, and no x_i is adjusted; steps (4) and (5) come from the identity (∗) (SetupA.row). Theorem [[thm:exp3gen|#]] is the special case exp(γ_2/γ_3) ≤ 3 and is derived from it in Lean."
-note_ru = "Гипотезы: c³ ∈ γ_5 для всех c ∈ γ_4 и a⁹ ∈ γ_4 для всех a ∈ γ_2. Доказательство в Lean отличается от статьи лишь учётом: базис Ω_1(Q/γ_2) согласован только с высотами и с ker P̄, базисы L_2 и L_3 произвольны, и x_i не подправляются; шаги (4) и (5) получаются из тождества (∗) (SetupA.row). Теорема [[thm:exp3gen|#]] — частный случай при exp(γ_2/γ_3) ≤ 3 и выводится из неё в Lean."
+note = "Hypotheses: c³ ∈ γ_5 for every c ∈ γ_4, and a⁹ ∈ γ_4 for every a ∈ γ_2. The Lean proof differs from the paper's only in bookkeeping: the basis of Ω_1(Q/γ_2) is adapted to the heights and to ker P̄ only, the basis of L_2 is arbitrary, and no x_i is adjusted; steps (4) and (5) come from the identity (∗) paired with x_i (SetupA.row). Theorem [[thm:exp3gen|#]] is the special case exp(γ_2/γ_3) ≤ 3 and is derived from it in Lean."
+note_ru = "Гипотезы: c³ ∈ γ_5 для всех c ∈ γ_4 и a⁹ ∈ γ_4 для всех a ∈ γ_2. Доказательство в Lean отличается от статьи лишь учётом: базис Ω_1(Q/γ_2) согласован только с высотами и с ker P̄, базис L_2 произволен, и x_i не подправляются; шаги (4) и (5) получаются из тождества (∗), спаренного с x_i (SetupA.row). Теорема [[thm:exp3gen|#]] — частный случай при exp(γ_2/γ_3) ≤ 3 и выводится из неё в Lean."
 
 [nodes."thm:gt3"]
 lean = ["GroupDimension.GuptaTahara.D_five_eq_gamma_five_of_metabelian", "GroupDimension.guptaTaharaMetabelian_three"]
