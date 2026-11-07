@@ -1,6 +1,9 @@
 # MATH-443 / D5-5: q99_main.plan, job kimmy/tm/20261107-005240-math443-main-567b7ba (tree 567b7ba, 4h11m),
-# split by q99split.py in kimmy/tm/20261107-082854-math443-exp9-split-52e5fb5.  e23 = log_3 exp(gamma_2/gamma_3).
-# columns: groups | non-met | S>1 (cyc: z in Q'') | z checked | z in Q'' | z in D5 | cert fail | ctrl D4 fail | Z cyclic
+# split by q99split.py: first by an identical inline copy in kimmy/tm/20261107-082854-math443-exp9-split-52e5fb5 (state
+# 'failed', exit 2, only from its trailing `ls HIT`: no HIT file), reproduced byte for byte from tree d7525e3 in
+# kimmy/tm/20261107-083103-math443-exp9-repro-d7525e3.  e23 = log_3 exp(gamma_2/gamma_3) (recorded, not imposed).
+# Counts are records (group, resp. (group, target) quotient), not isomorphism classes; 'z in D5' counts records with some z in D5.
+# columns: groups | non-met | S>1 (cyc: z in Q'') | z checked | z in Q'' | records with z in D5 | cert fail | ctrl D4 fail | Z cyclic
 == orig records 1499 e23 counts {0: 0, 1: 101, 2: 1398, 3: 0}
 (1, '[27, 9, 3, 3]', '-') [4, 4, 1, 12, 1, 0, 0, 0, 0]
 (1, '[27, 9, 3]', '-') [12, 7, 2, 51, 2, 0, 0, 0, 0]

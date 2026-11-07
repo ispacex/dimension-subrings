@@ -133,6 +133,9 @@ for it in [1..NG] do
   # possible, until Z(Qb) has a unique subgroup of order 3, namely <ub>.  Qb has cyclic centre,
   # class 4 (ub in gamma_4(Qb), ub != 1) and ub in Qb'' ∩ M_5(Qb) (resp. gamma_4 ∩ M_5); the record
   # tests z = ub in D_5(Qb), which z notin D_5(Q) does not decide.
+  # Each step kills a central <v> != <ub> of order 3, so ub stays a nontrivial central element of order 3 and |Pb|
+  # drops: the loop stops with Omega_1(Z(Qb)) = <ub>.  Then D_5(Qb) = 1 iff ub notin D_5(Qb) (D_5 normal meets Z).
+  # Fields tops, eps0, pqc are inherited from Q; pq_stable is not tested for Qb (a pc group, not a p-quotient).
   targ := Concatenation(zS, zX);
   for c in [1..Minimum(NCYC, Length(targ))] do
     u := targ[c];

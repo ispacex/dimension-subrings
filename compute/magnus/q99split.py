@@ -1,8 +1,10 @@
 """MATH-443 / D5-5: split of a run_q99.sh output directory by (e23, Q/gamma_2, gamma_4), separately for the
 groups of q99gen.g ("orig") and for their cyclic-centre quotients ("cyc", NCYC > 0).
 Usage: python q99split.py OUTDIR   (reads OUTDIR/d5s_*.jsonl).
-Columns: groups | non-met | z in Q'' (orig: S != 1) | z checked | z in Q'' | z in D5 | cert fail | ctrl D4 fail | Z cyclic.
-For a "cyc" record Omega_1(Z) = <z>, so z notin D_5 means D_5 = 1 for that quotient."""
+Columns: groups | non-met | z in Q'' (orig: S != 1) | z checked | z in Q'' | records with z in D5 | cert fail | ctrl D4 fail | Z cyclic.
+For a "cyc" record Omega_1(Z) = <z> and gamma_5 = 1, so z notin D_5 means D_5 = 1 for that quotient (a nontrivial
+normal D_5 would meet Z, hence contain <z>); there gamma_4 <= Z is cyclic, so gamma_4 = C_3 or C_9.
+In "cyc" records tops, eps0, pqc are inherited from Q and pq_stable is not tested; the split keys on ab of the quotient."""
 import json, sys, glob
 from collections import defaultdict
 R = []
@@ -28,7 +30,7 @@ for kind in ("orig", "cyc"):
         a[0] += 1; a[1] += r["nonmet"]; a[2] += (r["S"] > 0) if kind == "orig" else (r["nzS"] > 0)
         a[3] += r["nz"]; a[4] += r["nzS"]; a[5] += any(r["z_in_D5"]); a[6] += (not r["cert"]); a[7] += (not r["ctrl_z_in_D4"])
         a[8] += r.get("zcyc", False)
-    print("e23 | Q/g2 | g4 | groups | nonmet | S>1 (cyc: z in Q'') | z | z in Q'' | z in D5 | cert fail | ctrlD4 fail | Z cyclic")
+    print("e23 | Q/g2 | g4 | groups | nonmet | S>1 (cyc: z in Q'') | z | z in Q'' | records with z in D5 | cert fail | ctrlD4 fail | Z cyclic")
     for k in sorted(agg): print(k, agg[k])
     hits = [r["id"] for r in T if any(r["z_in_D5"])]
     print("HITS", hits)
