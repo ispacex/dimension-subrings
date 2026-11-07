@@ -131,6 +131,15 @@ $u = 0$ proves $h - 1 \in \varpi^n$ (modulo $p^E$), otherwise $S$ grows by the s
 ## Result for the 3-group of Bartholdi–Mikhailov
 
 See `../bm494/README.md` (`bm_grnq.g`, `run_grnq.sh`). In short: at $n = 6$ the full computation runs
-(25–50 min); at $n = 7$ the projection test does not decide the candidate $a_6^{81}$: round 0 leaves it in
-the span, one round of enlargement makes $S$ all 43 673 tails, and the first lazy residual has 39 675 entries
-outside $S$ ($|S| = 3884$). So $D_7$ itself stays open there.
+(25–50 min); at $n = 7$ the projection test does not decide the candidate $a_6^{81}$ (round 0 leaves it in
+the span, one round of enlargement makes $S$ all 43 673 tails), but the full computation does, with the
+streaming Howell form on 4 threads, `GRNQ_V32` and checkpoints (stage 6: ~232 500 rows × ~43 500 columns,
+18–20 h, within 16 GB): $a_6^{81} \in \varpi^6 \setminus \varpi^7$ with the certificate at $E = 20$ in $G$ and in the three
+$G/\langle u\rangle$, so $D_7(Q) = \langle w\rangle$ ([MATH-424](https://default.kaiku.tech/issue/MATH-424)). Logs: [`n7/`](n7/)
+($G$: an excerpt of the tm log; Gu1–Gu3: the logs from the Modal Volume, with a line per container start).
+
+After the tests `grnq` runs the span test (all $p^k$ combinations of the span basis); at $n = 7$ with $k = 9$
+or $8$ it did not finish (9 h on one core for $G$), and the four runs were stopped after the tests. The
+post-processing of the last stage (the third time in its `stage` line, ~2 h) and the tests (~4.5 h) are not
+checkpointed: a restart after the last Howell checkpoint redoes them, so on Modal the time from that
+checkpoint to the tests must fit in one container (`modal_grnq.py`).

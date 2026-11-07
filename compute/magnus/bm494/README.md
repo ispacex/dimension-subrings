@@ -61,13 +61,36 @@ That $z$ itself lies in $D_6$ is automatic ($a_6^{81} \in \gamma_6 \subseteq D_6
 $\bar Z$ does, i.e. $D_6(Q) \cap \bar Z = \gamma_6(Q) \cap \bar Z$. The descent of `bm_z8.g` does not help: the quotients keeping $z$ it reaches have order
 $3^{433}$ ($G$) and $3^{430}$ ($G/\langle u\rangle$), with $N = 17\,412$ and $17\,923$.
 
-At $n = 7$ (the question) the last stage has 43 673 tails, and its full Howell form is out of reach here (estimated ~100 h,
-> 100 GB; kimmy has 20 GB). The projection test of `grnq` (an exact sufficient test for $h \notin D_7$ on a quotient
-by the tails outside a set $S$) does not decide $a_6^{81}$ in $G$: on $S$ = the support of $y$ ($|S| = 3884$, 138 909
+At $n = 7$ (the question) the last stage has 43 673 tails. Its full Howell form was first estimated out of reach (~100 h,
+> 100 GB; kimmy has 20 GB), so the projection test of `grnq` was tried first (an exact sufficient test for $h \notin D_7$ on a quotient
+by the tails outside a set $S$). It does not decide $a_6^{81}$ in $G$: on $S$ = the support of $y$ ($|S| = 3884$, 138 909
 rows, 24 min) $y|_S$ lies in the span (likewise $a_6^{27}$, and the control $w$, which must); one round of enlargement
 by the supports of the rows makes $S$ all 43 673 tails; the lazy enlargement's first residual has 39 675 entries
 outside $S$. Runs: tm `grnq-G7-p0-a81` (`GRNQ_PROJ=0 GRNQ_ONLY=a6^81,a6^27`, 1 h 10 min), `grnq-G7-p1-size`,
-`grnq-G7-lazy-a81` (stopped after the first residual). Open: whether $z \in D_7(Q)$, hence whether $D_7(Q) = \langle w\rangle$. Small module certificates ([MATH-423](https://default.kaiku.tech/issue/MATH-423), [`../modcert`](../modcert/README.md)) do not decide it: $z \in H'$ for $C_G(g)$, $g \in \gamma_5$, and for a subgroup of index $3^7$, and the same family does not separate the known $y_1^{64} \notin D_4$ in Rips's group.
+`grnq-G7-lazy-a81` (stopped after the first residual). Small module certificates ([MATH-423](https://default.kaiku.tech/issue/MATH-423), [`../modcert`](../modcert/README.md)) do not decide it: $z \in H'$ for $C_G(g)$, $g \in \gamma_5$, and for a subgroup of index $3^7$, and the same family does not separate the known $y_1^{64} \notin D_4$ in Rips's group.
+
+**Result at $n = 7$ ([MATH-424](https://default.kaiku.tech/issue/MATH-424)): $D_7(Q) = \langle w\rangle$ in all four $Q$.** The full last stage
+does run with the streaming Howell form on 4 threads with 32-bit entries (`GRNQ_V32`, within 16 GB, 18–20 h for stage 6), with
+checkpoints (`../grnq/README.md`). $G$ on kimmy (tm `kimmy/tm/20261105-113858-grnq-G7-par4-v32-0a00e67`, commit 0a00e67), the three
+$G/\langle u\rangle$ on Modal (`../grnq/modal_grnq.py`, same `grnq.cpp`, the inputs from the same `bm_grnq.g`); logs in
+[`../grnq/n7/`](../grnq/n7/). $E = 20$, the certificate holds in all four (largest exponent of a power relation 13), so
+membership is exact:
+
+| | $G$ | $G/\langle u_1\rangle$, $G/\langle u_2\rangle$, $G/\langle u_3\rangle$ (identical) |
+|---|---|---|
+| $\log_3\lvert\varpi^6/\varpi^7\rvert$ (stage 6) | 53 146 | 52 936 |
+| generators of weight 0..6 | 1 7 44 241 1137 4809 18679 | 1 7 44 240 1130 4768 18469 |
+| $w$ | $\in \varpi^7$ | $\in \varpi^7$ |
+| $x_1$; $x_2$ | $\varpi^2 \setminus \varpi^3$; $\varpi^1 \setminus \varpi^2$ | the same |
+| $a_6$, $a_6^3$, $a_6^{27}$, $a_6^{81}$ | $\varpi^6 \setminus \varpi^7$ | the same |
+| $u$ (control; trivial in $Q$, test `u1` in the logs) | — | $\in \varpi^7$ |
+
+So $a_6^{81} \notin D_7(Q)$, hence (above) $D_7(Q) = \langle w\rangle$ for $Q = G$ and each $G/\langle u\rangle$, and $D_7(H) \subseteq \langle w\rangle$
+for every $H \le Q$: no subgroup has another witness, and for $H$ only $w \in D_7(H)$ remains. Also $w \in \varpi^7$, i.e. $w \in D_7(Q)$,
+computed here directly, independently of BM's proof. The span test over $\bar Z/\langle w\rangle$ that `grnq` runs after the tests did not
+finish in reasonable time (9 h on one core for $G$) and was stopped in all four runs; it is not needed after the reduction above.
+Stage 6 in the three quotients: Gu1 17.5 h; Gu2, Gu3 resumed from checkpoints across container restarts (logs show each
+`container start`); about 32 USD on Modal in all, the 21 h lost on 5–6.11 included.
 
 Run with `tm submit --untracked --cache mikh --cores 1 --mem 16G compute/magnus/bm494/run_check.sh`
 (likewise `run_final.sh`; `run_descent.sh` with `--cores 8`). Logs go to `$JOB_OUT` and are not kept.
