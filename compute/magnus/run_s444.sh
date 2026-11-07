@@ -1,6 +1,6 @@
 #!/bin/bash
 # MATH-444 / D5-49: s444.g + d5s.py over a plan, P shards in parallel; summary by s444sum.py.
-# Usage (inside a tm job, tree root): bash compute/magnus/run_s444.sh PLAN [P]
+# Usage (inside a tm job, tree root): [GSCRIPT=s449.g] bash compute/magnus/run_s444.sh PLAN [P]
 # PLAN lines: fam seed TOPS KS EPS0 NG [EXTRAW]   (GAP lists without spaces)
 export PATH=$JOB_CACHE/bin:$PATH
 source remote/py-env.sh
@@ -13,7 +13,7 @@ one() {
   t=$(date +%s)
   gap -q -b --quitonbreak -o 3g > "$OUT/gap_${fam}_$s.log" 2>&1 <<GAPEOF
 SEED:=$s;; NG:=$ng;; KS:=$ks;; TOPS:=$tops;; EPS0:=$e;; EXTRAW:=$xw;; OUT:="$OUT/q_${fam}_$s.jsonl";;
-Read("s444.g");
+Read("${GSCRIPT:-s444.g}");
 GAPEOF
   t1=$(date +%s)
   python d5s.py < "$OUT/q_${fam}_$s.jsonl" > "$OUT/d5s_${fam}_$s.jsonl"
