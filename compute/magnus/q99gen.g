@@ -98,12 +98,12 @@ for it in [1..NG] do
   DD := DerivedSubgroup(L[2]);
   nonmet := not IsTrivial(DD);
   if nonmet then stats.nonmet := stats.nonmet + 1; if e23 >= 2 then stats.nonmete23is2 := stats.nonmete23is2 + 1; fi; fi;
-  Z := Centre(P);
-  zcyc := IsCyclic(Z);
+  ZQ := Centre(P);
+  zcyc := IsCyclic(ZQ);
   if zcyc then stats.zcyc := stats.zcyc + 1; fi;
   J := JenningsSeries(P);
   if Length(J) >= 5 then M5 := J[5]; else M5 := TrivialSubgroup(P); fi;
-  Om1 := Omega(Z, 3, 1);
+  Om1 := Omega(ZQ, 3, 1);
   S := Intersection(Om1, DD, M5);
   S4 := Intersection(Om1, L[4], M5);
   if not IsTrivial(S) then stats.Snontriv := stats.Snontriv + 1; fi;
@@ -121,7 +121,7 @@ for it in [1..NG] do
     ",\"lcs\":", String(List([1..4], j -> Log(Index(L[j], L[j+1]), 3))),
     ",\"ab\":", String(ab), ",\"eps0\":", String(eps0),
     ",\"e23\":", String(e23), ",\"e34\":", String(e34), ",\"e4\":", String(e4),
-    ",\"nonmet\":", String(nonmet), ",\"zcyc\":", String(zcyc), ",\"logZ\":", String(Log(Size(Z), 3)),
+    ",\"nonmet\":", String(nonmet), ",\"zcyc\":", String(zcyc), ",\"logZ\":", String(Log(Size(ZQ), 3)),
     ",\"pclass\":", String(Length(PCentralSeries(P0, 3)) - 1), ",\"pqc\":", String(pqc),
     ",\"pq_stable\":", String(pqstable),
     ",\"dd\":", String(Log(Size(DD), 3)), ",\"S\":", String(Log(Size(S), 3)),

@@ -34,6 +34,8 @@ nm = [r for r in L if r["nonmet"]]
 row("non-met, e23=2", [r for r in nm if r["e23"] >= 2])
 row("non-met, e23=2, Z cyclic", [r for r in nm if r["e23"] >= 2 and r["zcyc"]])
 row("non-met, e23=2, |Q|>=3^10", [r for r in nm if r["e23"] >= 2 and r["logord"] >= 10])
+if not L:
+    sys.exit(0)
 print("ab", Counter(str(r["ab"]) for r in L))
 print("logord range", min(r["logord"] for r in L), max(r["logord"] for r in L),
       "| logord", sorted(Counter(r["logord"] for r in L).items()),
