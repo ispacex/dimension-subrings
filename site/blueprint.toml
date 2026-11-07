@@ -165,8 +165,8 @@ note_ru = "«γ_2/γ_3 имеет экспоненту не больше 3»: a�
 
 [nodes."thm:exp3h9"]
 uses = ["ext:tahara61"]
-note = "Proved on paper (MATH-444), checked by an independent review; not formalized. Theorem [[thm:exp3gen|#]] is the special case exp(γ_2/γ_3) ≤ 3, and the proof follows its proof: γ_2/γ_3 and γ_3/γ_4 may have exponent 9."
-note_ru = "Доказано на бумаге (MATH-444), проверено независимой рецензией; не формализовано. Теорема [[thm:exp3gen|#]] — частный случай exp(γ_2/γ_3) ≤ 3, и доказательство следует её доказательству: γ_2/γ_3 и γ_3/γ_4 могут иметь экспоненту 9."
+note = "Proved on paper (MATH-444), checked by an independent review; not formalized. Theorem [[thm:exp3gen|#]] is the special case exp(γ_2/γ_3) ≤ 3; here γ_2/γ_3 and γ_3/γ_4 may have exponent 9. The proof follows that of Theorem [[thm:exp3gen|#]]."
+note_ru = "Доказано на бумаге (MATH-444), проверено независимой рецензией; не формализовано. Теорема [[thm:exp3gen|#]] — частный случай при exp(γ_2/γ_3) ≤ 3; здесь γ_2/γ_3 и γ_3/γ_4 могут иметь экспоненту 9. Доказательство повторяет схему доказательства теоремы [[thm:exp3gen|#]]."
 
 [nodes."lem:filter"]
 lean = ["GroupDimension.filter_on_parents"]
@@ -322,8 +322,8 @@ where_en = '''[[thm:exp3gen]]; {{lean:GroupDimension.D_five_eq_gamma_five_of_exp
 
 [[results]]
 status = "p"
-ru = '''Ещё общее: $D_5(G)=\gamma_5(G)$, если $G/\gamma_2(G)$ — конечная $3$-группа, $\gamma_4(G)^3\subseteq\gamma_5(G)$ и $\gamma_2(G)^9\subseteq\gamma_4(G)$; теорема [[thm:exp3gen|#]] — частный случай, а $\gamma_2/\gamma_3$ и $\gamma_3/\gamma_4$ теперь могут иметь экспоненту $9$. Доказано на бумаге, проверено независимой рецензией. Отсюда у минимального контрпримера с $\gamma_4\cong C_3$ найдутся $x,y$ с $[x^9,y]\notin\gamma_4$, т.е. $\gamma_2^9\not\subseteq\gamma_4$.'''
-en = '''More generally still: $D_5(G)=\gamma_5(G)$ whenever $G/\gamma_2(G)$ is a finite $3$-group, $\gamma_4(G)^3\subseteq\gamma_5(G)$ and $\gamma_2(G)^9\subseteq\gamma_4(G)$; Theorem [[thm:exp3gen|#]] is the special case, and $\gamma_2/\gamma_3$ and $\gamma_3/\gamma_4$ may now have exponent $9$. Proved on paper, checked by an independent review. Hence a minimal counterexample with $\gamma_4\cong C_3$ has $x,y$ with $[x^9,y]\notin\gamma_4$, i.e. $\gamma_2^9\not\subseteq\gamma_4$.'''
+ru = '''Ещё шире: $D_5(G)=\gamma_5(G)$, если $G/\gamma_2(G)$ — конечная $3$-группа, $\gamma_4(G)^3\subseteq\gamma_5(G)$ и $\gamma_2(G)^9\subseteq\gamma_4(G)$; теорема [[thm:exp3gen|#]] — частный случай, а $\gamma_2/\gamma_3$ и $\gamma_3/\gamma_4$ теперь могут иметь экспоненту $9$. Доказано на бумаге, проверено независимой рецензией. Отсюда у минимального контрпримера с $\gamma_4\cong C_3$ найдутся $x,y$ с $[x^9,y]\notin\gamma_4$, т.е. $\gamma_2^9\not\subseteq\gamma_4$.'''
+en = '''Further still: $D_5(G)=\gamma_5(G)$ whenever $G/\gamma_2(G)$ is a finite $3$-group, $\gamma_4(G)^3\subseteq\gamma_5(G)$ and $\gamma_2(G)^9\subseteq\gamma_4(G)$; Theorem [[thm:exp3gen|#]] is the special case, and $\gamma_2/\gamma_3$ and $\gamma_3/\gamma_4$ may now have exponent $9$. Proved on paper, checked by an independent review. Hence a minimal counterexample with $\gamma_4\cong C_3$ has $x,y$ with $[x^9,y]\notin\gamma_4$, i.e. $\gamma_2^9\not\subseteq\gamma_4$.'''
 where = '''[[thm:exp3h9]]'''
 
 [[results]]
