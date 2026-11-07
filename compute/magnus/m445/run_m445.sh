@@ -6,7 +6,8 @@
 set -e
 cd compute/magnus/m445
 OUT=${JOB_OUT:-$PWD/out}; mkdir -p "$OUT"
-GAP=${GAP:-gap}
+GAP=${GAP:-$JOB_CACHE/gap/gap}
+PY=${PY:-$(ls -d $JOB_CACHE/venv-*/bin/python 2>/dev/null | head -1)}; PY=${PY:-python3}
 T=$(mktemp -d)
 case "$1" in
 ids)
@@ -25,6 +26,6 @@ tah)
 d5)
   echo "SEED:=$2;NG:=$3;KS:=[2,3,3];DEXP:=[3,9,9,27];NEXTRA:=6;MAXLOG:=26;MAXS:=4;OUT:=\"$OUT/met9_$2.jsonl\";" > $T/c.g
   $GAP -q $T/c.g met9gen.g | tr -d '\n' | sed 's/  */ /g' > "$OUT/met9gen_$2.log"
-  cd .. && python3 d5s.py < "$OUT/met9_$2.jsonl" > "$OUT/met9_d5s_$2.jsonl"
+  cd .. && $PY d5s.py < "$OUT/met9_$2.jsonl" > "$OUT/met9_d5s_$2.jsonl"
   tail -1 "$OUT/met9_d5s_$2.jsonl" ;;
 esac

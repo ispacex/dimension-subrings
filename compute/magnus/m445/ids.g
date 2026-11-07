@@ -2,7 +2,7 @@
 # Groups: Q = NilpotentQuotient(F/R, 4), F free on k gens, R = powers x_i^{e_i} (times random words),
 # random extra relators, and (MET=true) all [[x_a,x_b],[x_c,x_d]] (=> Q'' = 1 since class 4).
 # Usage: set SEED, NG, P (prime), MET before reading.
-LoadPackage("nq");
+Read("cfq.g");
 Reset(GlobalMersenneTwister, SEED); Reset(GlobalRandomSource, SEED);
 RW := function(F, wt) local g, c, i; g := GeneratorsOfGroup(F); c := Random(g);
   for i in [2..wt] do c := Comm(c, Random(g)); od; return c^Random([1..P-1]); end;
@@ -16,8 +16,8 @@ for it in [1..NG] do
       Comm(Comm(g[ab[1]], g[ab[2]]), Comm(g[cd[1]], g[cd[2]])))))); 
     Append(rels, List(Tuples([1..k], 3), t -> Comm(Comm(g[t[1]], g[t[2]]), Comm(Comm(g[t[1]], g[t[2]]), g[t[3]]))));
   fi;
-  Q := NilpotentQuotient(F / rels, 4);
-  if not IsFinite(Q) or not IsPGroup(Q) then continue; fi;
+  cq := ClassFourQuotient(F, rels, P); if cq = fail then continue; fi; Q := cq.Q;
+  if not IsPGroup(Q) then continue; fi;
   L := LowerCentralSeriesOfGroup(Q);
   if Length(L) <> 5 then continue; fi;
   st.groups := st.groups + 1;

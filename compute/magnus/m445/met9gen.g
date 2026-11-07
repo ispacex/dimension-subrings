@@ -6,7 +6,7 @@
 # Omega_1(Z(Q)) ∩ gamma_4 ∩ M_5 =: S; zs = one generator of each subgroup of order 3 of S.
 # (q1gen.g/q9gen.g use Q'' instead of gamma_4: that uses Lemma 6.1, i.e. Gupta-Tahara itself,
 # so it cannot be used here.)  Set SEED, NG, KS, DEXP, NEXTRA, MAXLOG, MAXS, OUT before reading.
-LoadPackage("nq");
+Read("cfq.g");
 Read("../presgens.g");
 Reset(GlobalMersenneTwister, SEED); Reset(GlobalRandomSource, SEED);
 RW := function(F, wt) local g, c, i; g := GeneratorsOfGroup(F); c := Random(g);
@@ -20,8 +20,7 @@ for it in [1..NG] do
   Append(rels, List([1..Random([0..NEXTRA])], j -> Product(List([1..Random([1, 2])], t -> RW(F, Random([2, 3, 3, 4]))), One(F))));
   Append(rels, Concatenation(List(Combinations([1..k], 2), ab -> List(Combinations([1..k], 2), cd ->
       Comm(Comm(g[ab[1]], g[ab[2]]), Comm(g[cd[1]], g[cd[2]]))))));
-  Q := NilpotentQuotient(F / rels, 4);
-  if not IsFinite(Q) or not IsPGroup(Q) then continue; fi;
+  cq := ClassFourQuotient(F, rels, 3); if cq = fail then continue; fi; Q := cq.Q;
   L := LowerCentralSeriesOfGroup(Q);
   if Length(L) <> 5 then continue; fi;
   st.class4 := st.class4 + 1;
@@ -29,7 +28,7 @@ for it in [1..NG] do
   if Exponent(L[2] / L[3]) < 9 then continue; fi;
   st.exp9 := st.exp9 + 1;
   if Log(Size(Q), 3) > MAXLOG then st.big := st.big + 1; continue; fi;
-  gens := List(GeneratorsOfGroup(F), x -> MappedWord(x, GeneratorsOfGroup(F), GeneratorsOfGroup(Q){[1..k]}));
+  gens := cq.gens;
   if Group(gens) <> Q then Error("gens"); fi;
   J := JenningsSeries(Q);
   if Length(J) >= 5 then M5 := J[5]; else M5 := TrivialSubgroup(Q); fi;

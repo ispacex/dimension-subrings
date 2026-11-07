@@ -1,5 +1,6 @@
 # random class-4 3-groups (MET: metabelian), Tahara admissible-lattice check with drop controls
 Read("tahadm.g");
+Read("cfq.g");
 Reset(GlobalMersenneTwister, SEED); Reset(GlobalRandomSource, SEED);
 P := 3;
 RW := function(F, wt) local g, c, i; g := GeneratorsOfGroup(F); c := Random(g);
@@ -16,8 +17,7 @@ for it in [1..NG] do
     Append(rels, Concatenation(List(Combinations([1..k], 2), ab -> List(Combinations([1..k], 2), cd ->
       Comm(Comm(g[ab[1]], g[ab[2]]), Comm(g[cd[1]], g[cd[2]]))))));
   fi;
-  Q := NilpotentQuotient(F / Concatenation(rels, List(Tuples([1..k], 5), t -> LeftNormedComm(g{t}))), 4);
-  if not IsFinite(Q) then continue; fi;
+  cq := ClassFourQuotient(F, rels, P); if cq = fail then continue; fi; Q := cq.Q;
   L := LowerCentralSeriesOfGroup(Q);
   if Length(L) <> 5 then continue; fi;
   if MET and not IsTrivial(DerivedSubgroup(L[2])) then Error("not metabelian"); fi;

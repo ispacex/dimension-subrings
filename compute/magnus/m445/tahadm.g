@@ -3,7 +3,7 @@
 # The admissible families form a lattice (kernel of an integer matrix with slack variables for the
 # congruences); g is additive in tau (gamma_3 abelian), so g = 1 on a lattice basis decides it.
 # DROP: list of condition names to drop (negative control), e.g. ["E"].
-LoadPackage("nq");
+
 LayerBasis := function(Q, L, i)  # uniqueness basis of L[i]/L[i+1], orders nondecreasing
   local hom, A, ind, ord, perm, seq, j, pc, x, o;
   hom := NaturalHomomorphismByNormalSubgroup(L[i], L[i+1]); A := Image(hom);
