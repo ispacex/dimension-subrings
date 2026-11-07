@@ -44,7 +44,13 @@ Threads and 32-bit rows (MATH-424). `GRNQ_THREADS` (default: the cpus the proces
 `-fopenmp`, without it one thread): the `stream` Howell form eliminates in blocks of `GRNQ_BLOCK` columns (default
 256); inside a block every elimination is applied at once, its tail beyond the block is applied for the whole
 block by the threads, each on its own range of columns. The sums mod $p^E$ are exact, so the output, statistics
-included, is that of one thread (checked: `G` at $n = 5, 6$ and `rips` against the one-thread run). On kimmy 4
+included, is that of one thread. Checked: `G` at $n = 6$ with 4 threads against the one-thread run (tm
+`kimmy/tm/20261105-105831-grnq-G6-par4-7485b5a`, commit 7485b5a; the block logic is unchanged since), `G` at $n = 5$
+and `rips`; in review of #140, 300 runs (`rips` $n = 4..6$, `bm91` $n = 4, 5$; 1/2/3/8 threads, blocks 1/2/5/64/256,
+`GRNQ_PAR_MIN=0` so that every block takes the parallel path; 64-bit and V32) against main: 0 differences, statistics
+included, with "not in" answers among them ($y_1^{64} \notin \varpi^4$ in `rips`). V32 separately: `G` $n = 5$, `rips`, and
+a SIGTERM in stage 4 resumed with another thread count. The default thread count is `omp_get_max_threads()`; under
+a CPU quota without affinity set `GRNQ_THREADS` explicitly. On kimmy 4
 threads gave 1.4× at stage 5 of `G`: the elimination is bound by memory traffic more than by arithmetic.
 
 `-DGRNQ_V32` (compile time) keeps the entries of the Howell rows in 32 bits, 8 bytes an entry with the column
@@ -134,12 +140,13 @@ See `../bm494/README.md` (`bm_grnq.g`, `run_grnq.sh`). In short: at $n = 6$ the 
 (25–50 min); at $n = 7$ the projection test does not decide the candidate $a_6^{81}$ (round 0 leaves it in
 the span, one round of enlargement makes $S$ all 43 673 tails), but the full computation does, with the
 streaming Howell form on 4 threads, `GRNQ_V32` and checkpoints (stage 6: ~232 500 rows × ~43 500 columns,
-18–20 h, within 16 GB): $a_6^{81} \in \varpi^6 \setminus \varpi^7$ with the certificate at $E = 20$ in $G$ and in the three
+17.5–20 h, within 16 GB): $a_6^{81} \in \varpi^6 \setminus \varpi^7$ with the certificate at $E = 20$ in $G$ and in the three
 $G/\langle u\rangle$, so $D_7(Q) = \langle w\rangle$ ([MATH-424](https://default.kaiku.tech/issue/MATH-424)). Logs: [`n7/`](n7/)
-($G$: an excerpt of the tm log; Gu1–Gu3: the logs from the Modal Volume, with a line per container start).
+($G$: an excerpt of the tm log; Gu1–Gu3: the logs from the Modal Volume, with a line per container start;
+the runs are described in `../bm494/README.md`).
 
 After the tests `grnq` runs the span test (all $p^k$ combinations of the span basis); at $n = 7$ with $k = 9$
-or $8$ it did not finish (9 h on one core for $G$), and the four runs were stopped after the tests. The
+or $8$ it did not finish (9 h on one core for $G$), and the four runs were stopped after the tests (tm job cancelled, Modal processes killed). The
 post-processing of the last stage (the third time in its `stage` line, ~2 h) and the tests (~4.5 h) are not
 checkpointed: a restart after the last Howell checkpoint redoes them, so on Modal the time from that
 checkpoint to the tests must fit in one container (`modal_grnq.py`).

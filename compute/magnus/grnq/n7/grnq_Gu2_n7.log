@@ -1,0 +1,193 @@
+=== container start 2026-11-05 12:21:41 UTC, 0.0 h used before, 4 threads ===
+p = 3, E = 20, n = 7, r = 7, 186 relators, 8 tests; |T_<n| = 137257
+Magnus expansions of 494 named subexpressions and 186 relators: 27.6 s
+  howell stream: 7 rows (10 entries) x 7 columns; 1 eliminations writing 1 entries; 7 pivots, length mean 1 max 3
+stage 1: 7 tails, 0 + 7 equations, 7 new generators of weight 1 (0 without power relation), log_3 |Delta^1/Delta^2| = 59; 0.0 + 0.0 + 0.0 s
+  howell stream: 136 rows (307 entries) x 56 columns; 313 eliminations writing 629 entries; 56 pivots, length mean 2 max 10
+stage 2: 56 tails, 56 + 80 equations, 44 new generators of weight 2 (0 without power relation), log_3 |Delta^2/Delta^3| = 262; 0.0 + 0.0 + 0.0 s
+  howell stream: 1116 rows (7942 entries) x 364 columns; 35992 eliminations writing 492002 entries; 364 pivots, length mean 15 max 144
+stage 3: 364 tails, 408 + 708 equations, 240 new generators of weight 3 (0 without power relation), log_3 |Delta^3/Delta^4| = 1108; 0.0 + 0.0 + 0.0 s
+  howell stream: 8431 rows (205090 entries) x 2044 columns; 4856670 eliminations writing 848489121 entries; 2044 pivots, length mean 242 max 1351
+stage 4: 2044 tails, 2328 + 6103 equations, 1130 new generators of weight 4 (0 without power relation), log_3 |Delta^4/Delta^5| = 4250; 0.1 + 3.1 + 0.3 s
+[howell stage 5] 0.17 h: rows 33370/48756 (68.44%), queue 0, pivots 9954/9954; 214163278 eliminations, 3.37e+11 entries written (5.62e+08/s), 4 threads; 55.6 rows/s now, 55.6 on average; ETA by the average rate 0.1 h
+[howell stage 5] 0.20 h: rows 48756/48756 (100.00%), queue 0, pivots 9954/9954; 262600479 eliminations, 4.05e+11 entries written (5.98e+08/s), 4 threads; 134 rows/s now, 68.2 on average; ETA by the average rate 0.0 h
+  howell stream: 48756 rows (11307104 entries) x 9954 columns; 262600479 eliminations writing 405456250474 entries; 9954 pivots, length mean 2591 max 9232
+stage 5: 9954 tails, 11368 + 37388 equations, 4768 new generators of weight 5 (0 without power relation), log_3 |Delta^5/Delta^6| = 15401; 25.7 + 714.6 + 69.0 s
+[howell stage 6] 0.17 h: rows 8298/232471 (3.57%), queue 2, pivots 9757/43330; 91774906 eliminations, 5.66e+11 entries written (9.44e+08/s), 4 threads; 13.8 rows/s now, 13.8 on average; ETA by the average rate 4.5 h
+[howell stage 6] 0.33 h: rows 9069/232471 (3.90%), queue 2, pivots 10873/43330; 148607019 eliminations, 1.27e+12 entries written (1.17e+09/s), 4 threads; 1.28 rows/s now, 7.56 on average; ETA by the average rate 8.2 h
+[howell stage 6] 0.50 h: rows 9666/232471 (4.16%), queue 1, pivots 11785/43330; 202854667 eliminations, 1.95e+12 entries written (1.14e+09/s), 4 threads; 0.995 rows/s now, 5.37 on average; ETA by the average rate 11.5 h
+[howell stage 6] 0.67 h: rows 10192/232471 (4.38%), queue 1, pivots 12533/43330; 255323560 eliminations, 2.66e+12 entries written (1.19e+09/s), 4 threads; 0.876 rows/s now, 4.25 on average; ETA by the average rate 14.5 h
+[howell stage 6] 0.83 h: rows 10647/232471 (4.58%), queue 1, pivots 13228/43330; 303847003 eliminations, 3.36e+12 entries written (1.15e+09/s), 4 threads; 0.757 rows/s now, 3.55 on average; ETA by the average rate 17.4 h
+[howell stage 6] 1.00 h: rows 11052/232471 (4.75%), queue 3, pivots 13985/43330; 350654280 eliminations, 4.07e+12 entries written (1.19e+09/s), 4 threads; 0.675 rows/s now, 3.07 on average; ETA by the average rate 20.0 h
+[howell stage 6] 1.17 h: rows 11456/232471 (4.93%), queue 2, pivots 14714/43330; 398055396 eliminations, 4.82e+12 entries written (1.25e+09/s), 4 threads; 0.673 rows/s now, 2.73 on average; ETA by the average rate 22.5 h
+[howell stage 6] 1.33 h: rows 11871/232471 (5.11%), queue 3, pivots 15532/43330; 444034967 eliminations, 5.56e+12 entries written (1.22e+09/s), 4 threads; 0.691 rows/s now, 2.47 on average; ETA by the average rate 24.8 h
+[howell stage 6] 1.50 h: rows 12217/232471 (5.26%), queue 1, pivots 16251/43330; 486448584 eliminations, 6.25e+12 entries written (1.17e+09/s), 4 threads; 0.576 rows/s now, 2.26 on average; ETA by the average rate 27.1 h
+[howell stage 6] 1.67 h: rows 12573/232471 (5.41%), queue 2, pivots 17120/43330; 529326455 eliminations, 6.98e+12 entries written (1.21e+09/s), 4 threads; 0.592 rows/s now, 2.09 on average; ETA by the average rate 29.2 h
+=== container start 2026-11-06 11:51:57 UTC, 2.5 h used before, 4 threads ===
+p = 3, E = 20, n = 7, r = 7, 186 relators, 8 tests; |T_<n| = 137257
+Magnus expansions of 494 named subexpressions and 186 relators: 26.2 s
+  howell stream: 7 rows (10 entries) x 7 columns; 1 eliminations writing 1 entries; 7 pivots, length mean 1 max 3
+stage 1: 7 tails, 0 + 7 equations, 7 new generators of weight 1 (0 without power relation), log_3 |Delta^1/Delta^2| = 59; 0.0 + 0.0 + 0.0 s
+  howell stream: 136 rows (307 entries) x 56 columns; 313 eliminations writing 629 entries; 56 pivots, length mean 2 max 10
+stage 2: 56 tails, 56 + 80 equations, 44 new generators of weight 2 (0 without power relation), log_3 |Delta^2/Delta^3| = 262; 0.0 + 0.0 + 0.0 s
+  howell stream: 1116 rows (7942 entries) x 364 columns; 35992 eliminations writing 492002 entries; 364 pivots, length mean 15 max 144
+stage 3: 364 tails, 408 + 708 equations, 240 new generators of weight 3 (0 without power relation), log_3 |Delta^3/Delta^4| = 1108; 0.0 + 0.0 + 0.0 s
+  howell stream: 8431 rows (205090 entries) x 2044 columns; 4856670 eliminations writing 848489121 entries; 2044 pivots, length mean 242 max 1351
+stage 4: 2044 tails, 2328 + 6103 equations, 1130 new generators of weight 4 (0 without power relation), log_3 |Delta^4/Delta^5| = 4250; 0.0 + 2.3 + 0.2 s
+[howell stage 5] 0.17 h: rows 43451/48756 (89.12%), queue 0, pivots 9954/9954; 249941928 eliminations, 3.93e+11 entries written (6.55e+08/s), 4 threads; 72.4 rows/s now, 72.4 on average; ETA by the average rate 0.0 h
+[howell stage 5] 0.17 h: rows 48756/48756 (100.00%), queue 0, pivots 9954/9954; 262600479 eliminations, 4.05e+11 entries written (5.76e+08/s), 4 threads; 248 rows/s now, 78.4 on average; ETA by the average rate 0.0 h
+  howell stream: 48756 rows (11307104 entries) x 9954 columns; 262600479 eliminations writing 405456250474 entries; 9954 pivots, length mean 2591 max 9232
+stage 5: 9954 tails, 11368 + 37388 equations, 4768 new generators of weight 5 (0 without power relation), log_3 |Delta^5/Delta^6| = 15401; 21.8 + 621.5 + 68.4 s
+[howell stage 6] 0.17 h: rows 8303/232471 (3.57%), queue 1, pivots 9765/43330; 92407094 eliminations, 5.74e+11 entries written (9.55e+08/s), 4 threads; 13.8 rows/s now, 13.8 on average; ETA by the average rate 4.5 h
+[howell stage 6] 0.33 h: rows 9107/232471 (3.92%), queue 1, pivots 10921/43330; 152444102 eliminations, 1.31e+12 entries written (1.23e+09/s), 4 threads; 1.34 rows/s now, 7.58 on average; ETA by the average rate 8.2 h
+[howell stage 6] 0.50 h: rows 9754/232471 (4.20%), queue 1, pivots 11935/43330; 210750449 eliminations, 2.06e+12 entries written (1.24e+09/s), 4 threads; 1.08 rows/s now, 5.42 on average; ETA by the average rate 11.4 h
+[howell stage 6] 0.67 h: rows 10288/232471 (4.43%), queue 3, pivots 12696/43330; 265373102 eliminations, 2.81e+12 entries written (1.25e+09/s), 4 threads; 0.889 rows/s now, 4.28 on average; ETA by the average rate 14.4 h
+[howell stage 6] 0.83 h: rows 10765/232471 (4.63%), queue 2, pivots 13555/43330; 317203432 eliminations, 3.56e+12 entries written (1.25e+09/s), 4 threads; 0.794 rows/s now, 3.59 on average; ETA by the average rate 17.2 h
+[howell stage 6] 1.00 h: rows 11191/232471 (4.81%), queue 2, pivots 14231/43330; 366412881 eliminations, 4.32e+12 entries written (1.27e+09/s), 4 threads; 0.709 rows/s now, 3.11 on average; ETA by the average rate 19.8 h
+[howell stage 6] 1.17 h: rows 11603/232471 (4.99%), queue 2, pivots 15027/43330; 414439698 eliminations, 5.08e+12 entries written (1.27e+09/s), 4 threads; 0.686 rows/s now, 2.76 on average; ETA by the average rate 22.2 h
+[howell stage 6] 1.33 h: rows 12006/232471 (5.16%), queue 3, pivots 15838/43330; 461394316 eliminations, 5.84e+12 entries written (1.27e+09/s), 4 threads; 0.671 rows/s now, 2.5 on average; ETA by the average rate 24.5 h
+[howell stage 6] 1.50 h: rows 12392/232471 (5.33%), queue 2, pivots 16722/43330; 507278697 eliminations, 6.61e+12 entries written (1.28e+09/s), 4 threads; 0.643 rows/s now, 2.29 on average; ETA by the average rate 26.7 h
+[howell stage 6] 1.67 h: rows 12760/232471 (5.49%), queue 2, pivots 17435/43330; 551551794 eliminations, 7.37e+12 entries written (1.27e+09/s), 4 threads; 0.613 rows/s now, 2.13 on average; ETA by the average rate 28.7 h
+[howell stage 6] 1.83 h: rows 13131/232471 (5.65%), queue 1, pivots 17986/43330; 595179549 eliminations, 8.14e+12 entries written (1.28e+09/s), 4 threads; 0.618 rows/s now, 1.99 on average; ETA by the average rate 30.6 h
+[howell stage 6] 2.00 h: rows 13533/232471 (5.82%), queue 3, pivots 18856/43330; 639513043 eliminations, 8.9e+12 entries written (1.27e+09/s), 4 threads; 0.669 rows/s now, 1.88 on average; ETA by the average rate 32.4 h
+[howell stage 6] 2.17 h: rows 13950/232471 (6.00%), queue 1, pivots 20107/43330; 684242059 eliminations, 9.67e+12 entries written (1.28e+09/s), 4 threads; 0.694 rows/s now, 1.79 on average; ETA by the average rate 34.0 h
+[howell stage 6] 2.34 h: rows 14490/232471 (6.23%), queue 2, pivots 20916/43330; 728778949 eliminations, 1.04e+13 entries written (1.28e+09/s), 4 threads; 0.899 rows/s now, 1.72 on average; ETA by the average rate 35.1 h
+[howell stage 6] 2.50 h: rows 14905/232471 (6.41%), queue 3, pivots 21644/43330; 773381679 eliminations, 1.12e+13 entries written (1.27e+09/s), 4 threads; 0.691 rows/s now, 1.65 on average; ETA by the average rate 36.5 h
+[howell stage 6] 2.67 h: rows 15315/232471 (6.59%), queue 2, pivots 22461/43330; 819534697 eliminations, 1.19e+13 entries written (1.22e+09/s), 4 threads; 0.683 rows/s now, 1.59 on average; ETA by the average rate 37.8 h
+[howell stage 6] 2.84 h: rows 15805/232471 (6.80%), queue 2, pivots 23541/43330; 862741645 eliminations, 1.26e+13 entries written (1.12e+09/s), 4 threads; 0.816 rows/s now, 1.55 on average; ETA by the average rate 38.9 h
+[howell stage 6] 3.00 h: rows 16419/232471 (7.06%), queue 2, pivots 24220/43330; 911510409 eliminations, 1.33e+13 entries written (1.23e+09/s), 4 threads; 1.02 rows/s now, 1.52 on average; ETA by the average rate 39.5 h
+[howell stage 6] 3.17 h: rows 16943/232471 (7.29%), queue 2, pivots 24486/43330; 960188495 eliminations, 1.41e+13 entries written (1.22e+09/s), 4 threads; 0.873 rows/s now, 1.49 on average; ETA by the average rate 40.3 h
+[howell stage 6] 3.34 h: rows 17431/232471 (7.50%), queue 1, pivots 24724/43330; 1009800774 eliminations, 1.48e+13 entries written (1.21e+09/s), 4 threads; 0.812 rows/s now, 1.45 on average; ETA by the average rate 41.2 h
+[howell stage 6] 3.50 h: rows 17940/232471 (7.72%), queue 2, pivots 25228/43330; 1061218362 eliminations, 1.55e+13 entries written (1.19e+09/s), 4 threads; 0.848 rows/s now, 1.42 on average; ETA by the average rate 41.9 h
+[howell stage 6] 3.67 h: rows 18441/232471 (7.93%), queue 2, pivots 25655/43330; 1112506987 eliminations, 1.62e+13 entries written (1.19e+09/s), 4 threads; 0.834 rows/s now, 1.4 on average; ETA by the average rate 42.6 h
+[howell stage 6] 3.84 h: rows 18922/232471 (8.14%), queue 1, pivots 25970/43330; 1163853087 eliminations, 1.7e+13 entries written (1.2e+09/s), 4 threads; 0.801 rows/s now, 1.37 on average; ETA by the average rate 43.3 h
+[ckpt] stage 6: 19398/232471 rows done, 3.50 GB written to /w/Gu2/Gu2_n7.ckpt in 18 s
+[howell stage 6] 4.01 h: rows 19398/232471 (8.34%), queue 1, pivots 26355/43330; 1214610244 eliminations, 1.77e+13 entries written (1.16e+09/s), 4 threads; 0.783 rows/s now, 1.35 on average; ETA by the average rate 44.0 h
+[howell stage 6] 4.17 h: rows 19888/232471 (8.56%), queue 1, pivots 26663/43330; 1267087372 eliminations, 1.84e+13 entries written (1.19e+09/s), 4 threads; 0.816 rows/s now, 1.32 on average; ETA by the average rate 44.6 h
+[howell stage 6] 4.34 h: rows 20367/232471 (8.76%), queue 2, pivots 26974/43330; 1320087841 eliminations, 1.91e+13 entries written (1.19e+09/s), 4 threads; 0.798 rows/s now, 1.3 on average; ETA by the average rate 45.2 h
+[howell stage 6] 4.51 h: rows 20888/232471 (8.99%), queue 2, pivots 27335/43330; 1374839420 eliminations, 1.98e+13 entries written (1.17e+09/s), 4 threads; 0.868 rows/s now, 1.29 on average; ETA by the average rate 45.6 h
+[howell stage 6] 4.67 h: rows 21418/232471 (9.21%), queue 3, pivots 27763/43330; 1429129611 eliminations, 2.05e+13 entries written (1.15e+09/s), 4 threads; 0.883 rows/s now, 1.27 on average; ETA by the average rate 46.0 h
+[howell stage 6] 4.84 h: rows 21941/232471 (9.44%), queue 2, pivots 28106/43330; 1483909696 eliminations, 2.12e+13 entries written (1.14e+09/s), 4 threads; 0.871 rows/s now, 1.26 on average; ETA by the average rate 46.4 h
+[howell stage 6] 5.01 h: rows 22481/232471 (9.67%), queue 2, pivots 28471/43330; 1539401688 eliminations, 2.19e+13 entries written (1.15e+09/s), 4 threads; 0.899 rows/s now, 1.25 on average; ETA by the average rate 46.8 h
+[howell stage 6] 5.17 h: rows 23011/232471 (9.90%), queue 2, pivots 28911/43330; 1594889124 eliminations, 2.26e+13 entries written (1.16e+09/s), 4 threads; 0.883 rows/s now, 1.24 on average; ETA by the average rate 47.1 h
+[howell stage 6] 5.34 h: rows 23567/232471 (10.14%), queue 1, pivots 29204/43330; 1651103560 eliminations, 2.32e+13 entries written (1.15e+09/s), 4 threads; 0.926 rows/s now, 1.23 on average; ETA by the average rate 47.3 h
+[howell stage 6] 5.51 h: rows 24178/232471 (10.40%), queue 1, pivots 29491/43330; 1708509721 eliminations, 2.39e+13 entries written (1.13e+09/s), 4 threads; 1.02 rows/s now, 1.22 on average; ETA by the average rate 47.4 h
+[howell stage 6] 5.67 h: rows 24795/232471 (10.67%), queue 2, pivots 29897/43330; 1767261186 eliminations, 2.46e+13 entries written (1.13e+09/s), 4 threads; 1.03 rows/s now, 1.21 on average; ETA by the average rate 47.5 h
+[howell stage 6] 5.84 h: rows 25472/232471 (10.96%), queue 1, pivots 30450/43330; 1827377239 eliminations, 2.53e+13 entries written (1.12e+09/s), 4 threads; 1.13 rows/s now, 1.21 on average; ETA by the average rate 47.5 h
+[howell stage 6] 6.01 h: rows 26133/232471 (11.24%), queue 2, pivots 31052/43330; 1886272289 eliminations, 2.59e+13 entries written (1.07e+09/s), 4 threads; 1.1 rows/s now, 1.21 on average; ETA by the average rate 47.4 h
+[howell stage 6] 6.17 h: rows 26854/232471 (11.55%), queue 2, pivots 31717/43330; 1945638575 eliminations, 2.65e+13 entries written (1.01e+09/s), 4 threads; 1.2 rows/s now, 1.21 on average; ETA by the average rate 47.3 h
+[howell stage 6] 6.34 h: rows 27620/232471 (11.88%), queue 1, pivots 32410/43330; 2012204587 eliminations, 2.72e+13 entries written (1.08e+09/s), 4 threads; 1.28 rows/s now, 1.21 on average; ETA by the average rate 47.0 h
+[howell stage 6] 6.51 h: rows 28386/232471 (12.21%), queue 1, pivots 32900/43330; 2078511368 eliminations, 2.78e+13 entries written (1.07e+09/s), 4 threads; 1.28 rows/s now, 1.21 on average; ETA by the average rate 46.8 h
+[howell stage 6] 6.67 h: rows 29165/232471 (12.55%), queue 2, pivots 33656/43330; 2146333529 eliminations, 2.84e+13 entries written (1.04e+09/s), 4 threads; 1.3 rows/s now, 1.21 on average; ETA by the average rate 46.5 h
+[howell stage 6] 6.84 h: rows 30029/232471 (12.92%), queue 1, pivots 34605/43330; 2217330377 eliminations, 2.91e+13 entries written (1.03e+09/s), 4 threads; 1.44 rows/s now, 1.22 on average; ETA by the average rate 46.1 h
+[howell stage 6] 7.01 h: rows 30958/232471 (13.32%), queue 2, pivots 35609/43330; 2293025649 eliminations, 2.97e+13 entries written (1.02e+09/s), 4 threads; 1.55 rows/s now, 1.23 on average; ETA by the average rate 45.6 h
+[howell stage 6] 7.17 h: rows 32027/232471 (13.78%), queue 1, pivots 36456/43330; 2372740414 eliminations, 3.03e+13 entries written (9.88e+08/s), 4 threads; 1.78 rows/s now, 1.24 on average; ETA by the average rate 44.9 h
+[howell stage 6] 7.34 h: rows 33125/232471 (14.25%), queue 2, pivots 37408/43330; 2456636396 eliminations, 3.08e+13 entries written (9.79e+08/s), 4 threads; 1.83 rows/s now, 1.25 on average; ETA by the average rate 44.2 h
+[howell stage 6] 7.51 h: rows 34297/232471 (14.75%), queue 2, pivots 38237/43330; 2546498515 eliminations, 3.14e+13 entries written (9.27e+08/s), 4 threads; 1.95 rows/s now, 1.27 on average; ETA by the average rate 43.4 h
+[howell stage 6] 7.67 h: rows 35479/232471 (15.26%), queue 1, pivots 38894/43330; 2638536844 eliminations, 3.19e+13 entries written (8.95e+08/s), 4 threads; 1.97 rows/s now, 1.28 on average; ETA by the average rate 42.6 h
+[howell stage 6] 7.84 h: rows 36904/232471 (15.87%), queue 3, pivots 39781/43330; 2737303410 eliminations, 3.25e+13 entries written (8.72e+08/s), 4 threads; 2.37 rows/s now, 1.31 on average; ETA by the average rate 41.6 h
+[ckpt] stage 6: 38820/232471 rows done, 2.65 GB written to /w/Gu2/Gu2_n7.ckpt in 25 s
+[howell stage 6] 8.01 h: rows 38821/232471 (16.70%), queue 1, pivots 40922/43330; 2845271345 eliminations, 3.3e+13 entries written (7.96e+08/s), 4 threads; 3.1 rows/s now, 1.35 on average; ETA by the average rate 40.0 h
+[howell stage 6] 8.18 h: rows 41697/232471 (17.94%), queue 2, pivots 41905/43330; 2971127829 eliminations, 3.34e+13 entries written (7.62e+08/s), 4 threads; 4.79 rows/s now, 1.42 on average; ETA by the average rate 37.4 h
+[howell stage 6] 8.35 h: rows 49692/232471 (21.38%), queue 0, pivots 43330/43330; 3130573488 eliminations, 3.39e+13 entries written (7.8e+08/s), 4 threads; 13.3 rows/s now, 1.65 on average; ETA by the average rate 30.7 h
+[howell stage 6] 8.51 h: rows 50589/232471 (21.76%), queue 2, pivots 43330/43330; 3249464981 eliminations, 3.45e+13 entries written (1.06e+09/s), 4 threads; 1.49 rows/s now, 1.65 on average; ETA by the average rate 30.6 h
+[howell stage 6] 8.68 h: rows 52106/232471 (22.41%), queue 1, pivots 43330/43330; 3355412723 eliminations, 3.52e+13 entries written (1.12e+09/s), 4 threads; 2.53 rows/s now, 1.67 on average; ETA by the average rate 30.0 h
+[howell stage 6] 8.85 h: rows 53456/232471 (22.99%), queue 2, pivots 43330/43330; 3457897313 eliminations, 3.59e+13 entries written (1.17e+09/s), 4 threads; 2.25 rows/s now, 1.68 on average; ETA by the average rate 29.6 h
+[howell stage 6] 9.01 h: rows 54611/232471 (23.49%), queue 2, pivots 43330/43330; 3561356132 eliminations, 3.66e+13 entries written (1.15e+09/s), 4 threads; 1.92 rows/s now, 1.68 on average; ETA by the average rate 29.4 h
+[howell stage 6] 9.18 h: rows 56027/232471 (24.10%), queue 1, pivots 43330/43330; 3659277339 eliminations, 3.73e+13 entries written (1.2e+09/s), 4 threads; 2.36 rows/s now, 1.7 on average; ETA by the average rate 28.9 h
+[howell stage 6] 9.35 h: rows 57720/232471 (24.83%), queue 2, pivots 43330/43330; 3746581835 eliminations, 3.8e+13 entries written (1.22e+09/s), 4 threads; 2.82 rows/s now, 1.72 on average; ETA by the average rate 28.3 h
+[howell stage 6] 9.51 h: rows 59618/232471 (25.65%), queue 0, pivots 43330/43330; 3825093470 eliminations, 3.88e+13 entries written (1.24e+09/s), 4 threads; 3.15 rows/s now, 1.74 on average; ETA by the average rate 27.6 h
+[howell stage 6] 9.68 h: rows 61442/232471 (26.43%), queue 1, pivots 43330/43330; 3899597037 eliminations, 3.95e+13 entries written (1.25e+09/s), 4 threads; 3.02 rows/s now, 1.76 on average; ETA by the average rate 27.0 h
+[howell stage 6] 9.85 h: rows 63238/232471 (27.20%), queue 0, pivots 43330/43330; 3973440355 eliminations, 4.03e+13 entries written (1.25e+09/s), 4 threads; 2.99 rows/s now, 1.78 on average; ETA by the average rate 26.4 h
+[howell stage 6] 10.02 h: rows 64982/232471 (27.95%), queue 2, pivots 43330/43330; 4047433343 eliminations, 4.1e+13 entries written (1.25e+09/s), 4 threads; 2.9 rows/s now, 1.8 on average; ETA by the average rate 25.8 h
+[howell stage 6] 10.18 h: rows 66759/232471 (28.72%), queue 0, pivots 43330/43330; 4120259154 eliminations, 4.18e+13 entries written (1.24e+09/s), 4 threads; 2.96 rows/s now, 1.82 on average; ETA by the average rate 25.3 h
+[howell stage 6] 10.35 h: rows 68590/232471 (29.50%), queue 0, pivots 43330/43330; 4194286747 eliminations, 4.25e+13 entries written (1.24e+09/s), 4 threads; 3.04 rows/s now, 1.84 on average; ETA by the average rate 24.7 h
+[howell stage 6] 10.52 h: rows 70513/232471 (30.33%), queue 1, pivots 43330/43330; 4269078468 eliminations, 4.33e+13 entries written (1.26e+09/s), 4 threads; 3.2 rows/s now, 1.86 on average; ETA by the average rate 24.2 h
+[howell stage 6] 10.68 h: rows 72477/232471 (31.18%), queue 1, pivots 43330/43330; 4341979090 eliminations, 4.41e+13 entries written (1.26e+09/s), 4 threads; 3.27 rows/s now, 1.88 on average; ETA by the average rate 23.6 h
+[howell stage 6] 10.85 h: rows 74506/232471 (32.05%), queue 2, pivots 43330/43330; 4416667016 eliminations, 4.48e+13 entries written (1.26e+09/s), 4 threads; 3.38 rows/s now, 1.91 on average; ETA by the average rate 23.0 h
+[howell stage 6] 11.02 h: rows 76758/232471 (33.02%), queue 0, pivots 43330/43330; 4493384772 eliminations, 4.56e+13 entries written (1.25e+09/s), 4 threads; 3.72 rows/s now, 1.94 on average; ETA by the average rate 22.4 h
+[howell stage 6] 11.19 h: rows 79064/232471 (34.01%), queue 0, pivots 43330/43330; 4568866032 eliminations, 4.63e+13 entries written (1.26e+09/s), 4 threads; 3.84 rows/s now, 1.96 on average; ETA by the average rate 21.7 h
+[howell stage 6] 11.35 h: rows 81433/232471 (35.03%), queue 0, pivots 43330/43330; 4645386467 eliminations, 4.71e+13 entries written (1.23e+09/s), 4 threads; 3.94 rows/s now, 1.99 on average; ETA by the average rate 21.1 h
+[howell stage 6] 11.52 h: rows 84012/232471 (36.14%), queue 0, pivots 43330/43330; 4723258886 eliminations, 4.78e+13 entries written (1.24e+09/s), 4 threads; 4.27 rows/s now, 2.03 on average; ETA by the average rate 20.4 h
+[howell stage 6] 11.69 h: rows 86691/232471 (37.29%), queue 1, pivots 43330/43330; 4800638472 eliminations, 4.86e+13 entries written (1.23e+09/s), 4 threads; 4.45 rows/s now, 2.06 on average; ETA by the average rate 19.7 h
+[howell stage 6] 11.85 h: rows 89677/232471 (38.58%), queue 2, pivots 43330/43330; 4878993202 eliminations, 4.93e+13 entries written (1.23e+09/s), 4 threads; 4.97 rows/s now, 2.1 on average; ETA by the average rate 18.9 h
+[ckpt] stage 6: 92760/232471 rows done, 4.88 GB written to /w/Gu2/Gu2_n7.ckpt in 23 s
+[howell stage 6] 12.02 h: rows 92800/232471 (39.92%), queue 0, pivots 43330/43330; 4955793490 eliminations, 5e+13 entries written (1.2e+09/s), 4 threads; 5.2 rows/s now, 2.14 on average; ETA by the average rate 18.1 h
+[howell stage 6] 12.19 h: rows 96163/232471 (41.37%), queue 0, pivots 43330/43330; 5031535062 eliminations, 5.08e+13 entries written (1.25e+09/s), 4 threads; 5.6 rows/s now, 2.19 on average; ETA by the average rate 17.3 h
+[howell stage 6] 12.36 h: rows 99657/232471 (42.87%), queue 1, pivots 43330/43330; 5106835154 eliminations, 5.15e+13 entries written (1.25e+09/s), 4 threads; 5.8 rows/s now, 2.24 on average; ETA by the average rate 16.5 h
+[howell stage 6] 12.52 h: rows 101740/232471 (43.76%), queue 0, pivots 43330/43330; 5178510568 eliminations, 5.23e+13 entries written (1.23e+09/s), 4 threads; 3.47 rows/s now, 2.26 on average; ETA by the average rate 16.1 h
+[howell stage 6] 12.69 h: rows 103905/232471 (44.70%), queue 0, pivots 43330/43330; 5251872514 eliminations, 5.3e+13 entries written (1.25e+09/s), 4 threads; 3.59 rows/s now, 2.27 on average; ETA by the average rate 15.7 h
+[howell stage 6] 12.86 h: rows 105975/232471 (45.59%), queue 1, pivots 43330/43330; 5324632312 eliminations, 5.38e+13 entries written (1.25e+09/s), 4 threads; 3.44 rows/s now, 2.29 on average; ETA by the average rate 15.3 h
+[howell stage 6] 13.02 h: rows 108128/232471 (46.51%), queue 0, pivots 43330/43330; 5398284731 eliminations, 5.45e+13 entries written (1.24e+09/s), 4 threads; 3.57 rows/s now, 2.31 on average; ETA by the average rate 15.0 h
+[howell stage 6] 13.19 h: rows 110380/232471 (47.48%), queue 0, pivots 43330/43330; 5472252078 eliminations, 5.53e+13 entries written (1.23e+09/s), 4 threads; 3.73 rows/s now, 2.32 on average; ETA by the average rate 14.6 h
+[howell stage 6] 13.36 h: rows 112595/232471 (48.43%), queue 0, pivots 43330/43330; 5546062340 eliminations, 5.6e+13 entries written (1.23e+09/s), 4 threads; 3.68 rows/s now, 2.34 on average; ETA by the average rate 14.2 h
+[howell stage 6] 13.53 h: rows 114876/232471 (49.42%), queue 0, pivots 43330/43330; 5620486101 eliminations, 5.67e+13 entries written (1.22e+09/s), 4 threads; 3.79 rows/s now, 2.36 on average; ETA by the average rate 13.8 h
+[howell stage 6] 13.69 h: rows 117234/232471 (50.43%), queue 0, pivots 43330/43330; 5695644915 eliminations, 5.75e+13 entries written (1.21e+09/s), 4 threads; 3.91 rows/s now, 2.38 on average; ETA by the average rate 13.5 h
+[howell stage 6] 13.86 h: rows 119709/232471 (51.49%), queue 0, pivots 43330/43330; 5772111439 eliminations, 5.82e+13 entries written (1.21e+09/s), 4 threads; 4.12 rows/s now, 2.4 on average; ETA by the average rate 13.1 h
+[howell stage 6] 14.03 h: rows 122257/232471 (52.59%), queue 0, pivots 43330/43330; 5848650389 eliminations, 5.89e+13 entries written (1.23e+09/s), 4 threads; 4.24 rows/s now, 2.42 on average; ETA by the average rate 12.6 h
+[howell stage 6] 14.19 h: rows 124839/232471 (53.70%), queue 0, pivots 43330/43330; 5925649846 eliminations, 5.97e+13 entries written (1.21e+09/s), 4 threads; 4.29 rows/s now, 2.44 on average; ETA by the average rate 12.2 h
+[howell stage 6] 14.36 h: rows 127488/232471 (54.84%), queue 0, pivots 43330/43330; 6002000150 eliminations, 6.04e+13 entries written (1.18e+09/s), 4 threads; 4.4 rows/s now, 2.47 on average; ETA by the average rate 11.8 h
+[howell stage 6] 14.53 h: rows 130149/232471 (55.99%), queue 0, pivots 43330/43330; 6077153042 eliminations, 6.11e+13 entries written (1.14e+09/s), 4 threads; 4.42 rows/s now, 2.49 on average; ETA by the average rate 11.4 h
+[howell stage 6] 14.70 h: rows 133029/232471 (57.22%), queue 0, pivots 43330/43330; 6155364152 eliminations, 6.17e+13 entries written (1.15e+09/s), 4 threads; 4.77 rows/s now, 2.51 on average; ETA by the average rate 11.0 h
+[howell stage 6] 14.86 h: rows 136069/232471 (58.53%), queue 0, pivots 43330/43330; 6234722352 eliminations, 6.24e+13 entries written (1.14e+09/s), 4 threads; 5.05 rows/s now, 2.54 on average; ETA by the average rate 10.5 h
+[howell stage 6] 15.03 h: rows 139259/232471 (59.90%), queue 0, pivots 43330/43330; 6314898633 eliminations, 6.31e+13 entries written (1.13e+09/s), 4 threads; 5.31 rows/s now, 2.57 on average; ETA by the average rate 10.1 h
+[howell stage 6] 15.20 h: rows 142527/232471 (61.31%), queue 0, pivots 43330/43330; 6396760106 eliminations, 6.38e+13 entries written (1.14e+09/s), 4 threads; 5.43 rows/s now, 2.61 on average; ETA by the average rate 9.6 h
+[howell stage 6] 15.36 h: rows 146180/232471 (62.88%), queue 0, pivots 43330/43330; 6483317480 eliminations, 6.45e+13 entries written (1.16e+09/s), 4 threads; 6.07 rows/s now, 2.64 on average; ETA by the average rate 9.1 h
+[howell stage 6] 15.53 h: rows 150099/232471 (64.57%), queue 0, pivots 43330/43330; 6571080079 eliminations, 6.52e+13 entries written (1.13e+09/s), 4 threads; 6.52 rows/s now, 2.68 on average; ETA by the average rate 8.5 h
+[howell stage 6] 15.70 h: rows 154296/232471 (66.37%), queue 0, pivots 43330/43330; 6659790397 eliminations, 6.58e+13 entries written (1.11e+09/s), 4 threads; 6.99 rows/s now, 2.73 on average; ETA by the average rate 8.0 h
+[howell stage 6] 15.87 h: rows 159060/232471 (68.42%), queue 0, pivots 43330/43330; 6752910767 eliminations, 6.65e+13 entries written (1.1e+09/s), 4 threads; 7.93 rows/s now, 2.78 on average; ETA by the average rate 7.3 h
+[ckpt] stage 6: 163716/232471 rows done, 5.09 GB written to /w/Gu2/Gu2_n7.ckpt in 27 s
+[howell stage 6] 16.03 h: rows 163860/232471 (70.49%), queue 0, pivots 43330/43330; 6841607482 eliminations, 6.71e+13 entries written (1.05e+09/s), 4 threads; 7.99 rows/s now, 2.84 on average; ETA by the average rate 6.7 h
+[howell stage 6] 16.20 h: rows 169501/232471 (72.91%), queue 0, pivots 43330/43330; 6937457012 eliminations, 6.78e+13 entries written (1.09e+09/s), 4 threads; 9.39 rows/s now, 2.91 on average; ETA by the average rate 6.0 h
+[howell stage 6] 16.37 h: rows 176610/232471 (75.97%), queue 0, pivots 43330/43330; 7040010609 eliminations, 6.84e+13 entries written (1.08e+09/s), 4 threads; 11.8 rows/s now, 3 on average; ETA by the average rate 5.2 h
+[howell stage 6] 16.53 h: rows 184639/232471 (79.42%), queue 0, pivots 43330/43330; 7136506709 eliminations, 6.91e+13 entries written (1.11e+09/s), 4 threads; 13.4 rows/s now, 3.1 on average; ETA by the average rate 4.3 h
+[howell stage 6] 16.70 h: rows 193975/232471 (83.44%), queue 0, pivots 43330/43330; 7227131992 eliminations, 6.98e+13 entries written (1.13e+09/s), 4 threads; 15.5 rows/s now, 3.23 on average; ETA by the average rate 3.3 h
+[howell stage 6] 16.87 h: rows 200395/232471 (86.20%), queue 0, pivots 43330/43330; 7300140112 eliminations, 7.05e+13 entries written (1.17e+09/s), 4 threads; 10.7 rows/s now, 3.3 on average; ETA by the average rate 2.7 h
+[howell stage 6] 17.03 h: rows 202843/232471 (87.26%), queue 0, pivots 43330/43330; 7371324353 eliminations, 7.12e+13 entries written (1.16e+09/s), 4 threads; 4.08 rows/s now, 3.31 on average; ETA by the average rate 2.5 h
+[howell stage 6] 17.20 h: rows 205595/232471 (88.44%), queue 0, pivots 43330/43330; 7446317208 eliminations, 7.19e+13 entries written (1.13e+09/s), 4 threads; 4.57 rows/s now, 3.32 on average; ETA by the average rate 2.2 h
+[howell stage 6] 17.37 h: rows 208827/232471 (89.83%), queue 0, pivots 43330/43330; 7527053297 eliminations, 7.25e+13 entries written (1.09e+09/s), 4 threads; 5.37 rows/s now, 3.34 on average; ETA by the average rate 2.0 h
+[howell stage 6] 17.54 h: rows 213131/232471 (91.68%), queue 0, pivots 43330/43330; 7618084841 eliminations, 7.31e+13 entries written (1.04e+09/s), 4 threads; 7.16 rows/s now, 3.38 on average; ETA by the average rate 1.6 h
+[howell stage 6] 17.70 h: rows 220555/232471 (94.87%), queue 0, pivots 43330/43330; 7731182785 eliminations, 7.37e+13 entries written (9.19e+08/s), 4 threads; 12.4 rows/s now, 3.46 on average; ETA by the average rate 1.0 h
+[howell stage 6] 17.76 h: rows 232471/232471 (100.00%), queue 0, pivots 43330/43330; 7797106675 eliminations, 7.39e+13 entries written (7.29e+08/s), 4 threads; 55.6 rows/s now, 3.64 on average; ETA by the average rate 0.0 h
+  howell stream: 232471 rows (313789065 entries) x 43330 columns; 7797106675 eliminations writing 73854299291417 entries; 43330 pivots, length mean 14696 max 42611
+stage 6: 43330 tails, 49512 + 182959 equations, 18469 new generators of weight 6 (0 without power relation), log_3 |Delta^6/Delta^7| = 52936; 1900.3 + 63943.2 + 7297.2 s
+=== container start 2026-11-07 08:36:36 UTC, 23.2 h used before, 4 threads ===
+p = 3, E = 20, n = 7, r = 7, 186 relators, 8 tests; |T_<n| = 137257
+Magnus expansions of 494 named subexpressions and 186 relators: 26.5 s
+  howell stream: 7 rows (10 entries) x 7 columns; 1 eliminations writing 1 entries; 7 pivots, length mean 1 max 3
+stage 1: 7 tails, 0 + 7 equations, 7 new generators of weight 1 (0 without power relation), log_3 |Delta^1/Delta^2| = 59; 0.0 + 0.9 + 0.0 s
+  howell stream: 136 rows (307 entries) x 56 columns; 313 eliminations writing 629 entries; 56 pivots, length mean 2 max 10
+stage 2: 56 tails, 56 + 80 equations, 44 new generators of weight 2 (0 without power relation), log_3 |Delta^2/Delta^3| = 262; 0.0 + 0.0 + 0.0 s
+  howell stream: 1116 rows (7942 entries) x 364 columns; 35992 eliminations writing 492002 entries; 364 pivots, length mean 15 max 144
+stage 3: 364 tails, 408 + 708 equations, 240 new generators of weight 3 (0 without power relation), log_3 |Delta^3/Delta^4| = 1108; 0.0 + 0.0 + 0.0 s
+  howell stream: 8431 rows (205090 entries) x 2044 columns; 4856670 eliminations writing 848489121 entries; 2044 pivots, length mean 242 max 1351
+stage 4: 2044 tails, 2328 + 6103 equations, 1130 new generators of weight 4 (0 without power relation), log_3 |Delta^4/Delta^5| = 4250; 0.1 + 2.8 + 0.2 s
+[howell stage 5] 0.17 h: rows 41259/48756 (84.62%), queue 0, pivots 9954/9954; 237237911 eliminations, 3.69e+11 entries written (6.15e+08/s), 4 threads; 68.7 rows/s now, 68.7 on average; ETA by the average rate 0.0 h
+[howell stage 5] 0.19 h: rows 48756/48756 (100.00%), queue 0, pivots 9954/9954; 262600479 eliminations, 4.05e+11 entries written (5.37e+08/s), 4 threads; 111 rows/s now, 73 on average; ETA by the average rate 0.0 h
+  howell stream: 48756 rows (11307104 entries) x 9954 columns; 262600479 eliminations writing 405456250474 entries; 9954 pivots, length mean 2591 max 9232
+stage 5: 9954 tails, 11368 + 37388 equations, 4768 new generators of weight 5 (0 without power relation), log_3 |Delta^5/Delta^6| = 15401; 23.1 + 667.9 + 76.1 s
+[ckpt] stage 6 resumed from /w/Gu2/Gu2_n7.ckpt: 163716/232471 rows done, 0 queued (read in 8 s)
+[howell stage 6] 0.17 h: rows 169645/232471 (72.97%), queue 0, pivots 43330/43330; 6939839671 eliminations, 6.78e+13 entries written (1.15e+09/s), 4 threads; 9.88 rows/s now, 9.88 on average; ETA by the average rate 1.8 h
+[howell stage 6] 0.33 h: rows 177526/232471 (76.36%), queue 0, pivots 43330/43330; 7052110533 eliminations, 6.85e+13 entries written (1.18e+09/s), 4 threads; 13.1 rows/s now, 11.5 on average; ETA by the average rate 1.3 h
+[howell stage 6] 0.50 h: rows 186415/232471 (80.19%), queue 0, pivots 43330/43330; 7156382155 eliminations, 6.93e+13 entries written (1.22e+09/s), 4 threads; 14.8 rows/s now, 12.6 on average; ETA by the average rate 1.0 h
+[howell stage 6] 0.67 h: rows 197495/232471 (84.95%), queue 0, pivots 43330/43330; 7251073744 eliminations, 7e+13 entries written (1.23e+09/s), 4 threads; 18.4 rows/s now, 14.1 on average; ETA by the average rate 0.7 h
+[howell stage 6] 0.83 h: rows 201179/232471 (86.54%), queue 0, pivots 43330/43330; 7324138293 eliminations, 7.07e+13 entries written (1.23e+09/s), 4 threads; 6.12 rows/s now, 12.5 on average; ETA by the average rate 0.7 h
+[ckpt] stage 6: 203675/232471 rows done, 5.10 GB written to /w/Gu2/Gu2_n7.ckpt in 290 s
+[howell stage 6] 1.08 h: rows 203691/232471 (87.62%), queue 0, pivots 43330/43330; 7395518035 eliminations, 7.14e+13 entries written (7.65e+08/s), 4 threads; 2.81 rows/s now, 10.3 on average; ETA by the average rate 0.8 h
+[howell stage 6] 1.25 h: rows 206155/232471 (88.68%), queue 0, pivots 43330/43330; 7460774882 eliminations, 7.2e+13 entries written (9.59e+08/s), 4 threads; 4.09 rows/s now, 9.43 on average; ETA by the average rate 0.8 h
+[howell stage 6] 1.42 h: rows 208923/232471 (89.87%), queue 0, pivots 43330/43330; 7529309190 eliminations, 7.25e+13 entries written (9.14e+08/s), 4 threads; 4.6 rows/s now, 8.86 on average; ETA by the average rate 0.7 h
+[howell stage 6] 1.58 h: rows 212459/232471 (91.39%), queue 0, pivots 43330/43330; 7604912097 eliminations, 7.31e+13 entries written (8.73e+08/s), 4 threads; 5.89 rows/s now, 8.55 on average; ETA by the average rate 0.7 h
+[howell stage 6] 1.75 h: rows 217675/232471 (93.64%), queue 0, pivots 43330/43330; 7693743187 eliminations, 7.35e+13 entries written (8.03e+08/s), 4 threads; 8.68 rows/s now, 8.56 on average; ETA by the average rate 0.5 h
+[howell stage 6] 1.87 h: rows 232471/232471 (100.00%), queue 0, pivots 43330/43330; 7797106675 eliminations, 7.39e+13 entries written (7.41e+08/s), 4 threads; 35.6 rows/s now, 10.2 on average; ETA by the average rate 0.0 h
+  howell stream: 232471 rows (313789065 entries) x 43330 columns; 7797106675 eliminations writing 73854299291417 entries; 43330 pivots, length mean 14696 max 42611
+stage 6: 43330 tails, 49512 + 182959 equations, 18469 new generators of weight 6 (0 without power relation), log_3 |Delta^6/Delta^7| = 52936; 1984.6 + 6728.2 + 7665.8 s
+generators by weight: 1 7 44 240 1130 4768 18469; largest exponent of a power relation 13 (E = 20)
+certificate (p^(E-1) Delta in Delta^7 + p^E): holds
+test w: h - 1 in Delta^7
+test x1: h - 1 in Delta^2, not in Delta^3
+test x2: h - 1 in Delta^1, not in Delta^2
+test a6: h - 1 in Delta^6, not in Delta^7
+test a6^3: h - 1 in Delta^6, not in Delta^7
+test a6^27: h - 1 in Delta^6, not in Delta^7
+test a6^81: h - 1 in Delta^6, not in Delta^7
+test u1: h - 1 in Delta^7

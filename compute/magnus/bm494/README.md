@@ -70,13 +70,15 @@ outside $S$. Runs: tm `grnq-G7-p0-a81` (`GRNQ_PROJ=0 GRNQ_ONLY=a6^81,a6^27`, 1 h
 `grnq-G7-lazy-a81` (stopped after the first residual). Small module certificates ([MATH-423](https://default.kaiku.tech/issue/MATH-423), [`../modcert`](../modcert/README.md)) do not decide it: $z \in H'$ for $C_G(g)$, $g \in \gamma_5$, and for a subgroup of index $3^7$, and the same family does not separate the known $y_1^{64} \notin D_4$ in Rips's group.
 
 **Result at $n = 7$ ([MATH-424](https://default.kaiku.tech/issue/MATH-424)): $D_7(Q) = \langle w\rangle$ in all four $Q$.** The full last stage
-does run with the streaming Howell form on 4 threads with 32-bit entries (`GRNQ_V32`, within 16 GB, 18–20 h for stage 6), with
+does run with the streaming Howell form on 4 threads with 32-bit entries (`GRNQ_V32`, within 16 GB, 17.5–20 h for stage 6), with
 checkpoints (`../grnq/README.md`). $G$ on kimmy (tm `kimmy/tm/20261105-113858-grnq-G7-par4-v32-0a00e67`, commit 0a00e67), the three
-$G/\langle u\rangle$ on Modal (`../grnq/modal_grnq.py`, same `grnq.cpp`, the inputs from the same `bm_grnq.g`); logs in
-[`../grnq/n7/`](../grnq/n7/). $E = 20$, the certificate holds in all four (largest exponent of a power relation 13), so
+$G/\langle u\rangle$ on Modal (`../grnq/modal_grnq.py`; `grnq.cpp` as at 0a00e67, byte-identical to this tree; wrapper as at
+c628433, from 7.11 08:35 UTC as at 29f028d; the inputs from the same `bm_grnq.g`). The commits 0a00e67 and 29f028d are on the branch
+`grnq-par`, kept with the tag `grnq-n7-runs`. Logs in [`../grnq/n7/`](../grnq/n7/) (raw: Modal Volume `grnq-work`,
+`<case>/grnq_<case>_n7.log`). $E = 20$, the certificate holds in all four (largest exponent of a power relation 13), so
 membership is exact:
 
-| | $G$ | $G/\langle u_1\rangle$, $G/\langle u_2\rangle$, $G/\langle u_3\rangle$ (identical) |
+| | $G$ | $G/\langle u_1\rangle$, $G/\langle u_2\rangle$, $G/\langle u_3\rangle$ (identical values) |
 |---|---|---|
 | $\log_3\lvert\varpi^6/\varpi^7\rvert$ (stage 6) | 53 146 | 52 936 |
 | generators of weight 0..6 | 1 7 44 241 1137 4809 18679 | 1 7 44 240 1130 4768 18469 |
@@ -88,9 +90,23 @@ membership is exact:
 So $a_6^{81} \notin D_7(Q)$, hence (above) $D_7(Q) = \langle w\rangle$ for $Q = G$ and each $G/\langle u\rangle$, and $D_7(H) \subseteq \langle w\rangle$
 for every $H \le Q$: no subgroup has another witness, and for $H$ only $w \in D_7(H)$ remains. Also $w \in \varpi^7$, i.e. $w \in D_7(Q)$,
 computed here directly, independently of BM's proof. The span test over $\bar Z/\langle w\rangle$ that `grnq` runs after the tests did not
-finish in reasonable time (9 h on one core for $G$) and was stopped in all four runs; it is not needed after the reduction above.
-Stage 6 in the three quotients: Gu1 17.5 h; Gu2, Gu3 resumed from checkpoints across container restarts (logs show each
-`container start`); about 32 USD on Modal in all, the 21 h lost on 5–6.11 included.
+finish in reasonable time (9 h on one core for $G$) and is not needed after the reduction above: the tm job of $G$ was
+cancelled after the tests, the three Modal processes were killed (`SIGKILL`, exit −9, no `grnq done`).
+
+How the Modal runs went (each `=== container start` in the logs is a new container; Modal limits one to 24 h):
+- Gu1: the first container finished the stage-6 Howell form (17.5 h) and its post-processing, but was stopped at
+  23.5 h during the tests (no checkpoint after Howell); the second resumed from row 171 629 and ended after 1 h 10 min
+  without output (6.11 13:03 UTC; the cause is not recorded — that day containers were stopped by hand, wiki 859 §3);
+  the third resumed from 171 629 again and gave the answer.
+- Gu2, Gu3: the first containers ran stage 6 for ~21 h, but from 5.11 ~14 UTC their Volume commits did not arrive
+  (wiki 859 §7), so their logs end after stage 5 and the second containers started stage 6 from row 0. These were
+  restarted on 7.11 08:35 UTC by SIGTERM (Gu3 inside Howell: checkpoint at row 205 153; Gu2 after Howell: resumed from
+  its checkpoint at row 163 716), so that the ~6.5 h after Howell fit into one container.
+- A resumed run reproduces the uninterrupted one: Gu1 and Gu2 end stage 6 with the same Howell totals as their first
+  containers (Gu1: 7 797 733 611 eliminations, 73 846 739 209 960 entries written; Gu2: 7 797 106 675 and
+  73 854 299 291 417).
+
+About 32 USD on Modal in all, the lost 21 h included.
 
 Run with `tm submit --untracked --cache mikh --cores 1 --mem 16G compute/magnus/bm494/run_check.sh`
 (likewise `run_final.sh`; `run_descent.sh` with `--cores 8`). Logs go to `$JOB_OUT` and are not kept.

@@ -1,0 +1,27 @@
+# G, n = 7, E = 20: tm kimmy/tm/20261105-113858-grnq-G7-par4-v32-0a00e67 (dimension-subrings 0a00e67,
+# CASE=G N=7 E=20 run_grnq.sh, 4 threads, GRNQ_V32, 16G). Excerpt of the tm log: the GAP part of
+# bm_grnq.g and the [howell stage 6] progress lines (every 15 min, 19.8 h) are left out; nothing else is.
+p = 3, E = 20, n = 7, r = 7, 185 relators, 7 tests; |T_<n| = 137257
+Magnus expansions of 494 named subexpressions and 185 relators: 17.2 s
+  howell stream: 7 rows (10 entries) x 7 columns; 1 eliminations writing 1 entries; 7 pivots, length mean 1 max 3
+stage 1: 7 tails, 0 + 7 equations, 7 new generators of weight 1 (0 without power relation), log_3 |Delta^1/Delta^2| = 59; 0.0 + 0.0 + 0.0 s
+  howell stream: 136 rows (301 entries) x 56 columns; 305 eliminations writing 614 entries; 56 pivots, length mean 2 max 10
+stage 2: 56 tails, 56 + 80 equations, 44 new generators of weight 2 (0 without power relation), log_3 |Delta^2/Delta^3| = 262; 0.0 + 0.0 + 0.0 s
+  howell stream: 1115 rows (7813 entries) x 364 columns; 35560 eliminations writing 487081 entries; 364 pivots, length mean 14 max 144
+stage 3: 364 tails, 408 + 707 equations, 241 new generators of weight 3 (0 without power relation), log_3 |Delta^3/Delta^4| = 1109; 0.0 + 0.0 + 0.0 s
+  howell stream: 8450 rows (200091 entries) x 2051 columns; 4732584 eliminations writing 804644524 entries; 2051 pivots, length mean 237 max 1346
+stage 4: 2051 tails, 2336 + 6114 equations, 1137 new generators of weight 4 (0 without power relation), log_3 |Delta^4/Delta^5| = 4257; 0.0 + 2.4 + 0.2 s
+  howell stream: 48679 rows (11073804 entries) x 10010 columns; 259867095 eliminations writing 400759862046 entries; 10010 pivots, length mean 2591 max 9201
+stage 5: 10010 tails, 11432 + 37247 equations, 4809 new generators of weight 5 (0 without power relation), log_3 |Delta^5/Delta^6| = 15442; 18.0 + 707.8 + 77.4 s
+[howell stage 6] 19.77 h: rows 232521/232521 (100.00%), queue 0, pivots 43673/43673; 7802061025 eliminations, 7.42e+13 entries written (8.08e+08/s), 4 threads; 23.1 rows/s now, 3.27 on average; ETA by the average rate 0.0 h
+  howell stream: 232521 rows (314671438 entries) x 43673 columns; 7802061025 eliminations writing 74152137380301 entries; 43673 pivots, length mean 14814 max 42897
+stage 6: 43673 tails, 49904 + 182617 equations, 18679 new generators of weight 6 (0 without power relation), log_3 |Delta^6/Delta^7| = 53146; 2027.5 + 71169.7 + 8610.7 s
+generators by weight: 1 7 44 241 1137 4809 18679; largest exponent of a power relation 13 (E = 20)
+certificate (p^(E-1) Delta in Delta^7 + p^E): holds
+test w: h - 1 in Delta^7
+test x1: h - 1 in Delta^2, not in Delta^3
+test x2: h - 1 in Delta^1, not in Delta^2
+test a6: h - 1 in Delta^6, not in Delta^7
+test a6^3: h - 1 in Delta^6, not in Delta^7
+test a6^27: h - 1 in Delta^6, not in Delta^7
+test a6^81: h - 1 in Delta^6, not in Delta^7
