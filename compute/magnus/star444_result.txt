@@ -1,0 +1,22 @@
+# MATH-444 / D5-49 step 2 (wiki MATH page of Theorem B): checks of the identity (*) for g(tau)^2 and of the vanishing of
+# its factors T1..T5 on the admissible lattice in the adapted basis (star444.g); summaries by star444sum.py.
+# Modes: cut = gamma_4 cut to C_3, cyclic centre, only gamma_2^9 not in gamma_4 (the obstruction case of Theorem A);
+#        raw = Q/gamma_4^3; cut9 = gamma_4 = C_9, cyclic centre (case (b)); raw9 = Q/gamma_4^9.
+run 1  kimmy/tm/20261107-165655-math444-star-run1-6941c3e (tree 6941c3e, star444_run1.plan), summary
+       kimmy/tm/20261107-165943-math444-star-sum1b-50b28be: 329 groups
+run 2  kimmy/tm/20261107-170058-math444-star-run2-91e73e8 (tree 91e73e8, star444_run2.plan, summary.txt): 768 groups
+total  1097 groups; Q_ab of types [9,9], [3,9,9], [3,3,9,9], [9,9,9], [3,9,9,9], [3,9,27], [3,3,9,27], [9,27], [27,27],
+       [3,27,27], [3,3,27,27]; orders 3^9 .. 3^91
+mode            groups  exp g4  (*) fails  (*)-lattice vectors (B,D,E,F; default basis)  adapted basis  factor != 1  g != 1
+cut               139     3        0           6951            all             0           0
+raw               214     3        0          10105            all             0           0
+raw9 (g4^3=1)      83     3        0           3529            all             0           0
+cut9              531     9        0          26489            all             0           0
+raw9              130     9        0           6091            all             0           0
+controls of (*) (lattice of (B),(D),(E),(F) with one more group dropped): (*) fails in
+       B dropped 318, D dropped 163, E dropped 434, F dropped 130, everything dropped 776 groups.
+controls of the vanishing (run 2 only, 768 groups): some factor != 1 with all conditions dropped in 404 groups, with
+       {B,C,D} dropped in 174; with only B, only C or only D dropped: none, except 12 groups without D (T3, T4).
+failed/cancelled: ...165027-math444-star-test-4c0a980 and ...165242-math444-star-test2-4c0a980 (no gap in the empty
+       dimension-subrings cache; then a syntax error, field name rec), ...165550-math444-star-run1-6941c3e (cancelled
+       in the queue, 18G did not fit), ...170413-math444-s449-run1-186beae (cancelled, rerun with 8 cores).
