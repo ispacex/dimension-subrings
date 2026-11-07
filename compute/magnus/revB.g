@@ -5,7 +5,9 @@
 Read("tahara61.g");
 SizeScreen([4000, 100]);
 Reset(GlobalMersenneTwister, SEED); Reset(GlobalRandomSource, SEED);
-if not IsBound(MAXLOG) then MAXLOG := 45; fi;
+if not IsBound(MAXLOG) then MAXLOG := 60; fi;
+if not IsBound(EXPS) then EXPS := [3, 9, 9, 27, 27, 81]; fi;
+if not IsBound(NGEN) then NGEN := [2, 3, 3]; fi;
 
 Words := function(F, wt)
   local g, L, i;
@@ -209,9 +211,9 @@ else
   ng := 0; tries := 0;
   while ng < NG and tries < 20 * NG do
     tries := tries + 1;
-    if Random([1, 2]) = 1 then FG := F2g; else FG := F; fi;
+    FG := FreeGroup(Random(NGEN));
     gg := GeneratorsOfGroup(FG);
-    rels := List(gg, x -> x^Random([9, 27, 27, 81]) * Product(List([1..Random([0..2])],
+    rels := List(gg, x -> x^Random(EXPS) * Product(List([1..Random([0..2])],
                  r -> RandComm(FG, Random([2, 2, 3, 4]))), One(FG)));
     cube := Random([true, true, false]);
     P := MakeGroup(FG, rels, cube);
