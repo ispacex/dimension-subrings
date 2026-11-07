@@ -1,0 +1,10 @@
+# MATH-444 / D5-49 step 2, case (b): gamma_4 = C_9 (cyclic), cyclic centre, class 4, exp(gamma_2/gamma_3) >= 9 (s449.g;
+# Q'' != 1 before the cut).  z = generator of gamma_4^3 = Omega_1(Z).  By Theorem B (wiki MATH page 891, on paper),
+# D_5 <= gamma_4^3 = <z>, so D_5 = 1 iff z notin D_5; d5s.py decides it (Magnus mod 3^19, certificate), tahara61.g
+# checks g = 1 on the admissible lattice (second method).  id3/id4 = false is expected here (gamma_4^3 != 1).
+run 1  kimmy/tm/20261107-170709-math444-s449-run1b-186beae (tree 186beae, s449_run1.plan, 8 shards, 22 min):
+       940 records, Q_ab of types [9,9,3], [9,9,3,3], [9,9,9], [9,9,9,3], [27,9,3], [27,9,3,3], [27,27,3], [27,27,3,3];
+       orders 3^11 .. 3^26; gamma_2^9 <= gamma_4 in 653, not in 287 (psi up to 5);
+       z in D5: 0 (certificate and the control z in D4 in all); Tahara g <> 1: 0, non-vacuous (g not 1 on Z^n) in 706.
+       Shard b9 ([[9]], one invariant >= 9) gave no records.
+       (kimmy/tm/20261107-170413-math444-s449-run1-186beae: the same plan on 2 cores, cancelled as too slow.)
