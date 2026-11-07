@@ -184,14 +184,10 @@ Extra5 := function(T, V)
   okT2id := ForAll(pairs, p -> Comm(Comm(Y[p[1]], x[p[2]]), x[p[2]])^3 = Comm(Comm(x[p[1]], x[p[2]]), Y[p[2]]));
   badC := 0; badFull := 0;
   if pairs <> [] then
-    for lat in [TaharaLattice(T, V, TaharaConds(T, V, rec(drop := ["C"]))),
-                TaharaLattice(T, V, TaharaConds(T, V, rec(drop := [])))] do
-      cnt := Number(lat, tau -> ForAny(pairs, p ->
-          Comm(Comm(Y[p[1]], x[p[2]]), x[p[2]])^(-tau[X.u[p[1]][p[2]]] * 3) <> one));
-      if badC = 0 and lat = lat then fi;
-      if IsIdenticalObj(lat, lat) then fi;
-      if badFull = 0 and badC = 0 then badC := cnt; else badFull := cnt; fi;
-    od;
+    cnt := function(lat) return Number(lat, tau -> ForAny(pairs, p ->
+          Comm(Comm(Y[p[1]], x[p[2]]), x[p[2]])^(-tau[X.u[p[1]][p[2]]] * 3) <> one)); end;
+    badC := cnt(TaharaLattice(T, V, TaharaConds(T, V, rec(drop := ["C"]))));
+    badFull := cnt(TaharaLattice(T, V, TaharaConds(T, V, rec(drop := []))));
   fi;
   Print("E5 formula=", okF, " npairs39=", Length(pairs), " T2id=", okT2id,
         " T2(3,9)!=1 noC=", badC, " full=", badFull, " d=", d, " exp4=", Exponent(LowerCentralSeriesOfGroup(T.P)[4]), "\n");
