@@ -1,3 +1,4 @@
 # name seed MODE TOPS KS NG [NEEDNOTH2]
 t99c 5101 cut [[9,9]] [3] 6 true
 t99r 5102 raw [[9,9]] [3] 6
+t99c9 5103 cut9 [[9,9]] [3] 6

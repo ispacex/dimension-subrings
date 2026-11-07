@@ -34,6 +34,17 @@ W5 := function(F)
   return Filtered(L, c -> c <> One(F));
 end;
 LogExp := function(H, N) if Size(H) = Size(N) then return 0; fi; return Log(Exponent(H / N), 3); end;
+# hom P -> P/N, N <= gamma_4 the kernel of a random functional gamma_4 -> C_9 with u of order 9 mod N
+CutG4n9 := function(P, G4, u)
+  local ig, o, e, lam, C, c, f;
+  ig := IndependentGeneratorsOfAbelianGroup(G4); o := List(ig, Order);
+  e := IndependentGeneratorExponents(G4, u);
+  if ForAll([1..Length(ig)], r -> o[r] < 9 or e[r] mod 3 = 0) then return fail; fi;
+  repeat lam := List(o, x -> Random(Filtered([0..8], l -> (l * x) mod 9 = 0))); until (lam * e) mod 3 <> 0;
+  C := CyclicGroup(IsPcGroup, 9); c := MinimalGeneratingSet(C)[1];
+  f := GroupHomomorphismByImages(G4, C, ig, List(lam, l -> c^l));
+  return NaturalHomomorphismByNormalSubgroupNC(P, Kernel(f));
+end;
 CutG4 := function(P, G4, u)
   local ig, e, lam, C, c, f;
   ig := IndependentGeneratorsOfAbelianGroup(G4);
@@ -88,7 +99,7 @@ end;
 
 # the factors of (*) for tau; returns a list of [name, element]
 StarFactors := function(T, V, tau)
-  local s, X, x, Y, d, F, i, h, g, j, k, q;
+  local s, X, x, Y, d, F, i, h, g, j, k, q, R;
   s := T.s; X := V.idx; x := T.x1; Y := T.Y; d := T.d; F := [];
   q := function(i, j) return QuoInt(d[j], d[i]); end;
   for i in [1..s] do for h in [i+1..s] do
@@ -103,6 +114,10 @@ StarFactors := function(T, V, tau)
   for j in [1..s] do for k in [j+1..s] do for h in [k+1..s] do
     Add(F, [Concatenation("T4 ", String([j, k, h])), Comm(Y[h], Comm(x[j], x[k]))^(-tau[X.wpp[j][k][h]])]);
   od; od; od;
+  for i in [1..s] do
+    R := Product(List([1..T.t], k -> T.x2[k]^tau[X.v[i][k]]), One(T.P));
+    Add(F, [Concatenation("T5 ", String([i])), Comm(Comm(R, x[i]), x[i])^(-Binomial(d[i], 2))]);
+  od;
   return F;
 end;
 
@@ -120,7 +135,7 @@ StarCheck := function(T, V, drop)
 end;
 
 OUTS := OutputTextFile(OUT, false); SetPrintFormattingStatus(OUTS, false);
-stats := rec(tried := 0, ok := 0, rec := 0, starbad := 0, adaptbad := 0, factbad := 0, gbad := 0, skipbig := 0);
+stats := rec(tried := 0, ok := 0, nrec := 0, starbad := 0, adaptbad := 0, factbad := 0, gbad := 0, skipbig := 0);
 T0 := NanosecondsSinceEpoch();
 for it in [1..NG] do
   tops := Random(TOPS); t := Length(tops);
@@ -144,22 +159,33 @@ for it in [1..NG] do
   if Length(L) - 1 <> 4 or SortedList(AbelianInvariants(P)) <> SortedList(ords) then continue; fi;
   if MODE = "raw" then
     Pb := Image(NaturalHomomorphismByNormalSubgroup(P, Agemo(L[4], 3)));
+  elif MODE = "raw9" then
+    Pb := Image(NaturalHomomorphismByNormalSubgroup(P, Agemo(L[4], 9)));
   else
-    DD := DerivedSubgroup(L[2]); A3 := Agemo(L[4], 3); u := fail;
-    for c in [1..50] do x := Random(L[4]); if not x in A3 and (IsTrivial(DD) or c > 25 or x in DD) then u := x; break; fi; od;
+    DD := DerivedSubgroup(L[2]);
+    if MODE = "cut9" then A3 := Agemo(L[4], 9); else A3 := Agemo(L[4], 3); fi;
+    u := fail;
+    for c in [1..50] do
+      x := Random(L[4]);
+      if not x in A3 and (MODE <> "cut9" or Order(x) >= 9) and (IsTrivial(DD) or c > 25 or x in DD) then u := x; break; fi;
+    od;
     if u = fail then continue; fi;
-    hom := CutG4(P, L[4], u); Pb := Image(hom); ub := Image(hom, u);
+    if MODE = "cut9" then hom := CutG4n9(P, L[4], u); else hom := CutG4(P, L[4], u); fi;
+    if hom = fail then continue; fi;
+    Pb := Image(hom); ub := Image(hom, u);
+    if MODE = "cut9" then ub := ub^3; fi;      # Omega_1(Z) must become <ub>
     while true do
       Ob := Omega(Centre(Pb), 3, 1);
       if Size(Ob) = 3 then break; fi;
       U := Subgroup(Pb, [ub]);
       repeat v := Random(Ob); until not v in U;
       h2 := NaturalHomomorphismByNormalSubgroup(Pb, NormalClosure(Pb, Subgroup(Pb, [v])));
-      hom := hom * h2; Pb := Image(hom); ub := Image(hom, u);
+      hom := hom * h2; Pb := Image(hom); ub := Image(hom, u); if MODE = "cut9" then ub := ub^3; fi;
     od;
   fi;
   Lb := LowerCentralSeriesOfGroup(Pb);
   if Length(Lb) - 1 <> 4 then continue; fi;
+  if MODE = "cut9" and not (Size(Lb[4]) = 9 and IsCyclic(Lb[4])) then continue; fi;
   stats.ok := stats.ok + 1;
   e23 := LogExp(Lb[2], Lb[3]);
   P9 := Subgroup(Pb, Concatenation(List(GeneratorsOfGroup(Lb[2]), a -> a^9), GeneratorsOfGroup(Lb[4])));
@@ -192,11 +218,11 @@ for it in [1..NG] do
     for f in StarFactors(TA, VA, tau) do if not IsOne(f[2]) then AddSet(fnoC, f[1]{[1, 2]}); fi; od; od;
   for tau in TaharaLattice(TA, VA, TaharaConds(TA, VA, rec(drop := ["D"]))) do
     for f in StarFactors(TA, VA, tau) do if not IsOne(f[2]) then AddSet(fnoD, f[1]{[1, 2]}); fi; od; od;
-  stats.rec := stats.rec + 1;
+  stats.nrec := stats.nrec + 1;
   WriteAll(OUTS, Concatenation("{\"id\":\"", String(SEED), ".", String(it), "\",\"mode\":\"", MODE,
     "\",\"ab\":", String(AbelianInvariants(Pb)), ",\"logord\":", String(Log(Size(Pb), 3)),
     ",\"lcs\":", String(List([1..4], j -> Log(Index(Lb[j], Lb[j+1]), 3))),
-    ",\"e23\":", String(e23), ",\"e34\":", String(LogExp(Lb[3], Lb[4])), ",\"psi\":", String(psi),
+    ",\"e23\":", String(e23), ",\"e34\":", String(LogExp(Lb[3], Lb[4])), ",\"psi\":", String(psi), ",\"g4\":", String(AbelianInvariants(Lb[4])),
     ",\"zcyc\":", String(IsCyclic(Centre(Pb))), ",\"nonmet\":", String(not IsTrivial(DerivedSubgroup(Lb[2]))),
     ",\"nvars\":", String(V.n), ",\"star\":", String(st), ",\"ctl\":", String(ctl),
     ",\"adapted\":", String(adapt), ",\"latA\":", String(Length(latA)), ",\"gbad\":", String(gbad),
