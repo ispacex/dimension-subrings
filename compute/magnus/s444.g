@@ -47,7 +47,7 @@ CutG4 := function(P, G4, u)
   return NaturalHomomorphismByNormalSubgroupNC(P, Kernel(f));
 end;
 OUTS := OutputTextFile(OUT, false); SetPrintFormattingStatus(OUTS, false);
-stats := rec(tried := 0, ok := 0, nonmet := 0, nou := 0, rec := 0, e23is2 := 0, h2 := 0, noth2 := 0,
+stats := rec(tried := 0, ok := 0, nonmet := 0, nou := 0, nrec := 0, e23is2 := 0, h2 := 0, noth2 := 0,
              tahbad := 0, idbad := 0);
 T0 := NanosecondsSinceEpoch();
 for it in [1..NG] do
@@ -141,7 +141,7 @@ for it in [1..NG] do
   fi;
   prb := PresOnGens(Pb, gb);
   Jb := JenningsSeries(Pb);
-  stats.rec := stats.rec + 1;
+  stats.nrec := stats.nrec + 1;
   WriteAll(OUTS, Concatenation("{\"id\":\"", String(SEED), ".", String(it), "\",\"k\":", String(k),
     ",\"rels\":", String(List(prb.rels, ExtRepOfObj)), ",\"zs\":", String([ExtRepOfObj(prb.word(ub))]),
     ",\"nzS\":1,\"tops\":", String(tops), ",\"logord\":", String(Log(Size(Pb), 3)),
