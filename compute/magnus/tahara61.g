@@ -130,6 +130,7 @@ end;
 TaharaLattice := function(T, V, conds)
   local n, slacks, M, ncond, j, cond, x, ns, sl;
   n := V.n; slacks := Number(conds, x -> x[2] <> 0); ncond := Length(conds);
+  if ncond = 0 then return IdentityMat(n); fi;
   M := NullMat(n + slacks, ncond); sl := n;
   for j in [1..ncond] do
     cond := conds[j];
