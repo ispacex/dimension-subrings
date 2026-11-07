@@ -8,7 +8,8 @@ for r in RECS{[1..Minimum(NCTRL, Length(RECS))]} do
   P := Image(EpimorphismPGroup(G, 3, r.pclass + 1));
   T := TaharaData(P, fail); V := TaharaVars(T);
   res := [];
-  for drop in [[], ["A"], ["B"], ["C"], ["D"], ["E"], ["F"], ["A","B","C","D","E","F"]] do
+  for drop in [[], ["A"], ["B"], ["C"], ["D"], ["E"], ["F"], ["C","E"], ["A","C","E"], ["B","C","E"],
+               ["C","D","E"], ["C","E","F"], ["A","B","C","D","E","F"]] do
     lat := TaharaLattice(T, V, TaharaConds(T, V, rec(drop := drop)));
     D := Subgroup(P, List(lat, tau -> TaharaGen(T, V, tau).g));
     Add(res, [drop, Log(Size(D), 3), IsSubgroup(LowerCentralSeriesOfGroup(P)[4], D)]);

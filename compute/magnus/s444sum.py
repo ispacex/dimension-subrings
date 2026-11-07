@@ -1,5 +1,5 @@
 """MATH-444 / D5-49: summary of d5s.py output on s444.g records (gamma_4 = C_3, cyclic centre, Q'' != 1,
-exp(gamma_2/gamma_3) = 9), split by (H2) gamma_2^9 <= gamma_4 and by Q/gamma_2.  Usage: python s444sum.py < d5s.jsonl"""
+exp(gamma_2/gamma_3) >= 9, e23 >= 2), split by (H2) gamma_2^9 <= gamma_4 and by Q/gamma_2.  Usage: python s444sum.py < d5s.jsonl"""
 import json
 import sys
 from collections import defaultdict
@@ -24,8 +24,11 @@ for key in sorted(fam):
           "| id4", sum(r["id4"] for r in L), "| psi_d", pd,
           "| tah", sum(r["tah"] == "true" for r in tr), "/", len(tr),
           "| logord", min(r["logord"] for r in L), max(r["logord"] for r in L),
-          "| psi", min(r["psi"] for r in L), max(r["psi"] for r in L))
+          "| psi", min(r["psi"] for r in L), max(r["psi"] for r in L),
+          "| e23", sorted({r["e23"] for r in L}),
+          "| tah non-vacuous", sum(r.get("tah_free", -1) > 0 for r in L))
 tot = len(R)
 print("total records", tot, "| z in D5", sum(any(r["z_in_D5"]) for r in R),
       "| H2", sum(r["H2"] for r in R), "| notH2", sum(not r["H2"] for r in R),
-      "| tahara run", sum(r["tah"] in ("true", "false") for r in R), "| tahara g<>1", sum(r["tah"] == "false" for r in R))
+      "| tahara run", sum(r["tah"] in ("true", "false") for r in R), "| tahara g<>1", sum(r["tah"] == "false" for r in R),
+      "| tahara non-vacuous (g not 1 on Z^n)", sum(r.get("tah_free", -1) > 0 for r in R))

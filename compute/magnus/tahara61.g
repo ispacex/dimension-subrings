@@ -22,7 +22,8 @@ end;
 
 OProd := function(x, a, one) return Product(List([1..Length(x)], i -> x[i]^a[i]), one); end;
 
-# x1 (optional): a uniqueness basis of P/gamma_2 with nondecreasing orders; default: our own.
+# x1 (optional): a uniqueness basis of P/gamma_2 with nondecreasing orders, NOT checked beyond sortedness
+# (unused by the scripts); default (fail): our own, from IndependentGeneratorsOfAbelianGroup.
 TaharaData := function(P, x1opt)
   local L, B1, B2, B3, s, t, u, x1, d, x2, e, x3, f, Y, b, c, dd, al, i, k, g, h, r, one;
   L := LowerCentralSeriesOfGroup(P);
@@ -43,6 +44,12 @@ TaharaData := function(P, x1opt)
   od;
   dd := List([1..t], k -> B3.coords(x2[k]^e[k]));
   al := List([1..s], g -> List([1..s], h -> B3.coords(Comm(Y[g], x1[h]))));
+  # Data.Valid: hdd, halpha and the ranges (hb is checked above)
+  for k in [1..t] do if not OProd(x3, dd[k], one)^-1 * x2[k]^e[k] in L[4] then Error("hdd"); fi; od;
+  for g in [1..s] do for h in [g..s] do
+    if not OProd(x3, al[g][h], one)^-1 * Comm(Y[g], x1[h]) in L[4] then Error("halpha"); fi; od; od;
+  if not ForAll([1..s], i -> ForAll([1..t], k -> 0 <= b[i][k] and b[i][k] < e[k]) and
+         ForAll([1..u], l -> 0 <= c[i][l] and c[i][l] < f[l])) then Error("ranges"); fi;
   return rec(P := P, L := L, s := s, t := t, u := u, x1 := x1, d := d, x2 := x2, e := e, x3 := x3, f := f,
              Y := Y, b := b, c := c, dd := dd, al := al, B2 := B2, B3 := B3);
 end;

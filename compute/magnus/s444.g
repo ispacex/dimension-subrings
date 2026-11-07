@@ -20,7 +20,6 @@ if not IsBound(EXTRAW) then EXTRAW := [2, 3, 3, 4]; fi;
 if not IsBound(TAH) then TAH := true; fi;
 if not IsBound(TAHMAX) then TAHMAX := 2500; fi;
 if not IsBound(IDCHK) then IDCHK := 30; fi;
-if not IsBound(MODE) then MODE := 1; fi;
 Reset(GlobalMersenneTwister, SEED); Reset(GlobalRandomSource, SEED);
 RW := function(F, wt)
   local g, c, i;
@@ -105,7 +104,7 @@ for it in [1..NG] do
   stats.e23is2 := stats.e23is2 + 1;
   # (H2): gamma_2^9 <= gamma_4; a -> a^9 is a homomorphism on gamma_2 (gamma_4 central of exponent 3)
   P9 := Subgroup(Pb, Concatenation(List(GeneratorsOfGroup(Lb[2]), a -> a^9), GeneratorsOfGroup(Lb[4])));
-  psi := Log(Index(ClosureGroup(P9, Lb[4]), Lb[4]), 3);
+  psi := Log(Index(P9, Lb[4]), 3);
   H2 := psi = 0;
   if H2 then stats.h2 := stats.h2 + 1; else stats.noth2 := stats.noth2 + 1; fi;
   # psi on the generators: pairs (i,j) with [x_i^9, x_j] notin gamma_4, by the order of x_i mod gamma_2
@@ -126,7 +125,7 @@ for it in [1..NG] do
   od;
   if not id3 or not idcube or (H2 and not id4) then stats.idbad := stats.idbad + 1; fi;
   # Tahara solver (second method)
-  tah := "skip"; tahn := 0; tahlat := 0; taht := 0;
+  tah := "skip"; tahn := 0; tahlat := 0; taht := 0; tahfree := -1;
   if TAH then
     t1 := Runtime();
     T := TaharaData(Pb, fail); V := TaharaVars(T); tahn := V.n;
@@ -135,6 +134,8 @@ for it in [1..NG] do
       lat := TaharaLattice(T, V, conds); tahlat := Length(lat);
       gg := List(lat, tau -> TaharaGen(T, V, tau).g);
       tah := ForAll(gg, IsOne);
+      # the image of g on all of Z^n (no conditions): if it is trivial, "g = 1 on the lattice" is vacuous
+      tahfree := Log(Size(Subgroup(Pb, List(IdentityMat(V.n), tau -> TaharaGen(T, V, tau).g))), 3);
       if not tah then stats.tahbad := stats.tahbad + 1; Print("TAHARA g <> 1 in ", SEED, ".", it, "\n"); fi;
     fi;
     taht := Runtime() - t1;
@@ -152,11 +153,12 @@ for it in [1..NG] do
     ",\"inM5\":", String(Length(Jb) >= 5 and ub in Jb[5]), ",\"inQ2\":", String(ub in DDb),
     ",\"psi\":", String(psi), ",\"H2\":", String(H2), ",\"psi_d\":", String(psipairs),
     ",\"id3\":", String(id3), ",\"id4\":", String(id4), ",\"idcube\":", String(idcube),
-    ",\"tah\":\"", String(tah), "\",\"tah_vars\":", String(tahn), ",\"tah_lat\":", String(tahlat), ",\"tah_ms\":", String(taht),
+    ",\"tah\":\"", String(tah), "\",\"tah_vars\":", String(tahn), ",\"tah_lat\":", String(tahlat), ",\"tah_ms\":", String(taht), ",\"tah_free\":", String(tahfree),
     ",\"cyc_steps\":", String(nstep), ",\"cyc_outside_g2\":", String(outside),
-    ",\"pq_stable\":true,\"dd\":", String(Log(Size(DDb), 3)), ",\"S\":1,\"S4\":1,\"s4skip\":false,\"cyc\":false}\n"));
+    ",\"pclass\":", String(Length(PCentralSeries(Pb, 3)) - 1), ",\"pq_stable\":true,\"dd\":", String(Log(Size(DDb), 3)), ",\"S\":1,\"S4\":1,\"s4skip\":false,\"cyc\":false}\n"));
 od;
 CloseStream(OUTS);
-Print("stats ", stats, "\n");
+SetPrintFormattingStatus("*stdout*", false);
+Print("stats ", String(stats), "\n");
 Print("wall ", Int((NanosecondsSinceEpoch() - T0) / 10^9), " s\n");
 QUIT;
