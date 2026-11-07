@@ -1,18 +1,22 @@
-# MATH-444 / D5-49, step 2: checks of the identity (*) and of the vanishing of its terms (wiki MATH page of
-# step 2).  For a 3-group P of class 4 with gamma_4^3 = 1 and a Tahara family tau satisfying (B), (D), (E), (F):
+# MATH-444 / D5-49, step 2: checks of the identity (*) and of the vanishing of its terms (wiki MATH page 891,
+# Theorem B).  For a 3-group P of class 4 (any exponent of gamma_4) and a Tahara family tau satisfying (B), (D2), (E), (F2):
 #
 #   g(tau)^2 = prod_{i<h} Delta_ih^{u_ih} * prod_{h<i} [[Y_h,x_i],x_i]^{-u_hi q_hi}
-#              * prod_{i<g<=h} [[Y_g,x_i],x_h]^{-w'_igh} * prod_{j<k<h} [Y_h,[x_j,x_k]]^{-w''_jkh}          (*)
+#              * prod_{i<g<=h} [[Y_g,x_i],x_h]^{-w'_igh} * prod_{j<k<h} [Y_h,[x_j,x_k]]^{-w''_jkh}
+#              * prod_i [[R_i,x_i],x_i]^{-binom(d(i),2)}                                                       (*)
 #
-# with Delta_ih = [x_i^{d(h)}, x_h] [x_h^{d(h)}, x_i], Y_i = x_i^{d(i)}, Tahara's commutator [a,b] = a^-1 b^-1 a b.
-# (*) is checked on a Z-basis of the lattice of families with (B),(D),(E),(F) (A and C dropped), and, as
-# controls, with one more of B, D, E, F dropped (then (*) should fail somewhere).
-# With the ADAPTED basis x_1 (classes Ybar_i mod 3 gamma_2 gamma_3 of the rows either 0 or linearly
-# independent; built from a basis of Omega_1(P/gamma_2) compatible with the height flag and ker Pbar), every
-# single factor of (*) is checked to be 1 on a Z-basis of the full admissible lattice (A)-(F).
+# with Delta_ih = [x_i^{d(h)}, x_h] [x_h^{d(h)}, x_i], Y_i = x_i^{d(i)}, R_i = prod_k x_{2k}^{v_ik}, Tahara's commutator
+# [a,b] = a^-1 b^-1 a b.  (*) is checked on a Z-basis of the lattice of families with (B),(D),(E),(F) (A and C
+# dropped; D1 and F1 are kept, so this is a sublattice of the (B),(D2),(E),(F2) lattice), and, as controls, with one
+# more of B, D, E, F dropped and with everything dropped (then (*) should fail somewhere).
+# With the ADAPTED basis x_1 (classes Ybar_i mod 3 gamma_2 gamma_3 of the rows either 0 or linearly independent;
+# built from a basis of Omega_1(P/gamma_2) compatible with the height flag and ker Pbar), every single factor of (*)
+# is checked to be 1 on a Z-basis of the full admissible lattice (A)-(F); controls: factors on lattices with some
+# conditions dropped (fctl).  The independence check cannot fail for AdaptedX1 by construction (it does fail for the
+# default basis in about a third of the groups: review of dimension-subrings#139).
 #
 # Groups: as s444.g (random class-4 3-quotients); MODE "cut" = gamma_4 cut to C_3 + cyclic centre (s444.g),
-# MODE "raw" = P / gamma_4^3 (gamma_4 elementary of any rank, no centre condition).
+# "raw" = P / gamma_4^3, "cut9" = gamma_4 cut to C_9 + cyclic centre, "raw9" = P / gamma_4^9.
 # Set SEED, NG, KS, TOPS, MODE, OUT; optional EXTRAW, TAHMAX, NEEDNOTH2 (default false: keep only groups with
 # gamma_2^9 not in gamma_4 when true).
 LoadPackage("anupq");

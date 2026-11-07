@@ -1,5 +1,7 @@
 # MATH-444 / D5-49 step 2, case (b): as s444.g but gamma_4(Q) = C_9 (cyclic), z = generator of gamma_4^3 = Omega_1(Z).
-# (Theorem B of the step-2 wiki page gives D_5 <= gamma_4^3 = <z>; d5s.py decides z in D_5.)  Original header:
+# Omega_1(Z) = <z> has order 3 and a nontrivial normal D_5 meets Z, so D_5 = 1 iff z notin D_5 (no need of Theorem B;
+# Theorem B, wiki MATH 891, gives in addition D_5 <= gamma_4^3 = <z>).  exp(gamma_2/gamma_3) >= 9 is imposed before
+# the cut; the final filter only asks e23 >= 1, but e23 in {2,3} in all records of run 1.  Original header:
 # MATH-444 / D5-49: random 3-groups Q of class 4 with gamma_4(Q) = C_3, cyclic centre, Q'' != 1 and
 # exp(gamma_2/gamma_3) = 9 -- the subcase gamma_4 = C_3 of the minimal counterexample.  The point is the
 # condition (H2) gamma_2^9 <= gamma_4 (equivalently [x^9,y] in gamma_4 for all x,y): under (H1) exp gamma_4 = 3
@@ -47,7 +49,7 @@ CutG4 := function(P, G4, u)   # here: functional gamma_4 -> C_9, u of order 9 mo
   f := GroupHomomorphismByImages(G4, C, ig, List(lam, l -> c^l));
   return NaturalHomomorphismByNormalSubgroupNC(P, Kernel(f));
 end;
-CutG4old := function(P, G4, u)
+CutG4old := function(P, G4, u)   # (unused here; the C_3 cut of s444.g)
   local ig, e, lam, C, c, f;
   ig := IndependentGeneratorsOfAbelianGroup(G4);
   e := IndependentGeneratorExponents(G4, u);

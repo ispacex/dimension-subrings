@@ -1,8 +1,9 @@
 """Summary of star444.g output (all.jsonl on stdin): per mode, counts of records, (*) failures, controls, adapted
-basis, factors not 1 on the admissible lattice (adapted basis), g not 1, factors not 1 without (C) / without (D)."""
+basis, factors not 1 on the admissible lattice (adapted basis), g not 1, factors not 1 on lattices with some conditions dropped (fctl; run 2 on).
+(Run 1 was summarised with 50b28be, which printed f_noC / f_noD instead.)"""
 import json, sys, re
 from collections import Counter, defaultdict
-def fix(l):   # the GAP writer puts lists of strings inside a JSON string (fbad, f_noC, f_noD): escape their quotes
+def fix(l):   # relies on GAP printing lists of strings as [ "a", "b" ] (", " between items); the GAP writer puts lists of strings inside a JSON string (fbad, f_noC, f_noD): escape their quotes
     return re.sub(r'"(fbad|f_noC|f_noD)":"(\[.*?\])"(?=,"|})', lambda m: '"%s":"%s"' % (m.group(1), m.group(2).replace('"', "'")), l)
 R = [json.loads(fix(l)) for l in sys.stdin if l.strip()]
 by = defaultdict(list)

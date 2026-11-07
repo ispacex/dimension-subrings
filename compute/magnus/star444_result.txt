@@ -7,7 +7,7 @@ run 1  kimmy/tm/20261107-165655-math444-star-run1-6941c3e (tree 6941c3e, star444
 run 2  kimmy/tm/20261107-170058-math444-star-run2-91e73e8 (tree 91e73e8, star444_run2.plan, summary.txt): 768 groups
 total  1097 groups; Q_ab of types [9,9], [3,9,9], [3,3,9,9], [9,9,9], [3,9,9,9], [3,9,27], [3,3,9,27], [9,27], [27,27],
        [3,27,27], [3,3,27,27]; orders 3^9 .. 3^91
-mode            groups  exp g4  (*) fails  lattice vectors  adapted basis  factor != 1  g != 1
+mode            groups  exp g4  (*) fails  (*)-lattice vectors (B,D,E,F; default basis)  adapted basis  factor != 1  g != 1
 cut               139     3        0           6951            all             0           0
 raw               214     3        0          10105            all             0           0
 raw9 (g4^3=1)      83     3        0           3529            all             0           0
