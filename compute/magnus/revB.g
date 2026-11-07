@@ -157,7 +157,7 @@ end;
 
 Info3 := function(P)
   local L, g2, e4, h2;
-  L := LowerCentralSeriesOfGroup(P);
+  L := ShallowCopy(LowerCentralSeriesOfGroup(P));
   while Length(L) < 5 do Add(L, TrivialSubgroup(P)); od;
   e4 := Exponent(L[4]);
   # gamma_2/gamma_4 abelian, so a -> a^9 mod gamma_4 is a homomorphism: generators suffice
@@ -205,12 +205,12 @@ else
   ng := 0; tries := 0;
   while ng < NG and tries < 20 * NG do
     tries := tries + 1;
-    if Random([1, 2]) = 1 then FF := F2g; else FF := F; fi;
-    gg := GeneratorsOfGroup(FF);
+    if Random([1, 2]) = 1 then FG := F2g; else FG := F; fi;
+    gg := GeneratorsOfGroup(FG);
     rels := List(gg, x -> x^Random([9, 27, 27, 81]) * Product(List([1..Random([0..2])],
-                 r -> RandComm(FF, Random([2, 2, 3, 4]))), One(FF)));
+                 r -> RandComm(FG, Random([2, 2, 3, 4]))), One(FG)));
     cube := Random([true, true, false]);
-    P := MakeGroup(FF, rels, cube);
+    P := MakeGroup(FG, rels, cube);
     if P = fail then continue; fi;
     if Length(LowerCentralSeriesOfGroup(P)) < 5 then continue; fi;
     ng := ng + 1;
