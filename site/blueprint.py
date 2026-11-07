@@ -408,7 +408,7 @@ COPY_TEX_JS = r"""document.addEventListener("copy", function (event) {
   if (!found.length) return;
   found.forEach(function (c) {
     var d = c.hasAttribute("data-tex-display") ? "$$" : "$";
-    c.replaceWith(document.createTextNode(d + c.getAttribute("data-tex") + d));
+    c.replaceWith(document.createTextNode(d + c.getAttribute("data-tex").trim() + d));
   });
   event.clipboardData.setData("text/plain", box.textContent);
   event.clipboardData.setData("text/html", box.innerHTML);
