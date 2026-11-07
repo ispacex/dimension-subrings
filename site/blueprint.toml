@@ -106,18 +106,18 @@ proved = true
 computer = true
 
 [nodes."lem:qpp"]
-lean = ["GroupDimension.D_le_derivedSeries_two", "GroupDimension.mem_of_mem_D_add_two", "GroupDimension.rank_ge_three_of_D_five_ne_bot"]
+lean = ["GroupDimension.D_le_derivedSeries_two", "GroupDimension.mem_of_mem_D_add_two", "GroupDimension.rank_ge_three_of_D_five_ne_bot", "GroupDimension.D_le_derivedSeries_two_three", "GroupDimension.mem_of_mem_D_add_two_three", "GroupDimension.rank_ge_three_of_D_five_ne_bot_three"]
 proved = true
-uses = ["ext:guptatahara"]
-note = "Gupta–Tahara's D_{p+2} = γ_{p+2} for metabelian p-groups is an explicit hypothesis."
-note_ru = "Теорема Гупты–Тахары D_{p+2} = γ_{p+2} для метабелевых p-групп — явная гипотеза."
+uses = ["ext:guptatahara", "thm:gt3"]
+note = "For general p, Gupta–Tahara's D_{p+2} = γ_{p+2} for metabelian p-groups is an explicit hypothesis; for p = 3 (class ≤ 4) the lemma is proved without it (the _three versions), Gupta–Tahara at p = 3 being Theorem [[thm:gt3|#]]."
+note_ru = "При общем p теорема Гупты–Тахары D_{p+2} = γ_{p+2} для метабелевых p-групп — явная гипотеза; при p = 3 (ступень ≤ 4) лемма доказана без неё (версии _three): теорема Гупты–Тахары при p = 3 — это теорема [[thm:gt3|#]]."
 
 [nodes."lem:mincex3"]
-lean = ["GroupDimension.minimal_three'", "GroupDimension.minimal_three", "GroupDimension.minimal_three_of_quotients"]
+lean = ["GroupDimension.minimal_three_three", "GroupDimension.minimal_three_of_quotients_three", "GroupDimension.minimal_three'", "GroupDimension.minimal_three", "GroupDimension.minimal_three_of_quotients"]
 proved = true
-uses = ["ext:guptatahara", "ext:passi"]
-note = "“Least order” as: D_5(R) = γ_5(R) for every 3-group R with |R| < |Q|; Gupta–Tahara's theorem is an explicit hypothesis."
-note_ru = "«Наименьший порядок» в виде: D_5(R) = γ_5(R) для всякой 3-группы R с |R| < |Q|; теорема Гупты–Тахары — явная гипотеза."
+uses = ["thm:gt3", "ext:passi"]
+note = "“Least order” as: D_5(R) = γ_5(R) for every 3-group R with |R| < |Q|. Proved without hypotheses (minimal_three_three, minimal_three_of_quotients_three); the older forms take Gupta–Tahara's theorem (now Theorem [[thm:gt3|#]] at p = 3) as an explicit hypothesis."
+note_ru = "«Наименьший порядок» в виде: D_5(R) = γ_5(R) для всякой 3-группы R с |R| < |Q|. Доказано без гипотез (minimal_three_three, minimal_three_of_quotients_three); прежние варианты берут теорему Гупты–Тахары (при p = 3 теперь теорема [[thm:gt3|#]]) явной гипотезой."
 
 [nodes."lem:lie"]
 lean = ["GroupDimension.commutator_gamma_two_le_gamma_five", "GroupDimension.metabelian_of_class_four"]
@@ -167,6 +167,13 @@ note_ru = "«γ_2/γ_3 имеет экспоненту не больше 3»: a�
 uses = ["ext:tahara61"]
 note = "Proved on paper (MATH-444), checked by an independent review; not formalized. Theorem [[thm:exp3gen|#]] is the special case exp(γ_2/γ_3) ≤ 3; here γ_2/γ_3 and γ_3/γ_4 may have exponent 9. The proof follows that of Theorem [[thm:exp3gen|#]]."
 note_ru = "Доказано на бумаге (MATH-444), проверено независимой рецензией; не формализовано. Теорема [[thm:exp3gen|#]] — частный случай при exp(γ_2/γ_3) ≤ 3; здесь γ_2/γ_3 и γ_3/γ_4 могут иметь экспоненту 9. Доказательство повторяет схему доказательства теоремы [[thm:exp3gen|#]]."
+
+[nodes."thm:gt3"]
+lean = ["GroupDimension.GuptaTahara.D_five_eq_gamma_five_of_metabelian", "GroupDimension.guptaTaharaMetabelian_three"]
+proved = true
+uses = ["ext:tahara61"]
+note = "“G/γ_2 a finite p-group, p odd, [γ_2, γ_2] ⊆ γ_5”; through Tahara's Theorem 6.1 with any uniqueness basis (MATH-445). guptaTaharaMetabelian_three is the instance p = 3 of GuptaTaharaMetabelian."
+note_ru = "«G/γ_2 — конечная p-группа, p нечётно, [γ_2, γ_2] ⊆ γ_5»; через теорему 6.1 Тахары с любым базисом единственности (MATH-445). guptaTaharaMetabelian_three — случай p = 3 утверждения GuptaTaharaMetabelian."
 
 [nodes."lem:filter"]
 lean = ["GroupDimension.filter_on_parents"]
@@ -247,9 +254,9 @@ note_ru = "Общая теорема Дженнингса и описание р
 title = "Gupta–Tahara"
 title_ru = "Гупта–Тахара"
 statement = '''$D_{p+2}(G)=\gamma_{p+2}(G)$ for every finite metabelian $p$-group $G$, $p$ odd.'''
-lean = ["GroupDimension.GuptaTaharaMetabelian"]
-note = "Stated in Lean, not proved; an explicit hypothesis where it is used."
-note_ru = "В Lean сформулирована, не доказана; там, где используется, — явная гипотеза."
+lean = ["GroupDimension.GuptaTaharaMetabelian", "GroupDimension.GuptaTaharaMetabelianThree", "GroupDimension.guptaTaharaMetabelian_three"]
+note = "Stated in Lean; proved for p = 3 (guptaTaharaMetabelian_three, Theorem [[thm:gt3|#]]); for general p not proved, an explicit hypothesis where it is used."
+note_ru = "В Lean сформулирована; при p = 3 доказана (guptaTaharaMetabelian_three, теорема [[thm:gt3|#]]); при общем p не доказана, там, где используется, — явная гипотеза."
 
 
 # ---------------------------------------------------------------------------------------------
@@ -325,6 +332,13 @@ status = "p"
 ru = '''Ещё шире: $D_5(G)=\gamma_5(G)$, если $G/\gamma_2(G)$ — конечная $3$-группа, $\gamma_4(G)^3\subseteq\gamma_5(G)$ и $\gamma_2(G)^9\subseteq\gamma_4(G)$; теорема [[thm:exp3gen|#]] — частный случай, а $\gamma_2/\gamma_3$ и $\gamma_3/\gamma_4$ теперь могут иметь экспоненту $9$. Доказано на бумаге, проверено независимой рецензией. Отсюда у минимального контрпримера с $\gamma_4\cong C_3$ найдутся $x,y$ с $[x^9,y]\notin\gamma_4$, т.е. $\gamma_2^9\not\subseteq\gamma_4$.'''
 en = '''Further still: $D_5(G)=\gamma_5(G)$ whenever $G/\gamma_2(G)$ is a finite $3$-group, $\gamma_4(G)^3\subseteq\gamma_5(G)$ and $\gamma_2(G)^9\subseteq\gamma_4(G)$; Theorem [[thm:exp3gen|#]] is the special case, and $\gamma_2/\gamma_3$ and $\gamma_3/\gamma_4$ may now have exponent $9$. Proved on paper, checked by an independent review. Hence a minimal counterexample with $\gamma_4\cong C_3$ has $x,y$ with $[x^9,y]\notin\gamma_4$, i.e. $\gamma_2^9\not\subseteq\gamma_4$.'''
 where = '''[[thm:exp3h9]]'''
+
+[[results]]
+status = "l"
+ru = '''Гупта–Тахара при $p=3$: $D_5(G)=\gamma_5(G)$, если $G/\gamma_2(G)$ — конечная $p$-группа, $p$ нечётно, и $[\gamma_2,\gamma_2]\subseteq\gamma_5$ (например, $G$ метабелева), без ограничений на $\exp(\gamma_2/\gamma_3)$. Доказано через теорему 6.1 Тахары, проверено независимой рецензией и доказано в Lean; отсюда леммы [[lem:qpp|#]] (при $p=3$) и [[lem:mincex3|#]] — без гипотез.'''
+en = '''Gupta–Tahara at $p=3$: $D_5(G)=\gamma_5(G)$ whenever $G/\gamma_2(G)$ is a finite $p$-group, $p$ odd, and $[\gamma_2,\gamma_2]\subseteq\gamma_5$ (e.g. $G$ metabelian), with no condition on $\exp(\gamma_2/\gamma_3)$. Proved through Tahara's Theorem 6.1, checked by an independent review and proved in Lean; hence Lemmas [[lem:qpp|#]] (at $p=3$) and [[lem:mincex3|#]] without hypotheses.'''
+where_ru = '''[[thm:gt3]]; {{lean:GroupDimension.GuptaTahara.D_five_eq_gamma_five_of_metabelian|Lean}}'''
+where_en = '''[[thm:gt3]]; {{lean:GroupDimension.GuptaTahara.D_five_eq_gamma_five_of_metabelian|Lean}}'''
 
 [[results]]
 status = "l"
