@@ -706,10 +706,10 @@ ROWS = [  # (status, ru, en, ref) of results.html: ref is a str or (ru, en)
 OPEN = [  # (id, ru, en, task): the id is the anchor on open.html; task is the D5 issue in the tracker
     ("q-main", "Сам вопрос 20.84: $D_5(Q)=1$ для всех конечных $2$-групп ступени $3$? Контрпример обязан иметь $D_4(Q)\\ne1$ и порядок $\\ge2^{12}$; при порядке $2^{12}$ он — кандидат ранга $\\le8$. (Для одного лишь $D_4\\ne\\gamma_4$ оценка $2^{11}$; наименьший известный пример имеет порядок $2^{38}$.)",
      "Problem 20.84 itself: is $D_5(Q)=1$ for all finite $2$-groups of class $3$? A counterexample must have $D_4(Q)\\ne1$ and order $\\ge2^{12}$; at order $2^{12}$ it is a candidate of rank $\\le8$. (For $D_4\\ne\\gamma_4$ alone the bound is $2^{11}$; the smallest known example has order $2^{38}$.)", "D5-2"),
-    ("q-tahara", "Бывает ли $3$-кручение в $D_5/\\gamma_5$ (достигается ли оценка Тахары $6$)? Минимальный пример — порядка $\\ge3^{10}$, ступени $4$, с циклическим центром и не меньше чем двумя инвариантами $\\ge9$ у $Q/\\gamma_2$.",
-     "Is there $3$-torsion in $D_5/\\gamma_5$, i.e. is Tahara's bound $6$ attained? A minimal example has order $\\ge3^{10}$, class $4$, cyclic centre and at least two invariants $\\ge9$ in $Q/\\gamma_2$.", "D5-4"),
-    ("q-c9c9", "Следующий случай: у $Q/\\gamma_2$ два инварианта $\\ge9$, например $C_9\\times C_9\\times C_3$. Там $\\gamma_2/\\gamma_3$ может иметь экспоненту $9$, и доказательство теоремы [[thm:exp3plus|#]] не проходит.",
-     "The next case: $Q/\\gamma_2$ with two invariants $\\ge9$, e.g. $C_9\\times C_9\\times C_3$. There $\\gamma_2/\\gamma_3$ may have exponent $9$, and the proof of Theorem [[thm:exp3plus|#]] does not go through.", "D5-5"),
+    ("q-tahara", "Бывает ли $3$-кручение в $D_5/\\gamma_5$ (достигается ли оценка Тахары $6$)? Минимальный пример — порядка $\\ge3^{10}$, ступени $4$, с циклическим центром, с $\\gamma_2/\\gamma_3$ экспоненты $\\ge9$ (а значит, не меньше чем двумя инвариантами $\\ge9$ у $Q/\\gamma_2$) и циклической $\\gamma_4\\le Z(Q)$; $\\gamma_4\\cong C_3$ или $C_9$, если второй инвариант равен $9$ (теорема [[thm:exp3gen|#]]).",
+     "Is there $3$-torsion in $D_5/\\gamma_5$, i.e. is Tahara's bound $6$ attained? A minimal example has order $\\ge3^{10}$, class $4$, cyclic centre, $\\gamma_2/\\gamma_3$ of exponent $\\ge9$ (hence at least two invariants $\\ge9$ in $Q/\\gamma_2$) and $\\gamma_4\\le Z(Q)$ cyclic; $\\gamma_4\\cong C_3$ or $C_9$ when the second invariant is $9$ (Theorem [[thm:exp3gen|#]]).", "D5-4"),
+    ("q-c9c9", "Следующий случай: $\\gamma_2/\\gamma_3$ экспоненты $\\ge9$ (для этого у $Q/\\gamma_2$ нужны два инварианта $\\ge9$, например $C_9\\times C_9\\times C_3$). При экспоненте $3$ $D_5=\\gamma_5$ при любых инвариантах (теорема [[thm:exp3gen|#]]); при экспоненте $9$ доказательство ломается в нескольких местах; например, точная формула ступени $4$ — $[x^3,a]=[x,a]^3[x,a,x]^3$, и в $\\langle x,y\\mid x^9,y^9\\rangle/\\gamma_5$ $[x,a,x]^3\\ne1$ (замечание [[rem:exp3|#]]).",
+     "The next case: $\\gamma_2/\\gamma_3$ of exponent $\\ge9$ (this needs two invariants $\\ge9$ in $Q/\\gamma_2$, e.g. $C_9\\times C_9\\times C_3$). With exponent $3$, $D_5=\\gamma_5$ whatever the invariants (Theorem [[thm:exp3gen|#]]); with exponent $9$ the proof breaks in several places; e.g. the exact class-$4$ formula is $[x^3,a]=[x,a]^3[x,a,x]^3$, and in $\\langle x,y\\mid x^9,y^9\\rangle/\\gamma_5$ one has $[x,a,x]^3\\ne1$ (Remark [[rem:exp3|#]]).", "D5-5"),
     ("q-theoremc", "Групповой аналог теоремы C: $D_{2c-1}(G)=1$ для метабелевых групп ступени $\\le c$? Для нечётных простых ответ положительный при всех $c$ (Гупта, 1991); открыт случай $p=2$, $c\\ge3$.",
      "The group analogue of Theorem C: $D_{2c-1}(G)=1$ for metabelian groups of class $\\le c$? For odd primes the answer is yes for every $c$ (Gupta, 1991); open for $p=2$, $c\\ge3$.", "D5-7"),
     ("q-central", "Центральные произведения со склейкой по собственной подгруппе, когда $\\sigma$ не является $2^{j+1}$-й степенью: $12$ из $212$ разложений кандидатов порядков $2^8$–$2^9$ ничем не покрыты. Проекцией на $H$ это в общем случае не сделать: у $D_8\\circ_{\\langle t\\rangle}M_{16}$ кольцевое равенство нарушено при $n=4,5$.",
@@ -901,6 +901,9 @@ TIMELINE = [  # (iso date, [(ru, en)])
     ("2026-10-27", [
         ("$2$-группа с $D_4\\ne\\gamma_4$ имеет порядок $\\ge2^{11}$ (наименьший известный пример — группа Рипса, $2^{38}$). Порядок $2^9$ — ситом по SmallGroups ($4\\,421$ кандидат), порядок $2^{10}$ — по всем $10\\,208\\,630$ родителям порядка $2^9$, где $n\\in D_4$ — линейное условие на $p$-накрывающей группе. " + gh("compute/pq1024/README.md", "Код") + ".",
          "A $2$-group with $D_4\\ne\\gamma_4$ has order $\\ge2^{11}$ (the smallest known example is Rips's group, $2^{38}$). Order $2^9$ by a sieve over SmallGroups ($4\\,421$ candidates), order $2^{10}$ by all $10\\,208\\,630$ parents of order $2^9$, with $n\\in D_4$ a linear condition on the $p$-covering group. " + gh("compute/pq1024/README.md", "Code") + ".")]),
+    ("2026-11-07", [
+        ("$3$-кручение: $D_5=\\gamma_5$ для всякой конечной $3$-группы, у которой $\\gamma_2/\\gamma_3$ имеет экспоненту $3$, при любых инвариантах $Q/\\gamma_2$ (теорема [[thm:exp3gen|#]]; теоремы [[thm:exp3|#]] и [[thm:exp3plus|#]] — её следствия). Доказано на бумаге и проверено независимой рецензией. У минимального контрпримера теперь $\\exp(\\gamma_2/\\gamma_3)\\ge9$ (вместо «двух инвариантов $\\ge9$») и $\\gamma_4\\le Z$ циклична.",
+         "$3$-torsion: $D_5=\\gamma_5$ for every finite $3$-group with $\\gamma_2/\\gamma_3$ of exponent $3$, whatever the invariants of $Q/\\gamma_2$ (Theorem [[thm:exp3gen|#]]; Theorems [[thm:exp3|#]] and [[thm:exp3plus|#]] are its corollaries). Proved on paper and checked by an independent review. A minimal counterexample now has $\\exp(\\gamma_2/\\gamma_3)\\ge9$ (instead of “two invariants $\\ge9$”) and $\\gamma_4\\le Z$ cyclic.")]),
 ]
 
 
@@ -929,7 +932,7 @@ def cover3(n, d):
         return "cp", "[[thm:exp3]], [[thm:3e9]]"
     if n == 9:
         return "c", "[[thm:3e9]]"
-    return "o", "[[thm:exp3plus]]"  # open; the part with at most one invariant > 3 in Q/gamma_2 is proved
+    return "o", "[[thm:exp3gen]]"  # open; the part with gamma_2/gamma_3 of exponent 3 is proved
 
 
 def grid(rows, cols, cover, p, lang, highlight=()):
@@ -958,7 +961,7 @@ def grid(rows, cols, cover, p, lang, highlight=()):
             kind = "x" if (k == "o" and p == 3) else k
             tip = f"{p}{str(n).translate(SUP)}, d = {d}: {STATUS[k][0 if lang == 'ru' else 1]}" + (f" ({refs_plain(where, lang)})" if where else "")
             if kind == "x":
-                tip += t(" — доказан случай, когда у $Q/\\gamma_2$ не больше одного инварианта $>3$", " — the case of $Q/\\gamma_2$ with at most one invariant $>3$ is proved").replace("$", "").replace("\\gamma_2", "γ₂")
+                tip += t(" — доказан случай, когда $\\gamma_2/\\gamma_3$ имеет экспоненту $3$", " — the case of $\\gamma_2/\\gamma_3$ of exponent $3$ is proved").replace("$", "").replace("\\gamma_2", "γ₂").replace("\\gamma_3", "γ₃")
             lab = {"c": "C", "p": "P", "cp": "C+P", "o": "?", "x": "?"}[kind]
             cell = (f'<rect class="cell k-{kind}" x="{x}" y="{y}" width="{cw}" height="{ch}" rx="3"><title>{html.escape(tip)}</title></rect>'
                     f'<text class="ct" x="{x + cw / 2}" y="{y + ch / 2 + 4}" text-anchor="middle">{lab}</text>')
@@ -980,8 +983,8 @@ def legend(lang, three=False):
     if three:
         out = out.replace('<span class="tag o">?</span> ' + t("открыто", "open"),
                           '<span class="tag o" style="background:repeating-linear-gradient(45deg,var(--open) 0 4px,var(--ppr) 4px 7px)">?</span> '
-                          + t("открыто; доказан случай, когда у $Q/\\gamma_2$ не больше одного инварианта $>3$ (теорема [[thm:exp3plus|#]])",
-                              "open; the case of $Q/\\gamma_2$ with at most one invariant $>3$ proved ([[thm:exp3plus]])"))
+                          + t("открыто; доказан случай, когда $\\gamma_2/\\gamma_3$ имеет экспоненту $3$ (теорема [[thm:exp3gen|#]])",
+                              "open; the case of $\\gamma_2/\\gamma_3$ of exponent $3$ proved ([[thm:exp3gen]])"))
     return f"<p><small>{out}. {t('Пустые клетки: таких групп нет.', 'Empty cells: no such groups.')}</small></p>"
 
 
@@ -1738,7 +1741,7 @@ No cell is open here any more: order $2^{11}$ is settled for every rank (Proposi
 <p>Это вопрос о $3$-кручении в $D_5/\\gamma_5$ (оценка Тахары: экспонента делит $6$). Клетки «на бумаге» закрыты так:
 если $Q/\\gamma_5$ метабелева, то $D_5=\\gamma_5$ по Гупте–Тахаре, а неметабелева группа ступени $4$ ранга $d$ имеет порядок
 $\\ge3^{d+5}$ (предложение [[prop:metab|#]]); при $d=2$ фактор $\\gamma_2/\\gamma_3$ цикличен. Остальное&nbsp;— перебор до $3^9$.
-Открытые клетки заштрихованы: в них доказан случай, когда у $Q/\\gamma_2$ не больше одного инварианта $>3$ (теорема [[thm:exp3plus|#]]).</p>""", """
+Открытые клетки заштрихованы: в них доказан случай, когда $\\gamma_2/\\gamma_3$ имеет экспоненту $3$ (теорема [[thm:exp3gen|#]]).</p>""", """
 <ul>
 <li>Up to $2^8$: the lattice $\\Delta^n$ for all groups; $2^9$: the Jennings sieve and the lattice.</li>
 <li>$2^{10}$: the minimal-counterexample lemma reduces to step-$1$ descendants of groups of order $2^9$ (ANUPQ), $3400$ candidates.</li>
@@ -1748,7 +1751,7 @@ $\\ge3^{d+5}$ (предложение [[prop:metab|#]]); при $d=2$ факто
 <p>This is the question of $3$-torsion in $D_5/\\gamma_5$ (Tahara: the exponent divides $6$). The “paper” cells are closed thus:
 if $Q/\\gamma_5$ is metabelian, then $D_5=\\gamma_5$ by Gupta–Tahara, and a non-metabelian group of class $4$ and rank $d$
 has order $\\ge3^{d+5}$ (Proposition [[prop:metab|#]]); for $d=2$ the factor $\\gamma_2/\\gamma_3$ is cyclic. The rest is the search up to $3^9$.
-Open cells are hatched: there the case of $Q/\\gamma_2$ with at most one invariant $>3$ is proved (Theorem [[thm:exp3plus|#]]).</p>""")
+Open cells are hatched: there the case of $\\gamma_2/\\gamma_3$ of exponent $3$ is proved (Theorem [[thm:exp3gen|#]]).</p>""")
       + grid(range(4, 13), range(2, 9), cover3, 3, lang) + legend(lang, three=True))
 
     # ---------- results ----------

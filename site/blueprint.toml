@@ -153,6 +153,11 @@ uses = ["ext:tahara61"]
 note = "“The cubes of G/γ_2 form a cyclic group”: for some t, every x³ is congruent modulo γ_2 to a power of t³."
 note_ru = "«Кубы G/γ_2 образуют циклическую группу»: для некоторого t всякий x³ сравним по модулю γ_2 со степенью t³."
 
+[nodes."thm:exp3gen"]
+uses = ["ext:tahara61"]
+note = "Proved on paper (MATH-443); not formalized."
+note_ru = "Доказано на бумаге (MATH-443); не формализовано."
+
 [nodes."lem:filter"]
 lean = ["GroupDimension.filter_on_parents"]
 proved = true
@@ -297,6 +302,12 @@ ru = '''Более общо: $D_5(G)=\gamma_5(G)$, если $G/\gamma_2(G)\cong 
 en = '''More generally: $D_5(G)=\gamma_5(G)$ whenever $G/\gamma_2(G)\cong C_{3^a}\times C_3^{s-1}$, i.e. it has at most one invariant larger than $3$ (including $C_9\times C_3^{s-1}$). <a href="timeline.html#d2026-10-18">Checked by an independent review</a> and proved in Lean, together with Tahara's Theorem 6.1.'''
 where_ru = '''[[thm:exp3plus]]; {{lean:GroupDimension.D_five_eq_gamma_five_of_cubes_cyclic|Lean}}'''
 where_en = '''[[thm:exp3plus]]; {{lean:GroupDimension.D_five_eq_gamma_five_of_cubes_cyclic|Lean}}'''
+
+[[results]]
+status = "p"
+ru = '''Ещё общее: $D_5(G)=\gamma_5(G)$, если $G/\gamma_2(G)$ — конечная $3$-группа и $\gamma_2(G)/\gamma_3(G)$ имеет экспоненту $3$, при любых инвариантах $G/\gamma_2(G)$ (например, $C_9\times C_9\times C_3$, если $\gamma_2/\gamma_3$ экспоненты $3$); теоремы [[thm:exp3|#]] и [[thm:exp3plus|#]] — следствия. Доказано на бумаге, проверено независимой рецензией. Отсюда у минимального контрпримера $\exp(\gamma_2/\gamma_3)\ge9$, а $\gamma_4\le Z$ циклична.'''
+en = '''More generally still: $D_5(G)=\gamma_5(G)$ whenever $G/\gamma_2(G)$ is a finite $3$-group and $\gamma_2(G)/\gamma_3(G)$ has exponent $3$, whatever the invariants of $G/\gamma_2(G)$ (e.g. $C_9\times C_9\times C_3$ when $\gamma_2/\gamma_3$ has exponent $3$); Theorems [[thm:exp3|#]] and [[thm:exp3plus|#]] are corollaries. Proved on paper, checked by an independent review. Hence a minimal counterexample has $\exp(\gamma_2/\gamma_3)\ge9$ and $\gamma_4\le Z$ cyclic.'''
+where = '''[[thm:exp3gen]]'''
 
 [[results]]
 status = "l"
