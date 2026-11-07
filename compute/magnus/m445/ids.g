@@ -2,21 +2,21 @@
 # Groups: Q = NilpotentQuotient(F/R, 4), F free on k gens, R = powers x_i^{e_i} (times random words),
 # random extra relators, and (MET=true) all [[x_a,x_b],[x_c,x_d]] (=> Q'' = 1 since class 4).
 # Usage: set SEED, NG, P (prime), MET before reading.
+SetPrintFormattingStatus("*stdout*", false);
 Read("cfq.g");
 Reset(GlobalMersenneTwister, SEED); Reset(GlobalRandomSource, SEED);
 RW := function(F, wt) local g, c, i; g := GeneratorsOfGroup(F); c := Random(g);
   for i in [2..wt] do c := Comm(c, Random(g)); od; return c^Random([1..P-1]); end;
 OrdMod := function(x, N) local n; n := 1; while not x^n in N do n := n*P; od; return n; end;
-st := rec(groups := 0, exp9 := 0, I1 := 0, I2 := 0, I3 := 0, I4 := 0, I5 := 0, I6 := 0, exp3fail := 0, nonmet := 0, tests := 0);
+st := rec(fails := 0, groups := 0, exp9 := 0, I1 := 0, I2 := 0, I3 := 0, I4 := 0, I5 := 0, I6 := 0, exp3fail := 0, nonmet := 0, tests := 0);
 for it in [1..NG] do
   k := Random([2,3]); F := FreeGroup(k); g := GeneratorsOfGroup(F);
   rels := List([1..k], i -> g[i]^Random([P, P^2, P^2, P^3]) / Product(List([1..Random([0..1])], j -> RW(F, Random([2,3]))), One(F)));
   Append(rels, List([1..Random([0..2])], j -> RW(F, Random([3,4]))));
   if MET then Append(rels, Concatenation(List(Combinations([1..k], 2), ab -> List(Combinations([1..k], 2), cd ->
       Comm(Comm(g[ab[1]], g[ab[2]]), Comm(g[cd[1]], g[cd[2]])))))); 
-    Append(rels, List(Tuples([1..k], 3), t -> Comm(Comm(g[t[1]], g[t[2]]), Comm(Comm(g[t[1]], g[t[2]]), g[t[3]]))));
   fi;
-  cq := ClassFourQuotient(F, rels, P); if cq = fail then continue; fi; Q := cq.Q;
+  cq := ClassFourQuotient(F, rels, P); if cq = fail then st.fails := st.fails + 1; continue; fi; Q := cq.Q;
   if not IsPGroup(Q) then continue; fi;
   L := LowerCentralSeriesOfGroup(Q);
   if Length(L) <> 5 then continue; fi;

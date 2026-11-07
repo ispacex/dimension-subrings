@@ -6,13 +6,14 @@
 # Omega_1(Z(Q)) ∩ gamma_4 ∩ M_5 =: S; zs = one generator of each subgroup of order 3 of S.
 # (q1gen.g/q9gen.g use Q'' instead of gamma_4: that uses Lemma 6.1, i.e. Gupta-Tahara itself,
 # so it cannot be used here.)  Set SEED, NG, KS, DEXP, NEXTRA, MAXLOG, MAXS, OUT before reading.
+SetPrintFormattingStatus("*stdout*", false);
 Read("cfq.g");
 Read("../presgens.g");
 Reset(GlobalMersenneTwister, SEED); Reset(GlobalRandomSource, SEED);
 RW := function(F, wt) local g, c, i; g := GeneratorsOfGroup(F); c := Random(g);
   for i in [2..wt] do c := Comm(c, Random(g)); od; return c^Random([1, 2]); end;
 OUTS := OutputTextFile(OUT, false); SetPrintFormattingStatus(OUTS, false);
-st := rec(tried := 0, class4 := 0, exp9 := 0, written := 0, bigS := 0, big := 0);
+st := rec(fails := 0, tried := 0, class4 := 0, exp9 := 0, written := 0, bigS := 0, big := 0);
 for it in [1..NG] do
   st.tried := st.tried + 1;
   k := Random(KS); F := FreeGroup(k); g := GeneratorsOfGroup(F);
@@ -20,7 +21,7 @@ for it in [1..NG] do
   Append(rels, List([1..Random([0..NEXTRA])], j -> Product(List([1..Random([1, 2])], t -> RW(F, Random([2, 3, 3, 4]))), One(F))));
   Append(rels, Concatenation(List(Combinations([1..k], 2), ab -> List(Combinations([1..k], 2), cd ->
       Comm(Comm(g[ab[1]], g[ab[2]]), Comm(g[cd[1]], g[cd[2]]))))));
-  cq := ClassFourQuotient(F, rels, 3); if cq = fail then continue; fi; Q := cq.Q;
+  cq := ClassFourQuotient(F, rels, 3); if cq = fail then st.fails := st.fails + 1; continue; fi; Q := cq.Q;
   L := LowerCentralSeriesOfGroup(Q);
   if Length(L) <> 5 then continue; fi;
   st.class4 := st.class4 + 1;

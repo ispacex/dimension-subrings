@@ -7,9 +7,11 @@ ClassFourQuotient := function(F, rels, p)
   local g, W5, Fp, c, e1, e2, P, L, nat, Q;
   g := GeneratorsOfGroup(F);
   if IsBound(USENQ) and USENQ then
-    Q := NilpotentQuotient(F / rels, 4);
+    LoadPackage("nq");
+    e1 := NqEpimorphismNilpotentQuotient(F / rels, 4);
+    Q := Image(e1);
     if not IsFinite(Q) then return fail; fi;
-    return rec(Q := Q, gens := GeneratorsOfGroup(Q){[1..Length(g)]});
+    return rec(Q := Q, gens := List(GeneratorsOfGroup(F / rels), x -> Image(e1, x)));
   fi;
   W5 := List(Tuples([1..Length(g)], 5), t -> LeftNormedComm(g{t}));
   Fp := F / Concatenation(rels, W5);
