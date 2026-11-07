@@ -36,8 +36,8 @@ DATA = HERE / "blueprint.toml"
 GROUPS = ROOT / "groups"
 GROUPS_REPO = "https://github.com/ispacex/group-dimension"
 SITE = "https://ispacex.github.io/d5/"
-ENVS = ("theorem", "proposition", "lemma", "question", "remark")
-NAMES = {"theorem": "Theorem", "proposition": "Proposition", "lemma": "Lemma", "question": "Question",
+ENVS = ("theorem", "proposition", "lemma", "corollary", "question", "remark")
+NAMES = {"theorem": "Theorem", "proposition": "Proposition", "lemma": "Lemma", "corollary": "Corollary", "question": "Question",
          "remark": "Remark"}
 LEAN_REF = re.compile(r"\{\{lean:([^|}]+)\|([^}]*)\}\}")
 NOTE_REF = re.compile(r"\[\[([A-Za-z0-9:._-]+)\|#\]\]")  # a number of the paper in a note
@@ -565,7 +565,7 @@ def src(data, index, out, tex=None, pin=None, paper_url=SITE + "viewer.html"):
         for x, n in nodes.items():
             if x.startswith("ext:"):
                 continue
-            kind = {"thm": "theorem", "prop": "proposition", "lem": "lemma", "rem": "remark", "q": "question"}[x.split(":")[0]]
+            kind = {"thm": "theorem", "prop": "proposition", "lem": "lemma", "cor": "corollary", "rem": "remark", "q": "question"}[x.split(":")[0]]
             parts.append(node_tex(x, n, kind, None, "",
                                   f"The statement \\texttt{{{tex_inline(x)}}} of the paper (placeholder: built without the paper)."))
     # numbered on their own (Known result 1, 2, ...), not as the last section of the paper

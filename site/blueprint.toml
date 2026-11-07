@@ -179,6 +179,8 @@ uses = ["ext:tahara61"]
 note = "Paper proof and Lean code each checked by an independent review (MATH-444). Hypothesis: c³ ∈ γ_5 for every c ∈ γ_4; no condition on γ_2/γ_3 or on G/γ_2 beyond being a finite 3-group. Theorems [[thm:exp3gen|#]] and [[thm:exp3h9|#]] are special cases; in Lean, Theorem [[thm:exp3h9|#]] is derived from it under its old names (and [[thm:exp3gen|#]] from [[thm:exp3h9|#]]). The Lean proof (G4Cube.lean) follows the paper: the row identity from (B) and (E) summed over all rows, the v-part by (F₂), the defect Δ for each pair, then 2g = 0 in γ_3."
 note_ru = "Доказательство в статье и код Lean проверены каждый независимой рецензией (MATH-444). Гипотеза: c³ ∈ γ_5 для всех c ∈ γ_4; на γ_2/γ_3 и G/γ_2 (кроме того, что это конечная 3-группа) условий нет. Теоремы [[thm:exp3gen|#]] и [[thm:exp3h9|#]] — частные случаи; в Lean теорема [[thm:exp3h9|#]] выводится из неё под прежними именами (а [[thm:exp3gen|#]] — из [[thm:exp3h9|#]]). Доказательство в Lean (G4Cube.lean) следует статье: тождество строк из (B) и (E), просуммированное по всем строкам, v-часть по (F₂), дефект Δ для каждой пары, затем 2g = 0 в γ_3."
 
+[nodes."cor:g4cube"]
+
 [nodes."rem:g4c9"]
 
 [nodes."thm:gt3"]

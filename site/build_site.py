@@ -1463,7 +1463,7 @@ def groups(s, k=None):
 
 # What a label names, by its prefix (the drafts keep to it): words for the links, full and short.
 KINDS = {"thm": ("Теорема", "Теор.", "Theorem", "Thm."), "prop": ("Предложение", "Предл.", "Proposition", "Prop."),
-         "lem": ("Лемма", "Лемма", "Lemma", "Lemma"), "rem": ("Замечание", "Зам.", "Remark", "Rem."),
+         "lem": ("Лемма", "Лемма", "Lemma", "Lemma"), "cor": ("Следствие", "Следств.", "Corollary", "Cor."), "rem": ("Замечание", "Зам.", "Remark", "Rem."),
          "q": ("Вопрос", "Вопрос", "Question", "Question"), "sec": ("Раздел", "§", "Section", "§"),
          "section": ("Раздел", "§", "Section", "§"),
          "app": ("Приложение", "Прил.", "Appendix", "App."),
@@ -1493,7 +1493,7 @@ def read_aux(aux, tex):
         if dest == anchor and number:  # a section without a label: hyperref's name, section.N
             labels[dest] = (number, int(page))
     titles = {}
-    for m in re.finditer(r"\\begin\{(theorem|proposition|lemma|remark|question)\}", tex):
+    for m in re.finditer(r"\\begin\{(theorem|proposition|lemma|corollary|remark|question)\}", tex):
         j = m.end()
         opt = ""
         if tex[j] == "[":  # the optional argument, brackets inside braces allowed
