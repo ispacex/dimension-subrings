@@ -26,12 +26,18 @@
 #include <csignal>
 #include <unistd.h>
 #include <cmath>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 using namespace std;
 typedef unsigned long long u64;
 typedef __uint128_t u128;
 typedef __int128 i128;
 
 static int P, E, NDEG, R;
+// GRNQ_THREADS: threads of howell_stream (default: all cpus this process may use; with OpenMP only);
+// GRNQ_BLOCK: its column block (default 256); a block's tails are split between the threads from HPAR entries on
+static int HTHREADS = 1, HW = 256; static long long HPAR = 1 << 15;  // GRNQ_PAR_MIN: HPAR (tests)
 static int HMETH = 0;  // GRNQ_HOWELL: stream (default), fixed, dyn
 static long long ST_ELIM = 0, ST_FILL = 0;  // Howell statistics: eliminations, entries written
 static u64 D;
@@ -216,18 +222,33 @@ struct StageMod {
 
 // ---------------- sparse Howell form over Z/p^E ----------------
 // h: the history of the row (GRNQ_LAZY), a combination of the input rows by their ids; empty otherwise
-struct Row { vector<int> i; vector<u64> v; SV h; };
+// GRNQ_V32 (compile time): the entries of the rows of the Howell forms in 32 bits (8 bytes per entry, not 12),
+// for p^E < 2^32 (checked at the start); the arithmetic stays 64-bit.  The checkpoint is of the width it was written with.
+#ifdef GRNQ_V32
+typedef uint32_t rv_t;
+#else
+typedef u64 rv_t;
+#endif
+// every entry of a row goes in through RV: in a GRNQ_V32 build it stops the run if an entry does not fit
+// (it cannot when all entries are reduced mod D < 2^32: the check guards that invariant against later changes)
+static inline rv_t RV(u64 x) {
+#ifdef GRNQ_V32
+  if (x >> 32) { fprintf(stderr, "ERROR: GRNQ_V32: row entry %llu >= 2^32 (D = %llu)\n", (unsigned long long)x, (unsigned long long)D); abort(); }
+#endif
+  return (rv_t)x;
+}
+struct Row { vector<int> i; vector<rv_t> v; SV h; };
 static int lead(const Row& r) { return r.i.empty() ? INT32_MAX : r.i[0]; }
-static void scale(vector<int>& I, vector<u64>& V, u64 c) { size_t w = 0; for (size_t q = 0; q < I.size(); q++) { u64 x = mulm(V[q], c); if (x) { I[w] = I[q]; V[w++] = x; } } I.resize(w); V.resize(w); }
+template <class V_> static void scale(vector<int>& I, vector<V_>& V, u64 c) { size_t w = 0; for (size_t q = 0; q < I.size(); q++) { u64 x = mulm(V[q], c); if (x) { I[w] = I[q]; V[w++] = (V_)RV(x); } } I.resize(w); V.resize(w); }
 static void scale(Row& r, u64 c) { scale(r.i, r.v, c); scale(r.h.i, r.h.v, c); }
-static void axpy(const vector<int>& ai, const vector<u64>& av, const vector<int>& bi, const vector<u64>& bv, u64 cb, vector<int>& si, vector<u64>& sv) {
+template <class V_> static void axpy(const vector<int>& ai, const vector<V_>& av, const vector<int>& bi, const vector<V_>& bv, u64 cb, vector<int>& si, vector<V_>& sv) {
   size_t p = 0, q = 0; si.reserve(ai.size() + bi.size()); sv.reserve(ai.size() + bi.size());
   while (p < ai.size() || q < bi.size()) {
     int k; u64 x;
     if (q >= bi.size() || (p < ai.size() && ai[p] < bi[q])) { k = ai[p]; x = av[p++]; }
     else if (p >= ai.size() || bi[q] < ai[p]) { k = bi[q]; x = mulm(bv[q++], cb); }
     else { k = ai[p]; x = addm(av[p++], mulm(bv[q++], cb)); }
-    if (x) { si.push_back(k); sv.push_back(x); }
+    if (x) { si.push_back(k); sv.push_back((V_)RV(x)); }
   }
 }
 static Row axpy(const Row& a, const Row& b, u64 cb) {  // a + cb b
@@ -280,7 +301,11 @@ static volatile sig_atomic_t SIG_CKPT = 0, SIG_TERM = 0, IN_HOWELL = 0;
 static void on_usr1(int) { SIG_CKPT = 1; }
 static void on_term(int) { if (!IN_HOWELL) _exit(143); SIG_TERM = 1; }  // outside the Howell form: nothing to save
 struct CkHead { char magic[8]; int32_t p, e, stage, ncol; u64 nrows, hash, next; long long elim, fill; u64 bytes; };
+#ifdef GRNQ_V32
+static const char CK_MAGIC[9] = "GRNQCK32", CK_END[9] = "GRNQEN32";  // entries in 32 bits: not the file of a 64-bit build
+#else
 static const char CK_MAGIC[9] = "GRNQCK02", CK_END[9] = "GRNQEND2";
+#endif
 static u64 rows_hash(const vector<Row>& rows) {
   u64 h = 1469598103934665603ULL;
   auto mix = [&](u64 x) { h ^= x; h *= 1099511628211ULL; };
@@ -339,7 +364,7 @@ static bool ck_load(vector<Row>& rows, int ncol, u64 hash, size_t* next, vector<
             CKPT, H.stage, H.ncol, ncol, (unsigned long long)H.nrows, rows.size(), H.hash == hash ? "same" : "differs");
     return false;
   }
-  for (size_t q = 0; q < H.next; q++) { Row().i.swap(rows[q].i); vector<u64>().swap(rows[q].v); }
+  for (size_t q = 0; q < H.next; q++) { Row().i.swap(rows[q].i); vector<rv_t>().swap(rows[q].v); }
   double t0 = now(); FILE* f = fopen(CKPT, "rb"); bool ok = f && fseeko(f, sizeof H, SEEK_SET) == 0;
   if (ok) ck_r(f, pv, ok);
   ok = ok && pv.size() == (size_t)ncol;
@@ -348,6 +373,9 @@ static bool ck_load(vector<Row>& rows, int ncol, u64 hash, size_t* next, vector<
   if (ok) pend.resize(np);
   for (u64 q = 0; ok && q < np; q++) { ck_r(f, pend[q].i, ok); ck_r(f, pend[q].v, ok); }
   if (f) fclose(f);
+  // entries reduced mod D (in a GRNQ_V32 build this is what keeps them below 2^32): a file that breaks it is not ours
+  auto below = [&](const vector<Row>& R) { for (auto& r : R) for (auto x : r.v) if ((u64)x >= D) return false; return true; };
+  ok = ok && below(piv) && below(pend);
   // the input rows before next are gone: a body that cannot be read now (it was complete a moment ago) is fatal
   if (!ok) { fprintf(stderr, "ERROR: %s could not be read; delete it and run again\n", CKPT); exit(2); }
   *next = H.next; ST_ELIM = H.elim; ST_FILL = H.fill;
@@ -380,17 +408,36 @@ static vector<Row> howell_stream(vector<Row>& rows, int ncol, vector<int>& pv, v
     double dt = t - tp, rate = dt > 0 ? (next - nextp) / dt : 0, done = nrows ? (double)next / nrows : 1;
     double avg = t > ts ? (next - next0) / (t - ts) : 0;
     fprintf(stderr, "[howell stage %d] %.2f h: rows %zu/%llu (%.2f%%), queue %zu, pivots %lld/%d; %lld eliminations, "
-            "%.3g entries written (%.3g/s); %.3g rows/s now, %.3g on average; ETA by the average rate %.1f h\n",
+            "%.3g entries written (%.3g/s), %d threads; %.3g rows/s now, %.3g on average; ETA by the average rate %.1f h\n",
             CUR_STAGE, (t - ts) / 3600, next, (unsigned long long)nrows, 100 * done, pend.size(), npiv, ncol, ST_ELIM,
-            (double)ST_FILL, dt > 0 ? (ST_FILL - fillp) / dt : 0, rate, avg, avg > 0 ? (nrows - next) / avg / 3600 : -1.0);
+            (double)ST_FILL, dt > 0 ? (ST_FILL - fillp) / dt : 0, HTHREADS, rate, avg, avg > 0 ? (nrows - next) / avg / 3600 : -1.0);
     if (PFILE) if (FILE* f = fopen(PFILE, "w")) { fprintf(f, "%zu/%llu\n", next, (unsigned long long)nrows); fclose(f); }
     tp = t; fillp = ST_FILL; nextp = next;
   };
   auto extract = [&](int c, int hi, u64 u) {  // acc[c..hi] times u as a row; clears acc
-    Row r; for (int k = c; k <= hi; k++) if (acc[k]) { r.i.push_back(k); r.v.push_back(mulm(acc[k], u)); acc[k] = 0; }
+    Row r; for (int k = c; k <= hi; k++) if (acc[k]) { r.i.push_back(k); r.v.push_back(RV(mulm(acc[k], u))); acc[k] = 0; }
     return r;
   };
   auto closure = [&](const Row& r, int v) { if (v > 0) { Row s = r; scale(s, PP[E - v]); if (!s.i.empty()) pend.push_back(std::move(s)); } };
+  struct Tail { const Row* r; size_t t; u64 q; };  // pivot row, first entry at or after the block end, factor
+  vector<Tail> tails;
+  auto apply = [&](int lo, int up) {  // the tails at the columns [lo, up)
+    for (auto& T : tails) {
+      const vector<int>& I = T.r->i; const vector<rv_t>& V = T.r->v;
+      size_t t = lower_bound(I.begin() + T.t, I.end(), lo) - I.begin();
+      for (; t < I.size() && I[t] < up; t++) acc[I[t]] = addm(acc[I[t]], mulm(V[t], T.q));
+    }
+  };
+  auto flush = [&](int lo, int hi, long long tw) {
+    if (tails.empty()) return;
+    int nt = HTHREADS, span = hi + 1 - lo;
+    if (nt <= 1 || tw < HPAR || span < (HPAR ? 64 : 1) * nt) { apply(lo, hi + 1); return; }
+    int nch = 4 * nt;  // more chunks than threads: the tails are denser near some columns
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1) num_threads(nt)
+#endif
+    for (int q = 0; q < nch; q++) apply(lo + (int)((long long)span * q / nch), lo + (int)((long long)span * (q + 1) / nch));
+  };
   for (unsigned it = 0;; it++) {
     double t = (it & 15) == 0 || SIG_CKPT || SIG_TERM ? now() : tp;  // the clock every 16 rows
     if (PEVERY > 0 && t - tp >= PEVERY) report(t);
@@ -405,19 +452,31 @@ static vector<Row> howell_stream(vector<Row>& rows, int ncol, vector<int>& pv, v
     if (x.i.empty()) continue;
     for (size_t q = 0; q < x.i.size(); q++) acc[x.i[q]] = x.v[q];
     int c = x.i[0], hi = x.i.back();
+    // blocks of HW columns: inside the block [c, bend) each elimination is applied at once; its part at
+    // columns >= bend (the tail) is deferred to tails and applied for the whole block by the threads, each
+    // on its own range of columns (flush).  The sums mod p^E are the same, so the result is that of one thread.
     while (c <= hi) {
-      u64 a = acc[c];
-      if (!a) { c++; continue; }
-      int va = val(a);
-      if (pv[c] < 0 || va < pv[c]) {
+      const int bend = c + HW; tails.clear(); long long tw = 0;
+      bool stop = false;
+      for (; c < bend && c <= hi; c++) {
+        u64 a = acc[c];
+        if (!a) continue;
+        int va = val(a);
+        if (pv[c] < 0 || va < pv[c]) { stop = true; break; }
+        u64 nq = negm(a / PP[pv[c]]); const Row& pr = piv[c]; ST_ELIM++; ST_FILL += pr.i.size();
+        size_t t = 0, n = pr.i.size();
+        for (; t < n && pr.i[t] < bend; t++) { int k = pr.i[t]; acc[k] = addm(acc[k], mulm(pr.v[t], nq)); }
+        if (n && pr.i[n - 1] > hi) hi = pr.i[n - 1];
+        if (t < n) { tails.push_back({&pr, t, nq}); tw += n - t; }
+      }
+      flush(bend, hi, tw);
+      if (stop) {
+        u64 a = acc[c]; int va = val(a);
         Row r = extract(c, hi, invunit(a / PP[va]));
         if (pv[c] >= 0) pend.push_back(std::move(piv[c])); else npiv++;
         pv[c] = va; closure(r, va); piv[c] = std::move(r);
         break;
       }
-      u64 nq = negm(a / PP[pv[c]]); const Row& pr = piv[c]; ST_ELIM++; ST_FILL += pr.i.size();
-      for (size_t t = 0; t < pr.i.size(); t++) { int k = pr.i[t]; acc[k] = addm(acc[k], mulm(pr.v[t], nq)); if (k > hi) hi = k; }
-      c++;
     }
   }
   IN_HOWELL = 0; if (SIG_TERM) _exit(143);
@@ -451,7 +510,7 @@ static vector<Row> howell_stream_dag(vector<Row>& rows, int ncol, vector<int>& p
       int va = val(a);
       if (pv[c] < 0 || va < pv[c]) {
         u64 u = invunit(a / PP[va]);
-        Row r; for (int k = c; k <= hi; k++) if (acc[k]) { r.i.push_back(k); r.v.push_back(mulm(acc[k], u)); acc[k] = 0; }
+        Row r; for (int k = c; k <= hi; k++) if (acc[k]) { r.i.push_back(k); r.v.push_back(RV(mulm(acc[k], u))); acc[k] = 0; }
         if (xn < 0) { nodes.push_back(HNode{std::move(x.h), {}}); xn = nodes.size() - 1; }
         HNode nd; nd.parts.push_back({xn, u}); for (auto& o : ops) nd.parts.push_back({o.first, mulm(o.second, u)});
         nodes.push_back(std::move(nd)); int rn = nodes.size() - 1;
@@ -512,7 +571,7 @@ static vector<Row> howell_dyn(vector<Row>& rows, int ncol, vector<int>& pv, vect
           if (p2 >= pr.i.size() || (p1 < x.i.size() && x.i[p1] < pr.i[p2])) { k = x.i[p1]; z = x.v[p1++]; }
           else if (p1 >= x.i.size() || pr.i[p2] < x.i[p1]) { k = pr.i[p2]; z = mulm(pr.v[p2++], cb); if (z) colrows[k].push_back(rr); }
           else { k = x.i[p1]; z = addm(x.v[p1++], mulm(pr.v[p2++], cb)); }
-          if (z) { y.i.push_back(k); y.v.push_back(z); }
+          if (z) { y.i.push_back(k); y.v.push_back(RV(z)); }
         }
         ST_ELIM++; ST_FILL += y.i.size();
         rows[rr] = std::move(y);
@@ -600,7 +659,7 @@ static void final_proj(int k, int ng) {
   auto finish = [&](const SV& g, const SV& t, const vector<char>& mask) {
     sm.acc.addsv(g, 1); for (size_t q = 0; q < t.size(); q++) sm.acc.add(ng + t.i[q], t.v[q]);
     SV x = sm.nf_acc(); Row r;
-    for (size_t q = 0; q < x.size(); q++) { if (x.i[q] < ng) { badgen++; continue; } int c = x.i[q] - ng; if (mask[c]) { r.i.push_back(c); r.v.push_back(x.v[q]); } }
+    for (size_t q = 0; q < x.size(); q++) { if (x.i[q] < ng) { badgen++; continue; } int c = x.i[q] - ng; if (mask[c]) { r.i.push_back(c); r.v.push_back(RV(x.v[q])); } }
     return r;
   };
   vector<Acc> rg(magnus.size()), rt(magnus.size()); for (auto& a : rg) a.init(ng); for (auto& a : rt) a.init(NT);
@@ -741,7 +800,7 @@ static bool stage(int k) {  // PR = R_k (generators of weight <= k-1) -> R_{k+1}
   long long badgen = 0;
   auto push = [&](const SV& s) {
     Row r;
-    for (size_t q = 0; q < s.size(); q++) { if (s.i[q] < ng) { badgen++; continue; } r.i.push_back(s.i[q] - ng); r.v.push_back(s.v[q]); }
+    for (size_t q = 0; q < s.size(); q++) { if (s.i[q] < ng) { badgen++; continue; } r.i.push_back(s.i[q] - ng); r.v.push_back(RV(s.v[q])); }
     if (!r.i.empty()) rows.push_back(std::move(r));
   };
   // (E0) p^(E-e_b) (pi_b + t^P_b) = 0: over Z/p^E the power relation p^e_b b = pi_b + t^P_b implies it,
@@ -813,7 +872,7 @@ static bool stage(int k) {  // PR = R_k (generators of weight <= k-1) -> R_{k+1}
         else acc.add(cc, r.v[t]);
       }
       rest[c] = acc.take();
-      Row().i.swap(piv[c].i); vector<u64>().swap(piv[c].v);
+      Row().i.swap(piv[c].i); vector<rv_t>().swap(piv[c].v);
     } }
   // new generators: the surviving tail columns (no pivot, or pivot p^v with v > 0), in the order
   vector<int> newidx(NT, -1); int nnew = 0;
@@ -863,10 +922,18 @@ int main(int argc, char** argv) {
   auto expect = [&](const char* w) { t = tok(); if (t != w) { fprintf(stderr, "expected %s got %s\n", w, t.c_str()); exit(2); } };
   expect("p"); P = atoi(tok().c_str()); expect("E"); E = atoi(tok().c_str()); expect("n"); NDEG = atoi(tok().c_str()); expect("r"); R = atoi(tok().c_str());
   if (argc > 1) NDEG = atoi(argv[1]);  // override n of the input
+#ifdef _OPENMP
+  HTHREADS = getenv("GRNQ_THREADS") ? max(1, atoi(getenv("GRNQ_THREADS"))) : omp_get_max_threads();
+#endif
+  if (getenv("GRNQ_PAR_MIN")) HPAR = atoll(getenv("GRNQ_PAR_MIN"));
+  if (getenv("GRNQ_BLOCK")) HW = max(1, atoi(getenv("GRNQ_BLOCK")));
   { const char* h = getenv("GRNQ_HOWELL"); string hs = h ? h : "stream"; HMETH = hs == "fixed" ? 1 : hs == "dyn" ? 2 : 0; }
   { u128 d = 1; for (int q = 0; q < E; q++) d *= P; if (d >= ((u128)1 << 62)) { fprintf(stderr, "p^E too large\n"); return 2; } D = (u64)d; }
   PP.assign(E + 1, 1); for (int q = 1; q <= E; q++) PP[q] = PP[q - 1] * P;
   SMALLD = D < ((u64)1 << 32); if (SMALLD) BARM = (u64)((((u128)1) << 64) / D);
+#ifdef GRNQ_V32
+  if (!SMALLD) { fprintf(stderr, "this build (GRNQ_V32) needs p^E < 2^32\n"); return 2; }
+#endif
   t = tok();
   while (t == "let") { string nm = tok(); PEx e = parse(); NAMES.push_back({nm, e}); t = tok(); }
   if (t != "rels") { fprintf(stderr, "expected rels got %s\n", t.c_str()); exit(2); }
