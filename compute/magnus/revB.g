@@ -171,6 +171,32 @@ Info3 := function(P)
              exp23 := Exponent(L[2] / L[3]));
 end;
 
+
+# section 5 (second round): T2 at d(h)=3, d(i)=9 and the formula [Y_g,x_i,x_m] = [c_gi,x_m]^{d(g)}
+Extra5 := function(T, V)
+  local x, Y, d, s, one, okF, okT2id, g, i, m, h, pairs, lat, cnt, badC, badFull, tau, X;
+  x := T.x1; Y := T.Y; d := T.d; s := T.s; one := One(T.P); X := V.idx;
+  okF := true;
+  for g in [1..s] do for i in [1..s] do if g <> i then for m in [1..s] do
+    okF := okF and Comm(Comm(Y[g], x[i]), x[m]) = Comm(Comm(x[g], x[i]), x[m])^d[g];
+  od; fi; od; od;
+  pairs := Filtered(Cartesian([1..s], [1..s]), p -> p[1] < p[2] and d[p[1]] = 3 and d[p[2]] = 9);
+  okT2id := ForAll(pairs, p -> Comm(Comm(Y[p[1]], x[p[2]]), x[p[2]])^3 = Comm(Comm(x[p[1]], x[p[2]]), Y[p[2]]));
+  badC := 0; badFull := 0;
+  if pairs <> [] then
+    for lat in [TaharaLattice(T, V, TaharaConds(T, V, rec(drop := ["C"]))),
+                TaharaLattice(T, V, TaharaConds(T, V, rec(drop := [])))] do
+      cnt := Number(lat, tau -> ForAny(pairs, p ->
+          Comm(Comm(Y[p[1]], x[p[2]]), x[p[2]])^(-tau[X.u[p[1]][p[2]]] * 3) <> one));
+      if badC = 0 and lat = lat then fi;
+      if IsIdenticalObj(lat, lat) then fi;
+      if badFull = 0 and badC = 0 then badC := cnt; else badFull := cnt; fi;
+    od;
+  fi;
+  Print("E5 formula=", okF, " npairs39=", Length(pairs), " T2id=", okT2id,
+        " T2(3,9)!=1 noC=", badC, " full=", badFull, " d=", d, " exp4=", Exponent(LowerCentralSeriesOfGroup(T.P)[4]), "\n");
+end;
+
 RunOne := function(name, P)
   local T, V, inf, lem, full, f5, line;
   if Length(LowerCentralSeriesOfGroup(P)) < 5 then Print("skip class<4 ", name, "\n"); return fail; fi;
@@ -179,6 +205,7 @@ RunOne := function(name, P)
   lem := CheckLemmas(T, V);
   if V.n <= 400 then full := FullTahara(T, V); else full := "skip"; fi;
   f5 := CheckF5(T);
+  Extra5(T, V);
   line := rec(name := name, info := inf, d := T.d, e := T.e, f := T.f, nvars := V.n, lemmas := lem,
               full := full, F5formula := f5);
   Print(line, "\n");
