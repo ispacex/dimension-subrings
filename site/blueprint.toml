@@ -28,7 +28,8 @@
 # "l" may cite only statements whose proof is in Lean.
 
 # Declarations that the paper's section on the formalization names but that belong to no node: the
-# authors' Lie-ring theorem, imported only by the version lean-v4.29.
+# authors' Lie-ring theorem, imported only by the version lean-v4.29, and the computation lemma of
+# Theorem 6.9 (SetupGen.gen_eq_one, named in §4 by its namespace-qualified short name).
 section4_not_nodes = ["LieRings.Publication.corollaryD", "SetupGen.gen_eq_one"]
 
 [nodes."q:main"]
