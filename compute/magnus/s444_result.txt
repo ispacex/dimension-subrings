@@ -9,7 +9,8 @@ run 1  kimmy/tm/20261107-113303-math444-s444-run1-0f07a73 (tree 0f07a73, s444_ma
 run 2  kimmy/tm/20261107-113532-math444-s444-run2-b2d4611 (tree b2d4611, s444_run2.plan): 1121 records, H2 306, notH2 815
 old    kimmy/tm/20261107-125731-math444-h2old-ctrl2-6b0ec6c: the 100 gamma_4 = C_3 records of MATH-443 (q99): H2 71, notH2 29,
        tahara g = 1 in all 100, non-vacuous 83 (first run: kimmy/tm/20261107-112354-math444-h2old-0f07a73)
-ctrl   same job, 20 of the old records, number with <g> != 1 when the conditions listed are dropped:
+ctrl   same job, 20 of the old records (tally of its tahctrl.log: kimmy/tm/20261107-131435-math444-ctrlsum-nogit),
+       number with <g> != 1 when the conditions listed are dropped:
        all (A)-(F) 14, {B,C,E} 13, {C,E,F} 6, {C,D,E} 4, {C,E} 3, {A,C,E} 3, {B} 2, {F} 1, every other single group 0.
        (first control run kimmy/tm/20261107-114033-math444-tahctrl-909c4e1, 8 records: all dropped 6 of 8;
         kimmy/tm/20261107-113350-math444-tahctrl-8f3fdcd failed on an empty condition list, fixed in 909c4e1)
