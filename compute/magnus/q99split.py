@@ -34,7 +34,7 @@ for kind in ("orig", "cyc"):
     print("HITS", hits)
     if kind == "cyc":
         nm9 = [r for r in T if r["e23"] == 2 and r["nonmet"]]
-        print("cyc nonmet e23=2 total", len(nm9), "by g4", {g: sum(g4(r) == g for r in nm9) for g in set(map(g4, nm9))},
+        print("cyc nonmet e23=2 total", len(nm9), "by g4", {g: sum(g4(r) == g for r in nm9) for g in sorted(set(map(g4, nm9)))},
               "z in Q''", sum(r["nzS"] for r in nm9), "zcyc all", all(r["zcyc"] for r in nm9),
               "class4 all", all(r["cyc_class4"] for r in nm9), "inM5 all", all(r["cyc_inM5"] for r in nm9),
               "outside_g2", sum(r["cyc_outside_g2"] for r in nm9), "logord", min(r["logord"] for r in nm9), max(r["logord"] for r in nm9))

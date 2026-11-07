@@ -47,4 +47,4 @@ HITS []
 (2, '[9, 9]', 'C3') [1, 0, 0, 1, 0, 0, 0, 0, 1]
 (2, '[9, 9]', 'C9') [43, 0, 0, 43, 0, 0, 0, 0, 43]
 HITS []
-cyc nonmet e23=2 total 1233 by g4 {'C9': 1133, 'C3': 100} z in Q'' 1233 zcyc all True class4 all True inM5 all True outside_g2 179 logord 12 26
+cyc nonmet e23=2 total 1233 by g4 {'C3': 100, 'C9': 1133} z in Q'' 1233 zcyc all True class4 all True inM5 all True outside_g2 179 logord 12 26
