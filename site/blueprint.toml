@@ -169,8 +169,19 @@ note_ru = "«γ_2/γ_3 имеет экспоненту не больше 3»: a�
 lean = ["GroupDimension.D_five_eq_gamma_five_of_g4_cube_g2_nine", "GroupDimension.D_five_eq_bot_of_class_four_g4_cube_g2_nine", "GroupDimension.ExpThree.D_five_eq_gamma_five_g4_cube_g2_nine", "GroupDimension.ExpThree.D_five_eq_bot_of_class_four_g4_cube_g2_nine"]
 proved = true
 uses = ["ext:tahara61"]
-note = "Checked by an independent review (MATH-444). Hypotheses: c³ ∈ γ_5 for every c ∈ γ_4, and a⁹ ∈ γ_4 for every a ∈ γ_2. The Lean proof differs from the paper's only in bookkeeping: the basis of Ω_1(Q/γ_2) is adapted to the heights and to ker P̄ only, the basis of L_2 is arbitrary, and no x_i is adjusted; steps (4) and (5) come from the identity (∗) paired with x_i (SetupA.row). Theorem [[thm:exp3gen|#]] is the special case exp(γ_2/γ_3) ≤ 3 and is derived from it in Lean."
-note_ru = "Проверено независимой рецензией (MATH-444). Гипотезы: c³ ∈ γ_5 для всех c ∈ γ_4 и a⁹ ∈ γ_4 для всех a ∈ γ_2. Доказательство в Lean отличается от статьи лишь учётом: базис Ω_1(Q/γ_2) согласован только с высотами и с ker P̄, базис L_2 произволен, и x_i не подправляются; шаги (4) и (5) получаются из тождества (∗), спаренного с x_i (SetupA.row). Теорема [[thm:exp3gen|#]] — частный случай при exp(γ_2/γ_3) ≤ 3 и выводится из неё в Lean."
+note = "Checked by an independent review (MATH-444). Hypotheses: c³ ∈ γ_5 for every c ∈ γ_4, and a⁹ ∈ γ_4 for every a ∈ γ_2. The Lean proof differs from the paper's only in bookkeeping: the basis of Ω_1(Q/γ_2) is adapted to the heights and to ker P̄ only, the basis of L_2 is arbitrary, and no x_i is adjusted; steps (4) and (5) come from the identity (∗) paired with x_i (SetupA.row). Theorem [[thm:exp3gen|#]] is the special case exp(γ_2/γ_3) ≤ 3 and is derived from it in Lean. Now itself a special case of Theorem [[thm:g4cube|#]] (with γ_2^9 ⊆ γ_4 in addition): the two declarations without the prefix ExpThree are derived from it in Lean under their old names; the direct proofs ExpThree.D_five_eq_gamma_five_g4_cube_g2_nine and ExpThree.D_five_eq_bot_of_class_four_g4_cube_g2_nine (ExpNine.lean) are kept."
+note_ru = "Проверено независимой рецензией (MATH-444). Гипотезы: c³ ∈ γ_5 для всех c ∈ γ_4 и a⁹ ∈ γ_4 для всех a ∈ γ_2. Доказательство в Lean отличается от статьи лишь учётом: базис Ω_1(Q/γ_2) согласован только с высотами и с ker P̄, базис L_2 произволен, и x_i не подправляются; шаги (4) и (5) получаются из тождества (∗), спаренного с x_i (SetupA.row). Теорема [[thm:exp3gen|#]] — частный случай при exp(γ_2/γ_3) ≤ 3 и выводится из неё в Lean. Теперь и сама — частный случай теоремы [[thm:g4cube|#]] (с дополнительным условием γ_2^9 ⊆ γ_4): два утверждения без префикса ExpThree выводятся из неё в Lean под прежними именами; прямые доказательства ExpThree.D_five_eq_gamma_five_g4_cube_g2_nine и ExpThree.D_five_eq_bot_of_class_four_g4_cube_g2_nine (ExpNine.lean) сохранены."
+
+[nodes."thm:g4cube"]
+lean = ["GroupDimension.D_five_eq_gamma_five_of_g4_cube", "GroupDimension.D_five_eq_bot_of_class_four_g4_cube", "GroupDimension.ExpThree.D_five_eq_gamma_five_g4_cube", "GroupDimension.ExpThree.D_five_eq_bot_of_class_four_g4_cube"]
+proved = true
+uses = ["ext:tahara61"]
+note = "Paper proof and Lean code each checked by an independent review (MATH-444). Hypothesis: c³ ∈ γ_5 for every c ∈ γ_4; no condition on γ_2/γ_3 or on G/γ_2 beyond being a finite 3-group. Theorems [[thm:exp3gen|#]] and [[thm:exp3h9|#]] are special cases; in Lean, Theorem [[thm:exp3h9|#]] is derived from it under its old names (and [[thm:exp3gen|#]] from [[thm:exp3h9|#]]). The Lean proof (G4Cube.lean) follows the paper in summing the row identities from (B) and (E) over all rows and in the defects Δ, but takes a shorter route than (⋆): the w-part is shown trivial directly by (D) modulo 3, (E) is used modulo 3, the v-part uses (F₁) and (F₂), and of the terms of (⋆) only T₁ appears; so (⋆) itself, valid without γ_4³ = 1, is not in Lean."
+note_ru = "Доказательство в статье и код Lean проверены каждый независимой рецензией (MATH-444). Гипотеза: c³ ∈ γ_5 для всех c ∈ γ_4; на γ_2/γ_3 и G/γ_2 (кроме того, что это конечная 3-группа) условий нет. Теоремы [[thm:exp3gen|#]] и [[thm:exp3h9|#]] — частные случаи; в Lean теорема [[thm:exp3h9|#]] выводится из неё под прежними именами (а [[thm:exp3gen|#]] — из [[thm:exp3h9|#]]). Доказательство в Lean (G4Cube.lean) следует статье в суммировании тождеств строк из (B) и (E) по всем строкам и в дефектах Δ, но идёт короче, чем через (⋆): w-часть тривиальна сразу по (D) по модулю 3, (E) используется по модулю 3, v-часть — по (F₁) и (F₂), и из членов (⋆) возникает лишь T₁; само тождество (⋆), верное без γ_4³ = 1, в Lean не доказано."
+
+[nodes."cor:g4cube"]
+
+[nodes."rem:g4c9"]
 
 [nodes."thm:gt3"]
 lean = ["GroupDimension.GuptaTahara.D_five_eq_gamma_five_of_metabelian", "GroupDimension.guptaTaharaMetabelian_three"]
@@ -338,6 +349,13 @@ ru = '''Ещё шире: $D_5(G)=\gamma_5(G)$, если $G/\gamma_2(G)$ — ко
 en = '''Further still: $D_5(G)=\gamma_5(G)$ whenever $G/\gamma_2(G)$ is a finite $3$-group, $\gamma_4(G)^3\subseteq\gamma_5(G)$ and $\gamma_2(G)^9\subseteq\gamma_4(G)$; Theorem [[thm:exp3gen|#]] is the special case, and $\gamma_2/\gamma_3$ and $\gamma_3/\gamma_4$ may now have exponent $9$. Checked by an independent review and proved in Lean, together with Tahara's Theorem 6.1. Hence a minimal counterexample with $\gamma_4\cong C_3$ has $x,y$ with $[x^9,y]\notin\gamma_4$, i.e. $\gamma_2^9\not\subseteq\gamma_4$.'''
 where_ru = '''[[thm:exp3h9]]; {{lean:GroupDimension.D_five_eq_gamma_five_of_g4_cube_g2_nine|Lean}}'''
 where_en = '''[[thm:exp3h9]]; {{lean:GroupDimension.D_five_eq_gamma_five_of_g4_cube_g2_nine|Lean}}'''
+
+[[results]]
+status = "l"
+ru = '''Самое общее на сегодня: $D_5(G)=\gamma_5(G)$, если $G/\gamma_2(G)$ — конечная $3$-группа и $\gamma_4(G)^3\subseteq\gamma_5(G)$, без условий на экспоненты $\gamma_2/\gamma_3$ и $\gamma_3/\gamma_4$; теоремы [[thm:exp3gen|#]] и [[thm:exp3h9|#]] — частные случаи. Доказательство и код Lean проверены независимыми рецензиями; доказано в Lean вместе с теоремой 6.1 Тахары. Отсюда $D_5(Q)\subseteq\gamma_4(Q)^3$ для всякой конечной $3$-группы ступени $\le4$ (следствие [[cor:g4cube|#]]), а у минимального контрпримера $\gamma_4\cong C_{3^k}$ с $k\ge2$ и $D_5=\Omega_1(\gamma_4)$.'''
+en = '''Most general so far: $D_5(G)=\gamma_5(G)$ whenever $G/\gamma_2(G)$ is a finite $3$-group and $\gamma_4(G)^3\subseteq\gamma_5(G)$, with no condition on the exponents of $\gamma_2/\gamma_3$ and $\gamma_3/\gamma_4$; Theorems [[thm:exp3gen|#]] and [[thm:exp3h9|#]] are special cases. The proof and the Lean code were checked by independent reviews; proved in Lean, together with Tahara's Theorem 6.1. Hence $D_5(Q)\subseteq\gamma_4(Q)^3$ for every finite $3$-group of class $\le4$ (Corollary [[cor:g4cube|#]]), and a minimal counterexample has $\gamma_4\cong C_{3^k}$ with $k\ge2$ and $D_5=\Omega_1(\gamma_4)$.'''
+where_ru = '''[[thm:g4cube]]; {{lean:GroupDimension.D_five_eq_gamma_five_of_g4_cube|Lean}}'''
+where_en = '''[[thm:g4cube]]; {{lean:GroupDimension.D_five_eq_gamma_five_of_g4_cube|Lean}}'''
 
 [[results]]
 status = "l"
