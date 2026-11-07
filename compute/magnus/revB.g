@@ -3,6 +3,7 @@
 # Set SEED, NG, OUT before reading. Groups: fixed examples + random class-4 3-groups (gamma_5 = 1),
 # optionally with gamma_4^3 = 1.
 Read("tahara61.g");
+SizeScreen([4000, 100]);
 Reset(GlobalMersenneTwister, SEED); Reset(GlobalRandomSource, SEED);
 if not IsBound(MAXLOG) then MAXLOG := 45; fi;
 
@@ -28,6 +29,7 @@ MakeGroup := function(F, rels, cube4)
   od;
   P := Image(epi);
   if Length(LowerCentralSeriesOfGroup(P)) > 5 then Error("class>4"); fi;
+  if Length(LowerCentralSeriesOfGroup(P)) < 5 then return fail; fi;
   return P;
 end;
 
@@ -169,6 +171,7 @@ end;
 
 RunOne := function(name, P)
   local T, V, inf, lem, full, f5, line;
+  if Length(LowerCentralSeriesOfGroup(P)) < 5 then Print("skip class<4 ", name, "\n"); return fail; fi;
   inf := Info3(P);
   T := TaharaData(P, fail); V := TaharaVars(T);
   lem := CheckLemmas(T, V);
@@ -192,14 +195,15 @@ RandComm := function(F, wt)
 end;
 
 results := [];
+AddR := function(r) if r <> fail then Add(results, r); fi; end;
 if SEED = 0 then
   for cube in [true, false] do
     P := MakeGroup(F, [a^9 * Comm(b, c)^-1, b^9 * Comm(a, c)^-1, c^9], cube);
-    if P <> fail then Add(results, RunOne(Concatenation("ex1 cube=", String(cube)), P)); fi;
+    if P <> fail then AddR(RunOne(Concatenation("ex1 cube=", String(cube)), P)); fi;
     P := MakeGroup(F, [a^27 * Comm(b, c)^-1, b^9 * Comm(a, c)^-1, c^27 * Comm(a, b)^-1], cube);
-    if P <> fail then Add(results, RunOne(Concatenation("ex2 cube=", String(cube)), P)); fi;
+    if P <> fail then AddR(RunOne(Concatenation("ex2 cube=", String(cube)), P)); fi;
     P := MakeGroup(F2g, [a2^27 * Comm(Comm(b2, a2), a2)^-1, b2^27 * Comm(a2, b2)^-1], cube);
-    if P <> fail then Add(results, RunOne(Concatenation("ex3 cube=", String(cube)), P)); fi;
+    if P <> fail then AddR(RunOne(Concatenation("ex3 cube=", String(cube)), P)); fi;
   od;
 else
   ng := 0; tries := 0;
@@ -214,7 +218,7 @@ else
     if P = fail then continue; fi;
     if Length(LowerCentralSeriesOfGroup(P)) < 5 then continue; fi;
     ng := ng + 1;
-    Add(results, RunOne(Concatenation("rand", String(SEED), "_", String(ng), " cube=", String(cube)), P));
+    AddR(RunOne(Concatenation("rand", String(SEED), "_", String(ng), " cube=", String(cube)), P));
   od;
 fi;
 Print("SUMMARY seed ", SEED, " groups ", Length(results), "\n");

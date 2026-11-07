@@ -10,5 +10,5 @@ Read("revB.g");
 GAPEOF
 done
 wait
-grep -h '^S ' "$OUT"/revB_*.log | tee "$OUT/summary.txt"
+cat "$OUT"/revB_*.log
 grep -h -i -B2 -A5 'error' "$OUT"/revB_*.log | head -40
