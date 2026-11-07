@@ -20,7 +20,7 @@ MakeGroup := function(F, rels, cube4)
   if cube4 then Append(R, List(Words(F, 4), c -> c^3)); fi;
   G := F / R; olast := -1; cl := 6;
   while true do
-    epi := EpimorphismPQuotient(G, 3, cl);
+    epi := EpimorphismPGroup(G, 3, cl);
     o := Size(Image(epi));
     if o = olast then break; fi;
     if Log(o, 3) > MAXLOG then return fail; fi;
