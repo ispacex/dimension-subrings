@@ -47,6 +47,21 @@ for key in sorted(set((tuple(r["tops"]), r["k"]) for r in C)):
           f" | z in D5: {sum(any(r['z_in_D5']) for r in R)} {[r['id'] for r in R if any(r['z_in_D5'])][:10]}"
           f" | cert all {all(r['cert'] for r in R)} | ctrl D4 all {all(r['ctrl_z_in_D4'] for r in R)}"
           f" | logord {min(r['logord'] for r in R)}..{max(r['logord'] for r in R)}")
+# split asked by the theory step (wiki 886): exp(gamma_2/gamma_3) = 9 vs 3, and gamma_4 = C_3 / C_9
+def g4(r):
+    return {1: "C3", 2: "C9" if r["e4"] == 2 else "C3^2"}.get(r["lcs"][3] if len(r["lcs"]) > 3 else 0, "big")
+
+
+for name, R in (("orig", L), ("cyc", C)):
+    for e in (1, 2):
+        for g in ("any", "C3", "C9"):
+            T = [r for r in R if r["e23"] == e and (g == "any" or g4(r) == g)]
+            if T or g == "any":
+                print(f"split {name} exp(g2/g3)=3^{e} gamma4={g}: groups {len(T)} | non-met {sum(r['nonmet'] for r in T)}"
+                      f" | two big {sum(sum(d >= 9 for d in r['ab']) >= 2 for r in T)}"
+                      f" | Z cyclic {sum(r['zcyc'] for r in T)} | z {sum(r['nz'] for r in T)}"
+                      f" | z in Q'' {sum(r['nzS'] for r in T)}"
+                      f" | z in D5 {sum(any(r['z_in_D5']) for r in T)} | cert all {all(r['cert'] for r in T)}")
 if not L:
     sys.exit(0)
 print("ab", Counter(str(r["ab"]) for r in L))
