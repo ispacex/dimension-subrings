@@ -172,6 +172,7 @@ note_ru = "Доказано на бумаге (MATH-444), проверено н�
 lean = ["GroupDimension.GuptaTahara.D_five_eq_gamma_five_of_metabelian", "GroupDimension.guptaTaharaMetabelian_three"]
 proved = true
 uses = ["ext:tahara61"]
+uses_drop = ["lem:qpp", "lem:mincex3"]
 note = "“G/γ_2 a finite p-group, p odd, [γ_2, γ_2] ⊆ γ_5”; through Tahara's Theorem 6.1 with any uniqueness basis (MATH-445). guptaTaharaMetabelian_three is the instance p = 3 of GuptaTaharaMetabelian."
 note_ru = "«G/γ_2 — конечная p-группа, p нечётно, [γ_2, γ_2] ⊆ γ_5»; через теорему 6.1 Тахары с любым базисом единственности (MATH-445). guptaTaharaMetabelian_three — случай p = 3 утверждения GuptaTaharaMetabelian."
 
