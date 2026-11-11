@@ -11,6 +11,7 @@ import re
 import sys
 from collections import defaultdict
 
+CTL_EXTRA = {"cor3R_wide_noD23"}  # outside (c3): effectively a control
 COUNTS = {"omega_cY", "tpart_base"}  # omega(cbar_ab, Ybar_h); t(c;x_i,x_i) t(c;x_h,x_h)^-1 before the coefficient
 REC = re.compile(r"(\w+) := (-?\d+|true|false)")
 
@@ -66,8 +67,8 @@ def main():
     print("\nnontriviality counts (no identity; lhs<>1 = how often the value is <> 1):")
     for nm in sorted(n for n in new if n in COUNTS):
         print(f"  {nm:32s} n={new[nm]['n']} ne1={new[nm]['lhs']}")
-    for title, pick in (("positive checks", lambda n: "_ctl" not in n and n not in COUNTS),
-                        ("negative controls (bad > 0 expected)", lambda n: "_ctl" in n)):
+    for title, pick in (("positive checks", lambda n: "_ctl" not in n and n not in COUNTS | CTL_EXTRA),
+                        ("negative controls (bad > 0 expected; 0 where the sides are 1)", lambda n: "_ctl" in n or n in CTL_EXTRA)):
         print(f"\n{title}:")
         print(f"  {'name':32s} {'n':>7s} {'lhs<>1':>7s} {'rhs<>1':>7s} {'bad':>7s}")
         for nm in sorted(n for n in new if pick(n)):
