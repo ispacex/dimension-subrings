@@ -1,0 +1,18 @@
+# MATH-446 / D5-51: case (b), gamma_4 = C_9 with cyclic centre — results of compute/magnus/case446/run_case446.sh
+# Original run (Open Math OS session, code inline): kimmy/tm/20261111-215358-case446-real-fixeddir-841f7c0 (tree 841f7c0)
+# Reproduction from this directory:              kimmy/tm/20261111-220537-case446-repro-f973976  (tree f973976)
+# Both give identical FINAL records (same seeds). 4 cores, ~5.5 min. GAP 4.15.1 from the mikh cache.
+#
+# Fields: groups = groups kept; vectors = Z-basis vectors of the admissible lattice (A)-(F) in the adapted basis;
+# *bad = number of failures of: A3bad (A_3), cor_bad (Corollary 3, g^2 = A^(12U) B^(w_233+3U)), omegaA/omegaB (A, B as
+# omega values), t1bad/tpartbad (T_1 and its t-part = 0), t2bad (T_2 formula), deltabad ((Delta)), starbad ((star)),
+# thm2bad (2g = R(tau)), gbad (g != 1), factorbad (a Star factor != 1); ctl_* = controls (lattices without single
+# conditions), reported per control in the run.jsonl files of the job.
+== r339
+FINAL rec( A3bad := 0, cor_bad := 0, cor_n := 2325, ctl_groups := 120, ctl_skipbig := 0, ctl_vectors := 16155, deltabad := 0, deltan := 720, factorbad := 0, gbad := 0, groups := 120, groups339 := 120, nonvac := 120, omegaA := 0, omegaB := 0, skipped := 0, starbad := 0, t1bad := 0, t1n := 6975, t2bad := 0, t2n := 6975, thm2bad := 0, tpartbad := 0, tried := 120, unondiv3 := 0, vectors := 2325 )
+== r279
+FINAL rec( A3bad := 0, cor_bad := 0, cor_n := 1996, ctl_groups := 104, ctl_skipbig := 0, ctl_vectors := 13868, deltabad := 0, deltan := 624, factorbad := 0, gbad := 0, groups := 104, groups339 := 0, nonvac := 104, omegaA := 0, omegaB := 0, skipped := 6, starbad := 0, t1bad := 0, t1n := 5988, t2bad := 0, t2n := 5988, thm2bad := 0, tpartbad := 0, tried := 110, unondiv3 := 0, vectors := 1996 )
+== r999
+FINAL rec( A3bad := 0, cor_bad := 0, cor_n := 2086, ctl_groups := 110, ctl_skipbig := 0, ctl_vectors := 14492, deltabad := 0, deltan := 660, factorbad := 0, gbad := 0, groups := 110, groups339 := 0, nonvac := 110, omegaA := 0, omegaB := 0, skipped := 0, starbad := 0, t1bad := 0, t1n := 6258, t2bad := 0, t2n := 6258, thm2bad := 0, tpartbad := 0, tried := 110, unondiv3 := 0, vectors := 2086 )
+== r9933
+FINAL rec( A3bad := 0, cor_bad := 0, cor_n := 4300, ctl_groups := 90, ctl_skipbig := 0, ctl_vectors := 29560, deltabad := 0, deltan := 1080, factorbad := 0, gbad := 0, groups := 90, groups339 := 0, nonvac := 90, omegaA := 0, omegaB := 0, skipped := 0, starbad := 0, t1bad := 0, t1n := 25800, t2bad := 0, t2n := 25800, thm2bad := 0, tpartbad := 0, tried := 90, unondiv3 := 0, vectors := 4300 )
