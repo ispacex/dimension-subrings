@@ -4,11 +4,12 @@
 # Usage (tm job, tree root, cache mikh): bash compute/magnus/case446/run_case446.sh [smoke|main]
 # Each shard: groups with Q_ab of the given type, gamma_4 = C_9, cyclic centre; adapted basis (AdaptedX1, as in
 # star444.g).  Wave 1 = the original four shards (same seeds, EXTRAW [2,3,3,4]: power words of weight 3 only, so
-# Ybar_i = 0 in L_2 for the generators of the presentation); wave 2 = EXTRAW [2,2,3,4] (power words of weight 2
-# or 3), standard and reversed generator order, where omega(cbar, Ybar) <> 1 occurs.  Output per shard:
+# Ybar_i = 0 in L_2 for the generators of the presentation); waves 2-3 = power words of weight 2 or 3 (EXTRAW
+# [2,2,3,4] / [3,2,2,4]), FORCE13 (a [x_order3, x_j] factor in the power words), reversed generator order,
+# where omega(cbar, Ybar) <> 1 occurs.  Output per shard:
 # run.jsonl (per group / per control lattice) and run.jsonl.final (FINAL = old counters; CTL = per control
 # lattice, with "differs" = HNF differs from the full lattice; GRP = per-group shares; NEW = substantive counters
-# rec(n, lhs, rhs, bad), see newchecks.g).  At most 4 shards run at a time.
+# rec(n, lhs, rhs, bad), see newchecks.g).  At most 4 shards run at a time (three waves).
 set -euo pipefail
 export PATH=$JOB_CACHE/bin:$PATH
 PLAN=${1:-main}
@@ -27,16 +28,20 @@ Read("$C/lib446.g");; Read("$C/newchecks.g");; Read("$C/run446.g");;
 GEOF
   timeout 1700 gap -q -b -o 4g "$d/driver.g" > "$d/gap.log" 2>&1
 }
-W1='[2,3,3,4]'; W2='[2,2,3,4]'
+W1='[2,3,3,4]'; W2='[2,2,3,4]'; W3='[3,2,2,4]'
 if [ "$PLAN" = smoke ]; then
   wave1=("f339 8339 20 [3] [[9,9]] $W1 std true" "g339 9339 20 [3] [[9,9]] $W2 rev true"
          "f279 8279 12 [3] [[27,9]] $W2 std true" "f999 8999 12 [3] [[9,9,9]] $W2 std true")
-  wave2=()
+  wave2=(); wave3=()
 else
+  # wave 1: the original four shards (same seeds and construction; old counters must reproduce)
   wave1=("r339 339 120 [3] [[9,9]] $W1 std" "r279 279 110 [3] [[27,9]] $W1 std"
          "r999 999 110 [3] [[9,9,9]] $W1 std" "r9933 9933 90 [4] [[9,9]] $W1 std")
-  wave2=("n339 4339 120 [3] [[9,9]] $W2 std" "v339 5339 120 [3] [[9,9]] $W2 rev"
-         "n279 4279 100 [3] [[27,9]] $W2 rev" "n999 4999 100 [3] [[9,9,9]] $W2 std")
+  # waves 2, 3: constructions with Ybar_i <> 0 in L_2 (weight-2 power words; FORCE13; reversed generator order)
+  wave2=("f339 8339 120 [3] [[9,9]] $W1 std true" "g339 9339 120 [3] [[9,9]] $W2 rev true"
+         "f279 8279 100 [3] [[27,9]] $W2 std true" "f9933 8933 80 [4] [[9,9]] $W2 std true")
+  wave3=("v339 5339 120 [3] [[9,9]] $W2 rev" "x339 7339 120 [3] [[9,9]] $W3 rev"
+         "v279 5279 100 [3] [[27,9]] $W2 rev" "v999 5999 100 [3] [[9,9,9]] $W2 rev")
 fi
 rc=0
 runwave() {  # the shards of one wave in parallel
@@ -48,6 +53,7 @@ runwave() {  # the shards of one wave in parallel
 }
 runwave "${wave1[@]}"
 if [ ${#wave2[@]} -gt 0 ]; then runwave "${wave2[@]}"; fi
+if [ ${#wave3[@]} -gt 0 ]; then runwave "${wave3[@]}"; fi
 for d in "$OUT"/*/; do
   s=$(basename "$d"); echo "== $s"
   if [ -f "$d/run.jsonl.final" ]; then cat "$d/run.jsonl.final"; else echo "no FINAL"; tail -5 "$d/gap.log"; rc=1; fi

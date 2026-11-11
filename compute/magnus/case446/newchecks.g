@@ -369,6 +369,9 @@ LatticeChecks := function(T, V, L, S)
     P := ResidualParts(T, V, tau);
     Cmp(S, "rhsR_ctl_noc1", g2, P.T1 * P.T2 * P.T3 * P.T4);
     Cmp(S, "tpartsum_ctl_free", TpartSum(T, V, tau), One(T.P));
+    t2 := T2Sides(T, V, tau);                      # the T2 formula needs no condition on tau
+    Cmp(S, "t2sum_free", t2[1], t2[2]);
+    Cmp(S, "t2sum_free_ctl_inv", t2[1], t2[2]^-1);
   od;
   for tau in L.thm2 do
     g2 := TaharaGen(T, V, tau).g^2;
@@ -406,6 +409,9 @@ LatticeChecks := function(T, V, L, S)
     od;
     for tau in L.cor3wNoA3 do CorR(tau, "cor3R_ctl_noA3", 1); od;
     for tau in L.cor3wNoB3 do CorR(tau, "cor3R_ctl_noB3", 1); od;
-    for tau in L.cor3wNoD23 do CorR(tau, "cor3R_ctl_noD23", 1); od;
+    # wider lattice, (D2) mod 3 (hence (c3)) not imposed: a positive test where the sides can be <> 1
+    for tau in L.cor3wNoD23 do
+      CorR(tau, "cor3R_wide_noD23", 1); CorR(tau, "cor3R_wide_noD23_ctl_flipB", -1);
+    od;
   fi;
 end;
