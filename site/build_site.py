@@ -790,7 +790,7 @@ def fold(x):
 def term(name, text=None):
     """A mark that opens the registry's term `name` (its word or a spelling of it) in a cloud; the build
     stops if the set has no such term."""
-    if not any(fold(name) in [fold(x["name"])] + [fold(v) for v in x["variants"]] for x in REGISTRY["terms"]):
+    if not any(fold(name) in [fold(x["name"])] + [fold(v) for v in x.get("variants", [])] for x in REGISTRY["terms"]):
         sys.exit(f"the site marks the term {name!r}, which is not in the registry set {EMBED_SET}")
     return f'<span data-kaiku-term="{html.escape(name)}">{text if text is not None else name}</span>'
 
@@ -2052,7 +2052,7 @@ Checks: two independent methods, PARI/GP, known values.</small></p>""")
 
     # ---------- open questions ----------
     def ODEF(label):
-        return f'<a href="definitions.html#c-{re.sub(r"[:.]", "-", label)}">{t("Формулировка из реестра", "As in the registry")}</a>' 
+        return f'<a href="definitions.html#c-{re.sub(r"[:.]", "-", label)}">{t("Формулировка из реестра", "As in the registry")}</a>'
     P("open.html", t("Открытые вопросы", "Open questions"), t("""
 <p>Что осталось, по убыванию важности.</p>""", """
 <p>What is left, most important first.</p>""") + "<ol>" + "".join(
