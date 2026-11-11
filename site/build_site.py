@@ -52,6 +52,7 @@ links to the twin, an EN/RU switch, a System/Light/Dark switch and one search in
 languages in which every page names its `lang`.
 """
 import datetime
+import hashlib
 import html
 import json
 import pathlib
@@ -727,14 +728,18 @@ OPEN = [  # (id, ru, en, task): the id is the anchor on open.html; task is the D
 
 # Definitions and main statements from the tracker's registry (MATH-316). The project MATH of the tracker
 # keeps a register of terms and of the paper's claims (label, number, statement, status); the set
-# EMBED_SET puts a hand-picked list of them on this site, and on no other (the tracker answers only this
-# origin). They come in twice: the build reads the set (registry()) and writes its texts into
+# EMBED_SET puts a hand-picked list of them out. The set is public data: CORS lets browsers read it only
+# on this origin, but anyone may fetch it. They come in twice: the build reads the set (registry()) and writes its texts into
 # definitions.html, so the page has them without scripts and in the search; and EMBED_SCRIPT, the
 # tracker's script, opens the current text of a term or claim in a cloud over every mark
 #     <span data-kaiku-term="кандидат">…</span>    <span data-kaiku-claim="thm:g4cube">…</span>
 # (term(), claim_mark()). A term is named by its word or a spelling of it, a claim by its label. The texts
-# are the registry's, in Russian, each checked against the paper before it was put into the set; the
-# build stops if a claim's number there is not the number of its label in the .aux. SCENE is the anim
+# are the registry's, in Russian, each checked against the paper when it was put into the set; the build
+# checks only that a claim's number is the number of its label in the .aux and that every mark names an
+# entry of the set: references inside the texts ("лемма 5.2") are not checked, so a renumbering of the
+# paper means a look at the registry. The site is then no longer a function of the commits alone: the
+# build prints a hash of the set it read. kaiku.js is our tracker's own script, loaded without SRI on
+# the pages with marks. SCENE is the anim
 # scene of the MATH wiki page 899, one block per language (its embed id, the caption, the frame's
 # title), shown in a frame the tracker serves only to this origin.
 EMBED_ORIGIN = "https://default.kaiku.tech"
@@ -768,22 +773,33 @@ def registry():
 
 def check_registry():
     """Every claim of the set is a label of both drafts, with the same number (an open question of §7 is
-    numbered there "§7, п. 2" and in the .aux "2")."""
+    numbered there "§7, п. 2", the section being that of sec:open, and in the .aux "2")."""
+    sec = paper_entry("sec:open", "en")[1]
     for c in REGISTRY["claims"]:
         number = paper_entry(c["label"], "en")[1]
         want = c["number"]
-        m = re.fullmatch(r"§\d+, п\. (\d+)", want or "")
-        if (m.group(1) if m else want) != number:
+        m = re.fullmatch(r"§(\d+), п\. (\d+)", want or "")
+        if (m.group(2) if m and m.group(1) == sec else want) != number:
             sys.exit(f"the registry gives {c['label']} the number {want!r}, the .aux of {PDF['en']}.tex {number!r}")
 
 
+def fold(x):
+    return re.sub(r"\s+", " ", x.strip()).lower()
+
+
 def term(name, text=None):
-    """A mark that opens the registry's term `name` (its word or a spelling of it) in a cloud."""
+    """A mark that opens the registry's term `name` (its word or a spelling of it) in a cloud; the build
+    stops if the set has no such term."""
+    if not any(fold(name) in [fold(x["name"])] + [fold(v) for v in x["variants"]] for x in REGISTRY["terms"]):
+        sys.exit(f"the site marks the term {name!r}, which is not in the registry set {EMBED_SET}")
     return f'<span data-kaiku-term="{html.escape(name)}">{text if text is not None else name}</span>'
 
 
 def claim_mark(label, text):
-    """A mark that opens the registry's claim with this label in a cloud."""
+    """A mark that opens the registry's claim with this label in a cloud; the build stops if the set has
+    no such claim."""
+    if label.lower() not in [c["label"].lower() for c in REGISTRY["claims"]]:
+        sys.exit(f"the site marks the claim {label!r}, which is not in the registry set {EMBED_SET}")
     return f'<span data-kaiku-claim="{html.escape(label)}">{text}</span>'
 
 
@@ -811,6 +827,8 @@ def registry_md(s):
                 tag_ = "ol" if rest[0].group(1)[0].isdigit() else "ul"
                 out.append(f"<p>{html.escape(head[0], quote=False)}</p><{tag_}>"
                            + "".join(f"<li>{html.escape(m.group(2), quote=False)}</li>" for m in rest) + f"</{tag_}>")
+            elif rest:
+                sys.exit(f"registry_md: a paragraph with list lines it cannot read: {para!r}")
             else:
                 out.append("<p>" + html.escape(" ".join(lines), quote=False) + "</p>")
     return "".join(out)
@@ -1754,6 +1772,8 @@ def main():
         copy_blueprint(tex)
     REGISTRY.update(registry())
     check_registry()
+    print("registry set", EMBED_SET[:8], "read:", len(REGISTRY["terms"]), "terms,", len(REGISTRY["claims"]), "claims, sha256",
+          hashlib.sha256(json.dumps(REGISTRY, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12])
     pdate = paper_date()
     date = fmt_date(max(pdate, TIMELINE[-1][0]))
     paper = {lang: read_abstract(PAPER / f"{PDF[lang]}.tex") for lang in LANGS}
@@ -1789,7 +1809,7 @@ def site(lang, date, paper, pdfs, pdate):
 <div class="box"><p><b>Вопрос</b> (Коуровская тетрадь, задача 20.84). Пусть $\\Delta$&nbsp;— {term("аугментационный идеал", "фундаментальный идеал")} $\\mathbb Z[G]$,
 $D_n(G)=G\\cap(1+\\Delta^n)$&nbsp;— {term("Размерные подгруппы", "размерные подгруппы")}, $\\gamma_n(G)$&nbsp;— {term("Нижний центральный ряд", "нижний центральный ряд")}. Всегда $\\gamma_n\\subseteq D_n$,
 и $D_n=\\gamma_n$ при $n\\le3$; при $n=4$ это неверно (Рипс). <b>{qmark}</b></p>
-<p>Определения и основные утверждения статьи (из реестра трекера; наведите на подчёркнутые слова)&nbsp;— на странице <a href="definitions.html">«Определения»</a>.</p>
+<p>Определения и основные утверждения статьи (из реестра трекера; подчёркнутые слова открываются при наведении или нажатии)&nbsp;— на странице <a href="definitions.html">«Определения»</a>.</p>
 <p>Для колец Ли ответ «да» (Ионин, Михайлов, Петров, 2026, с формализацией в Lean). Для групп вопрос открыт;
 к нему с нескольких сторон подходит наш препринт, отправленный в arXiv 22 октября 2026 года. Здесь — что доказано, что посчитано и что осталось.</p></div>
 <div class="cards">
@@ -1813,7 +1833,7 @@ $D_n(G)=G\\cap(1+\\Delta^n)$&nbsp;— {term("Размерные подгрупп
 <div class="box"><p><b>The question</b> (Kourovka notebook, Problem 20.84). Let $\\Delta$ be the {term("augmentation ideal")} of $\\mathbb Z[G]$,
 $D_n(G)=G\\cap(1+\\Delta^n)$ the {term("dimension subgroups")} and $\\gamma_n(G)$ the {term("lower central series")}. Always $\\gamma_n\\subseteq D_n$,
 and $D_n=\\gamma_n$ for $n\\le3$; for $n=4$ this fails (Rips). <b>{qmark}</b></p>
-<p>Definitions and the main statements of the paper (from the tracker's registry; hover over the underlined words) are on the <a href="definitions.html">Definitions</a> page.</p>
+<p>Definitions and the main statements of the paper (from the tracker's registry; hover over or tap the underlined words) are on the <a href="definitions.html">Definitions</a> page.</p>
 <p>For Lie rings the answer is yes (Ionin, Mikhailov, Petrov, 2026, formalized in Lean). For groups it is open;
 our preprint, submitted to arXiv on 22 October 2026, approaches it from several sides. This site shows what is proved, what is computed, and what is left.</p></div>
 <div class="cards">
@@ -1900,29 +1920,31 @@ Magnus algebra, with the exactness certificate); <span class="tag p">paper</span
     # ---------- definitions (the registry's set, MATH-316) ----------
     defs = "".join(f'<dt>{term(x["name"], html.escape(x["name"], quote=False))}</dt>'
                    f'<dd lang="ru">{registry_md(x["definition"])}</dd>' for x in REGISTRY["terms"])
-    claims = []
+    claims, osec = [], paper_entry("sec:open", lang)[1]
     for c in REGISTRY["claims"]:
         (full, _), number, _pg = paper_entry(c["label"], lang)
         head = paper_link(c["label"], lang, f"{full} {number}" if not c["label"].startswith("oq:")
-                          else t(f"Открытый вопрос §7, п. {number}", f"Open question §7, item {number}"))
+                          else t(f"Открытый вопрос §{osec}, п. {number}", f"Open question §{osec}, item {number}"))
         claims.append(f'<div class="claim" id="c-{re.sub(r"[:.]", "-", c["label"])}"><p><b>{head}</b> '
                       f'{claim_mark(c["label"], html.escape(c["title"] or ""))} '
                       f'{tag(CLAIM_STATUS[c["status"]], lang)}</p><div class="st" lang="ru">{registry_md(c["statement"])}</div></div>')
     P("definitions.html", t("Определения и основные утверждения", "Definitions and main statements"), t("""
-<p>Термины и утверждения статьи, как они записаны в реестре проекта MATH нашего трекера; каждый текст сверен со статьёй
-(<a href="paper.html">версия на этом сайте</a>) до того, как попал сюда. Подчёркнутое слово открывает облако с текущей записью реестра;
-так же размечены слова на других страницах сайта. Номер утверждения открывает статью на нём.</p>""", """
-<p>Terms and statements of the paper as they are written in the register of the project MATH of our tracker; each text was checked
-against the paper (<a href="paper.html">the version on this site</a>) before it was put here. The registry is kept in Russian, so the
-texts below are in Russian; the formulas and the numbers are those of the English draft too. An underlined word opens a cloud with the
+<p>Термины и утверждения статьи, как они записаны в реестре проекта MATH нашего трекера на момент сборки сайта. Каждый текст
+был сверен со статьёй (<a href="paper.html">версия на этом сайте</a>), когда его добавляли в этот набор; при сборке проверяется,
+что номера утверждений совпадают с номерами в статье. Подчёркнутое слово открывает (при наведении или нажатии) облако с текущей
+записью реестра; так же размечены слова на других страницах сайта. Номер утверждения открывает статью на нём.</p>""", """
+<p>Terms and statements of the paper as they are written in the register of the project MATH of our tracker when the site was
+built. Each text was checked against the paper (<a href="paper.html">the version on this site</a>) when it was added to this set; the
+build checks that the numbers of the statements are those of the paper. The registry is kept in Russian, so the texts below are in
+Russian; the formulas and the numbers are those of the English draft too. An underlined word opens (on hover or tap) a cloud with the
 current registry entry, as on the other pages of the site; the number of a statement opens the paper at it.</p>""")
       + scene(lang)
       + t("<h2 id=\"terms\">Определения</h2>", "<h2 id=\"terms\">Definitions</h2>") + f'<dl class="terms">{defs}</dl>'
       + t("<h2 id=\"claims\">Основные утверждения и открытые вопросы</h2>", "<h2 id=\"claims\">Main statements and open questions</h2>")
       + t("<p>Статус: <span class=\"tag p\">на бумаге</span>&nbsp;— доказано, <span class=\"tag c\">компьютер</span>&nbsp;— с помощью компьютера, "
-          "<span class=\"tag o\">открыто</span>&nbsp;— вопрос открыт; что формально проверено в Lean&nbsp;— на странице <a href=\"blueprint.html\">Blueprint</a>.</p>",
+          "<span class=\"tag o\">открыто</span>&nbsp;— вопрос открыт, <span class=\"tag l\">Lean</span>&nbsp;— формально проверено; подробнее о том, что формально проверено в Lean&nbsp;— на странице <a href=\"blueprint.html\">Blueprint</a>.</p>",
           "<p>Status: <span class=\"tag p\">paper</span>: proved; <span class=\"tag c\">computer</span>: computer-assisted; "
-          "<span class=\"tag o\">open</span>: an open question; what is formally verified in Lean is on the <a href=\"blueprint.html\">Blueprint</a> page.</p>")
+          "<span class=\"tag o\">open</span>: an open question; <span class=\"tag l\">Lean</span>: formally verified; more on what is formally verified in Lean is on the <a href=\"blueprint.html\">Blueprint</a> page.</p>")
       + "".join(claims))
 
     # ---------- blueprint ----------
@@ -2029,11 +2051,13 @@ Checks: two independent methods, PARI/GP, known values.</small></p>""")
       + f'<ol class="tl">{items}</ol>')
 
     # ---------- open questions ----------
+    def ODEF(label):
+        return f'<a href="definitions.html#c-{re.sub(r"[:.]", "-", label)}">{t("Формулировка из реестра", "As in the registry")}</a>' 
     P("open.html", t("Открытые вопросы", "Open questions"), t("""
 <p>Что осталось, по убыванию важности.</p>""", """
 <p>What is left, most important first.</p>""") + "<ol>" + "".join(
         f'<li id="{x[0]}"><p>{x[1 + li]} '
-        + (f'{claim_mark(OPEN_CLAIM[x[0]], t("Формулировка из реестра", "As in the registry"))}. ' if x[0] in OPEN_CLAIM else "")
+        + (f'{claim_mark(OPEN_CLAIM[x[0]], ODEF(OPEN_CLAIM[x[0]]))}. ' if x[0] in OPEN_CLAIM else "")
         + f'<a href="{TASK_URL}{x[3]}">{t("Трекер", "Tracker")}: {x[3]}</a></p></li>' for x in OPEN) + "</ol>")
 
     # ---------- paper ----------
