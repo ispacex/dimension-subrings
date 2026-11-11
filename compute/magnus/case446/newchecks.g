@@ -114,14 +114,6 @@ Cor3Check := function(T, V, lat)
   return out;
 end;
 
-AddStats := function(S, C)
-  S.n := S.n + C.n;
-  S.bad := S.bad + C.bad; S.A3bad := S.A3bad + C.A3bad;
-  S.unondiv3 := S.unondiv3 + C.unondiv3;
-  S.omegaA := S.omegaA + C.omegaA; S.omegaB := S.omegaB + C.omegaB;
-  S.gbad := S.gbad + C.gbad; S.thm2bad := S.thm2bad + C.thm2bad;
-end;
-
 MergeChecks := function(T, V, lat)
   local out, tau, p;
   out := Cor3Check(T, V, lat);
@@ -136,4 +128,234 @@ MergeChecks := function(T, V, lat)
     if not TermsOK(T, V, tau) then out.factorbad := out.factorbad + 1; fi;
   od;
   return out;
+end;
+
+# ======================================================================================================
+# Substantive checks (review of #145).  Every identity is counted as rec(n, lhs, rhs, bad): n comparisons,
+# lhs / rhs = how many times that side is <> 1, bad = how many times lhs <> rhs.  A claim "X = 1" is counted
+# with rhs = 1, so there lhs = bad.  Names containing "_ctl" are NEGATIVE CONTROLS: the same comparison with one
+# sign or exponent of the formula changed, or on a lattice without one condition that the derivation uses;
+# there bad > 0 shows that the check can fail.
+# ======================================================================================================
+
+Cmp := function(S, name, lhs, rhs)
+  local r;
+  if not IsBound(S.(name)) then S.(name) := rec(n := 0, lhs := 0, rhs := 0, bad := 0); fi;
+  r := S.(name); r.n := r.n + 1;
+  if not IsOne(lhs) then r.lhs := r.lhs + 1; fi;
+  if not IsOne(rhs) then r.rhs := r.rhs + 1; fi;
+  if lhs <> rhs then r.bad := r.bad + 1; fi;
+end;
+
+AddCnt := function(G, S)
+  local nm, f;
+  for nm in RecNames(S) do
+    if not IsBound(G.(nm)) then G.(nm) := rec(n := 0, lhs := 0, rhs := 0, bad := 0); fi;
+    for f in ["n", "lhs", "rhs", "bad"] do G.(nm).(f) := G.(nm).(f) + S.(nm).(f); od;
+  od;
+end;
+
+HNFl := function(M) if M = [] then return []; fi; return Filtered(HermiteNormalFormIntegerMat(M), r -> not IsZero(r)); end;
+
+# The conditions of TaharaConds tagged by sub-condition (in TaharaConds' order); verified against TaharaConds.
+TaggedConds := function(T, V)
+  local s, t, out, tags, part, i, j, k, l;
+  s := T.s; t := T.t; out := [];
+  part := function(letter, tg)
+    local cs, p;
+    cs := GroupConds(T, V, letter);
+    if Length(cs) <> Length(tg) then Error("tag count ", letter); fi;
+    for p in [1..Length(cs)] do Add(out, [tg[p][1], tg[p][2], cs[p]]); od;
+  end;
+  tags := [];
+  for i in [1..s] do Add(tags, ["A1", [i]]); od;
+  for i in [1..s] do for j in [i+1..s] do
+    Add(tags, ["A2", [i, j]]); Add(tags, ["A3", [i, j]]);
+    for k in [j+1..s] do Add(tags, ["A4", [i, j, k]]); od;
+  od; od;
+  part("A", tags);
+  tags := [];
+  for i in [1..s] do for k in [1..t] do Add(tags, ["B", [i, k]]); od; od;
+  part("B", tags);
+  tags := [];
+  for i in [1..s] do for j in [i+1..s] do
+    Append(tags, [["C", [i, j]], ["C", [i, j]], ["C", [i, j]]]);
+    for k in [j+1..s] do Append(tags, [["C", [i, j, k]], ["C", [i, j, k]], ["C", [i, j, k]]]); od;
+  od; od;
+  part("C", tags);
+  tags := [];
+  for i in [1..s] do for k in [1..t] do
+    Add(tags, ["D1", [i, k]]);
+    for j in [i+1..s] do Add(tags, ["D2", [i, j, k]]); od;
+  od; od;
+  part("D", tags);
+  tags := [];
+  for i in [1..s] do for l in [1..T.u] do Add(tags, ["E", [i, l]]); od; od;
+  part("E", tags);
+  tags := [];
+  for k in [1..t] do Add(tags, ["F1", [k]]); for l in [k+1..t] do Add(tags, ["F2", [k, l]]); od; od;
+  part("F", tags);
+  if List(out, x -> x[3]) <> TaharaConds(T, V, rec(drop := [])) then Error("tagged conditions"); fi;
+  return out;
+end;
+
+SelConds := function(TC, keep) return List(Filtered(TC, x -> x[1] in keep), x -> x[3]); end;
+
+# (c1) of wiki 891 Sec. 4: 3 | u_ij when d(i) = d(j), i < j
+C1Rows := function(T, V)
+  local r, i, j;
+  r := [];
+  for i in [1..T.s] do for j in [i+1..T.s] do
+    if T.d[i] = T.d[j] then Add(r, [[[V.idx.u[i][j], 1]], 3]); fi;
+  od; od;
+  return r;
+end;
+
+# Lattices with exactly the conditions each derivation uses (and controls without one of them):
+#   star    : (B), (D2), (E), (F2)                      -- identity (star), wiki 891 Sec. 3
+#   starNoE : (B), (D2), (F2)                           -- control: (E) dropped
+#   thm2    : (B), (D2), (E), (F2), (c1)                -- Theorem 2: 2g = R(tau) (the t-part of T1 needs (c1))
+#   cor3    : (B), (D2), (E), (F2), (c1), (A3)_{2,3}    -- Corollary 3, type [3,9,9] only
+NewLattices := function(T, V, TC)
+  local L, base;
+  base := SelConds(TC, ["B", "D2", "E", "F2"]);
+  L := rec();
+  L.star := TaharaLattice(T, V, base);
+  L.starNoE := TaharaLattice(T, V, SelConds(TC, ["B", "D2", "F2"]));
+  L.thm2 := TaharaLattice(T, V, Concatenation(base, C1Rows(T, V)));
+  if T.s = 3 and T.d = [3, 9, 9] then
+    L.cor3 := TaharaLattice(T, V, Concatenation(base, C1Rows(T, V),
+      List(Filtered(TC, x -> x[1] = "A3" and x[2] = [2, 3]), x -> x[3])));
+  fi;
+  return L;
+end;
+
+# (star) right side with the factors of one kind (T1..T5) inverted: a negative control
+# (F = StarFactors(T, V, tau))
+FlipProd := function(T, F, kind)
+  return Product(List(F, function(f)
+    if f[1]{[1, 2]} = kind then return f[2]^-1; fi; return f[2]; end), One(T.P));
+end;
+
+# T2 = prod_{h<i} [Y_h,x_i,x_i]^(-u_hi q_hi) and its claimed form prod_{h<i} omega(cbar_hi, Ybar_i)^(-u_hi)
+T2Sides := function(T, V, tau)
+  local x, Y, d, l, r, h, i, u;
+  x := T.x1; Y := T.Y; d := T.d; l := One(T.P); r := One(T.P);
+  for h in [1..T.s] do for i in [h+1..T.s] do
+    u := tau[V.idx.u[h][i]];
+    l := l * Comm(Comm(Y[h], x[i]), x[i])^(-u * QuoInt(d[i], d[h]));
+    r := r * Comm(Comm(x[h], x[i]), Y[i])^(-u);
+  od; od;
+  return [l, r];
+end;
+
+# the t-part of T1: prod_{i<h} (t(c;x_i,x_i) t(c;x_h,x_h)^-1)^(-n(n^2-1)/12 u_ih), c = [x_i,x_h], n = d(h)
+TpartSum := function(T, V, tau)
+  local x, d, r, i, h, c, n;
+  x := T.x1; d := T.d; r := One(T.P);
+  for i in [1..T.s] do for h in [i+1..T.s] do
+    c := Comm(x[i], x[h]); n := d[h];
+    r := r * (Comm(Comm(c, x[i]), x[i]) * Comm(Comm(c, x[h]), x[h])^-1)^(-n * (n^2 - 1) / 12 * tau[V.idx.u[i][h]]);
+  od; od;
+  return r;
+end;
+
+# Group identities, no tau (a coefficient u only multiplies the exponent, so u = 1 per pair covers all u)
+PairChecks := function(T, S)
+  local s, d, x, Y, i, h, g, a, b, m, n, q, c, ti, th, omi, omh, coef, k, base, lhs, Pi, om, A, B;
+  s := T.s; d := T.d; x := T.x1; Y := T.Y;
+  for i in [1..s] do for h in [i+1..s] do        # T1: (Delta) and its t-part (Kimi item 3)
+    m := d[i]; n := d[h]; q := n / m; c := Comm(x[i], x[h]);
+    ti := Comm(Comm(c, x[i]), x[i]); th := Comm(Comm(c, x[h]), x[h]);
+    omi := Comm(c, Y[i]); omh := Comm(c, Y[h]);
+    coef := n * (n^2 - 1) / 12;
+    lhs := Comm(x[i]^n, x[h]) * Comm(x[h]^n, x[i]);
+    Cmp(S, "delta", lhs, (omi^q * omh^-1)^((n - 1) / 2) * (ti * th^-1)^(-coef));
+    Cmp(S, "delta_ctl_tsign", lhs, (omi^q * omh^-1)^((n - 1) / 2) * (ti * th^-1)^coef);
+    Cmp(S, "delta_ctl_half", lhs, (omi^q * omh^-1)^((n + 1) / 2) * (ti * th^-1)^(-coef));
+    base := ti * th^-1;
+    Cmp(S, "tpart_base", base, One(T.P));               # the t-value that the coefficient must kill
+    if m < n then k := 1; else k := 3; fi;               # k = 3: (c1), 3 | u_ih when d(i) = d(h)
+    Cmp(S, "tpart", base^(coef * k), One(T.P));
+    Cmp(S, "tpart_ctl_coef3", base^(coef * k / 3), One(T.P));   # one factor 3 less in the coefficient
+    if m = n then Cmp(S, "tpart_ctl_noc1", base^coef, One(T.P)); fi;   # u = 1, (c1) violated
+  od; od;
+  for h in [1..s] do for i in [h+1..s] do        # T2: Proposition 1 and the T2 formula per pair (Kimi item 4)
+    m := d[h]; n := d[i]; q := n / m; c := Comm(x[h], x[i]);
+    ti := Comm(Comm(c, x[i]), x[i]); Pi := Comm(Comm(Y[h], x[i]), x[i]); om := Comm(c, Y[i]);
+    Cmp(S, "prop1", Pi^q, om * ti^(-n * (n - m) / 2));
+    Cmp(S, "prop1_ctl_inv", Pi^q, om^-1 * ti^(-n * (n - m) / 2));
+    Cmp(S, "t2pair", Pi^q, om);
+    Cmp(S, "t2pair_ctl_inv", Pi^q, om^-1);
+  od; od;
+  for g in [1..s] do for i in [1..s] do if g <> i then for h in [1..s] do   # wiki 891 Sec. 5 formula
+    c := Comm(x[g], x[i]); lhs := Comm(Comm(Y[g], x[i]), x[h]);
+    Cmp(S, "y3", lhs, Comm(c, x[h])^d[g]);
+    Cmp(S, "y3_ctl_inv", lhs, Comm(c, x[h])^(-d[g]));
+    if d[g] = d[h] then
+      Cmp(S, "y3om", lhs, Comm(c, Y[h]));
+      Cmp(S, "y3om_ctl_inv", lhs, Comm(c, Y[h])^-1);
+    fi;
+  od; fi; od; od;
+  for a in [1..s] do for b in [a+1..s] do for h in [1..s] do
+    Cmp(S, "omega_cY", Comm(Comm(x[a], x[b]), Y[h]), One(T.P));   # how often omega(cbar_ab, Ybar_h) <> 1
+  od; od; od;
+  if s = 3 and d = [3, 9, 9] then                 # Corollary 3: A, B as omega values
+    c := Comm(x[2], x[3]);
+    A := Comm(Comm(Y[2], x[3]), x[2]); B := Comm(Comm(Y[3], x[2]), x[3]);
+    Cmp(S, "A_omega", A, Comm(c, Y[2]));
+    Cmp(S, "A_omega_ctl_inv", A, Comm(c, Y[2])^-1);
+    Cmp(S, "B_omega", B, Comm(c, Y[3])^-1);
+    Cmp(S, "B_omega_ctl_inv", B, Comm(c, Y[3]));
+  fi;
+end;
+
+# tau identities on the lattices of NewLattices (all on a generating set; both sides are additive in tau)
+LatticeChecks := function(T, V, L, S)
+  local tau, g2, P, F, t2, x, A, B, u, U, w, wp, X;
+  X := V.idx;
+  for tau in L.star do
+    g2 := TaharaGen(T, V, tau).g^2;
+    F := StarFactors(T, V, tau);
+    Cmp(S, "star", g2, Product(List(F, f -> f[2]), One(T.P)));
+    Cmp(S, "star_ctl_flipT1", g2, FlipProd(T, F, "T1"));
+    Cmp(S, "star_ctl_flipT2", g2, FlipProd(T, F, "T2"));
+    Cmp(S, "star_ctl_flipT3", g2, FlipProd(T, F, "T3"));
+    Cmp(S, "star_ctl_flipT4", g2, FlipProd(T, F, "T4"));
+    t2 := T2Sides(T, V, tau);
+    Cmp(S, "t2sum", t2[1], t2[2]);
+    Cmp(S, "t2sum_ctl_inv", t2[1], t2[2]^-1);
+    Cmp(S, "tpartsum_ctl_noc1", TpartSum(T, V, tau), One(T.P));
+    P := ResidualParts(T, V, tau);
+    Cmp(S, "thm2_ctl_noc1", g2, P.T1 * P.T2 * P.T3 * P.T4);
+  od;
+  for tau in L.starNoE do
+    g2 := TaharaGen(T, V, tau).g^2;
+    Cmp(S, "star_ctl_noE", g2, StarRHS(T, V, tau));
+  od;
+  for tau in L.thm2 do
+    g2 := TaharaGen(T, V, tau).g^2;
+    P := ResidualParts(T, V, tau);
+    Cmp(S, "thm2", g2, P.T1 * P.T2 * P.T3 * P.T4);
+    Cmp(S, "thm2_ctl_flipT1", g2, P.T1^-1 * P.T2 * P.T3 * P.T4);
+    Cmp(S, "thm2_ctl_flipT2", g2, P.T1 * P.T2^-1 * P.T3 * P.T4);
+    Cmp(S, "thm2_ctl_flipT3", g2, P.T1 * P.T2 * P.T3^-1 * P.T4);
+    Cmp(S, "tpartsum", TpartSum(T, V, tau), One(T.P));
+  od;
+  if IsBound(L.cor3) then
+    x := T.x1;
+    A := Comm(Comm(T.Y[2], x[3]), x[2]); B := Comm(Comm(T.Y[3], x[2]), x[3]);
+    for tau in L.cor3 do
+      u := tau[X.u[2][3]]; w := tau[X.w[2][3][3]]; wp := tau[X.wp[2][3][3]];
+      if u mod 3 <> 0 or w + wp <> 4 * u then Error("cor3 lattice"); fi;
+      U := u / 3;
+      g2 := TaharaGen(T, V, tau).g^2;
+      Cmp(S, "cor3", g2, A^(12 * U) * B^(w + 3 * U));
+      Cmp(S, "cor3_ctl_flipB", g2, A^(12 * U) * B^(-(w + 3 * U)));
+    od;
+    for tau in L.thm2 do                          # (A3) not imposed
+      u := tau[X.u[2][3]]; w := tau[X.w[2][3][3]]; U := u / 3;
+      Cmp(S, "cor3_ctl_noA3", TaharaGen(T, V, tau).g^2, A^(12 * U) * B^(w + 3 * U));
+    od;
+  fi;
 end;

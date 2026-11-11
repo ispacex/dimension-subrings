@@ -1,4 +1,4 @@
-# test446.g -- tm test of the case (b) note on groups with gamma_4 = C_9,
+# lib446.g -- tm test of the case (b) note on groups with gamma_4 = C_9,
 # in the adapted basis of star444.g (TaharaData / AdaptedX1 / StarFactors / TaharaLattice).
 # Reads tahara61.g from the tree.  No anupq: groups built with EpimorphismPGroup (OneC9).
 # A watch timer stops the job gracefully at the end of its budget.
@@ -50,6 +50,10 @@ end;
 
 LogExp := function(H, N) if Size(H) = Size(N) then return 0; fi; return Log(Exponent(H / N), 3); end;
 
+# Random relators: g_i^ord_i = a product of 0..extraw[1] random commutators whose weights are drawn from extraw{[2,3]},
+# plus up to k+2 relators of weights from extraw.  NB: with the default EXTRAW = [2,3,3,4] the power words have
+# weight 3 only, so Y_i = x_i^d(i) lies in gamma_3 for the original generators (Ybar_i = 0 in L_2); this is why
+# omega(cbar, Ybar_h), A and B are trivial in the groups of the original run.  EXTRAW = [2,2,3,4] allows weight 2.
 RandP := function(F, g, ord, pqc, extraw)
   local k, rels, Fp, epi, P0, L0, P, L;
   k := Length(g);
@@ -192,19 +196,9 @@ end;
 
 StarRHS := function(T, V, tau) return Product(List(StarFactors(T, V, tau), f -> f[2]), One(T.P)); end;
 
-# check (*) on the lattice cut out by the conditions not in drop; returns [lattice size, failures]
-StarCheck := function(T, V, drop)
-  local conds, lat, bad, tau;
-  conds := TaharaConds(T, V, rec(drop := drop));
-  lat := TaharaLattice(T, V, conds); bad := 0;
-  for tau in lat do
-    if TaharaGen(T, V, tau).g^2 <> StarRHS(T, V, tau) then bad := bad + 1; fi;
-  od;
-  return [Length(lat), bad];
-end;
-
-# T1*T2*T3*T4 with Theorem 1 (containing (n-1)/2) and Proposition 2 [Theorem 2 of the note]
-ResidualOK := function(T, V, tau)
+# T1*T2*T3*T4 with Theorem 1 (containing (n-1)/2) and Proposition 2 [Theorem 2 of the note]: the residual R(tau),
+# returned by parts (T1 only its omega part: the t-part is dropped; T2 by the omega formula; T5 dropped)
+ResidualParts := function(T, V, tau)
   local s, X, x, Y, d, T1e, T2e, T3e, T4e, i, h, g, j, kk, oi, oh;
   s := T.s; X := V.idx; x := T.x1; Y := T.Y; d := T.d;
   T1e := One(T.P); T2e := One(T.P); T3e := One(T.P); T4e := One(T.P);
@@ -222,7 +216,13 @@ ResidualOK := function(T, V, tau)
   for j in [1..s] do for kk in [j+1..s] do for h in [kk+1..s] do
     T4e := T4e * Comm(Y[h], Comm(x[j], x[kk]))^(-tau[X.wpp[j][kk][h]]);
   od; od; od;
-  return T1e * T2e * T3e * T4e;
+  return rec(T1 := T1e, T2 := T2e, T3 := T3e, T4 := T4e);
+end;
+
+ResidualOK := function(T, V, tau)
+  local p;
+  p := ResidualParts(T, V, tau);
+  return p.T1 * p.T2 * p.T3 * p.T4;
 end;
 
 # (Delta) and Proposition 1 for every pair of x1's (all orders, every group with gamma_4^9 = 1)
@@ -245,21 +245,3 @@ DeltaChecks := function(T)
   od; od;
   return bad;
 end;
-
-# (C_2)--(C_4) are redundant on an ordered basis [Proposition 4 of the note]: on the lattice
-# without (A)-(F) every (C)-congruence holds with w = 0 (a test that the reading of C is right)
-CRedundant := function(T, V)
-  local s, i, j, k, ok;
-  s := T.s; ok := true;
-  for i in [1..s] do for j in [i+1..s] do
-    if not (Binomial(T.d[i], 2) mod T.d[i] = 0) then ok := false; fi;
-    if not (Binomial(T.d[j], 2) mod T.d[i] = 0) then ok := false; fi;
-    for k in [j+1..s] do
-      if not (Binomial(T.d[i], 2) mod T.d[i] = 0) then ok := false; fi;
-      if not (Binomial(T.d[j], 2) mod T.d[i] = 0) then ok := false; fi;
-      if not (Binomial(T.d[k], 2) mod T.d[i] = 0) then ok := false; fi;
-    od;
-  od; od;
-  return ok;
-end;
-
