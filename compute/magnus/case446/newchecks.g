@@ -216,16 +216,31 @@ end;
 #   starNoE : (B), (D2), (F2)                           -- control: (E) dropped
 #   thm2    : (B), (D2), (E), (F2), (c1)                -- Theorem 2: 2g = R(tau) (the t-part of T1 needs (c1))
 #   cor3    : (B), (D2), (E), (F2), (c1), (A3)_{2,3}    -- Corollary 3, type [3,9,9] only
+#   starNoD2, starNoF2                                  -- controls: (D2) / (F2) dropped
 NewLattices := function(T, V, TC)
-  local L, base;
+  local L, base, A323, B3, D23;
   base := SelConds(TC, ["B", "D2", "E", "F2"]);
   L := rec();
   L.star := TaharaLattice(T, V, base);
   L.starNoE := TaharaLattice(T, V, SelConds(TC, ["B", "D2", "F2"]));
   L.thm2 := TaharaLattice(T, V, Concatenation(base, C1Rows(T, V)));
+  L.starNoD2 := TaharaLattice(T, V, SelConds(TC, ["B", "E", "F2"]));
+  L.starNoF2 := TaharaLattice(T, V, SelConds(TC, ["B", "D2", "E"]));
+  # the algebraic steps after (star), on nearly free tau:
+  #   c1   : (c1) only                                   -- (star) RHS = R(tau) (Theorem 2 minus (star))
+  #   free : no condition                                -- control for c1
+  L.c1 := TaharaLattice(T, V, C1Rows(T, V));
+  L.free := IdentityMat(V.n);
   if T.s = 3 and T.d = [3, 9, 9] then
-    L.cor3 := TaharaLattice(T, V, Concatenation(base, C1Rows(T, V),
-      List(Filtered(TC, x -> x[1] = "A3" and x[2] = [2, 3]), x -> x[3])));
+    A323 := List(Filtered(TC, x -> x[1] = "A3" and x[2] = [2, 3]), x -> x[3]);
+    L.cor3 := TaharaLattice(T, V, Concatenation(base, C1Rows(T, V), A323));
+    # R(tau) = A^(12U) B^(w+3U) (Corollary 3 minus Theorem 2) uses (c1), (c2), (c3), (A3)_{2,3}; (c2) and (c3)
+    # follow from (B) mod 3 and (D2) mod 3 in the adapted basis
+    B3 := List(SelConds(TC, ["B"]), x -> [x[1], 3]); D23 := List(SelConds(TC, ["D2"]), x -> [x[1], 3]);
+    L.cor3w := TaharaLattice(T, V, Concatenation(C1Rows(T, V), B3, D23, A323));
+    L.cor3wNoA3 := TaharaLattice(T, V, Concatenation(C1Rows(T, V), B3, D23));
+    L.cor3wNoB3 := TaharaLattice(T, V, Concatenation(C1Rows(T, V), D23, A323));
+    L.cor3wNoD23 := TaharaLattice(T, V, Concatenation(C1Rows(T, V), B3, A323));
   fi;
   return L;
 end;
@@ -312,7 +327,7 @@ end;
 
 # tau identities on the lattices of NewLattices (all on a generating set; both sides are additive in tau)
 LatticeChecks := function(T, V, L, S)
-  local tau, g2, P, F, t2, x, A, B, u, U, w, wp, X;
+  local tau, g2, P, F, t2, x, A, B, u, U, w, wp, X, CorR;
   X := V.idx;
   for tau in L.star do
     g2 := TaharaGen(T, V, tau).g^2;
@@ -332,6 +347,28 @@ LatticeChecks := function(T, V, L, S)
   for tau in L.starNoE do
     g2 := TaharaGen(T, V, tau).g^2;
     Cmp(S, "star_ctl_noE", g2, StarRHS(T, V, tau));
+  od;
+  for tau in L.starNoD2 do Cmp(S, "star_ctl_noD2", TaharaGen(T, V, tau).g^2, StarRHS(T, V, tau)); od;
+  for tau in L.starNoF2 do Cmp(S, "star_ctl_noF2", TaharaGen(T, V, tau).g^2, StarRHS(T, V, tau)); od;
+  # Theorem 2 minus (star): (star) RHS = R(tau) for every tau with (c1) (items 3, 4 and T5 = 1)
+  for tau in L.c1 do
+    F := StarFactors(T, V, tau); g2 := Product(List(F, f -> f[2]), One(T.P));
+    P := ResidualParts(T, V, tau);
+    Cmp(S, "rhsR", g2, P.T1 * P.T2 * P.T3 * P.T4);
+    Cmp(S, "rhsR_ctl_flipT1", g2, P.T1^-1 * P.T2 * P.T3 * P.T4);
+    Cmp(S, "rhsR_ctl_flipT2", g2, P.T1 * P.T2^-1 * P.T3 * P.T4);
+    Cmp(S, "rhsR_ctl_flipT3", g2, P.T1 * P.T2 * P.T3^-1 * P.T4);
+    Cmp(S, "rhsR_ctl_flipT4", g2, P.T1 * P.T2 * P.T3 * P.T4^-1);
+    t2 := T2Sides(T, V, tau);
+    Cmp(S, "t2sum_c1", t2[1], t2[2]);
+    Cmp(S, "t2sum_c1_ctl_inv", t2[1], t2[2]^-1);
+    Cmp(S, "tpartsum_c1", TpartSum(T, V, tau), One(T.P));
+  od;
+  for tau in L.free do
+    F := StarFactors(T, V, tau); g2 := Product(List(F, f -> f[2]), One(T.P));
+    P := ResidualParts(T, V, tau);
+    Cmp(S, "rhsR_ctl_noc1", g2, P.T1 * P.T2 * P.T3 * P.T4);
+    Cmp(S, "tpartsum_ctl_free", TpartSum(T, V, tau), One(T.P));
   od;
   for tau in L.thm2 do
     g2 := TaharaGen(T, V, tau).g^2;
@@ -357,5 +394,18 @@ LatticeChecks := function(T, V, L, S)
       u := tau[X.u[2][3]]; w := tau[X.w[2][3][3]]; U := u / 3;
       Cmp(S, "cor3_ctl_noA3", TaharaGen(T, V, tau).g^2, A^(12 * U) * B^(w + 3 * U));
     od;
+    # Corollary 3 minus Theorem 2: R(tau) = A^(12U) B^(w+3U) on (c1), (B) mod 3, (D2) mod 3, (A3)_{2,3}
+    CorR := function(tau, name, flip)
+      local P, u, w;
+      u := tau[X.u[2][3]]; w := tau[X.w[2][3][3]];
+      P := ResidualParts(T, V, tau);
+      Cmp(S, name, P.T1 * P.T2 * P.T3 * P.T4, A^(12 * (u / 3)) * B^(flip * (w + u)));
+    end;
+    for tau in L.cor3w do
+      CorR(tau, "cor3R", 1); CorR(tau, "cor3R_ctl_flipB", -1);
+    od;
+    for tau in L.cor3wNoA3 do CorR(tau, "cor3R_ctl_noA3", 1); od;
+    for tau in L.cor3wNoB3 do CorR(tau, "cor3R_ctl_noB3", 1); od;
+    for tau in L.cor3wNoD23 do CorR(tau, "cor3R_ctl_noD23", 1); od;
   fi;
 end;
