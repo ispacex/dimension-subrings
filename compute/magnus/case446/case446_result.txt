@@ -58,7 +58,7 @@
 #     = 1), so A^(12U) = 1; if B <> 1 then Ybar_3 is not in 3 L_2, i.e. 3 is in the A-set, (c3) gives 3 | w'_233 and
 #     (A3) with (c1) gives 3 | w_233, so B^(w_233+3U) = 1.  Consequence: once Theorem 2 and Corollary 3 are proved,
 #     g^2 = 1, hence D_5 = 1 for type [3,9,9]; Kimi's remaining identity 12U A + (w_233+3U) B = 0 is automatic under
-#     (c1)-(c3) and (A3).  Hence the comparison cor3R (R vs the formula) is 1 vs 1 by construction, and the A part of
+#     (c1)-(c3) and (A3).  Hence the formula side is 1 by construction, so cor3R amounts to testing R = 1; the A part of
 #     the formula is never exercised (A^(12U) = 1 identically).
 #   Outside (c3) the formula fails: on the lattice without (D2) mod 3 (cor3R_wide_noD23, effectively a control),
 #     R <> 1 in 61 vectors, the formula <> 1 in 58, 3 failures.  Controls on the cor3R lattice itself: flipped B 0
@@ -74,7 +74,7 @@
 #     free-tau ones above); likewise tpartsum on the thm2 lattice and t2sum_c1 (13 nontrivial) are weak.
 #   Negative controls with 0 failures (all on these non-substantive checks; they cannot fail where the sides are 1):
 #     star_ctl_flipT2/T3/T4, thm2_ctl_flipT1/T2/T3, cor3_ctl_flipB, cor3_ctl_noA3, cor3R_ctl_flipB, t2sum_ctl_inv;
-#     star_ctl_flipT1 and thm2_ctl_noc1 / tpartsum_ctl_noc1 fail only once.
+#     star_ctl_flipT1 and thm2_ctl_noc1 / tpartsum_ctl_noc1 fail only twice (1 per wave).
 #   cor_n (old) counts lattice vectors of every type, but Corollary 3 applies only to [3,9,9]: the [3,9,9] vectors are
 #     those of the *339 shards (all their groups are [3,9,9]): 2325 old + 8649 new = 10974 (cor_bad = 0 there, 1 vs 1).
 #   Old counters (FINAL): unchanged meaning; A3bad, cor_bad, omegaA/B, starbad, thm2bad, gbad, factorbad compare 1 with 1
