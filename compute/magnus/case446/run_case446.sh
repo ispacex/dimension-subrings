@@ -15,10 +15,10 @@ PLAN=${1:-main}
 cd "$(dirname "$0")/.."                      # compute/magnus: lib446.g reads tahara61.g from here
 OUT=${JOB_OUT:-$PWD/case446/out}; mkdir -p "$OUT"
 C=$PWD/case446
-run() {  # name seed NG KS TOPS EXTRAW GENORDER
+run() {  # name seed NG KS TOPS EXTRAW GENORDER [FORCE13]
   local d=$OUT/$1; mkdir -p "$d"
   cat > "$d/driver.g" <<GEOF
-MODE := "$1";; NG := $3;; KS := $4;; TOPS := $5;; EXTRAW := $6;; GENORDER := "$7";;
+MODE := "$1";; NG := $3;; KS := $4;; TOPS := $5;; EXTRAW := $6;; GENORDER := "$7";; FORCE13 := ${8:-false};;
 MAXV := 1400;; WATCH := 1500;; TRIALS := 80;; BIGLAT := 1500;; CTL_MAXLAT := 2500;; NEW_MAXLAT := 2500;;
 DO_CONTROLS := true;; NEEDNOTH2 := false;;
 Reset(GlobalMersenneTwister, $2);; Reset(GlobalRandomSource, $2);;
@@ -29,8 +29,8 @@ GEOF
 }
 W1='[2,3,3,4]'; W2='[2,2,3,4]'
 if [ "$PLAN" = smoke ]; then
-  wave1=("o339 339 6 [3] [[9,9]] $W1 std" "v339 5339 20 [3] [[9,9]] $W2 rev"
-         "w339 6339 20 [3] [[9,9]] [2,2,2,4] rev" "x339 7339 20 [3] [[9,9]] [3,2,2,4] rev")
+  wave1=("f339 8339 20 [3] [[9,9]] $W1 std true" "g339 9339 20 [3] [[9,9]] $W2 rev true"
+         "f279 8279 12 [3] [[27,9]] $W2 std true" "f999 8999 12 [3] [[9,9,9]] $W2 std true")
   wave2=()
 else
   wave1=("r339 339 120 [3] [[9,9]] $W1 std" "r279 279 110 [3] [[27,9]] $W1 std"

@@ -11,6 +11,7 @@ if not IsBound(MAXV) then MAXV := 1200; fi;
 if not IsBound(TRIALS) then TRIALS := 40; fi;
 if not IsBound(BIGLAT) then BIGLAT := 4000; fi;
 if not IsBound(WATCH) then WATCH := 700; fi;
+if not IsBound(FORCE13) then FORCE13 := false; fi;
 Read("tahara61.g");
 
 STARTTIME := Runtime();
@@ -55,10 +56,18 @@ LogExp := function(H, N) if Size(H) = Size(N) then return 0; fi; return Log(Expo
 # weight 3 only, so Y_i = x_i^d(i) lies in gamma_3 for the original generators (Ybar_i = 0 in L_2); this is why
 # omega(cbar, Ybar_h), A and B are trivial in the groups of the original run.  EXTRAW = [2,2,3,4] allows weight 2.
 RandP := function(F, g, ord, pqc, extraw)
-  local k, rels, Fp, epi, P0, L0, P, L;
+  local k, rels, Fp, epi, P0, L0, P, L, p3, i;
   k := Length(g);
   rels := List([1..k], i -> g[i]^ord[i] / Product(List([1..Random([0..extraw[1]])],
     j -> RW(F, Random(extraw{[2, 3]}))), One(F)));
+  # FORCE13 (default false): the power word of each generator of order >= 9 also gets a factor [g_p, g_j], g_p of
+  # order 3, so that Ybar_i has a component along cbar_{p j} (needed for omega(cbar_23, Ybar_h) <> 1 in [3,9,9])
+  if FORCE13 and 3 in ord then
+    p3 := Position(ord, 3);
+    for i in Filtered([1..k], i -> ord[i] >= 9) do
+      rels[i] := rels[i] * Comm(g[p3], Random(g{Difference([1..k], [p3])}))^Random([1, 2]);
+    od;
+  fi;
   Append(rels, List([1..Random([0..k+2])], j -> Product(List([1..Random([1..2])],
     t -> RW(F, Random(extraw))), One(F))));
   Fp := F / Concatenation(rels, W5(F));
