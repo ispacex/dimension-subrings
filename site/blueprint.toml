@@ -4,7 +4,8 @@
 #
 # [nodes."<label>"]: one per labelled statement of paper/d5.tex (every one must be here), and a few
 # results of the literature that the formalization proves too ("ext:..." labels, with their own
-# statement). Fields:
+# statement), and our own results that it proves but the paper does not contain ("own:..." labels,
+# the same fields; e.g. own:ab399, MATH-448). Fields:
 #   lean     the Lean declarations (full names) that state or prove it; CI checks that each exists
 #            (.github/workflows/blueprint.yml) and the build that each is named in the paper's
 #            section on the formalization; each carries the attribute @[d5 "<label>"] in groups/
@@ -20,7 +21,7 @@
 #   note     what the Lean version differs in, or what is not formalized (shown in the blueprint
 #            and on blueprint.html), and note_ru, the same in Russian; a number of the paper is
 #            written [[label|#]] (the build puts in the number and checks the label); title, title_ru and statement
-#            (LaTeX, English) of an ext: node.
+#            (LaTeX, English) of an ext: or own: node.
 #
 # [[results]]: the rows of results.html (they were RESULTS in build_site.py): status ("l" Lean, "p"
 # paper, "c" computer, "cp" computer + paper, "o" open), the text in both languages, and where it is.
@@ -177,8 +178,8 @@ note_ru = "Проверено независимой рецензией (MATH-44
 lean = ["GroupDimension.D_five_eq_gamma_five_of_g4_cube", "GroupDimension.D_five_eq_bot_of_class_four_g4_cube", "GroupDimension.ExpThree.D_five_eq_gamma_five_g4_cube", "GroupDimension.ExpThree.D_five_eq_bot_of_class_four_g4_cube"]
 proved = true
 uses = ["ext:tahara61"]
-note = "Paper proof and Lean code each checked by an independent review (MATH-444). Hypothesis: c³ ∈ γ_5 for every c ∈ γ_4; no condition on γ_2/γ_3 or on G/γ_2 beyond being a finite 3-group. Theorems [[thm:exp3gen|#]] and [[thm:exp3h9|#]] are special cases; in Lean, Theorem [[thm:exp3h9|#]] is derived from it under its old names (and [[thm:exp3gen|#]] from [[thm:exp3h9|#]]). The Lean proof (G4Cube.lean) follows the paper in summing the row identities from (B) and (E) over all rows and in the defects Δ, but takes a shorter route than (⋆): the w-part is shown trivial directly by (D) modulo 3, (E) is used modulo 3, the v-part uses (F₁) and (F₂), and of the terms of (⋆) only T₁ appears; so (⋆) itself, valid without γ_4³ = 1, is not in Lean."
-note_ru = "Доказательство в статье и код Lean проверены каждый независимой рецензией (MATH-444). Гипотеза: c³ ∈ γ_5 для всех c ∈ γ_4; на γ_2/γ_3 и G/γ_2 (кроме того, что это конечная 3-группа) условий нет. Теоремы [[thm:exp3gen|#]] и [[thm:exp3h9|#]] — частные случаи; в Lean теорема [[thm:exp3h9|#]] выводится из неё под прежними именами (а [[thm:exp3gen|#]] — из [[thm:exp3h9|#]]). Доказательство в Lean (G4Cube.lean) следует статье в суммировании тождеств строк из (B) и (E) по всем строкам и в дефектах Δ, но идёт короче, чем через (⋆): w-часть тривиальна сразу по (D) по модулю 3, (E) используется по модулю 3, v-часть — по (F₁) и (F₂), и из членов (⋆) возникает лишь T₁; само тождество (⋆), верное без γ_4³ = 1, в Lean не доказано."
+note = "Paper proof and Lean code each checked by an independent review (MATH-444). Hypothesis: c³ ∈ γ_5 for every c ∈ γ_4; no condition on γ_2/γ_3 or on G/γ_2 beyond being a finite 3-group. Theorems [[thm:exp3gen|#]] and [[thm:exp3h9|#]] are special cases; in Lean, Theorem [[thm:exp3h9|#]] is derived from it under its old names (and [[thm:exp3gen|#]] from [[thm:exp3h9|#]]). The Lean proof (G4Cube.lean) follows the paper in summing the row identities from (B) and (E) over all rows and in the defects Δ, but takes a shorter route than (⋆): the w-part is shown trivial directly by (D) modulo 3, (E) is used modulo 3, the v-part uses (F₁) and (F₂), and of the terms of (⋆) only T₁ appears; (⋆) itself, valid without γ_4³ = 1, was later proved in Lean separately (Star.two_smul_gen_eq, MATH-448; see the result for Q_ab ≅ C_3 × C_9 × C_9, not in the paper, below) and is not used here."
+note_ru = "Доказательство в статье и код Lean проверены каждый независимой рецензией (MATH-444). Гипотеза: c³ ∈ γ_5 для всех c ∈ γ_4; на γ_2/γ_3 и G/γ_2 (кроме того, что это конечная 3-группа) условий нет. Теоремы [[thm:exp3gen|#]] и [[thm:exp3h9|#]] — частные случаи; в Lean теорема [[thm:exp3h9|#]] выводится из неё под прежними именами (а [[thm:exp3gen|#]] — из [[thm:exp3h9|#]]). Доказательство в Lean (G4Cube.lean) следует статье в суммировании тождеств строк из (B) и (E) по всем строкам и в дефектах Δ, но идёт короче, чем через (⋆): w-часть тривиальна сразу по (D) по модулю 3, (E) используется по модулю 3, v-часть — по (F₁) и (F₂), и из членов (⋆) возникает лишь T₁; само тождество (⋆), верное без γ_4³ = 1, позже доказано в Lean отдельно (Star.two_smul_gen_eq, MATH-448; см. результат для Q_ab ≅ C_3 × C_9 × C_9 вне статьи ниже) и здесь не используется."
 
 [nodes."cor:g4cube"]
 
@@ -276,6 +277,17 @@ note = "Stated in Lean; proved for p = 3 (guptaTaharaMetabelian_three, Theorem [
 note_ru = "В Lean сформулирована; при p = 3 доказана (guptaTaharaMetabelian_three, теорема [[thm:gt3|#]]); при общем p не доказана, там, где используется, — явная гипотеза."
 
 
+[nodes."own:ab399"]
+title = "$D_5=1$ for $Q_{ab}\\cong C_3\\times C_9\\times C_9$"
+title_ru = "$D_5=1$ при $Q_{ab}\\cong C_3\\times C_9\\times C_9$"
+statement = '''Let $Q$ be a finite group of class $\le4$ with $Q/\gamma_2(Q)\cong C_3\times C_9\times C_9$. Then $D_5(Q)=1$. No condition on $\gamma_4(Q)$ is assumed.'''
+lean = ["GroupDimension.D_five_eq_bot_of_class_four_ab399", "GroupDimension.Ab399.D_five_eq_bot_of_class_four_ab399",
+        "GroupDimension.Star.two_smul_gen_eq"]
+proved = true
+uses = ["ext:tahara61"]
+note = "Not in the paper (the authors' decision): the proof on paper is MATH-446 (wiki 891 §10, one review per 703), the Lean proof group-dimension#48 (MATH-448). It covers γ_4 of exponent 9 (e.g. γ_4 ≅ C_9), the case that Remark [[rem:g4c9|#]] leaves open, for this type of Q_ab; for γ_4^3 = 1 it is a case of Theorem [[thm:g4cube|#]]. Star.two_smul_gen_eq is the exact identity (⋆) of the proof of Theorem [[thm:g4cube|#]], for Tahara's data and any admissible τ in a group of class ≤ 4, with no condition on γ_4; the Lean proof of Theorem [[thm:g4cube|#]] does not use it. GroupDimension.Ab399.D_five_eq_bot_of_class_four_ab399 takes Tahara's inclusion as a hypothesis, the unprefixed one discharges it. Only the finite form of class ≤ 4 is in Lean; the general form D_5(G) = γ_5(G) for G_ab ≅ C_3 × C_9 × C_9 is not formalized. Other types of Q_ab with γ_4 ≅ C_9 are open (MATH-450)."
+note_ru = "Не в статье (решение авторов): доказательство на бумаге — MATH-446 (вики 891 §10, одна рецензия по 703), в Lean — group-dimension#48 (MATH-448). Покрывает γ_4 экспоненты 9 (например, γ_4 ≅ C_9) — случай, который замечание [[rem:g4c9|#]] оставляет открытым, — для этого типа Q_ab; при γ_4^3 = 1 это частный случай теоремы [[thm:g4cube|#]]. Star.two_smul_gen_eq — точное тождество (⋆) из доказательства теоремы [[thm:g4cube|#]] для данных Тахары и любого допустимого τ в группе ступени ≤ 4, без условий на γ_4; Lean-доказательство теоремы [[thm:g4cube|#]] его не использует. GroupDimension.Ab399.D_five_eq_bot_of_class_four_ab399 берёт включение Тахары гипотезой, версия без префикса её снимает. В Lean только конечная форма для ступени ≤ 4; общая форма D_5(G) = γ_5(G) при G_ab ≅ C_3 × C_9 × C_9 не формализована. Другие типы Q_ab при γ_4 ≅ C_9 открыты (MATH-450)."
+
 # ---------------------------------------------------------------------------------------------
 # The rows of results.html, in their order.
 
@@ -357,6 +369,13 @@ ru = '''Самое общее на сегодня: $D_5(G)=\gamma_5(G)$, есл�
 en = '''Most general so far: $D_5(G)=\gamma_5(G)$ whenever $G/\gamma_2(G)$ is a finite $3$-group and $\gamma_4(G)^3\subseteq\gamma_5(G)$, with no condition on the exponents of $\gamma_2/\gamma_3$ and $\gamma_3/\gamma_4$; Theorems [[thm:exp3gen|#]] and [[thm:exp3h9|#]] are special cases. The proof and the Lean code were checked by independent reviews; proved in Lean, together with Tahara's Theorem 6.1. Hence $D_5(Q)\subseteq\gamma_4(Q)^3$ for every finite $3$-group of class $\le4$ (Corollary [[cor:g4cube|#]]), and a minimal counterexample has $\gamma_4\cong C_{3^k}$ with $k\ge2$ and $D_5=\Omega_1(\gamma_4)$.'''
 where_ru = '''[[thm:g4cube]]; {{lean:GroupDimension.D_five_eq_gamma_five_of_g4_cube|Lean}}'''
 where_en = '''[[thm:g4cube]]; {{lean:GroupDimension.D_five_eq_gamma_five_of_g4_cube|Lean}}'''
+
+[[results]]
+status = "l"
+ru = '''Вне статьи: $D_5(Q)=1$ для всякой конечной группы $Q$ ступени $\le4$ с $Q/\gamma_2(Q)\cong C_3\times C_9\times C_9$, без условий на $\gamma_4$; в частности при $\gamma_4\cong C_9$, где теорема [[thm:g4cube|#]] неприменима (замечание [[rem:g4c9|#]]). Доказательство через точное тождество $(\star)$ и теорему 6.1 Тахары; проверено рецензией и доказано в Lean. Для других типов $Q_{ab}$ при $\gamma_4\cong C_9$ вопрос открыт.'''
+en = '''Beyond the paper: $D_5(Q)=1$ for every finite group $Q$ of class $\le4$ with $Q/\gamma_2(Q)\cong C_3\times C_9\times C_9$, with no condition on $\gamma_4$; in particular for $\gamma_4\cong C_9$, where Theorem [[thm:g4cube|#]] does not apply (Remark [[rem:g4c9|#]]). Proved through the exact identity $(\star)$ and Tahara's Theorem 6.1; checked by a review and proved in Lean. For other types of $Q_{ab}$ with $\gamma_4\cong C_9$ the question is open.'''
+where_ru = '''<a href="blueprint.html#b-own-ab399">Blueprint</a>; {{lean:GroupDimension.D_five_eq_bot_of_class_four_ab399|Lean}}'''
+where_en = '''<a href="blueprint.html#b-own-ab399">Blueprint</a>; {{lean:GroupDimension.D_five_eq_bot_of_class_four_ab399|Lean}}'''
 
 [[results]]
 status = "l"

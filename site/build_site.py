@@ -1994,8 +1994,12 @@ Open cells are hatched: there the case of $\\gamma_2/\\gamma_3$ of exponent $3$ 
     # ---------- results ----------
     rows = [(tag(k, lang), (r[li], "l"), (ref(where, lang), "l")) for k, *r, where in ROWS]
     rids = []  # row anchors, by the first label of the row: results.html#r-thm-small, #r-thm-small-2
-    for *_, where in ROWS:
-        rid = "r-" + re.sub(r"[:.]", "-", PAPER_REF.search(ref(where, "en")).group(1))
+    for *_, where in ROWS:  # (a row outside the paper: by its blueprint node, #r-own-ab399)
+        w = ref(where, "en")
+        m = PAPER_REF.search(w) or blueprint.ROW_NODE.search(w)
+        if not m:
+            sys.exit(f"results row without a [[label]] or a blueprint.html#b-... link: {w[:80]}")
+        rid = "r-" + re.sub(r"[:.]", "-", m.group(1))
         rids.append(rid if rid not in rids else f"{rid}-{sum(1 for x in rids if x.startswith(rid))+1}")
     P("results.html", t("Результаты", "Results"), t(f"""
 <p>Главные утверждения черновика с их статусом. Номера&nbsp;— по <a href="paper.html">версии статьи на этом сайте</a>;
@@ -2058,7 +2062,7 @@ cloud with the current registry entry, in English as well; the number of a state
 
     def bp_name(x, link=True):
         n = BP["nodes"][x]
-        if x.startswith("ext:"):
+        if blueprint.outside(x):
             name = t(n["title_ru"], n["title"])
             return f'<a href="#b-{re.sub(r"[:.]", "-", x)}">{name}</a>' if link else name
         return paper_link(x, lang) if link else paper_text(x, lang)
@@ -2075,10 +2079,12 @@ cloud with the current registry entry, in English as well; the number of a state
         extra = t(" + компьютер", " + computer") if n["computer"] and st["status"].startswith("lean") else ""
         return f'<span class="tag {words[0]}">{words[1]}{extra}</span>'
 
-    order = [x for x in stmts if x in BP["nodes"]] + [x for x in BP["nodes"] if x.startswith("ext:")]
+    order = ([x for x in stmts if x in BP["nodes"]] + [x for x in BP["nodes"] if x.startswith("ext:")]
+             + [x for x in BP["nodes"] if x.startswith("own:")])
     def bp_kind(x):
-        """The kind of statement: the environment of the paper (blueprint.statements), or "ext"."""
-        return "ext" if x.startswith("ext:") else stmts[x]["env"]
+        """The kind of statement: the environment of the paper (blueprint.statements), or "ext" / "own"
+        for a node outside the paper."""
+        return x.split(":")[0] if blueprint.outside(x) else stmts[x]["env"]
 
     def bp_filters(kinds, sts):
         """The filter bar above the table (MATH-316): one group of toggle buttons per facet, each with the
@@ -2088,7 +2094,7 @@ cloud with the current registry entry, in English as well; the number of a state
                    {"theorem": t("теорема", "theorem"), "proposition": t("предложение", "proposition"),
                     "lemma": t("лемма", "lemma"), "corollary": t("следствие", "corollary"),
                     "question": t("вопрос", "question"), "remark": t("замечание", "remark"),
-                    "ext": t("литература", "literature")}),
+                    "ext": t("литература", "literature"), "own": t("вне статьи", "not in the paper")}),
                   ("status", t("Статус", "Status"), sts,
                    {"lean": t("Lean", "Lean"), "lean-given": t("Lean при условии", "Lean, given"),
                     "lean-statement": t("Lean: формулировка или часть", "Lean: statement or part"),
@@ -2110,7 +2116,7 @@ cloud with the current registry entry, in English as well; the number of a state
     brows, bids, battrs = [], [], []
     for x in order:
         n = BP["nodes"][x]
-        what = bp_name(x) + (f"<br>{n['statement']}" if x.startswith("ext:") else
+        what = bp_name(x) + (f"<br>{n['statement']}" if blueprint.outside(x) else
                              (f" <span class=\"muted\">({tex_inline(PAPERS[lang]['titles'].get(x, ''))})</span>"
                               if PAPERS[lang]["titles"].get(x) and "Computer" not in stmts[x]["title"]
                               and "cite" not in stmts[x]["title"] else ""))
@@ -2125,9 +2131,9 @@ cloud with the current registry entry, in English as well; the number of a state
     counts = {}
     for x in order:
         counts[bst[x]["status"]] = counts.get(bst[x]["status"], 0) + 1
-    paper_nodes = sum(1 for x in order if not x.startswith("ext:"))
-    full = sum(1 for x in order if not x.startswith("ext:") and bst[x]["status"] == "lean")
-    given = sum(1 for x in order if not x.startswith("ext:") and bst[x]["status"] == "lean-given")
+    paper_nodes = sum(1 for x in order if not blueprint.outside(x))
+    full = sum(1 for x in order if not blueprint.outside(x) and bst[x]["status"] == "lean")
+    given = sum(1 for x in order if not blueprint.outside(x) and bst[x]["status"] == "lean-given")
     graph = (t('<p><a href="blueprint/dep_graph_document.html"><b>Граф зависимостей</b></a> и <a href="blueprint/index.html">blueprint</a> '
                '(leanblueprint, по-английски: формулировки из статьи, декларации Lean, что использует доказательство).</p>',
                '<p><a href="blueprint/dep_graph_document.html"><b>Dependency graph</b></a> and the <a href="blueprint/index.html">blueprint</a> '
@@ -2138,14 +2144,15 @@ cloud with the current registry entry, in English as well; the number of a state
 <a href="https://github.com/ispacex/group-dimension">group-dimension</a> (коммит, на который указывает <code>groups/</code>),
 и утверждениями, на которые опирается доказательство. Из {paper_nodes} утверждений статьи {full} доказаны в Lean
 целиком, вместе со всем, на что опираются, ещё {given}&nbsp;— в Lean при утверждениях, которых там нет
-(они названы). В конце&nbsp;— результаты литературы, которые формализация тоже доказывает.
+(они названы). В конце&nbsp;— результаты литературы, которые формализация тоже доказывает, и результаты
+вне статьи, доказанные в Lean.
 Таблица строится из того же файла <code>site/blueprint.toml</code>, что и <a href="results.html">результаты</a>;
 сборка проверяет его по статье, а CI&nbsp;— что каждая декларация есть в Lean.</p>""", f"""
 <p>Every labelled statement of the draft with its status, the Lean declarations of
 <a href="https://github.com/ispacex/group-dimension">group-dimension</a> (at the commit <code>groups/</code> points to) that state or
 prove it, and the statements its proof uses. Of the {paper_nodes} statements of the paper, {full} are proved in Lean together
 with everything they rest on, and {given} more in Lean from statements that are not (named in the status). At the end,
-results of the literature that the formalization proves too. The table is built from the same file,
+results of the literature that the formalization proves too, and results not in the paper that it proves. The table is built from the same file,
 <code>site/blueprint.toml</code>, as the <a href="results.html">results</a>; the build checks it against the paper, and CI that
 every declaration exists in Lean.</p>""") + graph
       + filters
