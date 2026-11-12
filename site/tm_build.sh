@@ -51,6 +51,9 @@ install_texlive() {  # TeX Live in $TL; .d5site-ok marks a finished install, any
   cat > "$W/install-tl/d5site.profile" <<EOF2
 selected_scheme scheme-full
 TEXDIR $TL
+TEXMFLOCAL $TL/texmf-local
+TEXMFSYSVAR $TL/texmf-var
+TEXMFSYSCONFIG $TL/texmf-config
 TEXMFHOME $W/texmf-home
 TEXMFVAR $W/texmf-var
 TEXMFCONFIG $W/texmf-config
