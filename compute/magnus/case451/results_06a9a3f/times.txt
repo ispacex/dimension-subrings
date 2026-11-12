@@ -1,0 +1,10 @@
+d927k2 gen 84 s d5s 93 s FINAL d927k2 rec( Wnontriv := 0, Wpartviol := 0, Wsharp := 0, Wtermviol := 0, \ {"groups": 73, "with_z_in_D5": 0}
+a2727 gen 99 s d5s 387 s FINAL a2727 rec( Wnontriv := 0, Wpartviol := 0, Wsharp := 0, Wtermviol := 0, W\ {"groups": 76, "with_z_in_D5": 0}
+c2781 gen 111 s d5s 383 s FINAL c2781 rec( Wnontriv := 0, Wpartviol := 0, Wsharp := 0, Wtermviol := 0, W\ {"groups": 33, "with_z_in_D5": 0}
+b2727 gen 122 s d5s 514 s FINAL b2727 rec( Wnontriv := 0, Wpartviol := 0, Wsharp := 0, Wtermviol := 0, W\ {"groups": 60, "with_z_in_D5": 0}
+i92727p gen 68 s d5s 555 s FINAL i92727p rec( Wnontriv := 0, Wpartviol := 0, Wsharp := 0, Wtermviol := 0,\ {"groups": 60, "with_z_in_D5": 0}
+j99927 gen 59 s d5s 431 s FINAL j99927 rec( Wnontriv := 0, Wpartviol := 0, Wsharp := 0, Wtermviol := 0, \ {"groups": 60, "with_z_in_D5": 0}
+f92727 gen 130 s d5s 1200 s FINAL f92727 rec( Wnontriv := 6, Wpartviol := 0, Wsharp := 6, Wtermviol := 0, \ {"groups": 80, "with_z_in_D5": 0}
+e92727 gen 192 s d5s 1260 s FINAL e92727 rec( Wnontriv := 9, Wpartviol := 0, Wsharp := 9, Wtermviol := 0, \ {"groups": 77, "with_z_in_D5": 0}
+g272727 gen 216 s d5s 3000 s FINAL g272727 rec( Wnontriv := 22, Wpartviol := 0, Wsharp := 17, Wtermviol := \ {"id": "g272727.11", "k": 3, "ab": [27, 27, 27], "mu": 3, "logord": 30, "g4": 3, "nz": 1, "z_in_D5": [false], "cert": true, "ctrl_z_in_D4": true}
+h92727x gen 576 s d5s 3000 s FINAL h92727x rec( Wnontriv := 5, Wpartviol := 0, Wsharp := 5, Wtermviol := 0,\ {"id": "h92727x.32", "k": 4, "ab": [3, 9, 27, 27], "mu": 2, "logord": 30, "g4": 3, "nz": 1, "z_in_D5": [false], "cert": true, "ctrl_z_in_D4": true}
