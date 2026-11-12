@@ -804,11 +804,11 @@ def check_registry():
         if [x[key] for x in ru] != [x[key] for x in en]:
             sys.exit(f"the English registry set lists other {kind} than the Russian one")
         for x in en:
-            if x.get("translation") not in ("machine", "human", "original") or x.get("translationOutdated"):
+            if x.get("translation") not in ("machine", "human") or x.get("lang") != "en" or x.get("translationOutdated"):
                 sys.exit(f"the English text of {x[key]!r} is {x.get('translation')!r}"
                          f"{' (outdated)' if x.get('translationOutdated') else ''}: the tracker translates it in the "
                          "background, build again in a few minutes")
-            if x.get("machineTranslated") and not x.get("translationNote"):
+            if (x.get("translation") == "machine" or x.get("machineTranslated")) and not x.get("translationNote"):
                 sys.exit(f"the machine translation of {x[key]!r} comes without its note")
 
 
@@ -816,8 +816,7 @@ def registry_text(kind, i, lang):
     """The entry number i of the set in the page's language: (item, lang of its text, its note or "")."""
     if lang == "en":
         x = REGISTRY_EN[kind][i]
-        return x, (x.get("lang") if x.get("translation") != "original" else x.get("sourceLang")) or "ru", \
-            x.get("translationNote") or ""
+        return x, "en", x.get("translationNote") or ""  # check_registry: an English translation
     return REGISTRY[kind][i], "ru", ""
 
 
@@ -1991,7 +1990,7 @@ Magnus algebra, with the exactness certificate); <span class="tag p">paper</span
 <p>Terms and statements of the paper as they are written in the register of the project MATH of our tracker when the site was
 built. Each text was checked against the paper (<a href="paper.html">the version on this site</a>) when it was added to this set; the
 build checks that the numbers of the statements are those of the paper. The registry is kept in Russian; the texts below are the
-tracker's machine translations of its entries, each marked as such (the <a href="ru/definitions.html" hreflang="ru">Russian page</a>
+tracker's translations of its entries, a machine translation marked as such (the <a href="ru/definitions.html" hreflang="ru">Russian page</a>
 has the originals). The formulas and the numbers are those of the English draft too. An underlined word opens (on hover or tap) a
 cloud with the current registry entry, in English as well; the number of a statement opens the paper at it.</p>""")
       + scene(lang)
