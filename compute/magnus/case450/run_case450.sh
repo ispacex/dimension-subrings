@@ -18,7 +18,7 @@ Reset(GlobalMersenneTwister, $2);; Reset(GlobalRandomSource, $2);;
 OUT := "$d/run.jsonl";;
 Read("case450/lib450.g");; Read("case450/run450.g");;
 GEOF
-  timeout $(( $9 + 600 )) gap -q -b -o 6g "$d/driver.g" > "$d/gap.log" 2>&1
+  timeout $(( $9 + 600 )) gap -q -b -o 3g "$d/driver.g" > "$d/gap.log" 2>&1
 }
 W2='[2,2,3,4]'; W3='[3,2,2,4]'
 if [ "$PLAN" = smoke ]; then

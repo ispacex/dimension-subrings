@@ -8,11 +8,12 @@ if not IsBound(GENORDER) then GENORDER := "std"; fi;
 LATNAMES := ["W", "WnoB3", "WnoD23", "Wnoc1", "WB", "WD2", "WBD2", "WBD2A", "thm2", "thm2A", "full"];
 TOT := rec(tried := 0, groups := 0, skipped := 0, sanity_bad := 0, g2R_bad := 0, g2R_ne := 0,
   gbad := 0, gbad_groups := 0, full_termsne_groups := 0, cc9 := 0, cY9 := 0, tY9 := 0, nB := []);
-LT := rec();
+LATS := rec();
 for nm in LATNAMES do for kind in ["r", "rB", "dB"] do
-  LT.(Concatenation(nm, "_", kind)) := rec(n := 0, ne := 0, groups := 0, groups_ne := 0);
+  LATS.(Concatenation(nm, "_", kind)) := rec(n := 0, ne := 0, groups := 0, groups_ne := 0);
 od; od;
 EXAMPLES := [];
+RELS := rec();
 
 for it in [1..NG] do
   if Runtime() - STARTTIME > WATCH * 1000 then Print("WATCH stop\n"); break; fi;
@@ -46,6 +47,7 @@ for it in [1..NG] do
   # nonvacuity on the full lattice: some single term of R_B is <> 0 for some admissible tau
   termsne := ForAny(LA.full, tau -> ForAny([1..DD.n], k -> (rB[k] * tau[k]) mod 9 <> 0));
   if termsne then TOT.full_termsne_groups := TOT.full_termsne_groups + 1; fi;
+  RelChecks(AA, RELS);
   st := OmegaStruct(AA, lg);
   if st.cc9 > 0 then TOT.cc9 := TOT.cc9 + 1; fi;
   if st.cY9 > 0 then TOT.cY9 := TOT.cY9 + 1; fi;
@@ -55,8 +57,8 @@ for it in [1..NG] do
     for kind in ["r", "rB", "dB"] do
       if kind = "r" then vv := r; elif kind = "rB" then vv := rB; else vv := dB; fi;
       key := Concatenation(nm, "_", kind); ne := NeCount(LA.(nm), vv);
-      LT.(key).n := LT.(key).n + Length(LA.(nm)); LT.(key).ne := LT.(key).ne + ne;
-      LT.(key).groups := LT.(key).groups + 1; if ne > 0 then LT.(key).groups_ne := LT.(key).groups_ne + 1; fi;
+      LATS.(key).n := LATS.(key).n + Length(LA.(nm)); LATS.(key).ne := LATS.(key).ne + ne;
+      LATS.(key).groups := LATS.(key).groups + 1; if ne > 0 then LATS.(key).groups_ne := LATS.(key).groups_ne + 1; fi;
       rec_ne.(key) := ne;
     od;
   od;
@@ -79,8 +81,9 @@ FIN := OutputTextFile(Concatenation(OUT, ".final"), false); SetPrintFormattingSt
 nBs := Collected(TOT.nB); Unbind(TOT.nB);
 WriteAll(FIN, Concatenation("TOT ", String(TOT), " nB=", String(nBs), "\n"));
 for nm in LATNAMES do for kind in ["r", "rB", "dB"] do
-  key := Concatenation(nm, "_", kind); WriteAll(FIN, Concatenation("LAT ", key, " ", String(LT.(key)), "\n"));
+  key := Concatenation(nm, "_", kind); WriteAll(FIN, Concatenation("LAT ", key, " ", String(LATS.(key)), "\n"));
 od; od;
+for nm in SortedList(RecNames(RELS)) do WriteAll(FIN, Concatenation("REL ", nm, " ", String(RELS.(nm)), "\n")); od;
 for ex in EXAMPLES do WriteAll(FIN, Concatenation("EX ", String(ex), "\n")); od;
 CloseStream(FIN);
 Print("TOT ", String(TOT), "\n");

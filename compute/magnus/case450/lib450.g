@@ -117,3 +117,34 @@ Lattices450 := function(T, V, TC)
   L.full := TaharaLattice(T, V, TaharaConds(T, V, rec(drop := [])));
   return L;
 end;
+
+# Lemma 11.4 (wiki 891 Sec. 11) in the group: sigma_{gih} = [c_gi, x_h]^{n0}, n0 = min(d(g), d(i), d(h)), lies in
+# gamma_4 and  [Y_g, x_i, x_h] = sigma^{d(g)/n0},  omega(cbar_gi, Ybar_h) = [c_gi, Y_h] = sigma^{d(h)/n0}  (g <> i),
+# and (J) sigma_{abc} sigma_{bca} sigma_{cab} = 1 for distinct a, b, c.  Counted as rec(n, ne, bad):
+# n comparisons, ne = the side is <> 1, bad = failures; "_ctl" = the same with a wrong exponent (control).
+RelChecks := function(T, S)
+  local x, Y, d, s, g, i, h, n0, sg, c, a, b, cc, cnt;
+  x := T.x1; Y := T.Y; d := T.d; s := T.s;
+  cnt := function(nm, lhs, rhs)
+    if not IsBound(S.(nm)) then S.(nm) := rec(n := 0, ne := 0, bad := 0); fi;
+    S.(nm).n := S.(nm).n + 1;
+    if not IsOne(lhs) then S.(nm).ne := S.(nm).ne + 1; fi;
+    if lhs <> rhs then S.(nm).bad := S.(nm).bad + 1; fi;
+  end;
+  sg := function(g, i, h) return Comm(Comm(x[g], x[i]), x[h])^Minimum(d[g], d[i], d[h]); end;
+  for g in [1..s] do for i in [1..s] do if g <> i then for h in [1..s] do
+    n0 := Minimum(d[g], d[i], d[h]);
+    if not IsBound(S.sigma_notin_g4) then S.sigma_notin_g4 := rec(n := 0, ne := 0, bad := 0); fi;
+    S.sigma_notin_g4.n := S.sigma_notin_g4.n + 1;
+    if not sg(g, i, h) in T.L[4] then S.sigma_notin_g4.bad := S.sigma_notin_g4.bad + 1; fi;
+    cnt("tau_sigma", Comm(Comm(Y[g], x[i]), x[h]), sg(g, i, h)^(d[g] / n0));
+    cnt("tau_sigma_ctl", Comm(Comm(Y[g], x[i]), x[h]), sg(g, i, h)^(-d[g] / n0));
+    cnt("om_sigma", Comm(Comm(x[g], x[i]), Y[h]), sg(g, i, h)^(d[h] / n0));
+    cnt("om_sigma_ctl", Comm(Comm(x[g], x[i]), Y[h]), sg(g, i, h)^(-d[h] / n0));
+  od; fi; od; od;
+  for cc in Combinations([1..s], 3) do
+    a := cc[1]; b := cc[2]; c := cc[3];
+    cnt("J", sg(a, b, c) * sg(b, c, a) * sg(c, a, b), One(T.P));
+    cnt("J_ctl", sg(a, b, c) * sg(b, c, a)^-1 * sg(c, a, b), One(T.P));
+  od;
+end;
