@@ -25,7 +25,7 @@ GEOF
   local t1=$(date +%s)
   timeout 3000 python d5s.py ${D5E:-19} < "$d/d5in.jsonl" > "$d/d5s.jsonl" 2> "$d/d5s.err"
   echo "$name gen $((t1-t0)) s d5s $(( $(date +%s)-t1 )) s $(grep FINAL "$d/gap.log") $(tail -1 "$d/d5s.jsonl")" | tee -a "$OUT/times.txt"
-  grep -q '"with_z_in_D5": [1-9]' "$d/d5s.jsonl" && echo "HIT $name" | tee -a "$OUT/HIT"
+  grep -q '"z_in_D5": \[[^]]*true' "$d/d5s.jsonl" && echo "HIT $name" | tee -a "$OUT/HIT"   # per record: also in timed-out shards
   grep -q 'TAHARA g <> 1' "$d/gap.log" && echo "TAHHIT $name" | tee -a "$OUT/HIT"
   echo x > "$ROOT/progress_$name"
 }
