@@ -1,0 +1,36 @@
+TYPE [ 3, 27, 243 ] drop=[ "J" ] cases=224 sigma_nonzero=204 FAILING=0 example\
+s=[  ]
+TYPE [ 3, 27, 27 ] drop=[ "J" ] cases=224 sigma_nonzero=191 FAILING=0 examples\
+=[  ]
+TYPE [ 3, 27, 81 ] drop=[ "J" ] cases=224 sigma_nonzero=204 FAILING=0 examples\
+=[  ]
+TYPE [ 3, 3, 27 ] drop=[ "J" ] cases=224 sigma_nonzero=204 FAILING=0 examples=\
+[  ]
+TYPE [ 3, 3, 3 ] drop=[ "J" ] cases=224 sigma_nonzero=112 FAILING=0 examples=[\
+  ]
+TYPE [ 3, 3, 9 ] drop=[ "J" ] cases=224 sigma_nonzero=204 FAILING=0 examples=[\
+  ]
+TYPE [ 3, 9, 27 ] drop=[ "J" ] cases=224 sigma_nonzero=204 FAILING=0 examples=\
+[  ]
+TYPE [ 3, 9, 81 ] drop=[ "J" ] cases=224 sigma_nonzero=204 FAILING=0 examples=\
+[  ]
+TYPE [ 3, 9, 9 ] drop=[ "J" ] cases=224 sigma_nonzero=191 FAILING=0 examples=[\
+  ]
+TYPE [ 9, 27, 243 ] drop=[ "J" ] cases=224 sigma_nonzero=204 FAILING=0 example\
+s=[  ]
+TYPE [ 9, 27, 27 ] drop=[ "J" ] cases=224 sigma_nonzero=191 FAILING=0 examples\
+=[  ]
+TYPE [ 9, 27, 81 ] drop=[ "J" ] cases=224 sigma_nonzero=204 FAILING=0 examples\
+=[  ]
+TYPE [ 9, 81, 243 ] drop=[ "J" ] cases=224 sigma_nonzero=204 FAILING=0 example\
+s=[  ]
+TYPE [ 9, 81, 729 ] drop=[ "J" ] cases=224 sigma_nonzero=204 FAILING=0 example\
+s=[  ]
+TYPE [ 9, 81, 81 ] drop=[ "J" ] cases=224 sigma_nonzero=191 FAILING=0 examples\
+=[  ]
+TYPE [ 9, 9, 27 ] drop=[ "J" ] cases=224 sigma_nonzero=204 FAILING=0 examples=\
+[  ]
+TYPE [ 9, 9, 81 ] drop=[ "J" ] cases=224 sigma_nonzero=204 FAILING=0 examples=\
+[  ]
+TYPE [ 9, 9, 9 ] drop=[ "J" ] cases=224 sigma_nonzero=180 FAILING=0 examples=[\
+  ]

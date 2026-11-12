@@ -1,0 +1,35 @@
+# MATH-450 (sub-task of MATH-447): D_5 = 1 for finite 3-groups of class <= 4 with gamma_4 = C_9, Q_ab types other
+# than [3,9,9].  Write-up: wiki 891, Sec. 11.  All jobs on kimmy, GAP 4.15 from the mikh cache.
+#
+# 1. Universal model (Prop. 11.5): universal.g (GAP) / universal.sage (Sage 10.9, the same model, used for local
+#    cross-checks).  For a type d, every A/N partition and every lattice 9Z^s + 3Z^N <= K_9 <= K_3, check that the
+#    bilinear form R(lambda, sigma) vanishes on (Tahara vectors with (A) exact and (B), (D2), (D1) in K) x (sigma tensors
+#    with (J), (Kt), (Ko)).  Without (C) the model depends on d only through the capped type (d(1) in {3,9}, ratios in
+#    {1,3,9}), so the capped types represent all types with s generators (18 for s = 3, 54 for s = 4).
+#      s = 3, without (C): kimmy/tm/20261112-151134-case450-univ3-controls-5710316 (line "drop C"):
+#        18/18 types, 224 (A, K_9) pairs each, FAILING = 0                 -> universal_results/s3_drop_C.txt
+#      s = 3, with (C):    kimmy/tm/20261112-145026-case450-univ3-b4f9748: 18/18 literal types, FAILING = 0
+#                                                                            -> universal_results/s3_withC.txt
+#      s = 4, without (C): kimmy/tm/20261112-151251-case450-univ4-noC-5710316 (79 min):
+#        54/54 types, 3392 (A, K_9) pairs each, FAILING = 0; sigma != 0 in 2332-3336 pairs per type
+#                                                                            -> universal_results/s4_noC.txt
+#    Negative controls (s = 3, one relation group dropped; types with a failure / failing pairs):
+#        A 10/238, B 3/7, D1 3/16, D2 12/534, Kt 6/79, Ko 0/0, J 0/0, C 0/0  -> universal_results/s3_drop_*.txt
+#    (The kimmy/tm/20261112-145633-case450-univ3-controls-b4f9748 run is void: DROP was not passed, fixed in 5710316.)
+#    certificate.sage: no K-independent ("uniform") certificate exists for [9,9,9], [3,9,9], [9,9,27] (local runs).
+#
+# 2. Actual groups: run_case450.sh main, kimmy/tm/20261112-151713-case450-main-5710316 (5 min), 740 groups with
+#    gamma_4 = C_9 and cyclic centre; per-shard records results_5710316/<shard>.final, table groups_summary.txt
+#    (python3 sum450.py results_5710316).  Shards: a279/b279 [3,9,27], a339 [3,9,9], a3927 [3,3,9,27], a2727 [3,27,27]
+#    (|B| = 2); a999/b999 [9,9,9], a3999 [3,9,9,9], a9927 [9,9,27], a9999 [9,9,9,9] (|B| >= 3).
+#    - g(tau) = 1 on the full lattice (A)-(F) in all 740 groups.
+#    - Lemma 11.3 in the groups: tau/omega via sigma 18120 comparisons each, 938 / 910 nontrivial, 0 failures,
+#      sign-flipped controls 938 / 910 failures; (J) 1220 triples, 0 failures, control 71; sigma in gamma_4 always.
+#    - Theorem 2 (2g = R) on its lattice: 5 nontrivial vectors (one [3,9,9,9] group), 0 failures.
+#    - Lemma 11.1 (R = R_B on W = (c1) + (B) mod 3 + (D2) mod 3): 0 failures; controls without (B) mod 3 / (D2) mod 3
+#      break it in 4 / 7 groups.
+#    - Theorem 11.2 (|B| = 2: R = 0 on W): 0 failures in 400 groups; control without (D2) mod 3: R != 0 in 38 groups.
+#    - |B| >= 3: R != 0 on W in 14 groups ([9,9,9] 9, [9,9,9,9] 4, [3,9,9,9] 1): the (c1)-(c3) argument cannot work;
+#      (B) and (D2) exact remove it except in the [3,9,9,9] group, where (A) is also needed.
+#    - On the full lattice every single term of R_B is 0 in all 740 groups (the cancellation between terms is not
+#      exercised there; the substantive checks are on W and on the Theorem 2 lattice).
