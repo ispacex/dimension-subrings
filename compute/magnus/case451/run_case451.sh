@@ -11,10 +11,10 @@ cd "$(dirname "$0")/.."                      # compute/magnus
 OUT=${JOB_OUT:-$PWD/case451/out}; mkdir -p "$OUT"; ROOT=${JOB_ROOT:-$OUT}
 C=$PWD/case451
 one() {
-  local name=$1 seed=$2 ng=$3 ks=$4 tops=$5 K=$6 xw=$7 go=$8 f13=$9
+  local name=$1 seed=$2 ng=$3 ks=$4 tops=$5 K=$6 xw=$7 go=$8 f13=$9 f2=${10:-false}
   local d=$OUT/$name; mkdir -p "$d"
   cat > "$d/driver.g" <<GEOF
-MODE := "$name";; NG := $ng;; KS := $ks;; TOPS := $tops;; KG4 := $K;; EXTRAW := $xw;; GENORDER := "$go";; FORCE13 := $f13;;
+MODE := "$name";; NG := $ng;; KS := $ks;; TOPS := $tops;; KG4 := $K;; EXTRAW := $xw;; GENORDER := "$go";; FORCE13 := $f13;; FORCE2 := $f2;;
 MAXV := 1400;; WATCH := ${WATCHS:-2400};; TRIALS := 60;; BIGLAT := 1500;;
 Reset(GlobalMersenneTwister, $seed);; Reset(GlobalRandomSource, $seed);;
 OUT := "$d/run.jsonl";; D5OUT := "$d/d5in.jsonl";;
@@ -33,19 +33,21 @@ export -f one; export OUT ROOT C
 W2='[2,2,3,4]'; W3='[3,2,2,4]'; W1='[2,3,3,4]'
 if [ "$PLAN" = smoke ]; then
   cat > "$OUT/plan.txt" <<PEOF
-s27a 4511 3 [3] [[27,27]] 3 $W2 std true
-s927 4512 3 [3] [[9,27,27]] 3 $W2 std false
+s27a 4511 4 [3] [[27,27]] 3 $W3 std true true
+s927 4512 4 [3] [[9,27,27]] 3 $W3 std false true
 PEOF
 else
   cat > "$OUT/plan.txt" <<PEOF
-a2727 45101 60 [3] [[27,27]] 3 $W2 std true
-b2727 45102 60 [3,4] [[27,27]] 3 $W3 rev true
-c2781 45103 40 [3] [[27,81]] 3 $W2 std true
-d927k2 45104 60 [3] [[9,27]] 2 $W2 std true
-e92727 45105 60 [3] [[9,27,27]] 3 $W2 std false
-f92727 45106 60 [3] [[9,27,27]] 3 $W3 rev false
-g272727 45107 40 [3] [[27,27,27]] 3 $W2 std false
-h92727x 45108 40 [4] [[9,27,27]] 3 $W2 std true
+a2727 45101 80 [3] [[27,27]] 3 $W3 std true true
+b2727 45102 60 [3,4] [[27,27]] 3 $W2 rev true true
+c2781 45103 40 [3] [[27,81]] 3 $W3 std true true
+d927k2 45104 80 [3] [[9,27]] 2 $W3 std true true
+e92727 45105 80 [3] [[9,27,27]] 3 $W3 std false true
+f92727 45106 80 [3] [[9,27,27]] 3 $W2 rev false true
+g272727 45107 50 [3] [[27,27,27]] 3 $W3 std false true
+h92727x 45108 50 [4] [[9,27,27]] 3 $W3 std true true
+i92727p 45109 60 [3] [[9,27,27]] 3 $W2 std false false
+j99927 45110 60 [3] [[9,9,27]] 2 $W3 std false true
 PEOF
 fi
 grep -v '^#' "$OUT/plan.txt" | grep . | xargs -P "$P" -L 1 bash -c 'one "$@"' _

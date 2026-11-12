@@ -14,6 +14,13 @@ RandPG := function(F, g, ord, pqc, extraw)
       rels[i] := rels[i] * Comm(g[p3], Random(g{Difference([1..k], [p3])}))^Random([1, 2]);
     od;
   fi;
+  # FORCE2 (default false): every power word of a generator of order >= 9 gets 1-2 extra weight-2 factors
+  # [g_a, g_b], so that Ybar_i <> 0 in L_2 and the forms omega(cbar, Ybar) are nontrivial more often
+  if IsBound(FORCE2) and FORCE2 then
+    for i in Filtered([1..k], i -> ord[i] >= 9) do
+      for p3 in [1..Random([1, 2])] do rels[i] := rels[i] * Comm(Random(g), Random(g))^Random([1, 2]); od;
+    od;
+  fi;
   Append(rels, List([1..Random([0..k+2])], j -> Product(List([1..Random([1..2])],
     t -> RW(F, Random(extraw))), One(F))));
   Fp := F / Concatenation(rels, W5(F));
