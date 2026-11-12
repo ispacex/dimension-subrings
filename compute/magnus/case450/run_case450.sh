@@ -1,7 +1,7 @@
 #!/bin/bash
 # MATH-450: gamma_4 = C_9, cyclic centre, Q_ab types other than [3,9,9] (wiki 891 Sec. 11).
 # Usage (tm job, tree root, cache mikh): bash compute/magnus/case450/run_case450.sh [smoke|main]
-# Shards: types with |B| = 2 (B = {i : d(i) >= 9}) test Theorem 11.1 (R = 0 on the weak lattice W, with controls);
+# Shards: types with |B| = 2 (B = {i : d(i) >= 9}) test Theorem 11.2 (R = 0 on the weak lattice W, with controls);
 # types with |B| >= 3 locate the obstruction (R on W and on W strengthened) and test g = 1 on the full lattice.
 # Groups as in case446 (OneC9 from lib446.g; EXTRAW [2,2,3,4] = power words of weight 2 or 3, so Ybar_i <> 0 in L_2).
 set -euo pipefail
@@ -26,7 +26,7 @@ if [ "$PLAN" = smoke ]; then
          "s3999 13999 3 [4] [[9,9,9]] $W2 std true 300" "s9927 19927 3 [3] [[27,9,9]] $W2 rev false 300")
   wave2=()
 else
-  # |B| = 2: Theorem 11.1 and its controls
+  # |B| = 2: Theorem 11.2 and its controls
   wave1=("a279 2279 100 [3] [[27,9]] $W2 std true 1500" "b279 3279 100 [3] [[27,9]] $W2 rev false 1500"
          "a339 2339 100 [3] [[9,9]] $W2 rev true 1500" "a3927 23927 60 [4] [[27,9]] $W2 std true 1500"
          "a2727 22727 40 [3] [[27,27]] $W2 rev true 1500")

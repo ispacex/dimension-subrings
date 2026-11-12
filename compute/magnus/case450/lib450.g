@@ -6,7 +6,7 @@
 # r in (Z/9)^n with R(tau) = r . tau mod 9 (discrete log in gamma_4 = <z>).  RVec builds r; RVecB keeps only the terms
 # all of whose indices lie in B = { i : d(i) >= 9 } (the "big" indices).  Claims tested (wiki 891 Sec. 11):
 #   (red)  R = R_B on the weak lattice W = (c1) + (B) mod 3 + (D2) mod 3  [terms with an index of d = 3 vanish]
-#   (two)  |B| <= 2  ==>  R = 0 on W                                          [Theorem 11.1]
+#   (two)  |B| <= 2  ==>  R = 0 on W                                          [Theorem 11.2]
 #   (obs)  |B| >= 3: R on W, and on W with (B) / (D2) / (A) / (E) exact added -- where the (c1)-(c3) argument stops.
 # Every check is counted as rec(n, ne) (vectors, vectors with R <> 0) per lattice; controls are lattices without one
 # of the conditions the argument uses.

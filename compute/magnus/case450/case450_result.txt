@@ -22,13 +22,16 @@
 #    gamma_4 = C_9 and cyclic centre; per-shard records results_5710316/<shard>.final, table groups_summary.txt
 #    (python3 sum450.py results_5710316).  Shards: a279/b279 [3,9,27], a339 [3,9,9], a3927 [3,3,9,27], a2727 [3,27,27]
 #    (|B| = 2); a999/b999 [9,9,9], a3999 [3,9,9,9], a9927 [9,9,27], a9999 [9,9,9,9] (|B| >= 3).
+#    - Series types confirmed from the "d" field of run.jsonl (all groups of a shard have the intended type).
 #    - g(tau) = 1 on the full lattice (A)-(F) in all 740 groups.
 #    - Lemma 11.3 in the groups: tau/omega via sigma 18120 comparisons each, 938 / 910 nontrivial, 0 failures,
 #      sign-flipped controls 938 / 910 failures; (J) 1220 triples, 0 failures, control 71; sigma in gamma_4 always.
 #    - Theorem 2 (2g = R) on its lattice: 5 nontrivial vectors (one [3,9,9,9] group), 0 failures.
 #    - Lemma 11.1 (R = R_B on W = (c1) + (B) mod 3 + (D2) mod 3): 0 failures; controls without (B) mod 3 / (D2) mod 3
 #      break it in 4 / 7 groups.
-#    - Theorem 11.2 (|B| = 2: R = 0 on W): 0 failures in 400 groups; control without (D2) mod 3: R != 0 in 38 groups.
+#    - Theorem 11.2 (|B| = 2: R = 0 on W): 0 failures in 400 groups; control without (D2) mod 3: R != 0 in 38 groups
+#      ([3,9,9], [3,27,27], [3,3,9,27]); in the [3,9,27] shards (200 groups) no control of W ever breaks, so m < n is
+#      tested in groups only positively.
 #    - |B| >= 3: R != 0 on W in 14 groups ([9,9,9] 9, [9,9,9,9] 4, [3,9,9,9] 1): the (c1)-(c3) argument cannot work;
 #      (B) and (D2) exact remove it except in the [3,9,9,9] group, where (A) is also needed.
 #    - On the full lattice every single term of R_B is 0 in all 740 groups (the cancellation between terms is not
