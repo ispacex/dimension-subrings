@@ -658,6 +658,8 @@ def main(argv):
         check(data, index)
         pathlib.Path(args[0]).write_text(lean_file(data, index))
     elif cmd == "tags":
+        if len(args) != 1:
+            sys.exit(__doc__)
         errors = tags(data, pathlib.Path(args[0]).read_text())
         if errors:
             sys.exit("blueprint: @[d5] tags and blueprint.toml differ:\n  " + "\n  ".join(errors))

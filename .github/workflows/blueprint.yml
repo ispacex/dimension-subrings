@@ -54,20 +54,27 @@ jobs:
         working-directory: groups
         run: |
           set -o pipefail
-          lake build GroupDimension
+          lake build GroupDimension GroupDimension.Cert1024.Prop1024
           lake env lean D5Tags.lean 2>&1 | tee tags.log
           python3 ../site/blueprint.py tags tags.log
       - name: negative controls (a missing tag, an extra label, an unregistered D5 tag must fail)
         working-directory: groups
         run: |
-          # drop the last tag line; then add a tag that no node has, and a permanent tag
+          # drop the last tag line; add a wrong label and an unregistered tag to a real tagged declaration;
+          # each must fail with its own message (not with any error)
+          d=GroupDimension.ExpThree.D_five_eq_gamma_five_g4_cube
           n=$(grep -n '"key":' tags.log | tail -1 | cut -d: -f1)
           sed "${n}d" tags.log > tags-missing.log
-          { cat tags.log; echo '{"key":"thm:no_such_label","decl":"GroupDimension.D_five_eq_gamma_five_g4_cube","comment":""}'; } > tags-extra.log
-          { cat tags.log; echo '{"key":"D5:000P","decl":"GroupDimension.D_five_eq_gamma_five_g4_cube","comment":""}'; } > tags-tag.log
-          for f in tags-missing.log tags-extra.log tags-tag.log; do
-            if python3 ../site/blueprint.py tags $f; then echo "::error::the tag check passes $f"; exit 1; fi
-          done
+          { cat tags.log; echo "{\"key\":\"thm:no_such_label\",\"decl\":\"$d\",\"comment\":\"\"}"; } > tags-extra.log
+          { cat tags.log; echo "{\"key\":\"D5:000P\",\"decl\":\"$d\",\"comment\":\"\"}"; } > tags-tag.log
+          check() {
+            if python3 ../site/blueprint.py tags "$1" > neg.out 2>&1; then echo "::error::the tag check passes $1"; exit 1; fi
+            cat neg.out
+            grep -qF "$2" neg.out || { echo "::error::$1 fails for another reason"; exit 1; }
+          }
+          check tags-missing.log 'but not tagged @[d5'
+          check tags-extra.log 'but not in the lean field of node thm:no_such_label'
+          check tags-tag.log 'a tag that no node of blueprint.toml has'
           echo "negative controls: a missing tag, an extra label and an unregistered tag fail, as they should"
       - name: negative control (a name that is not a declaration must fail)
         working-directory: groups
