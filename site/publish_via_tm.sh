@@ -149,6 +149,8 @@ for f in index.html paper.html blueprint/index.html ru/index.html kernel.html se
 done
 GROUPS_SHA=$(awk '$1 == "groups" {print $2}' "$M")
 REGISTRY=$(awk '$1 == "registry" {print $2 " sha256 " $3}' "$M")
+[ -n "$(awk '$1 == "registry" {print $3}' "$M")" ] || die "manifest of $JOB has no registry line (a build older than this script?)"
+[ -n "$(awk '$1 == "sitesearch" {print $2}' "$M")" ] || die "manifest of $JOB has no sitesearch line"
 
 # 4. into the clone of ispacex/d5
 rsync -a --delete --exclude .git "$S/site/" "$D5_CLONE/"
@@ -163,7 +165,7 @@ if [ -n "$deleted" ] && [ "$ALLOW_DEL" = 0 ]; then
   die "$(printf 'would delete from the live site:\n%s\nstopped (pass --allow-deletions if that is meant)' "$deleted")"
 fi
 if [ "$DRY" = 1 ]; then
-  say "dry run: the new site is staged in $D5_CLONE (git -C $D5_CLONE diff --cached); not pushed. Publish this build: --job $JOB"
+  say "dry run: the new site is staged in $D5_CLONE (git -C $D5_CLONE diff --cached); not pushed. Publish this build: --job $JOB --ds $DS_SHA --mikh $MIKH_SHA --kernel $KERNEL_SHA -m ..."
   exit 0
 fi
 

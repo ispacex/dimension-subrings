@@ -139,6 +139,10 @@ git -C "$K" checkout -q "$KERNEL_SHA"
 install_texlive
 install_env
 flock -s 9  # shared from here on: the tools are in use
+# (the switch drops the lock for a moment: check that no other job reinstalled them meanwhile)
+[ -f "$TL/.d5site-$(tl_profile | sha256sum | cut -c1-16)" ] \
+  && [ -f "$ENV/.d5site-$({ echo "$CONDA_SPEC"; cat "$DS/site/blueprint-requirements.txt"; } | sha256sum | cut -c1-16)" ] \
+  || { echo "the tools changed under this job (another d5site job reinstalled them): run it again"; exit 1; }
 
 # the paper as a one-commit repository dated as its last change in mikh: build_site.py reads the
 # "As of" date with git log from it (and would fall back to today, silently, if that failed)
