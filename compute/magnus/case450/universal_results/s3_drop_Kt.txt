@@ -1,0 +1,48 @@
+TYPE [ 3, 27, 243 ] drop=[ "Kt" ] cases=224 sigma_nonzero=224 FAILING=0 exampl\
+es=[  ]
+TYPE [ 3, 27, 27 ] drop=[ "Kt" ] cases=224 sigma_nonzero=224 FAILING=0 example\
+s=[  ]
+TYPE [ 3, 27, 81 ] drop=[ "Kt" ] cases=224 sigma_nonzero=224 FAILING=0 example\
+s=[  ]
+TYPE [ 3, 3, 27 ] drop=[ "Kt" ] cases=224 sigma_nonzero=224 FAILING=0 examples\
+=[  ]
+TYPE [ 3, 3, 3 ] drop=[ "Kt" ] cases=224 sigma_nonzero=196 FAILING=0 examples=\
+[  ]
+TYPE [ 3, 3, 9 ] drop=[ "Kt" ] cases=224 sigma_nonzero=224 FAILING=0 examples=\
+[  ]
+TYPE [ 3, 9, 27 ] drop=[ "Kt" ] cases=224 sigma_nonzero=224 FAILING=8 examples\
+=[ [ [ 1 ], [ [ 3, 0, 1 ], [ 0, 1, 0 ], [ 0, 0, 3 ] ] ], [ [ 1 ], [ [ 3, 0, 1 \
+], [ 0, 1, 1 ], [ 0, 0, 3 ] ] ], [ [ 1 ], [ [ 3, 0, 1 ], [ 0, 1, 2 ], [ 0, 0, \
+3 ] ] ] ]
+TYPE [ 3, 9, 81 ] drop=[ "Kt" ] cases=224 sigma_nonzero=224 FAILING=0 examples\
+=[  ]
+TYPE [ 3, 9, 9 ] drop=[ "Kt" ] cases=224 sigma_nonzero=224 FAILING=16 examples\
+=[ [ [ 1, 2 ], [ [ 3, 0, 1 ], [ 0, 3, 1 ], [ 0, 0, 3 ] ] ], [ [ 1, 2 ], [ [ 3,\
+ 0, 1 ], [ 0, 3, 2 ], [ 0, 0, 3 ] ] ], [ [ 1, 2 ], [ [ 3, 0, 2 ], [ 0, 3, 1 ],\
+ [ 0, 0, 3 ] ] ] ]
+TYPE [ 9, 27, 243 ] drop=[ "Kt" ] cases=224 sigma_nonzero=224 FAILING=0 exampl\
+es=[  ]
+TYPE [ 9, 27, 27 ] drop=[ "Kt" ] cases=224 sigma_nonzero=224 FAILING=17 exampl\
+es=[ [ [  ], [ [ 1, 0, 0 ], [ 0, 1, 1 ], [ 0, 0, 3 ] ] ], [ [  ], [ [ 1, 0, 1 \
+], [ 0, 1, 1 ], [ 0, 0, 3 ] ] ], [ [  ], [ [ 1, 0, 2 ], [ 0, 1, 1 ], [ 0, 0, 3\
+ ] ] ] ]
+TYPE [ 9, 27, 81 ] drop=[ "Kt" ] cases=224 sigma_nonzero=224 FAILING=6 example\
+s=[ [ [ 1 ], [ [ 3, 0, 1 ], [ 0, 1, 0 ], [ 0, 0, 3 ] ] ], [ [ 1 ], [ [ 3, 0, 1\
+ ], [ 0, 1, 1 ], [ 0, 0, 3 ] ] ], [ [ 1 ], [ [ 3, 0, 1 ], [ 0, 1, 2 ], [ 0, 0,\
+ 3 ] ] ] ]
+TYPE [ 9, 81, 243 ] drop=[ "Kt" ] cases=224 sigma_nonzero=224 FAILING=0 exampl\
+es=[  ]
+TYPE [ 9, 81, 729 ] drop=[ "Kt" ] cases=224 sigma_nonzero=224 FAILING=0 exampl\
+es=[  ]
+TYPE [ 9, 81, 81 ] drop=[ "Kt" ] cases=224 sigma_nonzero=224 FAILING=0 example\
+s=[  ]
+TYPE [ 9, 9, 27 ] drop=[ "Kt" ] cases=224 sigma_nonzero=224 FAILING=14 example\
+s=[ [ [ 1 ], [ [ 3, 0, 1 ], [ 0, 1, 0 ], [ 0, 0, 3 ] ] ], [ [ 1 ], [ [ 3, 0, 1\
+ ], [ 0, 1, 1 ], [ 0, 0, 3 ] ] ], [ [ 1 ], [ [ 3, 0, 1 ], [ 0, 1, 2 ], [ 0, 0,\
+ 3 ] ] ] ]
+TYPE [ 9, 9, 81 ] drop=[ "Kt" ] cases=224 sigma_nonzero=224 FAILING=0 examples\
+=[  ]
+TYPE [ 9, 9, 9 ] drop=[ "Kt" ] cases=224 sigma_nonzero=223 FAILING=18 examples\
+=[ [ [ 1, 2 ], [ [ 3, 0, 1 ], [ 0, 3, 2 ], [ 0, 0, 3 ] ] ], [ [ 1, 2 ], [ [ 3,\
+ 0, 2 ], [ 0, 3, 1 ], [ 0, 0, 3 ] ] ], [ [ 1, 2 ], [ [ 3, 3, 0 ], [ 0, 9, 0 ],\
+ [ 0, 0, 1 ] ] ] ]

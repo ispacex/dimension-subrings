@@ -1,0 +1,19 @@
+shard groups |B| gbad g2R_bad g2R_ne sanity cc9 tY9 | R<>0 vectors (groups) per lattice: W_r W_dB WnoB3_dB WnoD23_dB WnoD23_r WB_r WD2_r WBD2_r WBD2A_r thm2_r thm2A_r full_r
+a2727 40 [ [ 2, 40 ] ] 0 0 0 0 0 0 | W_r=0(0) W_dB=0(0) WnoB3_dB=0(0) WnoD23_dB=0(0) WnoD23_r=9(9) WB_r=0(0) WD2_r=0(0) WBD2_r=0(0) WBD2A_r=0(0) thm2_r=0(0) thm2A_r=0(0) full_r=0(0)
+a279 100 [ [ 2, 100 ] ] 0 0 0 0 0 0 | W_r=0(0) W_dB=0(0) WnoB3_dB=0(0) WnoD23_dB=0(0) WnoD23_r=0(0) WB_r=0(0) WD2_r=0(0) WBD2_r=0(0) WBD2A_r=0(0) thm2_r=0(0) thm2A_r=0(0) full_r=0(0)
+a339 100 [ [ 2, 100 ] ] 0 0 0 0 0 0 | W_r=0(0) W_dB=0(0) WnoB3_dB=0(0) WnoD23_dB=0(0) WnoD23_r=24(24) WB_r=0(0) WD2_r=0(0) WBD2_r=0(0) WBD2A_r=0(0) thm2_r=0(0) thm2A_r=0(0) full_r=0(0)
+a3927 60 [ [ 2, 60 ] ] 0 0 0 0 0 0 | W_r=0(0) W_dB=0(0) WnoB3_dB=3(3) WnoD23_dB=10(5) WnoD23_r=10(5) WB_r=0(0) WD2_r=0(0) WBD2_r=0(0) WBD2A_r=0(0) thm2_r=0(0) thm2A_r=0(0) full_r=0(0)
+a3999 60 [ [ 3, 60 ] ] 0 0 5 0 36 1 | W_r=7(1) W_dB=0(0) WnoB3_dB=1(1) WnoD23_dB=5(2) WnoD23_r=58(24) WB_r=4(1) WD2_r=5(1) WBD2_r=2(1) WBD2A_r=0(0) thm2_r=5(1) thm2A_r=0(0) full_r=0(0)
+a9927 40 [ [ 3, 40 ] ] 0 0 0 0 28 1 | W_r=0(0) W_dB=0(0) WnoB3_dB=0(0) WnoD23_dB=0(0) WnoD23_r=1(1) WB_r=0(0) WD2_r=0(0) WBD2_r=0(0) WBD2A_r=0(0) thm2_r=0(0) thm2A_r=0(0) full_r=0(0)
+a999 100 [ [ 3, 100 ] ] 0 0 0 0 67 4 | W_r=7(4) W_dB=0(0) WnoB3_dB=0(0) WnoD23_dB=0(0) WnoD23_r=7(4) WB_r=3(3) WD2_r=4(4) WBD2_r=0(0) WBD2A_r=0(0) thm2_r=0(0) thm2A_r=0(0) full_r=0(0)
+a9999 40 [ [ 4, 40 ] ] 0 0 0 0 40 4 | W_r=9(4) W_dB=0(0) WnoB3_dB=0(0) WnoD23_dB=0(0) WnoD23_r=10(5) WB_r=6(3) WD2_r=3(3) WBD2_r=0(0) WBD2A_r=0(0) thm2_r=0(0) thm2A_r=0(0) full_r=0(0)
+b279 100 [ [ 2, 100 ] ] 0 0 0 0 0 0 | W_r=0(0) W_dB=0(0) WnoB3_dB=0(0) WnoD23_dB=0(0) WnoD23_r=0(0) WB_r=0(0) WD2_r=0(0) WBD2_r=0(0) WBD2A_r=0(0) thm2_r=0(0) thm2A_r=0(0) full_r=0(0)
+b999 100 [ [ 3, 100 ] ] 0 0 0 0 76 5 | W_r=8(5) W_dB=0(0) WnoB3_dB=0(0) WnoD23_dB=0(0) WnoD23_r=15(8) WB_r=5(5) WD2_r=3(3) WBD2_r=0(0) WBD2A_r=0(0) thm2_r=0(0) thm2A_r=0(0) full_r=0(0)
+Lemma 11.3 in the groups (n, side<>1, failures):
+   J [1220, 0, 0]
+   J_ctl [1220, 71, 71]
+   om_sigma [18120, 910, 0]
+   om_sigma_ctl [18120, 910, 910]
+   sigma_notin_g4 [18120, 0, 0]
+   tau_sigma [18120, 938, 0]
+   tau_sigma_ctl [18120, 938, 938]

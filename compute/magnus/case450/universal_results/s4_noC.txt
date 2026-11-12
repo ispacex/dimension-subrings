@@ -1,0 +1,108 @@
+TYPE [ 3, 27, 243, 2187 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0\
+ examples=[  ]
+TYPE [ 3, 27, 243, 243 ] drop=[ "C" ] cases=3392 sigma_nonzero=3299 FAILING=0 \
+examples=[  ]
+TYPE [ 3, 27, 243, 729 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 \
+examples=[  ]
+TYPE [ 3, 27, 27, 243 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 e\
+xamples=[  ]
+TYPE [ 3, 27, 27, 27 ] drop=[ "C" ] cases=3392 sigma_nonzero=3268 FAILING=0 ex\
+amples=[  ]
+TYPE [ 3, 27, 27, 81 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 ex\
+amples=[  ]
+TYPE [ 3, 27, 81, 243 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 e\
+xamples=[  ]
+TYPE [ 3, 27, 81, 729 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 e\
+xamples=[  ]
+TYPE [ 3, 27, 81, 81 ] drop=[ "C" ] cases=3392 sigma_nonzero=3299 FAILING=0 ex\
+amples=[  ]
+TYPE [ 3, 3, 27, 243 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 ex\
+amples=[  ]
+TYPE [ 3, 3, 27, 27 ] drop=[ "C" ] cases=3392 sigma_nonzero=3299 FAILING=0 exa\
+mples=[  ]
+TYPE [ 3, 3, 27, 81 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 exa\
+mples=[  ]
+TYPE [ 3, 3, 3, 27 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 exam\
+ples=[  ]
+TYPE [ 3, 3, 3, 3 ] drop=[ "C" ] cases=3392 sigma_nonzero=2332 FAILING=0 examp\
+les=[  ]
+TYPE [ 3, 3, 3, 9 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 examp\
+les=[  ]
+TYPE [ 3, 3, 9, 27 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 exam\
+ples=[  ]
+TYPE [ 3, 3, 9, 81 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 exam\
+ples=[  ]
+TYPE [ 3, 3, 9, 9 ] drop=[ "C" ] cases=3392 sigma_nonzero=3299 FAILING=0 examp\
+les=[  ]
+TYPE [ 3, 9, 27, 243 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 ex\
+amples=[  ]
+TYPE [ 3, 9, 27, 27 ] drop=[ "C" ] cases=3392 sigma_nonzero=3299 FAILING=0 exa\
+mples=[  ]
+TYPE [ 3, 9, 27, 81 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 exa\
+mples=[  ]
+TYPE [ 3, 9, 81, 243 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 ex\
+amples=[  ]
+TYPE [ 3, 9, 81, 729 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 ex\
+amples=[  ]
+TYPE [ 3, 9, 81, 81 ] drop=[ "C" ] cases=3392 sigma_nonzero=3299 FAILING=0 exa\
+mples=[  ]
+TYPE [ 3, 9, 9, 27 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 exam\
+ples=[  ]
+TYPE [ 3, 9, 9, 81 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 exam\
+ples=[  ]
+TYPE [ 3, 9, 9, 9 ] drop=[ "C" ] cases=3392 sigma_nonzero=3268 FAILING=0 examp\
+les=[  ]
+TYPE [ 9, 27, 243, 2187 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0\
+ examples=[  ]
+TYPE [ 9, 27, 243, 243 ] drop=[ "C" ] cases=3392 sigma_nonzero=3299 FAILING=0 \
+examples=[  ]
+TYPE [ 9, 27, 243, 729 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 \
+examples=[  ]
+TYPE [ 9, 27, 27, 243 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 e\
+xamples=[  ]
+TYPE [ 9, 27, 27, 27 ] drop=[ "C" ] cases=3392 sigma_nonzero=3268 FAILING=0 ex\
+amples=[  ]
+TYPE [ 9, 27, 27, 81 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 ex\
+amples=[  ]
+TYPE [ 9, 27, 81, 243 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 e\
+xamples=[  ]
+TYPE [ 9, 27, 81, 729 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 e\
+xamples=[  ]
+TYPE [ 9, 27, 81, 81 ] drop=[ "C" ] cases=3392 sigma_nonzero=3299 FAILING=0 ex\
+amples=[  ]
+TYPE [ 9, 81, 243, 2187 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0\
+ examples=[  ]
+TYPE [ 9, 81, 243, 243 ] drop=[ "C" ] cases=3392 sigma_nonzero=3299 FAILING=0 \
+examples=[  ]
+TYPE [ 9, 81, 243, 729 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 \
+examples=[  ]
+TYPE [ 9, 81, 729, 2187 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0\
+ examples=[  ]
+TYPE [ 9, 81, 729, 6561 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0\
+ examples=[  ]
+TYPE [ 9, 81, 729, 729 ] drop=[ "C" ] cases=3392 sigma_nonzero=3299 FAILING=0 \
+examples=[  ]
+TYPE [ 9, 81, 81, 243 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 e\
+xamples=[  ]
+TYPE [ 9, 81, 81, 729 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 e\
+xamples=[  ]
+TYPE [ 9, 81, 81, 81 ] drop=[ "C" ] cases=3392 sigma_nonzero=3268 FAILING=0 ex\
+amples=[  ]
+TYPE [ 9, 9, 27, 243 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 ex\
+amples=[  ]
+TYPE [ 9, 9, 27, 27 ] drop=[ "C" ] cases=3392 sigma_nonzero=3299 FAILING=0 exa\
+mples=[  ]
+TYPE [ 9, 9, 27, 81 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 exa\
+mples=[  ]
+TYPE [ 9, 9, 81, 243 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 ex\
+amples=[  ]
+TYPE [ 9, 9, 81, 729 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 ex\
+amples=[  ]
+TYPE [ 9, 9, 81, 81 ] drop=[ "C" ] cases=3392 sigma_nonzero=3299 FAILING=0 exa\
+mples=[  ]
+TYPE [ 9, 9, 9, 27 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 exam\
+ples=[  ]
+TYPE [ 9, 9, 9, 81 ] drop=[ "C" ] cases=3392 sigma_nonzero=3336 FAILING=0 exam\
+ples=[  ]
+TYPE [ 9, 9, 9, 9 ] drop=[ "C" ] cases=3392 sigma_nonzero=3239 FAILING=0 examp\
+les=[  ]
