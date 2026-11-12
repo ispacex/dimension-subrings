@@ -4,7 +4,7 @@
 #   lean: every Lean declaration the blueprint names exists, checked by Lean itself (the equivalent of
 #         `leanblueprint checkdecls`): a generated file #checks each of them against the package
 #         pinned in groups/;
-#         It also compares the attribute @[d5 "label"] of the package (MATH-453; `#d5_tags`, printed by
+#         It also compares the attribute @[d5 ...] of the package (MATH-453; `#d5_tags`, printed by
 #         groups/D5Tags.lean) with the nodes: the (label, declaration) pairs must be the same, so a
 #         tag in the code cannot drift from blueprint.toml, which stays the source of truth;
 #   web:  the leanblueprint pages build (plasTeX, versions pinned in site/blueprint-requirements.txt).
@@ -57,17 +57,18 @@ jobs:
           lake build GroupDimension
           lake env lean D5Tags.lean 2>&1 | tee tags.log
           python3 ../site/blueprint.py tags tags.log
-      - name: negative controls (a missing and an extra tag must fail)
+      - name: negative controls (a missing tag, an extra label, an unregistered D5 tag must fail)
         working-directory: groups
         run: |
-          # drop the last tag line; then add a tag that no node has
-          n=$(grep -n 'd5 "' tags.log | tail -1 | cut -d: -f1)
+          # drop the last tag line; then add a tag that no node has, and a permanent tag
+          n=$(grep -n '"key":' tags.log | tail -1 | cut -d: -f1)
           sed "${n}d" tags.log > tags-missing.log
-          { cat tags.log; echo 'd5 "thm:no_such_label": GroupDimension.D_five_eq_gamma_five_g4_cube'; } > tags-extra.log
-          for f in tags-missing.log tags-extra.log; do
+          { cat tags.log; echo '{"key":"thm:no_such_label","decl":"GroupDimension.D_five_eq_gamma_five_g4_cube","comment":""}'; } > tags-extra.log
+          { cat tags.log; echo '{"key":"D5:000P","decl":"GroupDimension.D_five_eq_gamma_five_g4_cube","comment":""}'; } > tags-tag.log
+          for f in tags-missing.log tags-extra.log tags-tag.log; do
             if python3 ../site/blueprint.py tags $f; then echo "::error::the tag check passes $f"; exit 1; fi
           done
-          echo "negative controls: a missing and an extra tag fail, as they should"
+          echo "negative controls: a missing tag, an extra label and an unregistered tag fail, as they should"
       - name: negative control (a name that is not a declaration must fail)
         working-directory: groups
         run: |

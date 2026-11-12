@@ -25,7 +25,7 @@ the formalization), and a statement the paper calls formally verified has declar
 namespace and name; that Lean knows it is the CI check), and every declaration of a paper statement is
 named in the section on the formalization; a row of results.html marked Lean cites only statements
 whose proof is in Lean, and every {{lean:...}} of a row is a declaration of some node. `tags`: the
-declarations tagged @[d5 "label"] in groups/ (GroupDimension/D5Tag.lean, MATH-453) are exactly those of
+declarations tagged @[d5 "label"] (or a tag @[d5 XXXX]) in groups/ (GroupDimension/D5Tag.lean, MATH-453) are exactly those of
 the nodes, label by label; this file stays the source of truth and the attribute is checked against it.
 """
 import json
@@ -117,27 +117,44 @@ def lean_file(data, index):
             + "".join(f"#check @{x}\n" for x in names))
 
 
-TAG_LINE = re.compile(r'^(?:.*: info: )?d5 "([^"]+)": (\S+)$')  # the first line has Lean's prefix
-
-
 def tag_pairs(data):
-    """The (label, declaration) pairs of the blueprint: one per declaration of a node's `lean`."""
+    """The (key, declaration) pairs of the blueprint: one per declaration of a node's `lean`, the key
+    being the node's label."""
     return {(label, x) for label, n in data["nodes"].items() for x in n["lean"]}
 
 
+def tag_entries(log):
+    """The (key, declaration) pairs printed by `#d5_tags` (groups/D5Tags.lean): one JSON object
+    {"comment", "decl", "key"} per line; the first line of the message carries Lean's prefix."""
+    got = set()
+    for ln in log.splitlines():
+        i = ln.find('{"')
+        if i >= 0 and '"key":' in ln:
+            e = json.loads(ln[i:])
+            got.add((e["key"], e["decl"]))
+    return got
+
+
 def tags(data, log):
-    """The attribute @[d5 "label"] of groups/ (MATH-453) against blueprint.toml, which stays the source
-    of truth: the pairs printed by `#d5_tags` must be exactly those of the nodes. A list of
-    differences, empty if they agree."""
-    got = {m.groups() for m in map(TAG_LINE.match, log.splitlines()) if m}
+    """The attribute @[d5 ...] of groups/ (GroupDimension/D5Tag.lean; MATH-453, MATH-458) against
+    blueprint.toml, which stays the source of truth: the (key, declaration) pairs printed by
+    `#d5_tags` must be exactly those of the nodes. Keys are the labels of the nodes; a permanent tag
+    D5:XXXX (wiki 912) is not registered in blueprint.toml yet (MATH-457), so one in the code is a
+    difference too. A list of differences, empty if they agree."""
+    got = tag_entries(log)
     want = tag_pairs(data)
     errors = []
     if ": error" in log:
         errors.append("Lean reported an error (see the log)")
-    for label, x in sorted(want - got):
-        errors.append(f"{x}: in node {label} of blueprint.toml, but not tagged @[d5 \"{label}\"]")
-    for label, x in sorted(got - want):
-        errors.append(f"{x}: tagged @[d5 \"{label}\"], but not in the lean field of node {label}")
+    if not got:
+        errors.append("no @[d5] entries in the log")
+    for key, x in sorted(want - got):
+        errors.append(f"{x}: in node {key} of blueprint.toml, but not tagged @[d5 \"{key}\"]")
+    for key, x in sorted(got - want):
+        if key.startswith("D5:"):
+            errors.append(f"{x}: tagged {key}, a tag that no node of blueprint.toml has (tags: MATH-457)")
+        else:
+            errors.append(f"{x}: tagged @[d5 \"{key}\"], but not in the lean field of node {key}")
     return errors
 
 
