@@ -8,7 +8,7 @@ The static site on the D_5 problem: https://ispacex.github.io/d5/
 PAPER_DIR holds the paper draft, d5.tex and d5-ru.tex (its source is kept elsewhere); both are
 compiled here with pdflatex, so the PDFs on the site are always those of the sources read. These two are
 the "lab notebook" (status markers, the tracker, how each run was made), and everything on the site that
-links into the paper links into them. If PAPER_DIR also has d5-preprint.tex, the arXiv version (EN only,
+links into the paper links into them. If PAPER_DIR also has d5-preprint.tex, the concise preprint (EN only,
 its own numbering), it is compiled too, shown by preprint-viewer.html and offered on paper.html next to
 the notebook; nothing links into it by label. Without it the build is as before. ARXIV_ID, once known,
 adds the arXiv link.
@@ -93,7 +93,7 @@ LANGS = ("ru", "en")
 SITE_TITLE = {"ru": "Задача о $D_5$", "en": "The $D_5$ problem"}
 REPO = "https://github.com/ispacex/dimension-subrings"
 PDF = {"en": "d5", "ru": "d5-ru"}  # paper/<name>.pdf of each language
-PREPRINT = "d5-preprint"  # paper/<name>.tex: the arXiv version, compiled and shown only if PAPER has it
+PREPRINT = "d5-preprint"  # paper/<name>.tex: the concise preprint, compiled and shown only if PAPER has it
 ARXIV_ID = None  # e.g. "2611.01234" once the preprint is on arXiv: paper.html then links to arxiv.org/abs/<id>
 
 
@@ -279,7 +279,7 @@ html:not(.js) .bpf { display:none; }
 .bpf button:hover { border-color:var(--acc); }
 .bpf button:focus-visible { outline:2px solid var(--acc); outline-offset:1px; }
 .bpf button[aria-pressed="true"] { background:var(--acc); border-color:var(--acc); color:var(--bg); }
-.bpf button .n { color:var(--muted); margin-left:.3em; font-variant-numeric:tabular-nums; }
+.bpf button .n { color:var(--muted); margin-left:.1em; font-variant-numeric:tabular-nums; }
 .bpf button[aria-pressed="true"] .n { color:inherit; opacity:.85; }
 .bpf button.zero:not([aria-pressed="true"]) { opacity:.5; }
 .bpf .fs { display:flex; flex-wrap:wrap; align-items:center; gap:.6rem; font-size:.85rem; color:var(--muted); }
@@ -396,8 +396,6 @@ def theme_switch(lang):
         f'<svg viewBox="0 0 24 24" aria-hidden="true">{th[3]}</svg></button>' for th in THEMES) + "</span>")
 
 
-# The contents on the right of a long page (as on ispacex.github.io/gap/findings.html): sticky, shown
-# from 1180px on, the section being read marked as the page scrolls.
 # The filters of blueprint.html (MATH-316). Within a facet the chosen values are alternatives, the facets
 # combine; none chosen in a facet = all. The count of a button is the number of rows it would show with
 # the other facet as chosen. The choice is in the hash (#type=theorem,lemma&status=lean), so a filtered
@@ -406,6 +404,7 @@ BP_FILTER_JS = """<script>(function(){var bar=document.getElementById('bpf'),tb=
 var rows=[].slice.call(tb.tBodies[0].rows),groups=[].slice.call(bar.querySelectorAll('.fg')),all=bar.querySelector('.all'),
 st=bar.querySelector('[role=status]'),of=bar.getAttribute('data-of'),F=groups.map(function(g){return g.getAttribute('data-f')}),sel={};
 var none=document.createElement('p');none.className='muted';none.hidden=true;none.textContent='__NONE__';tb.parentNode.parentNode.insertBefore(none,tb.parentNode.nextSibling);
+function dec(){var h=location.hash.slice(1);try{return decodeURIComponent(h)}catch(e){return h}}
 function ok(r,skip){for(var i=0;i<F.length;i++){var f=F[i],s=sel[f];if(f!==skip&&s.length&&s.indexOf(r.getAttribute('data-'+f))<0)return false}return true}
 function apply(){var n=0;rows.forEach(function(r){var v=ok(r);r.classList.toggle('bpf-hide',!v);n+=v});
 groups.forEach(function(g){var f=g.getAttribute('data-f');[].forEach.call(g.querySelectorAll('button'),function(b){var v=b.getAttribute('data-v'),
@@ -414,17 +413,19 @@ b.querySelector('.n').textContent=c;b.classList.toggle('zero',!c)})});
 var any=F.some(function(f){return sel[f].length});all.disabled=!any;none.hidden=n>0;tb.parentNode.hidden=!n;
 st.textContent=any?'__SHOWN__ '+n+' '+of+' '+rows.length:''}
 function hash(){return F.filter(function(f){return sel[f].length}).map(function(f){return f+'='+sel[f].join(',')}).join('&')}
-function read(){var h=decodeURIComponent(location.hash.slice(1)),m={};F.forEach(function(f){sel[f]=[]});
+function read(){var h=dec(),m={};F.forEach(function(f){sel[f]=[]});
 if(!/^(type|status)=/.test(h))return;h.split('&').forEach(function(p){var kv=p.split('=');if(F.indexOf(kv[0])>=0)m[kv[0]]=(kv[1]||'').split(',').filter(Boolean)});
-F.forEach(function(f){var ok=[].map.call(bar.querySelectorAll('[data-f="'+f+'"] button'),function(b){return b.getAttribute('data-v')});
-sel[f]=(m[f]||[]).filter(function(v){return ok.indexOf(v)>=0})})}
+F.forEach(function(f){var vs=[].map.call(bar.querySelectorAll('[data-f="'+f+'"] button'),function(b){return b.getAttribute('data-v')});
+sel[f]=(m[f]||[]).filter(function(v){return vs.indexOf(v)>=0})})}
 function write(){var h=hash();if(history.replaceState)history.replaceState(null,'',h?'#'+h:location.pathname+location.search);else location.hash=h}
 groups.forEach(function(g){var f=g.getAttribute('data-f');g.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
 var v=b.getAttribute('data-v'),i=sel[f].indexOf(v);if(i<0)sel[f].push(v);else sel[f].splice(i,1);write();apply()})});
-all.addEventListener('click',function(){F.forEach(function(f){sel[f]=[]});write();apply()});
-window.addEventListener('hashchange',function(){var h=decodeURIComponent(location.hash.slice(1)),r=h&&document.getElementById(h);
+all.addEventListener('click',function(){F.forEach(function(f){sel[f]=[]});write();apply();bar.querySelector('button[data-v]').focus()});
+window.addEventListener('hashchange',function(){var h=dec(),r=h&&document.getElementById(h);
 if(/^(type|status)=/.test(h)||!h){read();apply()}else if(r&&r.classList.contains('bpf-hide')){F.forEach(function(f){sel[f]=[]});apply();r.scrollIntoView()}});
 read();apply()})()</script>"""
+# The contents on the right of a long page (as on ispacex.github.io/gap/findings.html): sticky, shown
+# from 1180px on, the section being read marked as the page scrolls.
 SIDE_JS = """<script>(function(){var a=document.querySelectorAll('aside.side a');if(!a.length||!('IntersectionObserver' in window))return;
 var m={},h=[],cur=null;for(var i=0;i<a.length;i++){var id=decodeURIComponent(a[i].getAttribute('href').slice(1)),e=document.getElementById(id);if(e){m[id]=a[i];h.push(e)}}
 function mark(id){if(cur)cur.classList.remove('on');cur=m[id]||null;if(cur){cur.classList.add('on');
@@ -712,7 +713,8 @@ def table(head, rows, ids=None, attrs=None, tid=None):
     body = "".join("<tr" + (f' id="{ids[k]}"' if ids else "") + (f" {attrs[k]}" if attrs else "") + ">"
                    + "".join(cell("td", c) for c in r) + "</tr>"
                    for k, r in enumerate(rows))
-    return (f'<div class="tw"><table{f" id={chr(34)}{tid}{chr(34)}" if tid else ""}><thead><tr>{th}</tr></thead>'
+    tid_attr = f' id="{tid}"' if tid else ""
+    return (f'<div class="tw"><table{tid_attr}><thead><tr>{th}</tr></thead>'
             f'<tbody>{body}</tbody></table></div>')
 
 
@@ -2094,7 +2096,7 @@ cloud with the current registry entry, in English as well; the number of a state
             if unknown:
                 sys.exit(f"blueprint.html: no filter name for {key} {sorted(unknown)}")
             chips = "".join(f'<button type="button" data-v="{v}" aria-pressed="false">{names[v]}'
-                            f'<span class="n">{vals.count(v)}</span></button>'
+                            f' <span class="n">{vals.count(v)}</span></button>'
                             for v in names if v in vals)
             out += (f'<div class="fg" role="group" aria-labelledby="bpf-{key}" data-f="{key}">'
                     f'<span class="fl" id="bpf-{key}">{label}</span>{chips}</div>')
