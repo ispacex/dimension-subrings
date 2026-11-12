@@ -1287,10 +1287,13 @@ def kernel_tasks(md):
     return "\n".join(re.sub(r"MATH-\d+", lambda m: KERNEL_TASKS[m.group(0)] if line.startswith("#")
                             else f"[{KERNEL_TASKS[m.group(0)]}]({TASK_URL}{KERNEL_TASKS[m.group(0)]})", line)
                      for line in md.split("\n"))  # kernel/<name> of each language
-KERNEL_TEX_HEAD = r"""\directlua{luaotfload.add_fallback("fb", {"STIX Two Math:", "Apple Symbols:", "Menlo:"})}
+# Apple Symbols and Menlo are fonts of macOS; elsewhere (the tm runner, site/tm_build.sh) their places are
+# taken by DejaVu Sans and DejaVu Sans Mono of TeX Live.
+KERNEL_SYMBOLS, KERNEL_MONO = ("Apple Symbols", "Menlo") if sys.platform == "darwin" else ("DejaVu Sans", "DejaVu Sans Mono")
+KERNEL_TEX_HEAD = r"""\directlua{luaotfload.add_fallback("fb", {"STIX Two Math:", "%s:", "%s:"})}
 \setmainfont{STIX Two Text}[RawFeature={fallback=fb}]
-\setmonofont{Menlo}[Scale=0.85,RawFeature={fallback=fb}]
-"""
+\setmonofont{%s}[Scale=0.85,RawFeature={fallback=fb}]
+""" % (KERNEL_SYMBOLS, KERNEL_MONO, KERNEL_MONO)
 # Nothing of the PDF runs past the margin: a pandoc filter lets inline code break after / _ . - , =
 # and an inline formula after a comma outside braces, and gives a table too wide for the page column
 # widths (each column at least its longest word, the rest by how much text it has; set smaller if the
@@ -1398,7 +1401,7 @@ def kernel_tex(tex):
 
 def kernel_pdf(lang, md):
     """kernel/<KERNEL_PDF>: the same markdown through pandoc and LuaLaTeX (STIX Two, glyphs it lacks from
-    STIX Two Math, Apple Symbols and Menlo); the title is the document's own, the subtitle its commit."""
+    STIX Two Math, Apple Symbols and Menlo, or DejaVu off macOS); the title is the document's own, the subtitle its commit."""
     title = re.match(r"# ([^\n]*)\n", md).group(1)
     body = md[len(title) + 3:]
     body = re.sub(r"\$\$(.+?)\$\$", lambda m: "$$" + kernel_tex(m.group(1)) + "$$", body, flags=re.S)
