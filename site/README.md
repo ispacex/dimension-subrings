@@ -18,11 +18,16 @@ repository is private, so the paper travels in the job's tree), the runner clone
 dimension-subrings (`--ds`, default `origin/main`: it must be pushed), groups and cflint-fast-core
 (`--kernel`, default `main`), builds the blueprint (plasTeX), the site and the two-tier search
 index, and returns `site.tar.gz` with `files.sha256` and `manifest.txt` (commits, tool versions).
-The Mac fetches them, checks every file and the guard (`index.html`, `paper.html`,
-`blueprint/index.html`, `ru/index.html`, `kernel.html` non-empty), copies the site over a clean
-clone of ispacex/d5 and pushes only if something changed and nothing would be deleted
-(`--allow-deletions` when that is meant). The deploy credentials stay on the Mac. It refuses a mikh
-commit that does not descend from the one the live site names. `--job JOB` reuses a finished build.
+The Mac fetches them, checks that the manifest names the commits asked for, every file against
+`files.sha256` and the guard (`index.html`, `paper.html`, `blueprint/index.html`, `ru/index.html`,
+`kernel.html`, `search-index.json` non-empty), copies the site over a clean clone of ispacex/d5 and
+pushes only if something changed and nothing would be deleted (`--allow-deletions` when that is
+meant). The deploy credentials stay on the Mac. It refuses a mikh commit that does not descend from
+the one the live site's commit messages name (`--no-ancestry-check` when none is named). The site
+commit names the commits, the registry set (fetched at build time) and the tm job. `--job JOB`
+reuses a finished build of the same commits, e.g. the one a `--dry-run` made. The job runs the
+`tm_build.sh` of the dimension-subrings commit it builds, so a change to it is tried with
+`--ds origin/<branch>`.
 
 The job runs on hel24 (`--runner R` for another; kimmy is kept for the Lean and GAP jobs). The tools
 are installed by the first job on a runner into `$JOB_CACHE/d5site` of the cache `mikh` (TeX Live,
