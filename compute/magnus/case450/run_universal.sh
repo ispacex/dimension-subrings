@@ -18,9 +18,10 @@ for d1 in (3,9):
     print(','.join(map(str,d)))")
 dropg='[]'
 if [ -n "$DROP" ]; then dropg="[\"$(echo "$DROP" | sed 's/,/","/g')\"]"; fi
+export OUT dropg
 echo "$types" | xargs -P "$PAR" -I{} bash -c '
-  t={}; f='"$OUT"'/u_$(echo $t | tr , _).txt
-  echo "DT := [$t];; DROP := '"$dropg"';; OUTF := \"$f\";; Read(\"universal.g\");; QUIT;" > "$f.g"
+  t={}; f=$OUT/u_$(echo $t | tr , _).txt
+  printf "DT := [%s];; DROP := %s;; OUTF := \"%s\";; Read(\"universal.g\");; QUIT;\n" "$t" "$dropg" "$f" > "$f.g"
   timeout 20000 gap -q -b -o 3g "$f.g" > "$f.log" 2>&1 || echo "FAILED $t" >> "$f"
 '
 cat "$OUT"/u_*.txt | tee "$OUT/summary.txt"
