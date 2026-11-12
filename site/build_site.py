@@ -227,6 +227,7 @@ figure.scene { margin:1rem 0; } figure.scene iframe { border:0; width:100%; max-
 figure.scene figcaption { font-size:.88rem; color:var(--muted); margin-top:.3rem; }
 dl.terms dt { font-weight:600; margin-top:.8rem; } dl.terms dd { margin:.2rem 0 0 1.2rem; } dl.terms dd p { margin:.2rem 0; }
 div.claim { margin:.9rem 0; } div.claim > p:first-child { margin-bottom:.2rem; } div.claim .st { margin-left:1.2rem; }
+p.mt { font-size:.82rem; color:var(--muted); font-style:italic; margin:.15rem 0 0; }
 .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(15rem,1fr)); gap:.8rem; margin:1rem 0; }
 .card { border:1px solid var(--line); border-radius:8px; padding:.7rem .9rem; background:var(--soft); }
 .card h3 { margin:.1rem 0 .4rem; font-size:1rem; } .card .big { font-size:1.35rem; font-weight:600; }
@@ -415,7 +416,7 @@ def page(lang, fn, title, body, date, contact=False, side=None):
 <html lang="{lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 {THEME_HEAD}
 <title>{html.escape(plain(title))} — {html.escape(plain(SITE_TITLE[lang]))}</title>{alt}{og_tags(lang, fn, plain(title) if fn == "index.html" else f"{plain(title)} — {plain(SITE_TITLE[lang])}", blurb(lang, body))}
-<style>{CSS}</style>{KATEX}{EMBED_SCRIPT if "data-kaiku-" in body else ""}</head>
+<style>{CSS}</style>{KATEX}{embed_script(lang) if "data-kaiku-" in body else ""}</head>
 <body{' class="has-side"' if side else ""}><header><div class="wrap"><div class="top"><a class="title" href="index.html">{SITE_TITLE[lang]}</a>
 <div class="tools"><span class="pal"></span>{theme_switch(lang)}{switch}</div></div>
 <nav aria-label="{"Разделы" if lang == "ru" else "Sections"}">{nav}</nav></div></header>
@@ -730,7 +731,7 @@ OPEN = [  # (id, ru, en, task): the id is the anchor on open.html; task is the D
 # keeps a register of terms and of the paper's claims (label, number, statement, status); the set
 # EMBED_SET puts a hand-picked list of them out. The set is public data: CORS lets browsers read it only
 # on this origin, but anyone may fetch it. They come in twice: the build reads the set (registry()) and writes its texts into
-# definitions.html, so the page has them without scripts and in the search; and EMBED_SCRIPT, the
+# definitions.html, so the page has them without scripts and in the search; and embed_script(), the
 # tracker's script, opens the current text of a term or claim in a cloud over every mark
 #     <span data-kaiku-term="кандидат">…</span>    <span data-kaiku-claim="thm:g4cube">…</span>
 # (term(), claim_mark()). A term is named by its word or a spelling of it, a claim by its label. The texts
@@ -742,9 +743,21 @@ OPEN = [  # (id, ru, en, task): the id is the anchor on open.html; task is the D
 # the pages with marks. SCENE is the anim
 # scene of the MATH wiki page 899, one block per language (its embed id, the caption, the frame's
 # title), shown in a frame the tracker serves only to this origin.
+# The English pages show the tracker's machine translations of the texts (PM-1373): the build reads the
+# set a second time with ?lang=en (REGISTRY_EN) and the clouds ask for English (data-kaiku-lang="en" on
+# the script). A translation is made by the tracker off the request, so the first request after a text
+# changes may answer "pending": the build then stops (run it again in a few minutes) rather than publish
+# the Russian text or an outdated translation on an English page. Every machine-translated text carries
+# the tracker's note ("Machine-translated from Russian"), on the page as in the cloud.
 EMBED_ORIGIN = "https://default.kaiku.tech"
 EMBED_SET = "b05bdc8cc4fcbe702bbb57f83374b96502b3ffa34bdc6bfd"
-EMBED_SCRIPT = f'<script src="{EMBED_ORIGIN}/embed/kaiku.js" data-kaiku-set="{EMBED_SET}" async></script>'
+
+
+def embed_script(lang):
+    ask = ' data-kaiku-lang="en"' if lang == "en" else ""
+    return f'<script src="{EMBED_ORIGIN}/embed/kaiku.js" data-kaiku-set="{EMBED_SET}"{ask} async></script>'
+
+
 SCENE = {"ru": ("112e0a885b56ad8911a65c34f33c488546ef849be52dcc48",
                 "Нижний центральный ряд, размерные подгруппы и вопрос $D_5\\subseteq\\gamma_4$",
                 "Нижний центральный ряд, размерные подгруппы и вопрос D₅ ⊆ γ₄"),
@@ -754,12 +767,16 @@ SCENE = {"ru": ("112e0a885b56ad8911a65c34f33c488546ef849be52dcc48",
 OPEN_CLAIM = {"q-main": "q:main", "q-tahara": "oq:torsion", "q-theoremc": "oq:theoremc"}  # open.html id -> claim
 CLAIM_STATUS = {"paper": "p", "computer": "c", "open": "o", "lean": "l"}
 REGISTRY = {}  # the set as the tracker gives it: {"terms": [...], "claims": [...]}, filled by main()
+REGISTRY_EN = {}  # the same set with its texts in English (?lang=en), filled by main()
+# the English words of the set's terms that have no English spelling in the registry, as the paper writes them
+TERM_EN = {"коммутатор": "commutator", "подгруппы Дженнингса": "Jennings subgroups", "мультипликатор": "multiplier",
+           "кандидат": "candidate", "тип нижнего центрального ряда": "type (of the lower central series)"}
 
 
-def registry():
+def registry(lang=None):
     """The set's terms and claims, read from the tracker as this site's origin reads them; the build stops
     if they cannot be read (a page of definitions without them would be published empty)."""
-    req = urllib.request.Request(f"{EMBED_ORIGIN}/embed/data/{EMBED_SET}",
+    req = urllib.request.Request(f"{EMBED_ORIGIN}/embed/data/{EMBED_SET}" + (f"?lang={lang}" if lang else ""),
                                  headers={"Origin": ORIGIN, "User-Agent": "d5-site-build"})
     try:
         with urllib.request.urlopen(req, timeout=60) as r:
@@ -781,6 +798,30 @@ def check_registry():
         m = re.fullmatch(r"§(\d+), п\. (\d+)", want or "")
         if (m.group(2) if m and m.group(1) == sec else want) != number:
             sys.exit(f"the registry gives {c['label']} the number {want!r}, the .aux of {PDF['en']}.tex {number!r}")
+    # the English set: the same entries in the same order, each translated and up to date
+    for kind, key in (("terms", "name"), ("claims", "label")):
+        ru, en = REGISTRY[kind], REGISTRY_EN.get(kind) or []
+        if [x[key] for x in ru] != [x[key] for x in en]:
+            sys.exit(f"the English registry set lists other {kind} than the Russian one")
+        for x in en:
+            if x.get("translation") not in ("machine", "human") or x.get("lang") != "en" or x.get("translationOutdated"):
+                sys.exit(f"the English text of {x[key]!r} is {x.get('translation')!r}"
+                         f"{' (outdated)' if x.get('translationOutdated') else ''}: the tracker translates it in the "
+                         "background, build again in a few minutes")
+            if (x.get("translation") == "machine" or x.get("machineTranslated")) and not x.get("translationNote"):
+                sys.exit(f"the machine translation of {x[key]!r} comes without its note")
+
+
+def registry_text(kind, i, lang):
+    """The entry number i of the set in the page's language: (item, lang of its text, its note or "")."""
+    if lang == "en":
+        x = REGISTRY_EN[kind][i]
+        return x, "en", x.get("translationNote") or ""  # check_registry: an English translation
+    return REGISTRY[kind][i], "ru", ""
+
+
+def note(s):
+    return f'<p class="mt">{html.escape(s, quote=False)}</p>' if s else ""
 
 
 def fold(x):
@@ -1771,9 +1812,11 @@ def main():
     if BLUEPRINT:
         copy_blueprint(tex)
     REGISTRY.update(registry())
+    REGISTRY_EN.update(registry("en"))
     check_registry()
     print("registry set", EMBED_SET[:8], "read:", len(REGISTRY["terms"]), "terms,", len(REGISTRY["claims"]), "claims, sha256",
-          hashlib.sha256(json.dumps(REGISTRY, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12])
+          hashlib.sha256(json.dumps([REGISTRY, REGISTRY_EN], sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12],
+          "(with the English texts)")
     pdate = paper_date()
     date = fmt_date(max(pdate, TIMELINE[-1][0]))
     paper = {lang: read_abstract(PAPER / f"{PDF[lang]}.tex") for lang in LANGS}
@@ -1918,16 +1961,27 @@ Magnus algebra, with the exactness certificate); <span class="tag p">paper</span
       + table([t("Статус", "Status"), (t("Утверждение", "Statement"), "l"), (t("Где", "Where"), "l")], rows, rids))
 
     # ---------- definitions (the registry's set, MATH-316) ----------
-    defs = "".join(f'<dt>{term(x["name"], html.escape(x["name"], quote=False))}</dt>'
-                   f'<dd lang="ru">{registry_md(x["definition"])}</dd>' for x in REGISTRY["terms"])
+    defs = []
+    for i, x0 in enumerate(REGISTRY["terms"]):
+        x, xl, xn = registry_text("terms", i, lang)
+        # the mark names the registry's (Russian) word; the English page shows the paper's English word: the
+        # registry's English spelling if it has one, else TERM_EN
+        word = x0["name"] if lang != "en" else TERM_EN.get(x0["name"]) or next(
+            (v for v in x0.get("variants", []) if not re.search("[а-яё]", v, re.I)), None)
+        if not word:
+            sys.exit(f"the term {x0['name']!r} has no English word: add it to TERM_EN")
+        defs.append(f'<dt>{term(x0["name"], html.escape(word, quote=False))}</dt>'
+                    f'<dd lang="{xl}">{registry_md(x["definition"])}{note(xn)}</dd>')
+    defs = "".join(defs)
     claims, osec = [], paper_entry("sec:open", lang)[1]
-    for c in REGISTRY["claims"]:
+    for i, c0 in enumerate(REGISTRY["claims"]):
+        c, cl, cn = registry_text("claims", i, lang)
         (full, _), number, _pg = paper_entry(c["label"], lang)
         head = paper_link(c["label"], lang, f"{full} {number}" if not c["label"].startswith("oq:")
                           else t(f"Открытый вопрос §{osec}, п. {number}", f"Open question §{osec}, item {number}"))
         claims.append(f'<div class="claim" id="c-{re.sub(r"[:.]", "-", c["label"])}"><p><b>{head}</b> '
-                      f'{claim_mark(c["label"], html.escape(c["title"] or ""))} '
-                      f'{tag(CLAIM_STATUS[c["status"]], lang)}</p><div class="st" lang="ru">{registry_md(c["statement"])}</div></div>')
+                      f'<span lang="{cl}">{claim_mark(c["label"], html.escape(c["title"] or ""))}</span> '
+                      f'{tag(CLAIM_STATUS[c0["status"]], lang)}</p><div class="st" lang="{cl}">{registry_md(c["statement"])}{note(cn)}</div></div>')
     P("definitions.html", t("Определения и основные утверждения", "Definitions and main statements"), t("""
 <p>Термины и утверждения статьи, как они записаны в реестре проекта MATH нашего трекера на момент сборки сайта. Каждый текст
 был сверен со статьёй (<a href="paper.html">версия на этом сайте</a>), когда его добавляли в этот набор; при сборке проверяется,
@@ -1935,9 +1989,10 @@ Magnus algebra, with the exactness certificate); <span class="tag p">paper</span
 записью реестра; так же размечены слова на других страницах сайта. Номер утверждения открывает статью на нём.</p>""", """
 <p>Terms and statements of the paper as they are written in the register of the project MATH of our tracker when the site was
 built. Each text was checked against the paper (<a href="paper.html">the version on this site</a>) when it was added to this set; the
-build checks that the numbers of the statements are those of the paper. The registry is kept in Russian, so the texts below are in
-Russian; the formulas and the numbers are those of the English draft too. An underlined word opens (on hover or tap) a cloud with the
-current registry entry, as on the other pages of the site; the number of a statement opens the paper at it.</p>""")
+build checks that the numbers of the statements are those of the paper. The registry is kept in Russian; the texts below are the
+tracker's translations of its entries, a machine translation marked as such (the <a href="ru/definitions.html" hreflang="ru">Russian page</a>
+has the originals). The formulas and the numbers are those of the English draft too. An underlined word opens (on hover or tap) a
+cloud with the current registry entry, in English as well; the number of a statement opens the paper at it.</p>""")
       + scene(lang)
       + t("<h2 id=\"terms\">Определения</h2>", "<h2 id=\"terms\">Definitions</h2>") + f'<dl class="terms">{defs}</dl>'
       + t("<h2 id=\"claims\">Основные утверждения и открытые вопросы</h2>", "<h2 id=\"claims\">Main statements and open questions</h2>")
