@@ -2,7 +2,7 @@
 # Rebuild the D5 site on tm and publish it to ispacex/d5 (https://ispacex.github.io/d5/), MATH-460.
 #
 #   site/publish_via_tm.sh [--dry-run] [--ds REV] [--mikh REV] [--kernel REV] [--allow-deletions]
-#                          [--job JOB] [-m "Rebuild: what changed (MATH-n)"]
+#                          [--runner R] [--job JOB] [-m "Rebuild: what changed (MATH-n)"]
 #
 # The build takes minutes (pdflatex of both drafts, plasTeX, pandoc/LuaLaTeX of the kernel PDFs) and
 # runs on a tm runner (site/tm_build.sh); only the checks and the push run here, so the deploy
@@ -12,8 +12,9 @@
 #      from there, so REV must be pushed), mikh (default origin/main; its paper/ is sent in the job's
 #      tree, the repository is private), cflint-fast-core (default main of GitLab). The mikh commit
 #      must descend from the one the live site names, or the site would go back in time.
-#   2. Submit the job (tm submit, cache mikh, 2 cores) and wait; --job JOB skips this and reuses a
-#      finished job.
+#   2. Submit the job (tm submit, cache mikh, 2 cores, runner hel24 unless --runner: kimmy is kept for
+#      the Lean and GAP jobs; the tools are installed per runner, once) and wait; --job JOB skips this
+#      and reuses a finished job.
 #   3. tm fetch; unpack site.tar.gz into a fresh directory; check every file against files.sha256 and
 #      the guard: index.html, paper.html, blueprint/index.html, ru/index.html, kernel.html non-empty.
 #   4. rsync --delete into a clean clone of ispacex/d5 (D5_CLONE, default ~/.cache/d5-publish/d5);
@@ -27,7 +28,7 @@
 # D5_CLONE.
 set -euo pipefail
 
-DRY=0 ALLOW_DEL=0 JOB="" DS_REV=origin/main MIKH_REV=origin/main KERNEL_REV=main MSG="Rebuild"
+DRY=0 ALLOW_DEL=0 JOB="" RUNNER=hel24 DS_REV=origin/main MIKH_REV=origin/main KERNEL_REV=main MSG="Rebuild"
 while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) DRY=1 ;;
@@ -36,8 +37,9 @@ while [ $# -gt 0 ]; do
     --mikh) MIKH_REV=$2; shift ;;
     --kernel) KERNEL_REV=$2; shift ;;
     --job) JOB=$2; shift ;;
+    --runner) RUNNER=$2; shift ;;
     -m) MSG=$2; shift ;;
-    -h|--help) sed -n '2,27p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,29p' "$0"; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
   shift
@@ -89,7 +91,7 @@ if [ -z "$JOB" ]; then
   git -C "$S/tree" init -q
   git -C "$S/tree" add -A
   git -C "$S/tree" -c user.name=d5site -c user.email=d5site@localhost commit -qm "d5 site inputs"
-  (cd "$S/tree" && "$TM" submit --name d5site --cache mikh --cores 2 --mem 6G --issue MATH-460 -- bash tm_build.sh) \
+  (cd "$S/tree" && "$TM" submit --name d5site --cache mikh --cores 2 --mem 6G --runner "$RUNNER" --issue MATH-460 -- bash tm_build.sh) \
     | tee "$S/submit.out"
   JOB=$(sed -n 's/^SUBMITTED: //p' "$S/submit.out")
   [ -n "$JOB" ] || { echo "no job submitted" >&2; exit 1; }

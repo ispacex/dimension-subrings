@@ -26,7 +26,7 @@ here=$(cd "$(dirname "$0")" && pwd)
 W=$JOB_CACHE/d5site
 TL=$W/texlive
 ENV=$W/env
-MAMBA=${MAMBA:-$JOB_CACHE/bin/micromamba}
+MAMBA=$W/bin/micromamba
 TLYEAR_BIN=x86_64-linux
 mkdir -p "$W/git"
 
@@ -68,12 +68,20 @@ EOF2
   rm -rf "$W/install-tl"
 }
 
+install_mamba() {  # a static micromamba of its own, so that any runner will do
+  [ -x "$MAMBA" ] && return 0
+  mkdir -p "$W/bin"
+  curl -fsSL https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xj -C "$W" bin/micromamba
+  "$MAMBA" --version >/dev/null
+}
+
 install_env() {  # the micromamba environment in $ENV; its stamp names the requirements it was made for
   local req=$DS/site/blueprint-requirements.txt stamp
   stamp=$(sha256sum <"$req" | cut -c1-16)
   [ -f "$ENV/.d5site-$stamp" ] && return 0
   log "installing Python, graphviz, pandoc, node and $req into $ENV (requirements $stamp)"
   rm -rf "$ENV"
+  install_mamba
   MAMBA_ROOT_PREFIX=$W/mamba "$MAMBA" create -y -q -p "$ENV" -c conda-forge \
     python=3.12 graphviz pandoc=3.9 nodejs poppler pkg-config >/dev/null
   # pygraphviz is compiled against the environment's graphviz, with the system gcc
