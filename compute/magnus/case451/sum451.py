@@ -34,6 +34,12 @@ def main(d):
             c["gfree>0 (g nonvacuous)"] += r["gfree"] > 0
             c["W viol (R or term > bound)"] += W["viol"] > 0 or W["partviol"] > 0 or Wt["viol"] > 0
             c["W R<>1"] += W["nontriv"] > 0
+            c["W some term <>1"] += Wt["nontriv"] > 0
+            c["W R of order 9"] += W["maxR"] >= 2
+            c["informative (ctl free viol, W ok)"] += fr["viol"] > 0 and W["viol"] == 0 and Wt["viol"] == 0
+            c["Lemma 12.5(b) attained (pairmax = mu > 0)"] += r["mu"] > 0 and fm["pairmax"] == r["mu"]
+            # mu <= K needed for Omega_{mu-1} = 3 Omega_mu (cyclic C_{3^K})
+            c["mu > K (bound reads differently)"] += r["mu"] > r["lcs"][3]
             c["W R attains bound (mu>=2, ord 3^(mu-1))"] += r["mu"] >= 2 and W["maxR"] == bnd and bnd > 0
             c["ctl free viol"] += fr["viol"] > 0
             c["ctl noB3 viol"] += nb["viol"] > 0
