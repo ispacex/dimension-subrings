@@ -25,4 +25,6 @@ echo "$types" | xargs -P "$PAR" -I{} bash -c '
   timeout 20000 gap -q -b -o 3g "$f.g" > "$f.log" 2>&1 || echo "FAILED $t" >> "$f"
 '
 cat "$OUT"/u_*.txt | tee "$OUT/summary.txt"
-! grep -q -E "FAILING=[1-9]|FAILED" "$OUT/summary.txt"
+want=$(( 2 * 3 ** (S - 1) )); got=$(grep -c '^TYPE' "$OUT/summary.txt" || true)
+echo "types: $got of $want"
+[ "$got" -eq "$want" ] && ! grep -q -E "FAILING=[1-9]|FAILED" "$OUT/summary.txt"
