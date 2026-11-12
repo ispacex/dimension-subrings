@@ -45,6 +45,8 @@ NAMES = {"theorem": "Theorem", "proposition": "Proposition", "lemma": "Lemma", "
          "remark": "Remark"}
 LEAN_REF = re.compile(r"\{\{lean:([^|}]+)\|([^}]*)\}\}")
 NOTE_REF = re.compile(r"\[\[([A-Za-z0-9:._-]+)\|#\]\]")  # a number of the paper in a note
+# a results row outside the paper names its node by a link blueprint.html#b-own-ab399 (own:ab399)
+ROW_NODE = re.compile(r"blueprint\.html#b-((?:ext|own)-[A-Za-z0-9_-]+)")
 # Nodes that are not statements of the paper, with their own title and statement: results of the
 # literature ("ext:") and our own results that the formalization proves but the paper does not
 # contain ("own:", e.g. own:ab399, MATH-448).
@@ -347,6 +349,15 @@ def check(data, index, tex=None):
         for name, _ in LEAN_REF.findall(text):
             if name not in names:
                 errors.append(f"results row {k}: {{{{lean:{name}}}}} is not a declaration of any node")
+        where_all = " ".join(row.get(f, "") for f in ("where", "where_ru", "where_en"))
+        anchors = sorted({a.replace("-", ":", 1) for a in ROW_NODE.findall(where_all)})
+        if not re.search(r"\[\[[A-Za-z0-9:._-]+", where_all) and not anchors:
+            errors.append(f"results row {k}: its where cites no [[label]] and no blueprint.html#b-<node> link")
+        for lab in anchors:
+            if lab not in nodes:
+                errors.append(f"results row {k}: blueprint.html#b-{lab.replace(':', '-')} is not a node")
+            elif "l" in row["status"] and not nodes[lab]["proved"]:
+                errors.append(f"results row {k} is marked Lean but links to node {lab}, whose proof is not in Lean")
         if "l" in row["status"]:
             where = " ".join(row.get(f, "") for f in ("where", "where_ru", "where_en"))
             for lab in re.findall(r"\[\[([A-Za-z0-9:._-]+)", where):
@@ -546,7 +557,8 @@ def src(data, index, out, tex=None, pin=None, paper_url=SITE + "viewer.html"):
                  "every labelled statement, with the Lean declarations of \\href{" + GROUPS_REPO + "}{group-dimension} that "
                  "state or prove it, and what its proof uses. Numbers are those of the paper. A green border means "
                  "the statement is in Lean; a green background, that its proof is too, from the statements it uses. "
-                 "The last section lists results of the literature that the formalization proves as well.\n")
+                 "The last sections list results of the literature that the formalization proves as well, and "
+                 "results it proves that are not in the paper.\n")
 
     def note_tex(s):
         """A note as LaTeX text: [[label|#]] becomes the paper's number (the label, without the paper)."""

@@ -1994,8 +1994,12 @@ Open cells are hatched: there the case of $\\gamma_2/\\gamma_3$ of exponent $3$ 
     # ---------- results ----------
     rows = [(tag(k, lang), (r[li], "l"), (ref(where, lang), "l")) for k, *r, where in ROWS]
     rids = []  # row anchors, by the first label of the row: results.html#r-thm-small, #r-thm-small-2
-    for *_, where in ROWS:
-        rid = "r-" + re.sub(r"[:.]", "-", PAPER_REF.search(ref(where, "en")).group(1))
+    for *_, where in ROWS:  # (a row outside the paper: by its blueprint node, #r-own-ab399)
+        w = ref(where, "en")
+        m = PAPER_REF.search(w) or blueprint.ROW_NODE.search(w)
+        if not m:
+            sys.exit(f"results row without a [[label]] or a blueprint.html#b-... link: {w[:80]}")
+        rid = "r-" + re.sub(r"[:.]", "-", m.group(1))
         rids.append(rid if rid not in rids else f"{rid}-{sum(1 for x in rids if x.startswith(rid))+1}")
     P("results.html", t("Результаты", "Results"), t(f"""
 <p>Главные утверждения черновика с их статусом. Номера&nbsp;— по <a href="paper.html">версии статьи на этом сайте</a>;
@@ -2140,14 +2144,15 @@ cloud with the current registry entry, in English as well; the number of a state
 <a href="https://github.com/ispacex/group-dimension">group-dimension</a> (коммит, на который указывает <code>groups/</code>),
 и утверждениями, на которые опирается доказательство. Из {paper_nodes} утверждений статьи {full} доказаны в Lean
 целиком, вместе со всем, на что опираются, ещё {given}&nbsp;— в Lean при утверждениях, которых там нет
-(они названы). В конце&nbsp;— результаты литературы, которые формализация тоже доказывает.
+(они названы). В конце&nbsp;— результаты литературы, которые формализация тоже доказывает, и результаты
+вне статьи, доказанные в Lean.
 Таблица строится из того же файла <code>site/blueprint.toml</code>, что и <a href="results.html">результаты</a>;
 сборка проверяет его по статье, а CI&nbsp;— что каждая декларация есть в Lean.</p>""", f"""
 <p>Every labelled statement of the draft with its status, the Lean declarations of
 <a href="https://github.com/ispacex/group-dimension">group-dimension</a> (at the commit <code>groups/</code> points to) that state or
 prove it, and the statements its proof uses. Of the {paper_nodes} statements of the paper, {full} are proved in Lean together
 with everything they rest on, and {given} more in Lean from statements that are not (named in the status). At the end,
-results of the literature that the formalization proves too. The table is built from the same file,
+results of the literature that the formalization proves too, and results not in the paper that it proves. The table is built from the same file,
 <code>site/blueprint.toml</code>, as the <a href="results.html">results</a>; the build checks it against the paper, and CI that
 every declaration exists in Lean.</p>""") + graph
       + filters
