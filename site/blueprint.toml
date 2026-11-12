@@ -7,7 +7,8 @@
 # statement). Fields:
 #   lean     the Lean declarations (full names) that state or prove it; CI checks that each exists
 #            (.github/workflows/blueprint.yml) and the build that each is named in the paper's
-#            section on the formalization;
+#            section on the formalization; each carries the attribute @[d5 "<label>"] in groups/
+#            (MATH-453), and CI checks that the tagged pairs are exactly these (blueprint.py tags);
 #   proved   true if the proof is formalized, from the statements it uses (leanblueprint's \leanok on
 #            the proof); a statement with `lean` but not `proved` has only its statement (or a part)
 #            in Lean;
