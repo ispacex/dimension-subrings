@@ -270,6 +270,23 @@ ol.toc { list-style:none; padding-left:0; } ol.toc > li { margin:.55rem 0; } ol.
 ol.toc .stm { font-size:.88rem; margin:.15rem 0 0 1.4rem; } ol.toc .stm > span { white-space:nowrap; }
 ol.toc .stm > span .muted { white-space:normal; }
 ol.tl .d { font-weight:600; } ol.tl ul { margin:.2rem 0 0; padding-left:1.1rem; }
+.bpf { margin:1rem 0 .4rem; display:grid; gap:.45rem; }
+html:not(.js) .bpf { display:none; }
+.bpf .fg { display:flex; flex-wrap:wrap; align-items:center; gap:.35rem; }
+.bpf .fl { font-size:.85rem; color:var(--muted); font-weight:600; min-width:6.5rem; }
+.bpf button { font:inherit; font-size:.85rem; line-height:1.5; padding:.1em .6em; border:1px solid var(--line); border-radius:999px;
+        background:var(--bg); color:var(--ink); cursor:pointer; }
+.bpf button:hover { border-color:var(--acc); }
+.bpf button:focus-visible { outline:2px solid var(--acc); outline-offset:1px; }
+.bpf button[aria-pressed="true"] { background:var(--acc); border-color:var(--acc); color:var(--bg); }
+.bpf button .n { color:var(--muted); margin-left:.3em; font-variant-numeric:tabular-nums; }
+.bpf button[aria-pressed="true"] .n { color:inherit; opacity:.85; }
+.bpf button.zero:not([aria-pressed="true"]) { opacity:.5; }
+.bpf .fs { display:flex; flex-wrap:wrap; align-items:center; gap:.6rem; font-size:.85rem; color:var(--muted); }
+.bpf .fs button.all { border-radius:6px; }
+.bpf .fs button.all:disabled { opacity:.5; cursor:default; }
+@media (max-width:520px) { .bpf .fl { min-width:100%; } }
+tr.bpf-hide { display:none; }
 """
 
 KATEX = """<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
@@ -381,6 +398,33 @@ def theme_switch(lang):
 
 # The contents on the right of a long page (as on ispacex.github.io/gap/findings.html): sticky, shown
 # from 1180px on, the section being read marked as the page scrolls.
+# The filters of blueprint.html (MATH-316). Within a facet the chosen values are alternatives, the facets
+# combine; none chosen in a facet = all. The count of a button is the number of rows it would show with
+# the other facet as chosen. The choice is in the hash (#type=theorem,lemma&status=lean), so a filtered
+# view can be linked; a hash that is not a choice (#b-thm-small: a row) is left alone.
+BP_FILTER_JS = """<script>(function(){var bar=document.getElementById('bpf'),tb=document.getElementById('bpt');if(!bar||!tb)return;
+var rows=[].slice.call(tb.tBodies[0].rows),groups=[].slice.call(bar.querySelectorAll('.fg')),all=bar.querySelector('.all'),
+st=bar.querySelector('[role=status]'),of=bar.getAttribute('data-of'),F=groups.map(function(g){return g.getAttribute('data-f')}),sel={};
+var none=document.createElement('p');none.className='muted';none.hidden=true;none.textContent='__NONE__';tb.parentNode.parentNode.insertBefore(none,tb.parentNode.nextSibling);
+function ok(r,skip){for(var i=0;i<F.length;i++){var f=F[i],s=sel[f];if(f!==skip&&s.length&&s.indexOf(r.getAttribute('data-'+f))<0)return false}return true}
+function apply(){var n=0;rows.forEach(function(r){var v=ok(r);r.classList.toggle('bpf-hide',!v);n+=v});
+groups.forEach(function(g){var f=g.getAttribute('data-f');[].forEach.call(g.querySelectorAll('button'),function(b){var v=b.getAttribute('data-v'),
+c=rows.filter(function(r){return r.getAttribute('data-'+f)===v&&ok(r,f)}).length;b.setAttribute('aria-pressed',sel[f].indexOf(v)>=0?'true':'false');
+b.querySelector('.n').textContent=c;b.classList.toggle('zero',!c)})});
+var any=F.some(function(f){return sel[f].length});all.disabled=!any;none.hidden=n>0;tb.parentNode.hidden=!n;
+st.textContent=any?'__SHOWN__ '+n+' '+of+' '+rows.length:''}
+function hash(){return F.filter(function(f){return sel[f].length}).map(function(f){return f+'='+sel[f].join(',')}).join('&')}
+function read(){var h=decodeURIComponent(location.hash.slice(1)),m={};F.forEach(function(f){sel[f]=[]});
+if(!/^(type|status)=/.test(h))return;h.split('&').forEach(function(p){var kv=p.split('=');if(F.indexOf(kv[0])>=0)m[kv[0]]=(kv[1]||'').split(',').filter(Boolean)});
+F.forEach(function(f){var ok=[].map.call(bar.querySelectorAll('[data-f="'+f+'"] button'),function(b){return b.getAttribute('data-v')});
+sel[f]=(m[f]||[]).filter(function(v){return ok.indexOf(v)>=0})})}
+function write(){var h=hash();if(history.replaceState)history.replaceState(null,'',h?'#'+h:location.pathname+location.search);else location.hash=h}
+groups.forEach(function(g){var f=g.getAttribute('data-f');g.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
+var v=b.getAttribute('data-v'),i=sel[f].indexOf(v);if(i<0)sel[f].push(v);else sel[f].splice(i,1);write();apply()})});
+all.addEventListener('click',function(){F.forEach(function(f){sel[f]=[]});write();apply()});
+window.addEventListener('hashchange',function(){var h=decodeURIComponent(location.hash.slice(1)),r=h&&document.getElementById(h);
+if(/^(type|status)=/.test(h)||!h){read();apply()}else if(r&&r.classList.contains('bpf-hide')){F.forEach(function(f){sel[f]=[]});apply();r.scrollIntoView()}});
+read();apply()})()</script>"""
 SIDE_JS = """<script>(function(){var a=document.querySelectorAll('aside.side a');if(!a.length||!('IntersectionObserver' in window))return;
 var m={},h=[],cur=null;for(var i=0;i<a.length;i++){var id=decodeURIComponent(a[i].getAttribute('href').slice(1)),e=document.getElementById(id);if(e){m[id]=a[i];h.push(e)}}
 function mark(id){if(cur)cur.classList.remove('on');cur=m[id]||null;if(cur){cur.classList.add('on');
@@ -658,15 +702,18 @@ def write_search(order):
     return sum(len(p["blocks"]) for p in pages)
 
 
-def table(head, rows, ids=None):
+def table(head, rows, ids=None, attrs=None, tid=None):
+    """attrs: per row, extra attributes of its <tr> (as written); tid: the id of the <table>."""
     def cell(tag, c):
         if isinstance(c, tuple):
             return f'<{tag} class="{c[1]}">{c[0]}</{tag}>'
         return f"<{tag}>{c}</{tag}>"
     th = "".join(cell("th", h) for h in head)
-    body = "".join((f'<tr id="{ids[k]}">' if ids else "<tr>") + "".join(cell("td", c) for c in r) + "</tr>"
+    body = "".join("<tr" + (f' id="{ids[k]}"' if ids else "") + (f" {attrs[k]}" if attrs else "") + ">"
+                   + "".join(cell("td", c) for c in r) + "</tr>"
                    for k, r in enumerate(rows))
-    return f'<div class="tw"><table><thead><tr>{th}</tr></thead><tbody>{body}</tbody></table></div>'
+    return (f'<div class="tw"><table{f" id={chr(34)}{tid}{chr(34)}" if tid else ""}><thead><tr>{th}</tr></thead>'
+            f'<tbody>{body}</tbody></table></div>')
 
 
 def num(n, lang):
@@ -1014,8 +1061,6 @@ TIMELINE = [  # (iso date, [(ru, en)])
         ("Повтор на ANUPQ с исправлениями аудита: поиск $2^{10}$ (все $858$ кусков, $3400$ кандидатов и ответы решётки) и ранги $2$–$4$, $7$, $8$ порядка $2^{11}$ совпали со старыми прогонами полностью. Оговорка к порядкам $2^{10}$ и $2^{11}$ снята.",
          "A repeat with ANUPQ with the audit fixes: the $2^{10}$ search (all $858$ chunks, $3400$ candidates and the lattice answers) and ranks $2$–$4$, $7$, $8$ of order $2^{11}$ agree exactly with the old runs. The caveat on orders $2^{10}$ and $2^{11}$ is lifted.")]),
     ("2026-10-22", [
-        ("Препринт отправлен в arXiv (math.GR).",
-         "The preprint is submitted to arXiv (math.GR)."),
         ("Точный критерий нетерминальности $p$-групп типа $(d,2,1)$ (теорема [[thm:nonterm|#]]): доказан на бумаге при нечётном $p$ и элементарной $P/\\gamma_2$, проверен вычислением на $3^8$, $3^7$, $5^7$, $7^7$. Вопрос снят из открытых.",
          "An exact criterion for nonterminality of $p$-groups of type $(d,2,1)$ (Theorem [[thm:nonterm|#]]): proved on paper for odd $p$ and elementary $P/\\gamma_2$, checked by computer at $3^8$, $3^7$, $5^7$, $7^7$. The question is removed from the open ones."),
         ("В статье: явная алгебра Ли типа $(3,3,1,1)$ с $[M_2,M_2]\\ne0$ — над $\\mathbb F_p$ при любом нечётном $p$ (приложение A); полный разбор случая $a=2$ теоремы [[thm:exp3plus|#]] (приложение B).",
@@ -1854,7 +1899,7 @@ $D_n(G)=G\\cap(1+\\Delta^n)$&nbsp;— {term("Размерные подгрупп
 и $D_n=\\gamma_n$ при $n\\le3$; при $n=4$ это неверно (Рипс). <b>{qmark}</b></p>
 <p>Определения и основные утверждения статьи (из реестра трекера; подчёркнутые слова открываются при наведении или нажатии)&nbsp;— на странице <a href="definitions.html">«Определения»</a>.</p>
 <p>Для колец Ли ответ «да» (Ионин, Михайлов, Петров, 2026, с формализацией в Lean). Для групп вопрос открыт;
-к нему с нескольких сторон подходит наш препринт, отправленный в arXiv 22 октября 2026 года. Здесь — что доказано, что посчитано и что осталось.</p></div>
+к нему с нескольких сторон подходит наша статья (препринт). Здесь — что доказано, что посчитано и что осталось.</p></div>
 <div class="cards">
 <div class="card"><h3>$2$-кручение: $D_5\\subseteq\\gamma_4$</h3><div class="big">до $2^{{10}}$</div>
 <p>Верно для всякой конечной группы с силовской $2$-подгруппой порядка $\\le2^{{10}}$, в частности для всех групп порядка $<2048$.</p>
@@ -1878,7 +1923,7 @@ $D_n(G)=G\\cap(1+\\Delta^n)$ the {term("dimension subgroups")} and $\\gamma_n(G)
 and $D_n=\\gamma_n$ for $n\\le3$; for $n=4$ this fails (Rips). <b>{qmark}</b></p>
 <p>Definitions and the main statements of the paper (from the tracker's registry; hover over or tap the underlined words) are on the <a href="definitions.html">Definitions</a> page.</p>
 <p>For Lie rings the answer is yes (Ionin, Mikhailov, Petrov, 2026, formalized in Lean). For groups it is open;
-our preprint, submitted to arXiv on 22 October 2026, approaches it from several sides. This site shows what is proved, what is computed, and what is left.</p></div>
+our paper (preprint) approaches it from several sides. This site shows what is proved, what is computed, and what is left.</p></div>
 <div class="cards">
 <div class="card"><h3>$2$-torsion: $D_5\\subseteq\\gamma_4$</h3><div class="big">up to $2^{{10}}$</div>
 <p>True for every finite group whose Sylow $2$-subgroup has order $\\le2^{{10}}$, in particular for all groups of order $<2048$.</p>
@@ -2026,7 +2071,38 @@ cloud with the current registry entry, in English as well; the number of a state
         return f'<span class="tag {words[0]}">{words[1]}{extra}</span>'
 
     order = [x for x in stmts if x in BP["nodes"]] + [x for x in BP["nodes"] if x.startswith("ext:")]
-    brows, bids = [], []
+    def bp_kind(x):
+        """The kind of statement: the environment of the paper (blueprint.statements), or "ext"."""
+        return "ext" if x.startswith("ext:") else stmts[x]["env"]
+
+    def bp_filters(kinds, sts):
+        """The filter bar above the table (MATH-316): one group of toggle buttons per facet, each with the
+        number of rows it would show; JS (BP_FILTER_JS) hides rows and keeps the choice in the URL hash
+        (#type=theorem,lemma&status=lean). Without JS the bar is hidden and the table is whole."""
+        facets = (("type", t("Тип", "Type"), kinds,
+                   {"theorem": t("теорема", "theorem"), "proposition": t("предложение", "proposition"),
+                    "lemma": t("лемма", "lemma"), "corollary": t("следствие", "corollary"),
+                    "question": t("вопрос", "question"), "remark": t("замечание", "remark"),
+                    "ext": t("литература", "literature")}),
+                  ("status", t("Статус", "Status"), sts,
+                   {"lean": t("Lean", "Lean"), "lean-given": t("Lean при условии", "Lean, given"),
+                    "lean-statement": t("Lean: формулировка или часть", "Lean: statement or part"),
+                    "computer": t("компьютер", "computer"), "paper": t("на бумаге", "paper")}))
+        out = ""
+        for key, label, vals, names in facets:
+            unknown = set(vals) - set(names)
+            if unknown:
+                sys.exit(f"blueprint.html: no filter name for {key} {sorted(unknown)}")
+            chips = "".join(f'<button type="button" data-v="{v}" aria-pressed="false">{names[v]}'
+                            f'<span class="n">{vals.count(v)}</span></button>'
+                            for v in names if v in vals)
+            out += (f'<div class="fg" role="group" aria-labelledby="bpf-{key}" data-f="{key}">'
+                    f'<span class="fl" id="bpf-{key}">{label}</span>{chips}</div>')
+        return (f'<div class="bpf" id="bpf" data-of="{t("из", "of")}">{out}<div class="fs">'
+                f'<button type="button" class="all" disabled>{t("Показать все", "Show all")}</button>'
+                f'<span role="status" aria-live="polite"></span></div></div>')
+
+    brows, bids, battrs = [], [], []
     for x in order:
         n = BP["nodes"][x]
         what = bp_name(x) + (f"<br>{n['statement']}" if x.startswith("ext:") else
@@ -2039,6 +2115,8 @@ cloud with the current registry entry, in English as well; the number of a state
                        if n["note"] else ""), "l"),
                       (uses, "l")))
         bids.append("b-" + re.sub(r"[:.]", "-", x))
+        battrs.append(f'data-type="{bp_kind(x)}" data-status="{bst[x]["status"]}"')
+    filters = bp_filters([bp_kind(x) for x in order], [bst[x]["status"] for x in order])
     counts = {}
     for x in order:
         counts[bst[x]["status"]] = counts.get(bst[x]["status"], 0) + 1
@@ -2065,8 +2143,11 @@ with everything they rest on, and {given} more in Lean from statements that are 
 results of the literature that the formalization proves too. The table is built from the same file,
 <code>site/blueprint.toml</code>, as the <a href="results.html">results</a>; the build checks it against the paper, and CI that
 every declaration exists in Lean.</p>""") + graph
+      + filters
       + table([(t("Утверждение", "Statement"), "l"), t("Статус", "Status"), (t("Lean", "Lean"), "l"), (t("Использует", "Uses"), "l")],
-              brows, bids))
+              brows, bids, battrs, "bpt")
+      + BP_FILTER_JS.replace("__NONE__", t("Ни одно утверждение не подходит.", "No statement matches."))
+                    .replace("__SHOWN__", t("Показано", "Shown")))
 
     # ---------- computations ----------
     body = t("""
@@ -2160,18 +2241,18 @@ Checks: two independent methods, PARI/GP, known values.</small></p>""")
         arxiv = f', <a href="https://arxiv.org/abs/{ARXIV_ID}">arXiv:{ARXIV_ID}</a>' if ARXIV_ID else ""
         pre = "" if lang == "en" else "../"
         versions = t(f"""
-<div class="box"><p>Статья есть в двух версиях: препринт для arXiv и лабораторный журнал со всеми подробностями.</p>
+<div class="box"><p>Статья есть в двух версиях: препринт и лабораторный журнал со всеми подробностями.</p>
 <ul>
-<li><b>Препринт (версия для arXiv)</b>: <a href="preprint-viewer.html">читать</a> ({pdfs[PREPRINT]} с., по-английски),
+<li><b>Препринт (сжатый текст)</b>: <a href="preprint-viewer.html">читать</a> ({pdfs[PREPRINT]} с., по-английски),
 <a href="{pre}paper/{PREPRINT}.pdf">PDF</a>{arxiv}.</li>
 <li><b>Лабораторный журнал (все подробности)</b>: черновик ниже, по-русски и по-английски.</li>
 </ul>
 <p><small>Препринт&nbsp;— сжатый текст статьи: результаты и доказательства. Журнал добавляет статус каждого утверждения,
 ссылки на задачи трекера (D5-N) и то, как сделано каждое вычисление; на него, а не на препринт, ведут все ссылки на номера утверждений на этом сайте
 (в препринте нумерация может быть другой).</small></p></div>""", f"""
-<div class="box"><p>The paper comes in two versions: the preprint for arXiv, and the lab notebook with all the details.</p>
+<div class="box"><p>The paper comes in two versions: the preprint, and the lab notebook with all the details.</p>
 <ul>
-<li><b>Preprint (arXiv version)</b>: <a href="preprint-viewer.html">read it</a> ({pdfs[PREPRINT]} pp., English),
+<li><b>Preprint (concise text)</b>: <a href="preprint-viewer.html">read it</a> ({pdfs[PREPRINT]} pp., English),
 <a href="{pre}paper/{PREPRINT}.pdf">PDF</a>{arxiv}.</li>
 <li><b>Lab notebook (full details)</b>: the draft below, in English and Russian.</li>
 </ul>
