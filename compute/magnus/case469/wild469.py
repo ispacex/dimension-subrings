@@ -65,8 +65,10 @@ def rank3(rows, ncols):
 def end_algebra(G, d, A, n, r):
     """G: n x s matrix over F_3 (column h = generator h).  Returns a basis of B (as n x n matrices)."""
     s = len(d)
-    # unknowns: pi (n*n entries, with pi(H) <= H: pi[i][j] = 0 for i >= r, j < r) and E (allowed entries)
-    pis = [(i, j) for i in range(n) for j in range(n) if not (i >= r and j < r)]
+    # unknowns: pi (n*n entries, with pi(H) <= H: pi[i][j] = 0 for i >= r, j < r) and E (allowed entries).
+    # r may be a list r_1 >= r_2 >= ...: the flag H_1 = S cap 3U >= H_2 = S cap 9U >= ... (modulus 3^(len+2))
+    rs = r if isinstance(r, list) else [r]
+    pis = [(i, j) for i in range(n) for j in range(n) if not any(i >= q and j < q for q in rs)]
     Es = [(q, p) for q in range(s) for p in range(s) if addable(d, A, q, p)]
     nv = len(pis) + len(Es)
     rows = []
@@ -119,7 +121,8 @@ def reduced(G, d, A):
     return True
 
 def lattices(G, d, A, n, r):
-    """(K_3, K_9, K_27) generators for the elementary configuration G (n x s over F_3, H = first r coordinates)"""
+    """(K_3, K_9, K_27) generators for the elementary configuration G (n x s over F_3, H = first r coordinates);
+    for a list r = [r_1 >= r_2 >= ...] the chain K_3 >= K_9 >= ... >= K_{3^(len+2)} (H_j = first r_j coordinates)"""
     s = len(d); E = np.eye(s, dtype=np.int64)
     K3 = [E[h] * (3 if h in A else 1) for h in range(s)]
     def rel(rowsel):
@@ -129,8 +132,12 @@ def lattices(G, d, A, n, r):
         gens = [[(3 * x[h] if h in A else x[h]) for h in range(s)] for x in ker]
         gens += [list(3 * k) for k in K3]          # 3 K_3: v'_a, v_n in 3Z
         return [np.array(b) for b in zbasis(gens, s)]
-    K27 = rel(range(n)); K9 = rel(range(r, n))
-    return {3: K3, 9: K9, 27: K27}
+    rs = r if isinstance(r, list) else [r]
+    k = len(rs) + 2
+    K = {3: K3, 3 ** k: rel(range(n))}
+    for j, q in enumerate(rs):          # H_{j+1} = first q coordinates: relations mod H_{j+1} give K_{3^(j+2)}
+        K[3 ** (j + 2)] = rel(range(q, n))
+    return K
 
 def search(d, A, n, r, tries, seed):
     rnd = random.Random(seed); s = len(d); found = 0
@@ -156,7 +163,7 @@ def check(path):
         locH = is_local(end_algebra(G, d, A, n, 0), n)
         ctl += (locH is not False)
         K = lattices(G, d, A, n, r)
-        M = Model(d, 27); ok, fr = M.check(K)
+        M = Model(d, 3 ** (len(r if isinstance(r, list) else [r]) + 2)); ok, fr = M.check(K)
         tot += 1; bad += (not ok); notloc += (loc is not True) or (not red)
         print("WILD", d, "A", sorted(A), "n", n, "r", r, "dimB", len(B), "local", loc, "reduced", red,
               "local_without_H", locH, "model_ok", ok, "sigma!=0", fr, flush=True)
@@ -167,6 +174,7 @@ def check(path):
 if __name__ == '__main__':
     if sys.argv[1] == 'search':
         d = [int(a) for a in sys.argv[2].split(',')]; A = {int(a) for a in sys.argv[3].split(',') if a}
-        search(d, A, int(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]), int(sys.argv[7]))
+        rr = [int(x) for x in sys.argv[5].split(':')]
+        search(d, A, int(sys.argv[4]), rr if len(rr) > 1 else rr[0], int(sys.argv[6]), int(sys.argv[7]))
     elif sys.argv[1] == 'check':
         sys.exit(1 if check(sys.argv[2]) else 0)

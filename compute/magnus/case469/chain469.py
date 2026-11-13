@@ -96,7 +96,45 @@ def cover(d):
     print("COVER type", d, "orbits", tot, "without a normal-form member", miss, flush=True)
     return miss
 
+def random_chain(d, rnd, p=None, q=None):
+    """a random REALIZABLE chain: random A, random Z/9-module U = (Z/9)^p + (Z/3)^q, random t_a, z_n in U (wiki 891
+    Sec. 14.1: K_27 = relations in U, K_9 = relations in U/3U, with v_a = 3 v'_a)"""
+    from diag467 import kernel
+    s = len(d)
+    A = {h for h in range(s) if rnd.random() < 0.5}
+    p = rnd.randint(0, 3) if p is None else p; q = rnd.randint(0, 3) if q is None else q
+    mods = [9] * p + [3] * q
+    U = [[rnd.randrange(m) for m in mods] for _ in range(s)]     # U[h] = t_h (h in A) or z_h (h in N)
+    def lat(full):
+        conds = [({h: U[h][c] for h in range(s) if U[h][c] % m}, (m if full else 3)) for c, m in enumerate(mods)]
+        conds = [c for c in conds if c[0]]
+        W = kernel(conds, s, 9)                                    # w mod 9, w_a = v_a / 3
+        gens = [[(3 * int(w[h]) if h in A else int(w[h])) for h in range(s)] for w in W]
+        gens += [[(27 if h in A else 9) * int(h == g) for g in range(s)] for h in range(s)]
+        return [np.array(b) for b in zbasis(gens, s)]
+    E = np.eye(s, dtype=np.int64)
+    return A, {3: [E[h] * (3 if h in A else 1) for h in range(s)], 9: lat(False), 27: lat(True)}
+
+def rand_check(S, n, seed, drop=()):
+    """n random realizable chains on random capped types of length S with d(S-2) >= 9, d(S-1) >= 27 (gamma_4 = C_27
+    outside Theorem 12.6), modulo-27 model; evidence only"""
+    import random
+    rnd = random.Random(seed)
+    types = [d for d in capped_types_k(S, 3) if d[S - 3] >= 9 and d[S - 2] >= 27]
+    models = {}; bad = tot = free = 0; ex = []
+    for _ in range(n):
+        d = rnd.choice(types)
+        if tuple(d) not in models: models[tuple(d)] = Model(d, 27, drop)
+        A, K = random_chain(d, rnd)
+        ok, fr = models[tuple(d)].check(K); tot += 1; bad += (not ok); free += fr
+        if not ok and len(ex) < 2: ex.append((d, sorted(A)))
+    print("RAND S =", S, "seed", seed, "drop", sorted(drop), "chains", tot, "sigma!=0", free, "FAILING", bad, ex, flush=True)
+    return bad
+
 if __name__ == '__main__':
+    if sys.argv[1] == 'rand':
+        sys.exit(1 if rand_check(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]),
+                                 sys.argv[5].split(',') if len(sys.argv) > 5 and sys.argv[5] else ()) else 0)
     if sys.argv[1] == 'cover':
         sys.exit(1 if cover([int(a) for a in sys.argv[2].split(',')]) else 0)
     if sys.argv[1] == 'nf':
