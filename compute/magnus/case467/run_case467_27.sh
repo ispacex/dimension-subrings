@@ -3,6 +3,7 @@
 set -uo pipefail
 PAR=${1:-8}
 cd "$(dirname "$0")"
+. ./env467.sh
 OUT=${JOB_OUT:-$PWD/out27}; mkdir -p "$OUT/b27"
 { python3 diag467.py diag 2 27 | tail -1; python3 diag467.py diag 3 27 | tail -1
   for dr in B D1 D2 Kt J; do python3 diag467.py diag 3 27 $dr | tail -1; done; } | tee "$OUT/diag27.txt"

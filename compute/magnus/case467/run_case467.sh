@@ -4,8 +4,8 @@
 set -uo pipefail
 PAR=${1:-8}
 cd "$(dirname "$0")"
+. ./env467.sh
 OUT=${JOB_OUT:-$PWD/out}; mkdir -p "$OUT/orb5"
-python3 -c 'import numpy; print("numpy", numpy.__version__)'
 # 1. the Python model against universal.sage (reference numbers, wiki 891 Sec. 11.4 / case450)
 { for t in 9,9,9 3,9,9; do python3 diag467.py validate $t; for dr in B D2 D1 Kt; do python3 diag467.py validate $t $dr; done; done; } \
   | tee "$OUT/validate.txt"
