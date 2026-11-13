@@ -6,7 +6,8 @@
 #       Omega_1(gamma_3 cap M_4) and Omega_1(gamma_3), for check_rank3.py (truncated Magnus algebra);
 #  TOUT (JSON per line): Tahara's lattice of admissible families (tahara61.g), log2 |<gen(tau)>|,
 #       gcd of lambda=u12, mu=u13, nu=u23 over the lattice, controls (drop C,E; drop all of A-F),
-#       and whether T32=[x3^d3,x2], T31, T21 are trivial.
+#       whether T32=[x3^d3,x2], T31, T21 are trivial, log2 orders of all six T_ij (Tord), and per
+#       lattice basis vector (lambda, mu, nu) mod 16 with log2 orders of the three summands (parts).
 # Set SEED, TYPES, PER, OUT, TOUT before Read; run from compute/magnus (see run_rank3.sh).
 Read("presgens.g");
 Reset(GlobalMersenneTwister, SEED);
@@ -39,7 +40,7 @@ Emit := function(Q, gens, id, typ, par)
 end;;
 Read("tahara61.g");
 TahEmit := function(Q, id)
-  local T, V, X, lat, D, la, mu, nu, Dc, Dall, gsz;
+  local T, V, X, lat, D, la, mu, nu, Dc, Dall, gsz, Tm, Tord, parts, A;
   T := TaharaData(Q, fail); V := TaharaVars(T); X := V.idx;
   if T.s <> 3 then AppendTo(TOUT, "{\"id\": \"", id, "\", \"s\": ", T.s, "}\n"); return; fi;
   lat := TaharaLattice(T, V, TaharaConds(T, V, rec(drop := [])));
@@ -50,12 +51,23 @@ TahEmit := function(Q, id)
   nu := Gcd(Concatenation([0], List(lat, tau -> tau[X.u[2][3]])));
   Dc := Subgroup(Q, List(TaharaLattice(T, V, TaharaConds(T, V, rec(drop := ["C","E"]))), tau -> TaharaGen(T, V, tau).g));
   Dall := Subgroup(Q, List(TaharaLattice(T, V, TaharaConds(T, V, rec(drop := ["A","B","C","D","E","F"]))), tau -> TaharaGen(T, V, tau).g));
+  # log2 orders of T12, T13, T23, T21, T31, T32 (T_ij = [x_i^d(i), x_j], Tahara's basis)
+  Tm := [[1,2],[1,3],[2,3],[2,1],[3,1],[3,2]];
+  Tord := List(Tm, p -> Log(Order(Comm(T.Y[p[1]], T.x1[p[2]])), 2));
+  # per lattice basis vector: lambda, mu, nu mod 16 and log2 orders of the summands
+  # u_ij q_ij T_ij of gen = genA (ij = 12, 13, 23)
+  A := function(tau, i, j)
+    return Log(Order(Comm(T.Y[i], T.x1[j])^(tau[X.u[i][j]] * QuoInt(T.d[j], T.d[i]))), 2);
+  end;
+  parts := List(lat, tau -> [tau[X.u[1][2]] mod 16, tau[X.u[1][3]] mod 16, tau[X.u[2][3]] mod 16,
+                             A(tau,1,2), A(tau,1,3), A(tau,2,3)]);
   AppendTo(TOUT, "{\"id\": \"", id, "\", \"d\": ", T.d, ", \"e\": ", T.e, ", \"f\": ", T.f,
     ", \"b\": ", T.b, ", \"lat_dim\": ", Length(lat), ", \"log2_tahD\": ", Log(Size(D), 2),
     ", \"gcd_lambda\": ", la, ", \"gcd_mu\": ", mu, ", \"gcd_nu\": ", nu,
     ", \"ctrl_dropCE_log2\": ", Log(Size(Dc), 2), ", \"ctrl_dropAll_log2\": ", Log(Size(Dall), 2),
     ", \"T32_trivial\": ", Comm(T.Y[3], T.x1[2]) = One(Q), ", \"T31_trivial\": ", Comm(T.Y[3], T.x1[1]) = One(Q),
-    ", \"T21_trivial\": ", Comm(T.Y[2], T.x1[1]) = One(Q), "}\n");
+    ", \"T21_trivial\": ", Comm(T.Y[2], T.x1[1]) = One(Q),
+    ", \"Tord\": ", Tord, ", \"parts\": ", parts, "}\n");
 end;;
 for typ in TYPES do
   cnt := 0; hard := 0;
