@@ -2007,12 +2007,12 @@ Open cells are hatched: there the case of $\\gamma_2/\\gamma_3$ of exponent $3$ 
 ссылка на номер открывает статью на этом утверждении, ссылки в тексте ведут к вычислению, коду и данным (коммит
 <a href="{REPO}/tree/{PIN}"><code>{PIN[:7]}</code></a>), файлам Lean и открытым вопросам.
 <span class="tag c">компьютер</span>&nbsp;— проверено точным вычислением (решётки по модулю $p^E$ в форме Хауэлла или усечённая
-алгебра Магнуса, с сертификатом точности); <span class="tag p">на бумаге</span>&nbsp;— доказано; <span class="tag l">Lean</span>&nbsp;— формально проверено.</p>""", f"""
+алгебра Магнуса, с сертификатом точности); <span class="tag p">на бумаге</span>&nbsp;— доказано; <span class="tag l">Lean</span>&nbsp;— формально проверено; <span class="tag k">известно</span>&nbsp;— результат из литературы (формулировка сверена, доказательство нами не перепроверено).</p>""", f"""
 <p>The main statements of the draft with their status. Numbers refer to the <a href="paper.html">version of the paper on this site</a>;
 a number opens the paper at the statement, and the links in the text lead to the computation, the code and data (commit
 <a href="{REPO}/tree/{PIN}"><code>{PIN[:7]}</code></a>), the Lean files and the open questions.
 <span class="tag c">computer</span>: checked by an exact computation (lattices modulo $p^E$ in Howell form, or the truncated
-Magnus algebra, with the exactness certificate); <span class="tag p">paper</span>: proved; <span class="tag l">Lean</span>: formally verified.</p>""")
+Magnus algebra, with the exactness certificate); <span class="tag p">paper</span>: proved; <span class="tag l">Lean</span>: formally verified; <span class="tag k">known</span>: a result from the literature (statement checked, proof not rechecked by us).</p>""")
       + table([t("Статус", "Status"), (t("Утверждение", "Statement"), "l"), (t("Где", "Where"), "l")], rows, rids))
 
     # ---------- definitions (the registry's set, MATH-316) ----------

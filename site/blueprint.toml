@@ -114,8 +114,8 @@ computer = true
 [nodes."rem:rank3"]
 not_formalized = true
 uses = ["ext:tahara61"]
-note = "Paper only (MATH-41). D₅ = 1 for d(Q) ≤ 3 is Tahara's [Tah77a, Cor. 18, 21] (D₄ = γ₄), not formalized. The independent check through Tahara's Theorem 6.1 uses its formalized inclusion; the rest is not formalized (checked by independent agent reviews, MATH-41, wiki 578 §4.4)."
-note_ru = "Только в статье (MATH-41). D₅ = 1 при d(Q) ≤ 3 — это [Tah77a, следствия 18, 21] Тахары (D₄ = γ₄), не формализовано. Независимая проверка через теорему 6.1 Тахары опирается на формализованное включение из неё; остальное не формализовано (проверено независимыми рецензиями агентов, MATH-41, вики 578 §4.4)."
+note = "Paper only (MATH-41). D₅ = 1 for d(Q) ≤ 3 is Tahara's [Tah77a, Cor. 18, 21] (D₄ = γ₄), not formalized. The independent check through Tahara's Theorem 6.1 uses its formalized inclusion; the rest is not formalized (checked by independent agent reviews, MATH-41 comments 8197, 8216)."
+note_ru = "Только в статье (MATH-41). D₅ = 1 при d(Q) ≤ 3 — это [Tah77a, следствия 18, 21] Тахары (D₄ = γ₄), не формализовано. Независимая проверка через теорему 6.1 Тахары опирается на формализованное включение из неё; остальное не формализовано (проверено независимыми рецензиями агентов, MATH-41, комментарии 8197, 8216)."
 
 [nodes."lem:qpp"]
 lean = ["GroupDimension.D_le_derivedSeries_two", "GroupDimension.mem_of_mem_D_add_two", "GroupDimension.rank_ge_three_of_D_five_ne_bot", "GroupDimension.D_le_derivedSeries_two_three", "GroupDimension.mem_of_mem_D_add_two_three", "GroupDimension.rank_ge_three_of_D_five_ne_bot_three"]
