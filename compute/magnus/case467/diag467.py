@@ -72,6 +72,8 @@ def kernel(conds, n, mod):
 class Model:
     def __init__(self, d, mod=9, drop=()):
         self.d = d; self.mod = mod; self.drop = set(drop)
+        # (A) is used to eliminate w and cannot be dropped here; that control exists only in case450/universal.sage
+        assert self.drop <= {'B', 'D1', 'D2', 'J', 'Kt', 'Ko', 'Kall'}, self.drop
         s = self.s = len(d); idx = range(s)
         assert list(d) == sorted(d)
         q = lambda i, j: d[j] // d[i]
@@ -324,6 +326,7 @@ def validate(d, drop=()):
                 ok, fr = M.check(config_K(s, set(A), X))
                 total += 1; nfree += fr; nbad += (not ok)
     print("type", d, "drop", sorted(drop), "cases (A, K_9):", total, "with sigma != 0:", nfree, "FAILING:", nbad, flush=True)
+    return nbad
 
 def diag(S, mod=9, drop=()):
     labels9 = [(1, 'N'), (3, 'N'), (3, 'A'), (9, 'A')]
@@ -345,6 +348,7 @@ def diag(S, mod=9, drop=()):
         nfail += bad
         print("  type", d, "failing labellings", bad, flush=True)
     print("DIAG S =", S, "mod", mod, "drop", sorted(drop), "cases", ncase, "FAILING", nfail, flush=True)
+    return nfail
 
 def diag27_labels():
     """per index: (m_3, m_9, m_27) with K_e = m_e Z, m_3 | 3, m_9 | 9, m_27 | 27, m_3 | m_9 | m_27,
@@ -361,10 +365,10 @@ def diag27_labels():
 if __name__ == '__main__':
     mode = sys.argv[1]
     if mode == 'validate':
-        validate([int(a) for a in sys.argv[2].split(',')], sys.argv[3].split(',') if len(sys.argv) > 3 else ())
+        sys.exit(1 if validate([int(a) for a in sys.argv[2].split(',')], sys.argv[3].split(',') if len(sys.argv) > 3 else ()) else 0)
     elif mode == 'diag':
-        diag(int(sys.argv[2]), int(sys.argv[3]) if len(sys.argv) > 3 else 9,
-             sys.argv[4].split(',') if len(sys.argv) > 4 and sys.argv[4] else ())
+        sys.exit(1 if diag(int(sys.argv[2]), int(sys.argv[3]) if len(sys.argv) > 3 else 9,
+                           sys.argv[4].split(',') if len(sys.argv) > 4 and sys.argv[4] else ()) else 0)
     elif mode == 'orbits':
         f = orbits([int(a) for a in sys.argv[2].split(',')])
         sys.exit(1 if f else 0)
