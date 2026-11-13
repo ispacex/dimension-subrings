@@ -178,6 +178,7 @@ class Model:
                         for k, c in fv[h].items(): r[k] = r.get(k, 0) + int(v[h]) * c
                 if r: sconds.append((r, mod))
         Sg = kernel(sconds, self.NS, mod)
+        self.last_unit = any(bool((np.asarray(g) % 3).any()) for g in Sg)
         if not Lg or not Sg: return True, bool(Sg)
         Lm = np.array(Lg) % mod; Sm = np.array(Sg) % mod
         val = (Lm @ self.RB % mod) @ Sm.T % mod
@@ -367,3 +368,61 @@ if __name__ == '__main__':
     elif mode == 'orbits':
         f = orbits([int(a) for a in sys.argv[2].split(',')])
         sys.exit(1 if f else 0)
+
+# ---------------------------------------------------------------- MOD = 27 (gamma_4^27 = 1), wiki 891 Sec. 13.4
+def zbasis(gens, s):
+    """Z-basis (HNF rows) of the lattice spanned by integer vectors gens (full rank expected)"""
+    M = [list(map(int, g)) for g in gens]
+    H = []
+    for c in range(s):
+        rows = [r for r in M if r[c] != 0]
+        others = [r for r in M if r[c] == 0]
+        while len(rows) > 1:
+            rows.sort(key=lambda r: abs(r[c]))
+            p = rows[0]
+            new = [p]
+            for r in rows[1:]:
+                f = r[c] // p[c]
+                r2 = [a - f * b for a, b in zip(r, p)]
+                if r2[c] != 0: new.append(r2)
+                else: others.append(r2)
+            rows = new
+        if rows:
+            p = rows[0]
+            if p[c] < 0: p = [-a for a in p]
+            H.append(p)
+        M = [r for r in others if any(r)]
+    assert len(H) == s
+    return H
+
+def configs27(s):
+    """all (A, K_3, K_9, K_27) with K_3 = Z^N + 3Z^A, 3K_3 <= K_9 <= K_3, 3K_9 <= K_27 <= K_9"""
+    subs = subspaces(s)
+    for r in range(s + 1):
+        for A in itertools.combinations(range(s), r):
+            A = set(A)
+            K3 = [[(3 if h in A else 1) * int(h == g) for g in range(s)] for h in range(s)]
+            for X in subs:
+                g9 = [[3 * a for a in k] for k in K3] + [[x[h] * (3 if h in A else 1) for h in range(s)] for x in X]
+                B9 = zbasis(g9, s)
+                for Z in subs:
+                    g27 = [[3 * a for a in b] for b in B9] + [[sum(z[t] * B9[t][h] for t in range(s)) for h in range(s)]
+                                                               for z in Z]
+                    yield A, X, Z, {3: [np.array(k) for k in K3], 9: [np.array(k) for k in B9],
+                                    27: [np.array(k) for k in g27]}
+
+def brute27(d, drop=()):
+    s = len(d); M = Model(d, 27, drop)
+    total = nfree = nbad = nunit = 0; ex = []
+    for A, X, Z, K in configs27(s):
+        ok, fr = M.check(K)
+        total += 1; nfree += fr; nunit += M.last_unit
+        if not ok:
+            nbad += 1
+            if len(ex) < 2: ex.append((sorted(A), X, Z))
+    print("MOD27 type", d, "drop", sorted(drop), "cases", total, "with sigma != 0:", nfree, "with sigma of order 27:", nunit, "FAILING:", nbad, ex, flush=True)
+    return nbad
+
+if __name__ == '__main__' and sys.argv[1] == 'brute27':
+    f = brute27([int(a) for a in sys.argv[2].split(',')], sys.argv[3].split(',') if len(sys.argv) > 3 and sys.argv[3] else ())
+    sys.exit(1 if f else 0)
