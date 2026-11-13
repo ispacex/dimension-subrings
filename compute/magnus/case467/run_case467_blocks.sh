@@ -29,6 +29,12 @@ xargs -P "$PAR" -I{} sh -c 'python3 diag467.py orbits {} > "'"$OUT"'/o5/$(echo {
 cat "$OUT"/o5/*.txt | grep '^BLOCK2' > "$OUT/block2.txt"
 cat "$OUT"/o5/*.txt | grep '^ORBITS' > "$OUT/orbits45.txt"
 echo "BLOCK2 types $(wc -l < "$OUT/block2.txt") of $(wc -l < "$OUT/types45.txt"); types with an orbit without a block member: $(grep -vc 'member (Lemma 13.2) 0$' "$OUT/block2.txt"); ORBITS types with failures: $(grep -vc 'FAILING 0$' "$OUT/orbits45.txt")"
-# exit 0 iff no failure in 1, 3 and every control fails somewhere
-! grep -q 'FAILING [1-9]' "$OUT/blocks25.txt" && [ "$(grep -vc 'member (Lemma 13.2) 0$' "$OUT/block2.txt")" = 0 ] \
-  && [ "$(wc -l < "$OUT/block2.txt")" = "$(wc -l < "$OUT/types45.txt")" ] && [ "$(wc -l < "$OUT/blocks6.txt")" = 486 ]
+# exit 0 iff: exactly the 4 lines S = 2..5 and the S = 6 line, all "FAILING 0"; all 486 S = 6 types reported;
+# every type of s = 4, 5 has a BLOCK2 line with 0 orbits without a block member; the D2 and Kt controls fail somewhere
+ok=1
+[ "$(grep -c '^BLOCKS S = [2-5] drop \[\] .* FAILING 0$' "$OUT/blocks25.txt")" = 4 ] || ok=0
+grep -q '^BLOCKS S = 6 types 486 configs [0-9]* FAILING 0$' "$OUT/blocks25.txt" || ok=0
+[ "$(wc -l < "$OUT/block2.txt")" = "$(wc -l < "$OUT/types45.txt")" ] || ok=0
+[ "$(grep -vc 'member (Lemma 13.2) 0$' "$OUT/block2.txt")" = 0 ] || ok=0
+for dr in D2 Kt; do grep "drop \['$dr'\]" "$OUT/controls.txt" | grep -q 'FAILING [1-9]' || ok=0; done
+echo "overall ok=$ok"; [ "$ok" = 1 ]
