@@ -102,8 +102,7 @@ def is_local(basis, n, limit=14):
     for coeffs in itertools.product(range(3), repeat=k):
         if not any(coeffs): continue
         X = sum(c * b for c, b in zip(coeffs, basis)) % 3
-        det = round(np.linalg.det(X)) % 3 if n else 1
-        if det: continue
+        if rank3([list(map(int, row)) for row in X], n) == n: continue      # invertible (exact rank over F_3)
         # singular: must be nilpotent
         Y = X.copy()
         for _ in range(n): Y = (Y @ X) % 3
