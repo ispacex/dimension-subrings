@@ -1,0 +1,5 @@
+type [9, 9, 9] drop ['B', 'C'] cases (A, K_9): 224 with sigma != 0: 180 FAILING: 6
+type [9, 27, 27] drop ['B', 'C'] cases (A, K_9): 224 with sigma != 0: 191 FAILING: 3
+type [9, 9, 9] drop ['C', 'Kt'] cases (A, K_9): 224 with sigma != 0: 223 FAILING: 48
+type [9, 9, 27] drop ['C', 'Kt'] cases (A, K_9): 224 with sigma != 0: 224 FAILING: 22
+type [9, 27, 27] drop ['C', 'Kt'] cases (A, K_9): 224 with sigma != 0: 224 FAILING: 22

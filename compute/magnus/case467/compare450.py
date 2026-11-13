@@ -6,7 +6,7 @@ dropped.  (A) cannot be dropped here (it eliminates w), (C) is not implemented.
 NB: the reference control files s3_drop_X.txt were computed WITH (C) (only s3_drop_C.txt is without it), while this
 model never has (C).  So rows may differ for X in {B, Kt}; on 2026-11-13 exactly 5 rows differed
 ([9,9,9] B, [9,27,27] B, [9,9,9] Kt, [9,9,27] Kt, [9,27,27] Kt), and `sage universal.sage TYPE C,X` (without (C))
-gave 6, 3, 48, 22, 22 failing pairs -- equal to this model.  Exit code 0 iff all other rows agree."""
+gave 6, 3, 48, 22, 22 failing pairs -- equal to this model (case450/universal_results/s3_noC_drop_B_Kt.txt).  Exit code 0 iff all other rows agree."""
 KNOWN_C = {('s3_drop_B.txt', (9, 9, 9)): 6, ('s3_drop_B.txt', (9, 27, 27)): 3, ('s3_drop_Kt.txt', (9, 9, 9)): 48,
            ('s3_drop_Kt.txt', (9, 9, 27)): 22, ('s3_drop_Kt.txt', (9, 27, 27)): 22}   # sage, drop C as well
 import re, sys, os, io, contextlib
