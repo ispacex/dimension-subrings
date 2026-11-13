@@ -69,12 +69,15 @@ def load():
         n.setdefault("note", "")
         n.setdefault("note_ru", "")
         n.setdefault("not_in_paper", [])
+        n.setdefault("not_formalized", False)
         unknown = set(n) - {"lean", "proved", "computer", "uses", "uses_drop", "note", "note_ru", "title", "title_ru", "statement",
-                                "not_in_paper"}
+                                "not_in_paper", "not_formalized"}
         if unknown:
             sys.exit(f"blueprint.toml: node {label}: unknown fields {sorted(unknown)}")
         if n["proved"] and not n["lean"]:
             sys.exit(f"blueprint.toml: node {label} is proved but names no Lean declaration")
+        if n["not_formalized"] and n["lean"]:
+            sys.exit(f"blueprint.toml: node {label} is not_formalized but names Lean declarations")
     return data
 
 
@@ -390,7 +393,7 @@ def check(data, index, tex=None):
             verified = bool(VERIFIED.search(s["body"] + s["proof"])) or f"\\ref{{{x}}}" in sec
             if n["lean"] and not verified:
                 errors.append(f"node {x} names Lean declarations, but the paper does not say it is formally verified")
-            if VERIFIED.search(s["body"] + s["proof"][:800]) and not n["lean"]:
+            if VERIFIED.search(s["body"] + s["proof"][:800]) and not n["lean"] and not n["not_formalized"]:
                 errors.append(f"the paper says {x} is formally verified, but its node names no Lean declaration")
             if "Computer-assisted" in s["title"] and not n["computer"]:
                 errors.append(f"{x} is Computer-assisted in the paper, but its node is not marked computer")

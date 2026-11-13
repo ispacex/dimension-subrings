@@ -18,6 +18,9 @@
 #            are taken from the paper); uses_drop: references of the proof that are not dependencies;
 #   not_in_paper  declarations that the paper's section on the formalization does not name (the
 #            check that it names every declaration of a node skips them);
+#   not_formalized  true for a statement of the paper that is not in Lean although its proof says
+#            that something it relies on is formalized (e.g. Tahara's Theorem 6.1); it turns off only
+#            the check that a statement the paper calls formally verified names Lean declarations;
 #   note     what the Lean version differs in, or what is not formalized (shown in the blueprint
 #            and on blueprint.html), and note_ru, the same in Russian; a number of the paper is
 #            written [[label|#]] (the build puts in the number and checks the label); title, title_ru and statement
@@ -107,6 +110,14 @@ proved = true
 
 [nodes."prop:2048"]
 computer = true
+
+[nodes."thm:rank3"]
+not_formalized = true
+uses = ["ext:tahara61"]
+note = "Paper only (MATH-41): the proof uses Tahara's Theorem 6.1, whose inclusion is formalized; the rest is not. Checked by independent reviews; the random-presentation runs (compute/magnus/run_rank3.sh) agree but are not part of the proof."
+note_ru = "Только в статье (MATH-41): доказательство опирается на теорему 6.1 Тахары, включение из которой формализовано; остальное — нет. Проверено независимыми рецензиями; счёт по случайным копредставлениям (compute/magnus/run_rank3.sh) согласуется, но в доказательство не входит."
+
+[nodes."rem:rank3"]
 
 [nodes."lem:qpp"]
 lean = ["GroupDimension.D_le_derivedSeries_two", "GroupDimension.mem_of_mem_D_add_two", "GroupDimension.rank_ge_three_of_D_five_ne_bot", "GroupDimension.D_le_derivedSeries_two_three", "GroupDimension.mem_of_mem_D_add_two_three", "GroupDimension.rank_ge_three_of_D_five_ne_bot_three"]
@@ -322,6 +333,12 @@ status = "l"
 ru = '''Центральные произведения: $D_n(H\circ E)=D_n(H)$ при $E\in\{D_8,Q_8\}$ и $t\in\gamma_2(H)$, а для $E=M_{2^{k+2}}$ — при условии на $g^{-2}s$ (например, $s=g^2$). {{gh:compute/central|Все $386$ кандидатов}} порядков $2^6$–$2^9$ ему удовлетворяют, так что разложимость $H\circ E$ с $E\in\{D_8,Q_8,M_{16}\}$ контрпримера не даёт. Склейка по собственной подгруппе $Z(E)$ закрыта при $\sigma=g^{2^{j+1}}$ (центральный корень любой степени; <a href="open.html#q-central">остальное открыто</a>); у каждого из $20$ раскладывающихся кандидатов есть разложение, покрытое предложением [[prop:central|#]]. {{lean:GroupDimension.D_n_eq_of_central_product|Предложение [[prop:central|##]]}} и {{lean:GroupDimension.D_n_eq_of_index|лемма [[lem:root|##]]}} доказаны в Lean; проверка кандидатов — вычислением.'''
 en = '''Central products: $D_n(H\circ E)=D_n(H)$ for $E\in\{D_8,Q_8\}$ and $t\in\gamma_2(H)$, and for $E=M_{2^{k+2}}$ under a condition on $g^{-2}s$ (e.g. $s=g^2$). {{gh:compute/central|All $386$ candidates}} of orders $2^6$–$2^9$ satisfy it, so splitting off $E\in\{D_8,Q_8,M_{16}\}$ gives no counterexample. Gluing along a proper subgroup of $Z(E)$ is closed when $\sigma=g^{2^{j+1}}$ (a central root of any degree; <a href="open.html#q-central">the rest is open</a>); each of the $20$ split candidates has a splitting covered by Prop. [[prop:central|#]]. {{lean:GroupDimension.D_n_eq_of_central_product|Prop. [[prop:central|##]]}} and {{lean:GroupDimension.D_n_eq_of_index|Lemma [[lem:root|##]]}} are proved in Lean; the check of the candidates is by computer.'''
 where = '''[[prop:central]], [[lem:root]]'''
+
+[[results]]
+status = "p"
+ru = '''Малый ранг: $D_5(Q)=1$ для конечной $2$-группы $Q$ ступени $3$, если $d(Q)\le2$, или $d(Q)=3$ и $d(2)\le4$, или $d(Q)=3$ и $d(2)^2\mid d(3)$ ($d(1)\mid d(2)\mid d(3)$ — инварианты $Q/\gamma_2$). Через теорему 6.1 Тахары. {{gh:compute/magnus/run_rank3.sh|Счёт}} по $2100$ случайным копредставлениям согласуется. Открыто: $d(Q)=3$, $d(2)\ge8$, $d(3)<d(2)^2$.'''
+en = '''Small rank: $D_5(Q)=1$ for a finite $2$-group $Q$ of class $3$ if $d(Q)\le2$, or $d(Q)=3$ and $d(2)\le4$, or $d(Q)=3$ and $d(2)^2\mid d(3)$ ($d(1)\mid d(2)\mid d(3)$ the invariants of $Q/\gamma_2$). Through Tahara's Theorem 6.1. {{gh:compute/magnus/run_rank3.sh|A computation}} on $2100$ random presentations agrees. Open: $d(Q)=3$, $d(2)\ge8$, $d(3)<d(2)^2$.'''
+where = '''[[thm:rank3]], [[rem:rank3]]'''
 
 [[results]]
 status = "c"
