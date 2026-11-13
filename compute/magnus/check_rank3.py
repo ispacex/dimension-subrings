@@ -27,8 +27,8 @@ def kernel_rank(T, R, rels, words):
     r = len(words)
     if not r:
         return 0, 0
-    A = T.ideal_rows([word(T, w) for w in rels], R)
     m = len(T.monos)
+    A = np.asarray(T.ideal_rows([word(T, w) for w in rels], R), dtype=np.int64).reshape(-1, m)
     V = np.array([T.vec(word(T, w), R) for w in words])
     top = np.hstack([A, np.zeros((A.shape[0], r), dtype=np.int64)])
     mid = np.hstack([V, np.eye(r, dtype=np.int64)])

@@ -7,7 +7,7 @@
 set -euo pipefail
 export PATH=${JOB_CACHE:-/nonexistent}/bin:$PATH
 cd "$(dirname "$0")"
-OUT=${JOB_OUT:-out}; mkdir -p "$OUT"
+OUT=${JOB_OUT:-out}; mkdir -p "$OUT"   # default out/ is in .gitignore
 SEED=${SEED:-1}; PER=${PER:-2}; TYPES=${TYPES:-"4,4,16 4,4,8"}
 PY=${PY:-$(ls -d ${JOB_CACHE:-/nonexistent}/venv-*/bin/python 2>/dev/null | head -1 || true)}; PY=${PY:-python3}
 $PY -c 'import numpy' || { echo "no numpy in $PY (use tm cache mikh)"; exit 2; }
@@ -22,3 +22,12 @@ wait
 grep -h "^type\|Error\|bound hit" "$OUT"/gap_*.log || true
 cat "$OUT"/py_*.err
 $PY rank3_sum.py "$OUT"
+# fail loudly if a type is missing: GAP or Python died, or fewer checked groups than generated
+bad=0
+for typ in $TYPES; do
+  tag=$(echo "$typ" | tr -d ,)
+  n=$(grep -h "^type" "$OUT/gap_$tag.log" | sed -n 's/.* class3 \([0-9]*\) .*/\1/p')
+  m=$(grep -c . "$OUT/magnus_$tag.jsonl" 2>/dev/null || true)
+  if [ -z "$n" ] || [ "$n" != "${m:-0}" ]; then echo "INCOMPLETE type $typ: generated '${n}' checked '${m:-0}'"; bad=1; fi
+done
+exit $bad
