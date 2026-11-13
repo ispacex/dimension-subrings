@@ -565,3 +565,19 @@ def orbits_k(d, k, verbose=False):
 if __name__ == '__main__' and sys.argv[1] == 'orbitsk':
     f = orbits_k([int(a) for a in sys.argv[3].split(',')], int(sys.argv[2]), True)
     sys.exit(1 if f else 0)
+
+# ---------------------------------------------------------------- validate split by A (parallel brute force, s = 5)
+def validate_A(d, A):
+    """all K_9 for one A (MOD = 9); the union over all A is 'validate'"""
+    s = len(d); M = Model(d, 9); subs = subspaces(s)
+    total = nfree = nbad = 0
+    for X in subs:
+        ok, fr = M.check(config_K(s, set(A), X))
+        total += 1; nfree += fr; nbad += (not ok)
+    print("VALA type", d, "A", sorted(A), "cases", total, "with sigma != 0:", nfree, "FAILING:", nbad, flush=True)
+    return nbad
+
+if __name__ == '__main__' and sys.argv[1] == 'validatea':
+    _d = [int(a) for a in sys.argv[2].split(',')]
+    _A = [int(a) for a in sys.argv[3].split(',') if a != ''] if len(sys.argv) > 3 else []
+    sys.exit(1 if validate_A(_d, _A) else 0)

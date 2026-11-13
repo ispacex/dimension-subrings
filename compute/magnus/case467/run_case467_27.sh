@@ -14,3 +14,7 @@ xargs -P "$PAR" -I{} sh -c 'python3 diag467.py brute27 {} > "'"$OUT"'/b27/$(echo
 cat "$OUT"/b27/*.txt | grep '^MOD27' | tee "$OUT/brute27.txt"
 echo "types: $(wc -l < "$OUT/brute27.txt") of $(wc -l < "$OUT/types27.txt"); with failures: $(grep -vc 'FAILING: 0 ' "$OUT/brute27.txt")"
 { for t in 9,27,27 27,27,27 9,9,27; do for dr in B D1 D2 Kt; do python3 diag467.py brute27 $t $dr; done; done; } | tee "$OUT/controls27.txt"
+# exit status: 0 iff all 60 types pass and every negative control fails somewhere (controls are expected to fail)
+nmain=$(grep -vc 'FAILING: 0 ' "$OUT/brute27.txt"); nctl0=$(grep -c 'FAILING: 0 ' "$OUT/controls27.txt")
+echo "main types with failures: $nmain; controls that did NOT fail: $nctl0"
+[ "$nmain" = 0 ] && [ "$nctl0" = 0 ] && [ "$(wc -l < "$OUT/brute27.txt")" = "$(wc -l < "$OUT/types27.txt")" ]
