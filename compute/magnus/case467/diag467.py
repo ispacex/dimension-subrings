@@ -426,3 +426,138 @@ def brute27(d, drop=()):
 if __name__ == '__main__' and sys.argv[1] == 'brute27':
     f = brute27([int(a) for a in sys.argv[2].split(',')], sys.argv[3].split(',') if len(sys.argv) > 3 and sys.argv[3] else ())
     sys.exit(1 if f else 0)
+
+# ---------------------------------------------------------------- MOD = 3^k in general (gamma_4^(3^k) = 1)
+def configs_k(s, k, A_list=None):
+    """all (A, {3^j: K_{3^j}}) with K_3 = Z^N + 3Z^A and 3K_e <= K_{3e} <= K_e (j = 1..k)"""
+    subs = subspaces(s)
+    As = A_list if A_list is not None else [set(A) for r in range(s + 1) for A in itertools.combinations(range(s), r)]
+    for A in As:
+        K3 = [[(3 if h in A else 1) * int(h == g) for g in range(s)] for h in range(s)]
+        def rec(e, B, acc):
+            if e == 3 ** k:
+                yield dict(acc); return
+            for X in subs:
+                g = [[3 * a for a in b] for b in B] + [[sum(x[t] * B[t][h] for t in range(s)) for h in range(s)] for x in X]
+                B2 = zbasis(g, s)
+                acc[3 * e] = B2
+                yield from rec(3 * e, B2, acc)
+            acc.pop(3 * e, None)
+        for K in rec(3, K3, {3: K3}):
+            yield A, {e: [np.array(b) for b in K[e]] for e in K}
+
+def labels_k(k):
+    out = []
+    for m3 in (1, 3):
+        def rec(seq):
+            if len(seq) == k: out.append({3 ** (j + 1): seq[j] for j in range(k)}); return
+            for m in (seq[-1], 3 * seq[-1]): rec(seq + [m])
+        rec([m3])
+    return out
+
+def capped_types_k(S, k):
+    cap = 3 ** k; vals = [3 ** j for j in range(1, k + 1)]; gaps = [1] + vals
+    out = []
+    for d1 in vals:
+        for g in itertools.product(gaps, repeat=S - 1):
+            d = [d1]
+            for x in g: d.append(d[-1] * x)
+            out.append(d)
+    return out
+
+def diag_k(S, k, drop=(), types=None):
+    nfail = ncase = 0
+    for d in (types or capped_types_k(S, k)):
+        M = Model(d, 3 ** k, drop); bad = 0
+        for lab in itertools.product(labels_k(k), repeat=S):
+            K = {e: [np.eye(S, dtype=np.int64)[h] * lab[h][e] for h in range(S)] for e in lab[0]}
+            ok, _ = M.check(K); ncase += 1; bad += (not ok)
+        nfail += bad
+    print("DIAGK S =", S, "mod", 3 ** k, "drop", sorted(drop), "types", len(types or capped_types_k(S, k)), "cases", ncase,
+          "FAILING", nfail, flush=True)
+    return nfail
+
+def brute_k(d, k, drop=()):
+    s = len(d); M = Model(d, 3 ** k, drop)
+    total = nfree = nbad = nunit = 0; ex = []
+    for A, K in configs_k(s, k):
+        ok, fr = M.check(K)
+        total += 1; nfree += fr; nunit += M.last_unit
+        if not ok:
+            nbad += 1
+            if len(ex) < 2: ex.append((sorted(A), {e: [list(map(int, b)) for b in K[e]] for e in K}))
+    print("MODK", 3 ** k, "type", d, "drop", sorted(drop), "cases", total, "with sigma != 0:", nfree,
+          "with sigma of full order:", nunit, "FAILING:", nbad, ex, flush=True)
+    return nbad
+
+if __name__ == '__main__' and sys.argv[1] == 'brutek':
+    f = brute_k([int(a) for a in sys.argv[3].split(',')], int(sys.argv[2]),
+                sys.argv[4].split(',') if len(sys.argv) > 4 and sys.argv[4] else ())
+    sys.exit(1 if f else 0)
+if __name__ == '__main__' and sys.argv[1] == 'diagk':
+    f = diag_k(int(sys.argv[3]), int(sys.argv[2]), sys.argv[4].split(',') if len(sys.argv) > 4 and sys.argv[4] else ())
+    sys.exit(1 if f else 0)
+
+def hnf_key(gens, s, mod):
+    """canonical key of the lattice spanned by gens + mod Z^s: HNF with entries above the pivots reduced"""
+    H = zbasis([list(map(int, g)) for g in gens] + [[mod * int(h == g) for g in range(s)] for h in range(s)], s)
+    for c in range(s):          # rows are in pivot order c = 0..s-1, pivot H[c][c] > 0
+        for r in range(c):
+            f = H[r][c] // H[c][c]
+            if f: H[r] = [a - f * b for a, b in zip(H[r], H[c])]
+    return tuple(tuple(r) for r in H)
+
+def gen_mats(d, A, mod):
+    """generators of Gamma ∩ Stab(K_3) as integer matrices C (K' = C^{-1} K), with their inverses mod 'mod'"""
+    s = len(d); out = []
+    for j in range(s):
+        C = np.eye(s, dtype=np.int64); C[j, j] = 2
+        Ci = np.eye(s, dtype=np.int64); Ci[j, j] = pow(2, -1, mod); out.append(Ci)
+    for i in range(s):
+        for j in range(s):
+            if i == j: continue
+            q = d[j] // d[i] if d[j] > d[i] else 1
+            c = q
+            if d[i] >= d[j] and (j not in A and i in A): c = 3
+            if c % mod == 0: continue
+            Ci = np.eye(s, dtype=np.int64); Ci[i, j] = -c; out.append(Ci)
+    return out
+
+def orbits_k(d, k, verbose=False):
+    """orbits of all chain configurations (A, K_3 >= K_9 >= ... >= K_{3^k}) under Stab_Gamma(K_3); orbits without a
+    diagonal member are checked directly"""
+    s = len(d); mod = 3 ** k; M = Model(d, mod)
+    def key(K): return tuple(hnf_key(K[3 ** j], s, mod) for j in range(2, k + 1))
+    def isdiag(kk): return all(all(H[r][c] == 0 for r in range(s) for c in range(s) if r != c) for H in kk)
+    tot = nd = fail = 0
+    for r in range(s + 1):
+        for A in itertools.combinations(range(s), r):
+            A = set(A)
+            confs = {}
+            for _, K in configs_k(s, k, [A]): confs[key(K)] = K
+            keys = list(confs); pos = {x: t for t, x in enumerate(keys)}; parent = list(range(len(keys)))
+            def find(x):
+                while parent[x] != x: parent[x] = parent[parent[x]]; x = parent[x]
+                return x
+            G = gen_mats(d, A, mod)
+            for t, kk in enumerate(keys):
+                for Ci in G:
+                    k2 = tuple(hnf_key([Ci @ np.array(row) for row in H], s, mod) for H in kk)
+                    a, b = find(t), find(pos[k2])
+                    if a != b: parent[a] = b
+            comps = {}
+            for t in range(len(keys)): comps.setdefault(find(t), []).append(t)
+            tot += len(comps)
+            for mem in comps.values():
+                if any(isdiag(keys[t]) for t in mem): continue
+                nd += 1
+                ok, _ = M.check(confs[keys[mem[0]]])
+                if not ok:
+                    fail += 1
+                    if verbose: print("   FAIL", sorted(A), keys[mem[0]])
+    print("ORBITSK mod", mod, "type", d, "orbits", tot, "without diagonal member", nd, "FAILING", fail, flush=True)
+    return fail
+
+if __name__ == '__main__' and sys.argv[1] == 'orbitsk':
+    f = orbits_k([int(a) for a in sys.argv[3].split(',')], int(sys.argv[2]), True)
+    sys.exit(1 if f else 0)
