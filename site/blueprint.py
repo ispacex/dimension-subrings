@@ -368,7 +368,7 @@ def check(data, index, tex=None):
                     continue
                 if lab not in nodes or not nodes[lab]["proved"]:
                     errors.append(f"results row {k} is marked Lean but cites [[{lab}]], whose proof is not in Lean")
-        if row["status"] not in ("l", "p", "c", "cp", "o"):
+        if row["status"] not in ("l", "p", "c", "cp", "k", "o"):
             errors.append(f"results row {k}: unknown status {row['status']!r}")
     if tex is not None:
         stmts, sections = statements(tex)

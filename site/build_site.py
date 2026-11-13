@@ -223,6 +223,7 @@ footer { border-top:1px solid var(--line); margin-top:3rem; }
        color:var(--cellink); border:1px solid var(--line); }
 .tag.c { background:var(--cmp); } .tag.p { background:var(--ppr); } .tag.cp { background:var(--both); }
 .tag.o { background:var(--open); } .tag.l { background:var(--soft); color:var(--ink); }
+.tag.k { background:var(--soft); color:var(--ink); border:1px dashed var(--ink); }
 figure.scene { margin:1rem 0; } figure.scene iframe { border:0; width:100%; max-width:640px; aspect-ratio:640/460; height:auto; display:block; }
 figure.scene figcaption { font-size:.88rem; color:var(--muted); margin-top:.3rem; }
 dl.terms dt { font-weight:600; margin-top:.8rem; } dl.terms dd { margin:.2rem 0 0 1.2rem; } dl.terms dd p { margin:.2rem 0; }
@@ -724,11 +725,11 @@ def num(n, lang):
 
 
 # ---------------------------------------------------------------------------------------------
-# What is known. Status: "c" computer, "p" paper, "cp" computer + paper, "o" open, "l" Lean.
+# What is known. Status: "c" computer, "p" paper, "cp" computer + paper, "k" known (literature), "o" open, "l" Lean.
 # Refs point to the paper draft (numbers of the version on the site) and to the code.
 
 STATUS = {"c": ("компьютер", "computer"), "p": ("на бумаге", "paper"), "cp": ("компьютер + бумага", "computer + paper"),
-          "o": ("открыто", "open"), "l": ("Lean", "Lean")}
+          "k": ("известно", "known"), "o": ("открыто", "open"), "l": ("Lean", "Lean")}
 
 # The rows of results.html, and the status of every statement of the paper, are in site/blueprint.toml
 # (MATH-324): the blueprint pages and blueprint.html are built from the same data, and site/blueprint.py
@@ -2006,12 +2007,12 @@ Open cells are hatched: there the case of $\\gamma_2/\\gamma_3$ of exponent $3$ 
 ссылка на номер открывает статью на этом утверждении, ссылки в тексте ведут к вычислению, коду и данным (коммит
 <a href="{REPO}/tree/{PIN}"><code>{PIN[:7]}</code></a>), файлам Lean и открытым вопросам.
 <span class="tag c">компьютер</span>&nbsp;— проверено точным вычислением (решётки по модулю $p^E$ в форме Хауэлла или усечённая
-алгебра Магнуса, с сертификатом точности); <span class="tag p">на бумаге</span>&nbsp;— доказано; <span class="tag l">Lean</span>&nbsp;— формально проверено.</p>""", f"""
+алгебра Магнуса, с сертификатом точности); <span class="tag p">на бумаге</span>&nbsp;— доказано; <span class="tag l">Lean</span>&nbsp;— формально проверено; <span class="tag k">известно</span>&nbsp;— результат из литературы (формулировка сверена, доказательство нами не перепроверено).</p>""", f"""
 <p>The main statements of the draft with their status. Numbers refer to the <a href="paper.html">version of the paper on this site</a>;
 a number opens the paper at the statement, and the links in the text lead to the computation, the code and data (commit
 <a href="{REPO}/tree/{PIN}"><code>{PIN[:7]}</code></a>), the Lean files and the open questions.
 <span class="tag c">computer</span>: checked by an exact computation (lattices modulo $p^E$ in Howell form, or the truncated
-Magnus algebra, with the exactness certificate); <span class="tag p">paper</span>: proved; <span class="tag l">Lean</span>: formally verified.</p>""")
+Magnus algebra, with the exactness certificate); <span class="tag p">paper</span>: proved; <span class="tag l">Lean</span>: formally verified; <span class="tag k">known</span>: a result from the literature (statement checked, proof not rechecked by us).</p>""")
       + table([t("Статус", "Status"), (t("Утверждение", "Statement"), "l"), (t("Где", "Where"), "l")], rows, rids))
 
     # ---------- definitions (the registry's set, MATH-316) ----------
