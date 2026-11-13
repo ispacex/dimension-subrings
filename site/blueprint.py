@@ -395,6 +395,8 @@ def check(data, index, tex=None):
                 errors.append(f"node {x} names Lean declarations, but the paper does not say it is formally verified")
             if VERIFIED.search(s["body"] + s["proof"][:800]) and not n["lean"] and not n["not_formalized"]:
                 errors.append(f"the paper says {x} is formally verified, but its node names no Lean declaration")
+            if n["not_formalized"] and not VERIFIED.search(s["body"] + s["proof"][:800]):
+                errors.append(f"node {x} is not_formalized, but the paper no longer mentions formalization there: drop the flag")
             if "Computer-assisted" in s["title"] and not n["computer"]:
                 errors.append(f"{x} is Computer-assisted in the paper, but its node is not marked computer")
         # each declaration of a node is named in an \\item of the section on the formalization that

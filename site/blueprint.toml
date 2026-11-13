@@ -114,8 +114,8 @@ computer = true
 [nodes."thm:rank3"]
 not_formalized = true
 uses = ["ext:tahara61"]
-note = "Paper only (MATH-41): the proof uses Tahara's Theorem 6.1, whose inclusion is formalized; the rest is not. Checked by independent reviews; the random-presentation runs (compute/magnus/run_rank3.sh) agree but are not part of the proof."
-note_ru = "Только в статье (MATH-41): доказательство опирается на теорему 6.1 Тахары, включение из которой формализовано; остальное — нет. Проверено независимыми рецензиями; счёт по случайным копредставлениям (compute/magnus/run_rank3.sh) согласуется, но в доказательство не входит."
+note = "Paper only (MATH-41): the proof uses Tahara's Theorem 6.1, whose inclusion is formalized; the rest is not. Checked by independent agent reviews (MATH-41, wiki 578 §4.4); the random-presentation runs (compute/magnus/run_rank3.sh) agree but are not part of the proof."
+note_ru = "Только в статье (MATH-41): доказательство опирается на теорему 6.1 Тахары, включение из которой формализовано; остальное — нет. Проверено независимыми рецензиями агентов (MATH-41, вики 578 §4.4); счёт по случайным копредставлениям (compute/magnus/run_rank3.sh) согласуется, но в доказательство не входит."
 
 [nodes."rem:rank3"]
 
@@ -336,8 +336,8 @@ where = '''[[prop:central]], [[lem:root]]'''
 
 [[results]]
 status = "p"
-ru = '''Малый ранг: $D_5(Q)=1$ для конечной $2$-группы $Q$ ступени $3$, если $d(Q)\le2$, или $d(Q)=3$ и $d(2)\le4$, или $d(Q)=3$ и $d(2)^2\mid d(3)$ ($d(1)\mid d(2)\mid d(3)$ — инварианты $Q/\gamma_2$). Через теорему 6.1 Тахары. {{gh:compute/magnus/run_rank3.sh|Счёт}} по $2100$ случайным копредставлениям согласуется. Открыто: $d(Q)=3$, $d(2)\ge8$, $d(3)<d(2)^2$.'''
-en = '''Small rank: $D_5(Q)=1$ for a finite $2$-group $Q$ of class $3$ if $d(Q)\le2$, or $d(Q)=3$ and $d(2)\le4$, or $d(Q)=3$ and $d(2)^2\mid d(3)$ ($d(1)\mid d(2)\mid d(3)$ the invariants of $Q/\gamma_2$). Through Tahara's Theorem 6.1. {{gh:compute/magnus/run_rank3.sh|A computation}} on $2100$ random presentations agrees. Open: $d(Q)=3$, $d(2)\ge8$, $d(3)<d(2)^2$.'''
+ru = '''Малый ранг: $D_5(Q)=1$ для конечной $2$-группы $Q$ ступени $3$, если $d(Q)\le2$, или $d(Q)=3$ и $d(2)\le4$, или $d(Q)=3$ и $d(2)^2\mid d(3)$ ($d(1)\mid d(2)\mid d(3)$ — инварианты $Q/\gamma_2$). Через теорему 6.1 Тахары. {{gh:compute/magnus/run_rank3.sh|Счёт}} по $2100$ случайным копредставлениям согласуется. Не покрыто: $d(Q)=3$, $d(2)\ge8$, $d(3)<d(2)^2$ (при порядке $\le2^{11}$ закрыто предложениями [[prop:1024|#]] и [[prop:2048|#]]).'''
+en = '''Small rank: $D_5(Q)=1$ for a finite $2$-group $Q$ of class $3$ if $d(Q)\le2$, or $d(Q)=3$ and $d(2)\le4$, or $d(Q)=3$ and $d(2)^2\mid d(3)$ ($d(1)\mid d(2)\mid d(3)$ the invariants of $Q/\gamma_2$). Through Tahara's Theorem 6.1. {{gh:compute/magnus/run_rank3.sh|A computation}} on $2100$ random presentations agrees. Not covered: $d(Q)=3$, $d(2)\ge8$, $d(3)<d(2)^2$ (for orders $\le2^{11}$ settled by Props. [[prop:1024|#]] and [[prop:2048|#]]).'''
 where = '''[[thm:rank3]], [[rem:rank3]]'''
 
 [[results]]
