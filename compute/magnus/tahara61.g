@@ -26,7 +26,7 @@ OProd := function(x, a, one) return Product(List([1..Length(x)], i -> x[i]^a[i])
 # (unused by the scripts); default (fail): our own, from IndependentGeneratorsOfAbelianGroup.
 TaharaData := function(P, x1opt)
   local L, B1, B2, B3, s, t, u, x1, d, x2, e, x3, f, Y, b, c, dd, al, i, k, g, h, r, one;
-  L := LowerCentralSeriesOfGroup(P);
+  L := ShallowCopy(LowerCentralSeriesOfGroup(P));  # immutable attribute; padded below when class < 4
   while Length(L) < 5 do Add(L, TrivialSubgroup(P)); od;
   if Length(L) > 5 and not IsTrivial(L[5]) then Error("class > 4"); fi;
   one := One(P);
