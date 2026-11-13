@@ -235,6 +235,22 @@ def config_K(s, A, X):
         K9.append(v)
     return {3: K3, 9: K9}
 
+def is_block2(X, A, d):
+    """K_9 (given by the subspace X of K_3/3K_3 in the basis b_h) is block diagonal with blocks singletons and pairs
+    {a, n}, a in A, n in N, d(n) >= 9 d(a) (wiki 891 Sec. 13, Lemma 13.2): the RREF rows have support of size <= 2,
+    pairwise disjoint, and every 2-support is such a pair"""
+    used = set()
+    for row in X:
+        sup = [h for h, x in enumerate(row) if x]
+        if used & set(sup): return False
+        used |= set(sup)
+        if len(sup) > 2: return False
+        if len(sup) == 2:
+            a, n = sup
+            if n in A: a, n = n, a
+            if not (a in A and n not in A and d[n] >= 9 * d[a]): return False
+    return True
+
 def is_diag(X):
     return all(sum(1 for x in row if x) == 1 for row in X)
 
@@ -286,7 +302,7 @@ def induced(C, A, s):
 
 def orbits(d, verbose=True):
     s = len(d); M = Model(d, 9); subs = subspaces(s)
-    tot_orbits = 0; nodiag = 0; failing = 0; checked = 0
+    tot_orbits = 0; nodiag = 0; failing = 0; checked = 0; noblock = 0
     for r in range(s + 1):
         for A in itertools.combinations(range(s), r):
             A = set(A)
@@ -306,6 +322,7 @@ def orbits(d, verbose=True):
             for t in range(len(subs)): comps.setdefault(find(t), []).append(t)
             tot_orbits += len(comps)
             for members in comps.values():
+                if not any(is_block2(subs[t], A, d) for t in members): noblock += 1
                 if any(is_diag(subs[t]) for t in members): continue
                 nodiag += 1
                 X = subs[members[0]]
@@ -313,6 +330,7 @@ def orbits(d, verbose=True):
                 if not ok:
                     failing += 1
                     if verbose: print("   FAIL A =", sorted(A), "X =", X, flush=True)
+    print("BLOCK2 type", d, "orbits", tot_orbits, "without a block member (Lemma 13.2)", noblock, flush=True)
     print("ORBITS type", d, "orbits", tot_orbits, "without diagonal member", nodiag, "checked directly", checked,
           "FAILING", failing, flush=True)
     return failing
@@ -581,3 +599,54 @@ if __name__ == '__main__' and sys.argv[1] == 'validatea':
     _d = [int(a) for a in sys.argv[2].split(',')]
     _A = [int(a) for a in sys.argv[3].split(',') if a != ''] if len(sys.argv) > 3 else []
     sys.exit(1 if validate_A(_d, _A) else 0)
+
+# ---------------------------------------------------------------- block-diagonal configurations (wiki 891 Sec. 13)
+def block_configs(d):
+    """all (A, K_3, K_9) on the capped type d whose K_9 is block diagonal with at most 3 blocks, each a singleton
+    (diagonal label) or a pair a < n with a in A, n in N, d(n) >= 9 d(a) and K_9|_{a,n} = <(3, -eps), (0, 3)>"""
+    s = len(d); labels9 = [(1, 'N'), (3, 'N'), (3, 'A'), (9, 'A')]
+    def partitions(rest):
+        if not rest: yield []; return
+        h = rest[0]
+        for p in partitions(rest[1:]): yield [(h,)] + p
+        for n in rest[1:]:
+            if d[n] >= 9 * d[h]:
+                r2 = [x for x in rest[1:] if x != n]
+                for p in partitions(r2): yield [(h, n)] + p
+    for blocks in partitions(list(range(s))):
+        if len(blocks) > 3: continue
+        singles = [b[0] for b in blocks if len(b) == 1]; pairs = [b for b in blocks if len(b) == 2]
+        for lab in itertools.product(labels9, repeat=len(singles)):
+            for eps in itertools.product((1, 2), repeat=len(pairs)):
+                A = {h for h, l in zip(singles, lab) if l[1] == 'A'} | {a for a, n in pairs}
+                E = np.eye(s, dtype=np.int64)
+                K3 = [E[h] * (3 if h in A else 1) for h in range(s)]
+                K9 = [E[h] * l[0] for h, l in zip(singles, lab)]
+                for (a, n), e in zip(pairs, eps):
+                    K9 += [3 * E[a] + (9 - e) * E[n], 3 * E[n], 9 * E[a]]
+                yield blocks, A, {3: K3, 9: K9}
+
+def blocks_check(S, drop=()):
+    nfail = ncase = npair = 0; ntypes = 0
+    for d in capped_types(S):
+        M = Model(d, 9, drop); bad = 0; ntypes += 1
+        for blocks, A, K in block_configs(d):
+            ok, _ = M.check(K); ncase += 1; bad += (not ok)
+            npair += any(len(b) == 2 for b in blocks)
+        nfail += bad
+        if bad: print("  type", d, "failing", bad, flush=True)
+    print("BLOCKS S =", S, "drop", sorted(drop), "types", ntypes, "configs", ncase, "with a pair block", npair,
+          "FAILING", nfail, flush=True)
+    return nfail
+
+if __name__ == '__main__' and sys.argv[1] == 'blocks':
+    f = blocks_check(int(sys.argv[2]), sys.argv[3].split(',') if len(sys.argv) > 3 and sys.argv[3] else ())
+    sys.exit(1 if f else 0)
+
+if __name__ == '__main__' and sys.argv[1] == 'blockstype':
+    _d = [int(a) for a in sys.argv[2].split(',')]; _M = Model(_d, 9); _n = _f = 0
+    for _b, _A, _K in block_configs(_d):
+        _ok, _ = _M.check(_K); _n += 1; _f += (not _ok)
+        if not _ok: print("   FAIL", _b, sorted(_A), flush=True)
+    print("BLOCKST type", _d, "configs", _n, "FAILING", _f, flush=True)
+    sys.exit(1 if _f else 0)
