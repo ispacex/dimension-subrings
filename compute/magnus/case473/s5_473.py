@@ -21,7 +21,10 @@ Modes (one summary line per type; exit status 1 iff a claim fails):
                          (control: must fail somewhere; then the exit status is 0 regardless).
   classify TYPE          per A: (T0), (T1) from t0471/t1471, and the independent shape classification; asserts that
                          (T1) <=> shape <= (1, 1) and (T0) <=> no incomparable pair.
-  types S                capped (cut 27) types of length S containing the invariant 9
+  full TYPE A            control of the orbit reduction: R = 0 on all 69 699 pairs for one A (comma list), no orbits
+  act TYPE N SEED        control of induced27: N random (A, pair), every generator: F_3 image == HNF image of Ci K
+  types S                capped types (gaps cut at 27, values kept: diag467.capped_types_k) of length S with the
+                         invariant 9
 """
 import itertools, os, sys, time
 import numpy as np
@@ -140,6 +143,38 @@ def classify_mode(d):
           "MISMATCH", bad, flush=True)
     return bad
 
+def full_mode(d, A):
+    """control of the orbit reduction: R = 0 on ALL pairs (X_9 >= X_27) for one A, without orbits; also reports
+    whether the verdict is constant on every orbit"""
+    t_start = time.time()
+    s = len(d); sp = Space(s); M = Model(d, MOD); A = set(A)
+    reps, _ = orbit_reps(sp, d, A)
+    nf = 0; verdict = []
+    for i, j in sp.pairs:
+        ok, _ = M.check(chain_K(sp.subs[i], sp.subs[j], A, s)); verdict.append(ok); nf += (not ok)
+    print("S5FULL type", ",".join(map(str, d)), "A", sorted(A), "pairs", len(sp.pairs), "orbits", len(reps),
+          "sec", round(time.time() - t_start, 1), "FAILING", nf, flush=True)
+    return nf
+
+def act_mode(d, n, seed):
+    """control of induced27: for random A, pairs and generators, the image computed on F_3 (induced27 + perm) equals
+    the image of the lattices under Ci, by HNF keys (as t1471/t0471 'orbits')"""
+    import random
+    from diag467 import hnf_key
+    rng = random.Random(seed); s = len(d); sp = Space(s); bad = 0; tot = 0
+    key = lambda K: (hnf_key(K[9], s, MOD), hnf_key(K[27], s, MOD))
+    for _ in range(n):
+        A = {h for h in range(s) if rng.random() < 0.5}
+        i, j = rng.choice(sp.pairs)
+        K = chain_K(sp.subs[i], sp.subs[j], A, s)
+        for Ci in gen_mats(d, A, MOD):
+            P = sp.perm(induced27(Ci, A, s))
+            k1 = key(chain_K(sp.subs[P[i]], sp.subs[P[j]], A, s))
+            k2 = tuple(hnf_key([Ci @ np.array(row) for row in K[e]], s, MOD) for e in (9, 27))
+            tot += 1; bad += (k1 != k2)
+    print("S5ACT type", ",".join(map(str, d)), "samples", n, "images", tot, "MISMATCH", bad, flush=True)
+    return bad
+
 def types_mode(S):
     for d in capped_types_k(S, 3):
         if 9 in d: print(",".join(map(str, d)))
@@ -149,6 +184,8 @@ if __name__ == '__main__':
     if m == 'types': types_mode(int(sys.argv[2])); sys.exit(0)
     d = [int(a) for a in sys.argv[2].split(',')]
     if m == 'classify': sys.exit(1 if classify_mode(d) else 0)
+    if m == 'full': sys.exit(1 if full_mode(d, [int(a) for a in sys.argv[3].split(',') if a]) else 0)
+    if m == 'act': sys.exit(1 if act_mode(d, int(sys.argv[3]), int(sys.argv[4])) else 0)
     if m == 'run':
         rest = sys.argv[3:]
         allA = 'all' in rest

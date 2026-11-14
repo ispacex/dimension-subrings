@@ -12,6 +12,8 @@
 #                             the independent shape classification (MISMATCH 0);
 #                         (c) controls on s = 5 types: without (D2) and without (Kt) the same check must fail;
 #                         (d) 'run TYPE all' on a few s = 5 types: the (T0)/(T1) classes too (reported per class).
+#   xfull PAR             (e) R = 0 on ALL pairs for 3 (d, A) at s = 5 (no orbit reduction), and the F_3 action of
+#                         the generators against HNF images of the lattices on 3 types (MISMATCH 0).
 #   pilot PAR             a fixed sample of 12 s = 5 types ('run' + 'classify') and (c): for the volume estimate.
 # Progress: $JOB_ROOT/progress as done/total.  Exit status 1 iff a claim fails or a control does not fail.
 set -uo pipefail
@@ -40,7 +42,7 @@ main_verdict() {  # main_verdict RUNFILE CLASSFILE NTYPES
   # number of A checked per type == number of non-(T1) A in classify (all classes except T0, T1)
   amis=$(awk '/^S5CLASS/{n=0; for(i=4;i<NF-1;i++){split($i,a,":"); if(a[1]!="T0" && a[1]!="T1") n+=a[2]}; want[$3]=n}
               /^S5RUN/{got[$3]=$7} END{m=0; for(t in want) if(got[t]!=want[t]) m++; print m}' "$cf" "$rf")
-  awk '/^S5RUN/{A+=$7; o+=$11; c+=$13; z+=$15; sec+=$(NF-2)} END{printf "types %d, A %d, orbits %d, checked %d, sigma!=0 %d, cpu-sec %.0f\n", NR, A, o, c, z, sec}' "$rf"
+  awk '/^S5RUN/{n++; A+=$7; o+=$11; c+=$13; z+=$15; sec+=$(NF-2)} END{printf "types %d, A %d, orbits %d, checked %d, sigma!=0 %d, cpu-sec %.0f\n", n, A, o, c, z, sec}' "$rf"
   awk '/^S5RUN/{for(i=1;i<=NF;i++) if($i ~ /^[0-9]A[0-9]N:/){split($i,a,"[:/]"); A[a[1]]+=a[2]; O[a[1]]+=a[3]; F[a[1]]+=a[4]}}
        END{for(k in A) printf "  class %s: A %d, orbits %d, failing %d\n", k, A[k], O[k], F[k]}' "$rf" | sort
   echo "run lines $nr of $nt, classify lines $nc of $nt, FAILING $f, MISMATCH $mm, types with wrong A count $amis"
@@ -110,6 +112,20 @@ checks)
   echo "== (d) s = 5, all A (including the (T0)/(T1) classes, covered by Thms 16.2/16.5)"; cat "$OUT/all5.txt"
   [ "$(grep -c '^S5RUN' "$OUT/all5.txt")" -eq 3 ] && [ "$(awk '/^S5RUN/{s+=$NF} END{print s+0}' "$OUT/all5.txt")" -eq 0 ] || st=1
   kill $PPID_PROG 2>/dev/null
+  ;;
+xfull)
+  # (e) review 703: control of the orbit reduction and of induced27 at s = 5
+  PAR=${1:-4}
+  { echo "full 3,9,27,243,729 0,1"; echo "full 3,9,9,81,243 0"; echo "full 9,27,243,729,2187 0,1,2";
+    echo "act 3,9,27,243,729 300 1"; echo "act 3,9,9,81,243 300 2"; echo "act 9,243,6561,59049,1594323 300 3"; } > "$OUT/xf.args"
+  progress 6 "$OUT/xf.txt"
+  xargs -P "$PAR" -L 1 python3 $py < "$OUT/xf.args" > "$OUT/xf.txt" 2>&1
+  kill $PPID_PROG 2>/dev/null
+  echo "== (e) orbit reduction and induced action at s = 5"; cat "$OUT/xf.txt"
+  nf=$(grep -c '^S5FULL' "$OUT/xf.txt"); na=$(grep -c '^S5ACT' "$OUT/xf.txt")
+  bad=$(awk '/^S5FULL|^S5ACT/{s+=$NF} END{print s+0}' "$OUT/xf.txt")
+  echo "full lines $nf of 3, act lines $na of 3, FAILING+MISMATCH $bad"
+  [ "$nf" -eq 3 ] && [ "$na" -eq 3 ] && [ "$bad" -eq 0 ] || st=1
   ;;
 *) echo "unknown mode $MODE"; exit 2 ;;
 esac
