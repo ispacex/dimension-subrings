@@ -22,6 +22,9 @@ Modes (one summary line each; exit status 1 iff a claim fails or a control does 
                        run the algorithm, check that only legal moves are used and that the result is diagonal;
                        check R = 0 directly in the model mod 3^K on the ORIGINAL chain.  With ctl the algorithm is
                        run with the same move set and the number of non-diagonal results is reported (must be > 0).
+                       Note (review 703): under (T0) the legality assertion holds by construction of the order (it
+                       guards the implementation, not the lemma), and the ctl line only shows that THIS algorithm
+                       fails without (T0); that a diagonal form can be impossible is shown by the 'orbits' control.
   orbits TYPE K        all elementary chains on TYPE (mod 3^K) for every A, orbits under the group generators of
                        case467 (gen_mats, independent of the move set above); per A: orbits without a diagonal member.
                        Claim: 0 for every A satisfying (T0).  Reported (control) for the other A.
