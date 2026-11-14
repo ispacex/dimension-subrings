@@ -97,8 +97,17 @@ def end_algebra(G, d, A, n, r):
 def is_local(basis, n, limit=14):
     """every element of span(basis) over F_3 is nilpotent or invertible"""
     k = len(basis)
-    if k > limit: return None
-    I = np.eye(n, dtype=np.int64)
+    if k > limit:
+        # too large to enumerate: look for a WITNESS of non-locality (singular, not nilpotent) among random elements;
+        # returns False if one is found, None (undecided) otherwise.  Used only for the negative control.
+        rnd = random.Random(k)
+        for _ in range(3000):
+            X = sum(rnd.randrange(3) * b for b in basis) % 3
+            if rank3([list(map(int, row)) for row in X], n) == n: continue
+            Y = X.copy()
+            for _ in range(n): Y = (Y @ X) % 3
+            if Y.any(): return False
+        return None
     for coeffs in itertools.product(range(3), repeat=k):
         if not any(coeffs): continue
         X = sum(c * b for c, b in zip(coeffs, basis)) % 3
@@ -161,11 +170,22 @@ def check(path):
         # so for n >= 2 the algebra must NOT be local
         locH = is_local(end_algebra(G, d, A, n, 0), n)
         ctl += (locH is not False)
+        # second negative control (with H): the direct sum of the configuration with itself must NOT be local
+        if not isinstance(r, list):
+            order = sorted(range(2 * len(d)), key=lambda h: (d[h % len(d)], h))
+            d2 = [d[h % len(d)] for h in order]; A2 = {i for i, h in enumerate(order) if (h % len(d)) in A}
+            rows = [(0, i) for i in range(r)] + [(1, i) for i in range(r)] + \
+                   [(0, i) for i in range(r, n)] + [(1, i) for i in range(r, n)]
+            G2 = [[(G[i][h % len(d)] if (h >= len(d)) == bool(b) else 0) for h in order] for b, i in rows]
+            locS = is_local(end_algebra(G2, d2, A2, 2 * n, 2 * r), 2 * n)
+            ctl += (locS is not False)
+        else:
+            locS = 'n/a'
         K = lattices(G, d, A, n, r)
         M = Model(d, 3 ** (len(r if isinstance(r, list) else [r]) + 2)); ok, fr = M.check(K)
         tot += 1; bad += (not ok); notloc += (loc is not True) or (not red)
         print("WILD", d, "A", sorted(A), "n", n, "r", r, "dimB", len(B), "local", loc, "reduced", red,
-              "local_without_H", locH, "model_ok", ok, "sigma!=0", fr, flush=True)
+              "local_without_H", locH, "local_direct_sum", locS, "model_ok", ok, "sigma!=0", fr, flush=True)
     print("WILDCHECK configs", tot, "not_local_or_not_reduced", notloc, "control_local_without_H", ctl,
           "model_FAILING", bad, flush=True)
     return bad or notloc or ctl
