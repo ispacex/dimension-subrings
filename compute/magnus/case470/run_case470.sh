@@ -5,8 +5,8 @@
 #     (b): there the inclusion Lambda -> Lambda_9 must fail somewhere (counted, required > 0).
 #  2. reduce: random elementary chains, all types without a middle invariant for s = 4, 5 (mod 27), sampled for
 #     s = 6 (mod 27) and s = 4, 5 (mod 81).
-#  3. sigma: claim (a) on random elementary chains of types WITH middle invariants; control: non-elementary chains must
-#     violate it.
+#  3. sigma: claim (a) on random elementary chains: s = 5 mod 27 on types with the invariant 9, s = 4 mod 81 on 60
+#     random capped types (38 of them with a middle invariant); control: non-elementary chains must violate it.
 #  4. evidence for the open mixed case: random elementary chains, s = 5, 6, types with the invariant 9, R = 0 directly.
 # Exit status 0 iff every claim holds and every control fails as it must.
 set -uo pipefail
