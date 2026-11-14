@@ -2,7 +2,7 @@
 # MATH-471 (wiki 891 Sec. 16): elementary chains under (T0) -- no a in A, n in N with d(n) >= 9 d(a).
 # Usage: run_case471.sh [PAR]
 #  1. diag: the diagonal model, all capped types of length 2 and 3, all diagonal labels (superset of the elementary
-#     ones), mod 27 and mod 81; controls (the same without (D2) / without (Kt)) must fail.  This is the finite check
+#     ones), mod 27 and mod 81; control: the same without (D2) must fail (without (Kt) it does not: reported only).  This is the finite check
 #     behind Thm 16.2 (with Prop. 13.3 for diagonal lattices).
 #  2. orbits: all elementary chains, s = 3 (every capped type mod 27 and mod 81) and s = 4 (every capped type mod 27),
 #     orbits under the group generators gen_mats of case467 (independent of the move set used in the proof):
@@ -41,9 +41,10 @@ xargs -P "$PAR" -L 1 python3 $T < "$OUT/nf.args" > "$OUT/nf.txt" 2>&1
 echo "== 1. diagonal model"
 cat "$OUT/diag.txt"
 full=$(grep -c "^DIAGK .*drop \[\] .*FAILING 0$" "$OUT/diag.txt")
-ctl=$(grep "^DIAGK .*drop \['" "$OUT/diag.txt" | grep -vc "FAILING 0$")
-echo "full checks with 0 failures: $full of 4; controls that fail: $ctl of 4"
-[ "$full" -eq 4 ] && [ "$ctl" -eq 4 ] || st=1
+ctl=$(grep "^DIAGK .*drop \['D2'\]" "$OUT/diag.txt" | grep -vc "FAILING 0$")
+echo "full checks with 0 failures: $full of 4; controls without (D2) that fail: $ctl of 2"
+echo "(without (Kt) the diagonal model has no failures -- as for diagonal labels in Sec. 13.6; reported, not required)"
+[ "$full" -eq 4 ] && [ "$ctl" -eq 2 ] || st=1
 echo "== 2. orbits"
 n=$(wc -l < "$OUT/orb.args"); ok=$(grep -c '^ORB471' "$OUT/orb.txt")
 bad=$(awk '/^ORB471/{for(i=1;i<=NF;i++) if($i=="there") s+=$(i+1)} END{print s+0}' "$OUT/orb.txt")
