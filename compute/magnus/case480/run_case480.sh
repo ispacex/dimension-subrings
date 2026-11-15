@@ -1,5 +1,6 @@
 #!/bin/bash
 # MATH-480 (wiki 891 Sec. 19).  Usage: run_case480.sh MODE [PAR]
+#   certf PAR     exp480.py 'certf' on every capped type of length 3 without 9 (filtration certificate)
 #   explore PAR   exp480.py 'test' on every capped type of length 3 without 9 (all A, all non-elementary K)
 # Progress: $JOB_ROOT/progress.  Exit status 1 iff the base check R(L(K),S(K)) = 0 fails somewhere or a line is missing.
 set -uo pipefail
@@ -23,5 +24,15 @@ if [ "$MODE" = explore ]; then
   [ "$n" -eq $((NA * 8)) ] || { echo "missing lines: $n of $((NA*8))"; st=1; }
   grep -q 'base 0 ' "$OUT/total.txt" || st=1
   grep -v '^EXP480 ' "$OUT/x.txt" | head -20
+fi
+if [ "$MODE" = certf ]; then
+  python3 ../case472/nonel472.py types 3 | awk '{print "certf " $0}' > "$OUT/c.args"
+  NA=$(wc -l < "$OUT/c.args"); echo "0/$NA" > "$PROG"
+  xargs -P "$PAR" -L 1 python3 exp480.py < "$OUT/c.args" > "$OUT/c.txt" 2>&1
+  n=$(grep -c '^CERTF ' "$OUT/c.txt"); echo "$NA/$NA" > "$PROG"
+  awk '/^CERTF /{N+=$7; b+=$9; z+=$11; c+=$13; if($15=="yes")u++; L++} END{printf "TOTAL (d,A) %d pairs %d not9 %d zero %d cert %d uni-yes %d\n", L, N, b, z, c, u}' "$OUT/c.txt" | tee "$OUT/ctotal.txt"
+  [ "$n" -eq $((NA * 8)) ] || { echo "missing lines: $n of $((NA*8))"; st=1; }
+  grep -q ' not9 0 ' "$OUT/ctotal.txt" || st=1
+  grep -v '^CERTF ' "$OUT/c.txt" | head -20
 fi
 echo "exit $st"; exit $st

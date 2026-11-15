@@ -14,12 +14,20 @@ parametrisation, no orbit reduction) report how often each of the following FAIL
     b2     R(L(K),  St(K'))
     c      R(L(K'), St(K''))
 and the indices [L(K'):L(K)], [S(K):S(K')] (log_3).  One summary line EXP480 ... per (type, A).
+
+Mode 'certf TYPE [A]': the filtration certificate.  For every pair of elementary chains K' <= K'' (X' <= X'' in
+K_3/3K_3, X'' != everything -- exactly the pairs (K', K'') of non-elementary K) the domain D = L(K') x St(K'') contains
+L(K) x S(K) for EVERY K with these K', K'' (all lifts psi).  On D, R is in 9Z/27 (checked: 'not9' counts violations).  Certificate:
+R = sum_ij c_ij <B_i(lambda), F_j(sigma)> on D (B_i: (B),(D2),(D1) of level 27; F_j: (Kt),(Ko) of level 27; each pairing
+vanishes on L(K) x S(K)) -- 'cert' counts pairs with such c_ij (c may depend on the pair); 'uni' says whether ONE c works
+for all pairs of this (type, A); 'zero' counts pairs where R = 0 on all of D.  Line CERTF ... per (type, A).
 """
 import itertools, os, sys, time
 import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 for sub in ('case467', 'case472', 'case473'): sys.path.insert(0, os.path.join(HERE, '..', sub))
 from diag467 import Model, kernel, howell
+from nonel472 import vec_mats, in_span
 from s5_473 import Space
 from s5_472 import chain_K27, lifts, K3
 
@@ -106,6 +114,34 @@ def test(d, As):
               "idxL", dict(sorted(idxL.items())), "idxS", dict(sorted(idxS.items())), "sec %.1f" % (time.time() - t0),
               flush=True)
 
+def lift_sub(Xs, k3, s):
+    return [sum(int(x[h]) * k3[h] for h in range(s)) % MOD for x in Xs] + [3 * v for v in k3]
+
+def certf(d, As):
+    s = len(d); M = Model(d, MOD); sp = Space(s); Bs, Fs = vec_mats(M)
+    for A in As:
+        t0 = time.time(); k3 = K3(s, A)
+        n = nine = zero = cert = 0; T = []; G = None
+        for (i, j) in sp.pairs:
+            Y, X = sp.subs[i], sp.subs[j]
+            if len(Y) == s: continue
+            K1 = lift_sub(X, k3, s); K2 = lift_sub(Y, k3, s)
+            L1 = lam(M, {3: k3, 27: K1}); T2 = sig(M, {3: k3, 27: K2}, 9)
+            n += 1
+            if L1.shape[0] == 0 or T2.shape[0] == 0:
+                GR = np.zeros(0, dtype=np.int64); gens = [np.zeros(0, dtype=np.int64) for _ in Bs for _ in Fs]
+            else:
+                GR = ((L1 @ M.RB % MOD) @ T2.T % MOD).ravel()
+                LB = [(L1 @ B.T) % MOD for B in Bs]; SF = [(T2 @ F.T) % MOD for F in Fs]
+                gens = [((lb @ sf.T) % MOD).ravel() for lb in LB for sf in SF]
+            nine += not (GR % 9).any(); zero += not GR.any()
+            cert += in_span([g for g in gens if g.any()], GR, MOD)
+            T.append(GR); G = gens if G is None else [np.concatenate([a, b]) for a, b in zip(G, gens)]
+        tgt = np.concatenate(T) if T else np.zeros(0, dtype=np.int64)
+        uni = in_span([g for g in (G or []) if g.any()], tgt, MOD)
+        print("CERTF type", ",".join(map(str, d)), "A", ",".join(map(str, sorted(A))) or "-", "pairs", n, "not9", n - nine,
+              "zero", zero, "cert", cert, "uni", "yes" if uni else "no", "sec %.1f" % (time.time() - t0), flush=True)
+
 if __name__ == '__main__':
     mode = sys.argv[1]
     if mode == 'test':
@@ -113,3 +149,8 @@ if __name__ == '__main__':
         if len(sys.argv) > 3: As = [set(int(a) for a in sys.argv[3].split(',') if a not in ('', '-'))]
         else: As = [set(c) for r in range(s + 1) for c in itertools.combinations(range(s), r)]
         test(d, As)
+    if mode == 'certf':
+        d = [int(a) for a in sys.argv[2].split(',')]; s = len(d)
+        if len(sys.argv) > 3: As = [set(int(a) for a in sys.argv[3].split(',') if a not in ('', '-'))]
+        else: As = [set(c) for r in range(s + 1) for c in itertools.combinations(range(s), r)]
+        certf(d, As)
