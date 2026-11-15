@@ -1,0 +1,12 @@
+{
+    "name": "ds473",
+    "long_name": "Dimension subgroups: elementary chains mod 27 (case473)",
+    "input_file_names": ["piece.txt"],
+    "output_file_names": ["result.txt"],
+    "max_nbytes_mb": 4,
+    "gzip_output": true,
+    "max_delay_days": 7,
+    "description": "Checks one piece of the enumeration of elementary chains mod 27 for the fifth dimension subgroup of 3-groups with Python and numpy and returns the orbit counts (https://github.com/ispacex/dimension-subrings, boinc/case473/README.md).",
+    "sci_kw": [],
+    "submitters": []
+}
