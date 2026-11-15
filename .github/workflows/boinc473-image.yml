@@ -1,5 +1,3 @@
-# TO INSTALL: copy to .github/workflows/boinc473-image.yml (a push of that path needs a token with the "workflow"
-# scope, which the agent's token lacks -- MATH-478).
 
 # Builds the volunteer-computing image of case473 (boinc/case473/Dockerfile) for x86_64 and aarch64 on native runners
 # and pushes it to ghcr.io/<owner>/dimension-subrings-case473-boinc:<tag>-amd64 / -arm64.  The digests are written to
