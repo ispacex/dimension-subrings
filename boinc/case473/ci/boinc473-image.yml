@@ -35,7 +35,7 @@ jobs:
           tag="ghcr.io/${GITHUB_REPOSITORY,,}-case473-boinc:${GITHUB_REF_NAME}-${{ matrix.arch }}"
           docker build -f boinc/case473/Dockerfile --build-arg CODE_COMMIT="$GITHUB_SHA" -t "$tag" .
           mkdir -p cross && cd cross
-          printf '%s\n' '3,9,27,243,729 0 0/1' '9,9,27,81,243 0,1 0/2' '3,9,81,243,729 1,2 0/1' '3,9,9,81,243 0 1/3' > cross.entries
+          printf '%s\n' '3,9,27,243,729 0 0/1' '9,9,27,81,243 0,1 0/2' '9,9,27,81,243 0,1 1/2' '3,9,81,243,729 1,2 0/1' > cross.entries
           docker run --rm -v "$PWD:/w" -w /w --entrypoint python3 "$tag" /opt/ds/boinc/case473/make_batch.py -r 1 -n 1 --prefix x 5 b cross.entries
           for j in b/*; do docker run --rm --cpus 1 -v "$PWD/$j:/app" "$tag" piece.txt result.txt; done
           cd ..

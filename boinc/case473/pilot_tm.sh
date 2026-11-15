@@ -33,7 +33,7 @@ runbatch() {  # runbatch DIR PAR: run_piece.py in every job directory, stderr be
   kill $pp 2>/dev/null; echo "$(find "$dir" -name result.txt | wc -l)/$tot" > "$PROG"
 }
 cross() {
-  printf '%s\n' '3,9,27,243,729 0 0/1' '9,9,27,81,243 0,1 0/2' '3,9,81,243,729 1,2 0/1' '3,9,9,81,243 0 1/3' > "$OUT/cross.entries"
+  printf '%s\n' '3,9,27,243,729 0 0/1' '9,9,27,81,243 0,1 0/2' '9,9,27,81,243 0,1 1/2' '3,9,81,243,729 1,2 0/1' > "$OUT/cross.entries"
   python3 "$HERE/make_batch.py" -r 1 -n 1 --prefix x 5 "$OUT/cross" "$OUT/cross.entries" || st=1
   runbatch "$OUT/cross" "$1"
   echo "== cross-host batch (sha256 of result.txt; the same on every runner)"
