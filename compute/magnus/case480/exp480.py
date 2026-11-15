@@ -17,7 +17,7 @@ and the indices [L(K'):L(K)], [S(K):S(K')] (log_3).  One summary line EXP480 ...
 
 Mode 'certf TYPE [A] [loose]': the filtration certificate.  For every pair of elementary chains K' <= K'' (X' <= X''
 in K_3/3K_3, X'' != everything -- exactly the pairs (K', K'') of non-elementary K) the K with this pair (all lifts psi)
-have sum K' and intersection 3K'', so the domain D = L(K') x S(3K'') contains L(K) x S(K) for EVERY such K
+have sum K' (if X' != 0; if X' = 0 the only such K is 3K'') and intersection 3K'', so the domain D = L(sum) x S(3K'') contains L(K) x S(K) for EVERY such K
 (with 'loose': the larger D = L(K') x St(K''); St(K'') = S(3K'') except that (J) and the level-3 conditions are
 only mod 9).  On D, R is in 9Z/27 (checked: 'not9' counts violations).  Certificate:
 R = sum_ij c_ij <B_i(lambda), F_j(sigma)> on D (B_i: (B),(D2),(D1) of level 27; F_j: (Kt),(Ko) of level 27; each pairing
@@ -127,7 +127,9 @@ def certf(d, As, loose=False):
         for (i, j) in sp.pairs:
             Y, X = sp.subs[i], sp.subs[j]
             if len(Y) == s: continue
-            K1 = lift_sub(X, k3, s); K2 = lift_sub(Y, k3, s)
+            K2 = lift_sub(Y, k3, s)
+            # sum of the fibre: K' if X' != 0; if X' = 0 the fibre is the single lattice K = 3K''
+            K1 = lift_sub(X, k3, s) if len(X) else [3 * v for v in K2]
             L1 = lam(M, {3: k3, 27: K1})
             T2 = sig(M, {3: k3, 27: K2}, 9) if loose else sig(M, {3: k3, 27: [3 * v for v in K2]})
             n += 1
