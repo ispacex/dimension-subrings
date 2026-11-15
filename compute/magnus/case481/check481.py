@@ -18,7 +18,8 @@ Checked:
   (2) some (pi, E) with pi and E invertible mod 3 exists  <=>  M ~= M'   (equivalence of configurations
       <=> isomorphism of pairs; pi, E invertible mod 3 <=> invertible over Z/9)
   (3) End-image local  <=>  End(M) local (M indecomposable).
-Usage: check481.py all [SEED]   -- m = 1 all 81 ordered pairs of objects;  m = 2 sample (see main).
+Usage: check481.py all [SEED] [M2CASES=24]  -- m = 1 all 81 ordered pairs of objects;  m = 2 sample (see main);
+  negative control: F without S_d (m = 2) -- dim image must exceed dim Hom(M, M) somewhere.
 Prints 'CHECK481 ... fail N' lines; exit 1 iff some check fails.
 """
 import itertools
@@ -138,8 +139,9 @@ def kernel9(A):
 
 
 # ---------------- the construction -----------------
-def rep_F(x, y):
-    """F(M): dict of subspaces (as lists of basis vectors of W = F_3^{4m})."""
+def rep_F(x, y, ctl=False):
+    """F(M): dict of subspaces (as lists of basis vectors of W = F_3^{4m}).  ctl: without S_d (negative control:
+    then End is the centralizer of X, larger than End(M))."""
     m = x.shape[0]
     n2 = 2 * m
     X = np.block([[x, y], [np.eye(m, dtype=np.int64), np.zeros((m, m), dtype=np.int64)]]) % 3
@@ -148,7 +150,7 @@ def rep_F(x, y):
     S2 = [np.concatenate([np.zeros(n2, dtype=np.int64), I[i]]) for i in range(n2)]
     S3 = [np.concatenate([I[i], I[i]]) for i in range(n2)]
     Se = [np.concatenate([I[i], X[:, i]]) % 3 for i in range(n2)]
-    Sd = Se[:m]
+    Sd = [] if ctl else Se[:m]
     return {'S1': S1, 'S2': S2, 'S3': S3, 'Sd': Sd, 'Se': Se}
 
 
@@ -266,14 +268,15 @@ def exists_equiv(gens, n, s, cap=12, samples=20000, rng=None):
     return False
 
 
-def compare(M, M2, rng, iso_known=None):
+def compare(M, M2, rng, iso_known=None, ctl=False):
     (x, y), (x2, y2) = M, M2
-    g, lab = realize(rep_F(x, y), rng)
-    g2, lab2 = realize(rep_F(x2, y2), rng)
+    g, lab = realize(rep_F(x, y, ctl), rng)
+    g2, lab2 = realize(rep_F(x2, y2, ctl), rng)
     gens = hom_image(g, lab, g2, lab2)
     img = span_basis([p for p, _ in gens])
     hp = hom_pairs(x, y, x2, y2)
     n, s = g.shape[0], g.shape[1]
+    assert len(hp) <= 10 or iso_known is not None
     iso_pairs = (x.shape == x2.shape) and any(
         rank3(sum(c * b for c, b in zip(cc, hp)) % 3) == x.shape[0]
         for cc in (itertools.product(range(3), repeat=len(hp)) if len(hp) <= 10 else []))
@@ -284,7 +287,6 @@ def compare(M, M2, rng, iso_known=None):
 
 
 def main():
-    mode = sys.argv[1] if len(sys.argv) > 1 else 'all'
     seed = int(sys.argv[2]) if len(sys.argv) > 2 else 0
     rng = random.Random(seed)
     fails = 0
@@ -293,7 +295,8 @@ def main():
     tab = {(names[i], names[j]): ideal_val(CLASSES[i], CLASSES[j]) for i in range(5) for j in range(5)}
     expect = {('a1p', 'a1'): 0, ('a1', 'a1p'): 1, ('a0', 'n0'): 1, ('n0', 'a0'): 1, ('n1', 'a0'): 1,
               ('a1', 'n0'): 0, ('a1p', 'n0'): 0, ('n1', 'n0'): 0, ('a1', 'n1'): 2, ('a1p', 'n1'): 1,
-              ('a0', 'a1'): 2, ('n0', 'n1'): 2, ('a0', 'n1'): 2, ('n0', 'a1'): 2, ('n1', 'a1'): 1}
+              ('a0', 'a1'): 2, ('n0', 'n1'): 2, ('a0', 'n1'): 2, ('n0', 'a1'): 2, ('n1', 'a1'): 1,
+              ('a0', 'a1p'): 2, ('n0', 'a1p'): 2, ('a1', 'a0'): 0, ('a1p', 'a0'): 0, ('n1', 'a1p'): 1}
     bad = [k for k, v in expect.items() if tab[k] != v]
     print('CHECK481 table', 'ok' if not bad else bad)
     fails += len(bad)
@@ -317,7 +320,7 @@ def main():
     cnt = 0
     GL2 = [np.array(P) for P in itertools.product(range(3), repeat=4)]
     GL2 = [P.reshape(2, 2) for P in GL2 if rank3(P.reshape(2, 2)) == 2]
-    for t in range(int(sys.argv[3]) if len(sys.argv) > 3 else 12):
+    for t in range(int(sys.argv[3]) if len(sys.argv) > 3 else 24):
         x = np.array([[rng.randrange(3) for _ in range(2)] for _ in range(2)])
         y = np.array([[rng.randrange(3) for _ in range(2)] for _ in range(2)])
         if t % 3 == 0:  # decomposable
@@ -347,6 +350,15 @@ def main():
         f2 += not ok
     print(f'CHECK481 m=2 cases {cnt} fail {f2}')
     fails += f2
+    # negative control: without S_d the check (1) must fail on some m = 2 pair
+    nbig = 0
+    for t in range(8):
+        x = np.array([[rng.randrange(3) for _ in range(2)] for _ in range(2)])
+        y = np.array([[rng.randrange(3) for _ in range(2)] for _ in range(2)])
+        dimg, dhom, _, _ = compare((x, y), (x, y), rng, iso_known=True, ctl=True)
+        nbig += dimg > dhom
+    print(f'CHECK481 control without S_d: dim image > dim End(M) in {nbig} of 8 (must be > 0)')
+    fails += (nbig == 0)
     print('CHECK481 overall', 'ok=1' if fails == 0 else f'ok=0 fails={fails}')
     sys.exit(1 if fails else 0)
 
