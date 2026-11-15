@@ -250,7 +250,7 @@ def main():
     for fn in a.ref:
         for ln in open(fn):
             if (ln.startswith('S5RUN ') and ' A 0 ' not in ln) or ln.startswith('S5NER ') or ln.startswith('S5NE '):
-                ln = re.sub(r' sec [0-9.]+ ', ' ', ln.strip()); ref[(ln.split()[0], ln.split()[2])] = ln
+                ln = re.sub(r' sec [0-9.]+ ', ' ', ln.strip()); ref[(ln.split()[0], ln.split()[2], ln.split()[4])] = ln
     tlines = {}; plines = []; nfail_g = {}; nref = nmatch = 0
     for g in groups:
         kind, S, drop = g
@@ -299,11 +299,11 @@ def main():
         if a.ref:                                       # comparison with the tm logs
             gr = gm = 0
             for t, ln in sorted(mylines.items()):
-                tag = ln.split()[0]
-                if (tag, t) not in ref: print('REF none for type %s' % t); continue
+                rk = (ln.split()[0], t, pydrop)
+                if rk not in ref: print('REF none for type %s' % t); continue
                 gr += 1
-                if ref[(tag, t)] == ln: gm += 1
-                else: print('REF differs for type %s:\n  ours %s\n  ref  %s' % (t, ln, ref[(tag, t)]))
+                if ref[rk] == ln: gm += 1
+                else: print('REF differs for type %s:\n  ours %s\n  ref  %s' % (t, ln, ref[rk]))
             print('reference: %d types compared, %d identical' % (gr, gm))
             nref += gr; nmatch += gm
     if a.types:

@@ -45,6 +45,7 @@ byte).  A piece of another kind has the header
      "nonelem_checked":..,"nonelem_orbits":..,"nparts":..,"pair_orbits":..,"pairs":..,"part":..,"sigma_nonzero":..,
      "type":".."}
     # end
+  gens: the number of generators gen_mats (for case473: the distinct non-identity induced F_3-matrices);
   pair_orbits / nonelem_orbits: all orbits of pairs (Y >= X) / those with Y != F_3^s (whatever PART);
   nonelem_checked: the representatives of this PART; lifts: their lifts (= MATH-472's 'chains'); lift_orbits =
   checked: the lifts checked (case472full: all of them); sigma_nonzero, failing over the checked lifts.

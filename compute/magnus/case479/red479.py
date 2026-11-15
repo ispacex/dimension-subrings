@@ -24,8 +24,9 @@ Modes:
                             lift-orbits O sigma!=0 Z FAILING F'; summary line S5NER.  DROP (D2/Kt): control.
   cmp TYPE A [DROP]         the control of the reduction: every lift of every non-elementary pair orbit checked
                             (MATH-472's run) AND the reduced run; prints both and the number of lift orbits whose
-                            members do not all have the verdict of their representative ('mixed'); exit 1 if the
-                            unreduced and reduced runs disagree on any orbit, or (without DROP) anything fails.
+                            members do not all have the verdict of their representative ('mixed'); without DROP
+                            exit 1 if anything fails or an orbit is lost; with DROP always exit 0 (run_case479.sh
+                            checks failing > 0, lost-orbits 0 and mixed-members 0 itself).
   act TYPE A N SEED         the control of the action: N random (pair orbit, Schreier element, lift); the image of
                             the lattice K_27 under the integer matrix S (HNF, case467.hnf_key) must equal the lattice
                             of the lift the affine map gives; also the affine map against a direct evaluation.
@@ -273,7 +274,7 @@ if __name__ == '__main__':
     t0 = time.time()
     if mode == 'run':
         rest = sys.argv[3:]
-        if rest and rest[0] != 'all' and rest[0] not in ('D2', 'Kt'):
+        if rest and rest[0] != 'all' and rest[0] not in ('D2', 'Kt', 'B', 'D1', 'J', 'Ko'):
             As = [parse_A(rest[0])]; rest = rest[1:]
         else:
             As = all_As(s)

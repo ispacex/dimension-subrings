@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """make_batch.py -- the BUDA batch directory of the case473 enumeration (boinc/case473/README.md).
 
-  make_batch.py [-r REPLICAS] [-n ENTRIES] [-p NPARTS] [--seed SEED] [--drop D2|Kt] S OUTDIR [ENTRYFILE]
+  make_batch.py [-r REPLICAS] [-n ENTRIES] [-p NPARTS] [--seed SEED] [--drop D2|Kt] [--kind KIND] S OUTDIR [ENTRYFILE]
 
 The entries are the pairs (d, A) of the enumeration at s = S: every capped type of length S with the invariant 9
 and every A violating (T1) (as 's5_473.py run TYPE' walks them; 4 948 at s = 5, 55 012 at s = 6), or the lines of
@@ -113,7 +113,8 @@ def main():
     if a.set:
         if len(a.args) != 1: ap.error('with --set, OUTDIR is the only positional argument')
         out = a.args[0].rstrip('/')
-        if a.prefix: ap.error('--prefix does not go with --set')
+        if a.prefix or a.n != 16 or a.p != 1 or a.kind != 'case473':
+            ap.error('--prefix, -n, -p, --kind do not go with --set (give N and P in each --set)')
         for x in a.set:
             f = x.split(':', 4)
             if len(f) < 3 or f[0] not in PREFIX: ap.error('bad --set %s' % x)

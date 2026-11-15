@@ -8,6 +8,8 @@
 #       'full' control, with the full model (FAILING 0 both ways) and without (D2) (failing lifts > 0, every failing
 #       lift's orbit has a failing representative: lost-orbits 0); s = 5 on the smallest pilot pair of MATH-472
 #       ([3,27,81,729,2187], A = {}) with the full model and without (D2);
+#       In every cmp run (also without (D2), where verdicts vary) each lift must have the verdict of its orbit's
+#       representative: mixed-members 0.
 #   (c) 'act' (affine map on the lifts vs the HNF image of the lattice under the integer Schreier element): 300
 #       samples on each of four s = 5 (d, A) and two s = 4 (d, A): mismatch 0.
 # Progress: $JOB_ROOT/progress.  Exit status 1 iff a claim fails or a control does not fail.
@@ -45,7 +47,8 @@ awk '/^S5NECMP/ && $7=="[]" {if ($15 || $17 || $21) bad++} END{exit bad+0}' "$OU
 # without (D2): failing lifts > 0 overall, lost-orbits 0 everywhere, and the failing representatives found
 c=$(awk '/^S5NECMP/ && $7 ~ /D2/ {f+=$15; r+=$17; if ($21) bad++} END{if (bad) print -1; else if (r>0 && f>0) print f; else print 0}' "$OUT/b.txt")
 echo "control without D2: failing lifts $c (must be > 0, and every failing orbit represented)"; [ "$c" -gt 0 ] || st=1
-mixed=$(awk '/^S5NECMP/{s+=$19} END{print s+0}' "$OUT/b.txt"); echo "lift orbits with members of another verdict than their representative: $mixed (reported)"
+mixed=$(awk '/^S5NECMP/{s+=$19} END{print s+0}' "$OUT/b.txt"); echo "lift-orbit members with another verdict than their representative (all runs, also without D2): $mixed (must be 0)"
+[ "$mixed" -eq 0 ] || st=1
 
 echo "== (c) act: affine map vs the HNF image of the lattice"
 printf '%s\n' "act 3,27,81,729,2187 0,2 300 1" "act 27,27,81,243,729 1,3 300 2" "act 3,3,27,81,729 0,3 300 3" \
