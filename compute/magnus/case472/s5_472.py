@@ -2,7 +2,7 @@
 """MATH-472 (wiki 891 Sec. 18): exhaustive check of NON-elementary chains mod 27 (gamma_4 = C_27) on capped types
 WITHOUT the invariant 9, for one type and all (or given) A, with a partial orbit reduction.
 
-Parametrisation (Sec. 18.5).  K = K_27 with 9K_3 <= K <= K_3 is a subgroup H = K/9K_3 of K_3/9K_3 = (Z/9)^s (basis
+Parametrisation (Sec. 18.4).  K = K_27 with 9K_3 <= K <= K_3 is a subgroup H = K/9K_3 of K_3/9K_3 = (Z/9)^s (basis
 b_h = e_h for h in N, 3e_h for h in A).  H is determined by
   Y = { y in F_3^s : 3y~ in H }  >=  X = H mod 3,
 and lifts x~_j = x_j + 3c_j of an F_3-basis x_j of X, c_j in F_3^s / Y.  So H <-> (Y >= X, c), and there are
@@ -74,7 +74,7 @@ if __name__ == '__main__':
     t0 = time.time()
     if mode == 'run':
         rest = sys.argv[3:]
-        if rest and rest[0] not in ('all',) and not rest[0].isalpha():
+        if rest and rest[0] != 'all' and rest[0] not in ('D2', 'Kt', 'B', 'D1', 'J', 'Ko'):
             As = [set(int(a) for a in rest[0].split(',') if a not in ('', '-'))]; rest = rest[1:]
         else:
             As = [set(c) for r in range(s + 1) for c in itertools.combinations(range(s), r)]

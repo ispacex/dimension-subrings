@@ -6,7 +6,7 @@
 #                  types that does not use the normal form of K_9);  control of the orbit reduction: 'full' on 3
 #                  (d, A) at s = 4 (all subgroups);  controls without (D2) and without (Kt) on 4 types: must fail;
 #              (b) bricks (nonel472.py 'brick'): 'four' m = 1..4 (Jordan J_m(2)), 'wild' m = 1..4 (first 12 seeds,
-#                  local ones reported): local image of B, all columns nonzero (four), R = 0; controls without (D2)
+#                  local ones reported), 'meet' (h_A ∩ h_N != 0) m = 1, 2 (8 seeds): local image of B, all columns nonzero (four), R = 0; controls without (D2)
 #                  on 'four' m = 2, 3: must fail;
 #              (c) certificate test (nonel472.py 'certs' S = 2, 3): reported (a negative result is expected);
 #              (d) random non-elementary chains s = 5, 6, 7 (evidence).
@@ -51,6 +51,11 @@ if [ "$MODE" = main ]; then
   grep -c 'local True' "$OUT/wild.txt" | sed 's/^/wild: local configurations /'
   grep 'local True' "$OUT/wild.txt"
   bad=$(grep '^BRICK' "$OUT/wild.txt" | grep -c 'R=0 False'); echo "wild: R=0 False in $bad"; [ "$bad" -eq 0 ] || st=1
+  for m in 1 2; do for seed in $(seq 0 7); do python3 nonel472.py brick meet $m "" $seed; done; done > "$OUT/meet.txt" 2>&1
+  grep -c 'local True' "$OUT/meet.txt" | sed 's/^/meet (h_A ∩ h_N != 0): local configurations /'
+  grep 'local True' "$OUT/meet.txt"
+  bad=$(grep '^BRICK' "$OUT/meet.txt" | grep -c 'R=0 False'); echo "meet: R=0 False in $bad"; [ "$bad" -eq 0 ] || st=1
+  [ "$(grep -c '^BRICK' "$OUT/meet.txt")" -eq 16 ] && [ "$(grep -c '^BRICK' "$OUT/wild.txt")" -eq 48 ] || st=1
   echo "== (c) certificate (reported only)"
   python3 nonel472.py certs 2; python3 nonel472.py certs 3
   echo "== (d) random non-elementary chains (evidence)"

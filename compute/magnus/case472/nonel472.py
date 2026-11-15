@@ -6,14 +6,15 @@ Sec. 11.4 / 13.5, without (C)) sees only K_3 = Z^N + 3Z^A and K_27, with 9K_3 <=
 Data (Sec. 14.1, 18.1): a Z/9-module V (here a submodule of (Z/9)^n) with columns g_h (t_a = 3y_a, z_n = y_n);
 K_27 = { v : 3 | v_a, sum_a (v_a/3) g_a + sum_n v_n g_n = 0 in V }.
 
-Modes (one summary line each; exit status 1 iff a claim fails or a control does not fail):
-  cert TYPE [A]          the universal certificate of Sec. 18.4: is R (on Lambda_0 x Sigma_0, mod 27) a Z/27-combination
+Modes (one summary line each; exit status 1 iff a claim fails; 'brick wild' also exits 1 when the random X is not
+local -- run_case472.sh ignores that status and only requires R = 0):
+  cert TYPE [A]          the universal certificate of Sec. 18.3: is R (on Lambda_0 x Sigma_0, mod 27) a Z/27-combination
                          of the level-27 pairings <B_i(lambda), F_mn(sigma)> (B_i: (B), (D2), (D1) of level 27; F_mn:
                          (Kt), (Ko) of level 27)?  Lambda_0 = Lambda(K_27 := K_3), Sigma_0 = Sigma(K_27 := 9K_3).
                          Without A: all A.  Prints per A 'yes'/'no'.
   certs S                cert for every capped type of length S without 9 and every A; summary
   brick FAMILY M [DROP]  the configurations D(X) of Sec. 18.2: FAMILY 'four' (four-subspace, Jordan block J_M(2), type
-                         3^M 27^M 81^M 729^M) or 'wild' ((1,1,1,2): type 3^M 27^M 81^M 243^M 2187^M).  Checks that the
+                         3^M 27^M 81^M 729^M) or 'wild' ((1,1,1,2): type 3^M 27^M 81^(M-k) 243^k 2187^M, k = ceil(M/2), random X).  Checks that the
                          image of B in End(W) is local (all elements units or nilpotent), that no column vanishes, and
                          R = 0 in the model (with DROP: the model without that condition; reported, a control)
   rand S N SEED          N random non-elementary chains (random V = (Z/9)^p + 3(Z/9)^q, random columns) on random
@@ -44,7 +45,7 @@ def K27_from_columns(G, A):
     out += [E[h] * (27 if h in A else 9) for h in range(s)]
     return out
 
-# ---------------------------------------------------------------- the certificate (Sec. 18.4)
+# ---------------------------------------------------------------- the certificate (Sec. 18.3)
 def lam_sig_bases(M, A):
     s = M.s; mod = M.mod
     K3 = K3_gens(s, A)
@@ -150,7 +151,8 @@ def brick(family, m, seed=0):
         return cols
     a0 = [np.eye(2 * m, dtype=np.int64)[i] for i in range(m)]
     n0 = [np.eye(2 * m, dtype=np.int64)[m + i] for i in range(m)]
-    if family == 'four':
+    if family == 'meet': pass
+    elif family == 'four':
         I = [[int(i == j) for i in range(m)] for j in range(m)]
         J = [[2 if i == j else (1 if j == i + 1 else 0) for i in range(m)] for j in range(m)]
         groups = [('A', 3, a0), ('N', 27, n0), ('A', 81, graph(I)), ('N', 729, graph(J))]
@@ -162,6 +164,14 @@ def brick(family, m, seed=0):
         k = (m + 1) // 2
         Sa1 = rnd_sub(m)                    # basis of S_a1; its first k vectors span S_a1'
         groups = [('A', 3, a0), ('N', 27, n0), ('A', 81, Sa1[k:]), ('A', 243, Sa1[:k]), ('N', 2187, rnd_sub(m))]
+    if family == 'meet':     # h_A ∩ h_N != 0 (Prop. 18.2(b) in general): V0 = (Z/9)^3, W = F_3^3,
+        # h_A = <e1,e2>, h_N = <e2,e3>; the n0-lift of e2 differs from the a0-lift (e2 + 3e1)
+        E = np.eye(3, dtype=np.int64)
+        def rnd(dim):
+            while True:
+                B = [[rng.randrange(3) for _ in range(3)] for _ in range(dim)]
+                if rank3(np.array(B, dtype=np.int64)) == dim: return [3 * np.array(b, dtype=np.int64) for b in B]
+        groups = [('A', 3, [E[0], E[1]]), ('N', 27, [E[1] + 3 * E[0], E[2]]), ('A', 81, rnd(m)), ('N', 729, rnd(m))]
     d = []; A = set(); cols = []
     for kind, val, cs in groups:
         for c in cs:
@@ -173,6 +183,8 @@ def B_image_local(d, A, G):
     """B = {pi in End(V) : pi g = g E, E in the ideal ring}; V = (Z/9)^n here (columns span with 3V = W).  Returns
     (dim of the image of B in End_F3(W) where W = 3V, local?)"""
     n, s = G.shape
+    # V = (Z/9)^n must be spanned by the columns (true for the bricks: a0, n0 columns are unit vectors)
+    assert len(howell(list(G.T % 9), n, 9)) == n and all(v == 0 for _, _, v in howell(list(G.T % 9), n, 9))
     # unknowns: pi (n x n over Z/9), E (s x s, E_qp in I_qp): pi G - G E = 0 mod 9
     var = {}
     for a in range(n):
@@ -296,6 +308,6 @@ if __name__ == '__main__':
             if key not in models: models[key] = Model(d, MOD)
             K = {3: K3_gens(S, A), 27: K27_from_columns(G, A)}
             ok, fr = models[key].check(K); fail += (not ok); nsig += fr
-        print("RAND S", S, "N", N, "seed", seed, "sigma!=0", nsig, "FAILING", fail, "cpu-sec %.1f" % (time.time() - t0),
+        print("RAND S", S, "N", N, "seed", seed, "sigma!=0", nsig, "cpu-sec %.1f" % (time.time() - t0), "FAILING", fail,
               flush=True)
         sys.exit(1 if fail else 0)
