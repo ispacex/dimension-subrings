@@ -37,7 +37,7 @@ jobs:
           mkdir -p cross && cd cross
           printf '%s\n' '3,9,27,243,729 0 0/1' '9,9,27,81,243 0,1 0/2' '9,9,27,81,243 0,1 1/2' '3,9,81,243,729 1,2 0/1' > cross.entries
           docker run --rm -v "$PWD:/w" -w /w --entrypoint python3 "$tag" /opt/ds/boinc/case473/make_batch.py -r 1 -n 1 --prefix x 5 b cross.entries
-          printf '%s\n' '3,27,81,729 0,2' '27,27,81,243 1' > y.entries; printf '%s\n' '3,27,81,729,2187 0,2 5/16' > z.entries
+          printf '%s\n' '3,27,81,729 0,2' '27,27,81,243 1' > y.entries; printf '%s\n' '3,81,81,2187,59049 1,2,3' > z.entries
           docker run --rm -v "$PWD:/w" -w /w --entrypoint python3 "$tag" /opt/ds/boinc/case473/make_batch.py -r 1 -n 1 --kind case472 --prefix y 4 b472 y.entries
           docker run --rm -v "$PWD:/w" -w /w --entrypoint python3 "$tag" /opt/ds/boinc/case473/make_batch.py -r 1 -n 1 --kind case472 --prefix z 5 b472z z.entries
           for j in b/* b472/* b472z/*; do docker run --rm --cpus 1 -v "$PWD/$j:/app" "$tag" piece.txt result.txt; done

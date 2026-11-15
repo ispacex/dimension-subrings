@@ -23,7 +23,7 @@
 #                                            order of make_batch.py --seed SEED, over all 13 664), kind case472:
 #                                            timings and memory per pair, replicas compared (default 1 part, 2 replicas).
 # The cross-host batch: 4 fixed small s = 5 pieces of case473 (as in MATH-478) and 3 small pieces of case472 (two at
-# s = 4, one part of an s = 5 pair); the sha256 of their results without the '# code' line are printed (CROSS lines),
+# s = 4, one whole s = 5 pair of ≈ 30 s); the sha256 of their results without the '# code' line are printed (CROSS lines),
 # the same on every runner and in the image.  Results, batches and stderr (timings, peak memory) go to $JOB_OUT.
 set -uo pipefail
 MODE=$1; shift
@@ -45,7 +45,7 @@ runbatch() {  # runbatch DIR PAR: run_piece.py in every job directory, stderr be
 cross() {
   printf '%s\n' '3,9,27,243,729 0 0/1' '9,9,27,81,243 0,1 0/2' '9,9,27,81,243 0,1 1/2' '3,9,81,243,729 1,2 0/1' > "$OUT/cross.entries"
   python3 "$HERE/make_batch.py" -r 1 -n 1 --prefix x 5 "$OUT/cross" "$OUT/cross.entries" || st=1
-  printf '%s\n' '3,27,81,729 0,2 0/1' '27,27,81,243 1 0/1' '3,27,81,729,2187 0,2 5/16' > "$OUT/cross472.entries"
+  printf '%s\n' '3,27,81,729 0,2 0/1' '27,27,81,243 1 0/1' '3,81,81,2187,59049 1,2,3 0/1' > "$OUT/cross472.entries"
   python3 "$HERE/make_batch.py" -r 1 -n 1 --kind case472 --prefix y 4 "$OUT/cross472" <(head -n 2 "$OUT/cross472.entries") || st=1
   python3 "$HERE/make_batch.py" -r 1 -n 1 --kind case472 --prefix z 5 "$OUT/cross472z" <(tail -n 1 "$OUT/cross472.entries") || st=1
   for b in cross cross472 cross472z; do runbatch "$OUT/$b" "$1"; done
