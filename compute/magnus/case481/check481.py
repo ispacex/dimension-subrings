@@ -66,6 +66,9 @@ def rref3(A):
 
 def rank3(A):
     A = np.asarray(A)
+    if A.ndim < 2:  # an empty sum of maps is the integer 0: the zero map, rank 0
+        assert A.ndim == 0 and int(A) % 3 == 0, A
+        return 0
     return 0 if A.size == 0 else len(rref3(A)[1])
 
 
@@ -256,6 +259,8 @@ def is_local(basis, n, cap=12, samples=4000, rng=None):
 def exists_equiv(gens, n, s, cap=12, samples=20000, rng=None):
     """Is there an F_3-combination of generators with pi and E both invertible mod 3?"""
     k = len(gens)
+    if k == 0:  # no maps at all: an equivalence exists only between empty configurations
+        return n == 0 and s == 0
     it = (itertools.product(range(3), repeat=k) if k <= cap
           else (tuple(rng.randrange(3) for _ in range(k)) for _ in range(samples)))
     for c in it:
@@ -277,9 +282,10 @@ def compare(M, M2, rng, iso_known=None, ctl=False):
     hp = hom_pairs(x, y, x2, y2)
     n, s = g.shape[0], g.shape[1]
     assert len(hp) <= 10 or iso_known is not None
-    iso_pairs = (x.shape == x2.shape) and any(
+    # Hom may be 0 between non-isomorphic pairs of one size: then they are isomorphic only if empty
+    iso_pairs = (x.shape == x2.shape) and (x.shape[0] == 0 or (len(hp) > 0 and any(
         rank3(sum(c * b for c, b in zip(cc, hp)) % 3) == x.shape[0]
-        for cc in (itertools.product(range(3), repeat=len(hp)) if len(hp) <= 10 else []))
+        for cc in (itertools.product(range(3), repeat=len(hp)) if len(hp) <= 10 else []))))
     if iso_known is not None:
         iso_pairs = iso_known
     eq = (g.shape == g2.shape) and exists_equiv(gens, n, s, rng=rng)
