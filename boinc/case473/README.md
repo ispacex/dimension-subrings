@@ -264,7 +264,8 @@ lattices under `gen_mats` (BFS over HNF keys) at $s=3$ and on the $s=4$ pairs: t
   `hel24/tm/20261115-104955-case479-cross-nogit.2`, `ax42/tm/20261115-104956-case479-cross-nogit` (Python 3.14.4,
   3.12.3, 3.14.4): all 7 results identical on the three runners; the 4 case473 pieces give the sha256 of MATH-478
   (`761baf7d…`, `ad7e3172…`, `928b61c5…`, `deb3b75e…`), the case472 pieces `3f2bb698…`, `119037b2…`, `9335bef3…`.
-  The image workflow prints the same 7 `CROSS` lines for amd64 and arm64.
+  The image workflow (not run yet: it is not installed) runs the same 7 pieces; its `CROSS` lines for amd64 and
+  arm64 must equal these.
 * tm's own checkout from GitHub answered 401 that day, so these jobs cloned the public repository at the commit
   themselves (key suffix `nogit`).
 
