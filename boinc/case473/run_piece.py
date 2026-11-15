@@ -28,7 +28,7 @@ OUT (the same bytes on every host for the same IN and the same image):
   Sigma != 0, how many fail R = 0 (and the first 20 failing representative indices).  Timings and peak memory go to
   stderr, never into OUT.
 
-Checkpoint: after each entry its line is appended to OUT.ckpt (first line: the input's sha256); a restarted job
+Checkpoint: after each entry its line is appended to OUT.ckpt (first line: the input's sha256 and the code commit); a restarted job
 skips the entries already there, so OUT is the same as without the restart.  OUT is written at the end through a
 temporary file and the checkpoint removed.
 
@@ -45,8 +45,8 @@ MAXBYTES = 1 << 20
 MAXENTRIES = 4096
 MAXPARTS = 4096
 NAME_RE = re.compile(r'[A-Za-z0-9_.-]{1,64}\Z')
-HEADER_RE = re.compile(r'# case473 piece v1 name=(\S+) s=(\d+)( drop=(D2|Kt))?\Z')
-ENTRY_RE = re.compile(r'([0-9]+(?:,[0-9]+)*) (-|[0-9]+(?:,[0-9]+)*) ([0-9]+)/([0-9]+)\Z')
+HEADER_RE = re.compile(r'# case473 piece v1 name=(\S{1,64}) s=([0-9]{1,2})( drop=(D2|Kt))?\Z')
+ENTRY_RE = re.compile(r'([0-9]{1,9}(?:,[0-9]{1,9}){0,9}) (-|[0-9](?:,[0-9]){0,9}) ([0-9]{1,4})/([0-9]{1,4})\Z')
 
 
 class Malformed(Exception):
@@ -125,7 +125,7 @@ def main(argv):
     ckpt = out + '.ckpt'; done = {}
     try:
         with open(ckpt) as f: cl = f.read().split('\n')
-        if cl and cl[0] == sha:
+        if cl and cl[0] == sha + ' ' + code:
             for ln in cl[1:-1]:                         # the last element is '' or a truncated line
                 try: r = json.loads(ln)
                 except ValueError: break
@@ -133,7 +133,7 @@ def main(argv):
     except OSError:
         pass
     with open(ckpt, 'w') as f:
-        f.write(sha + '\n')
+        f.write(sha + ' ' + code + '\n')
         for r in done.values(): f.write(entry_line(r) + '\n')
     if done: print('run_piece: resuming, %d of %d entries from the checkpoint' % (len(done), len(entries)),
                    file=sys.stderr, flush=True)

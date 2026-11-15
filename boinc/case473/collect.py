@@ -20,7 +20,7 @@ Then the summary of the agreed pieces:
     (for a control batch, drop=D2/Kt: FAILING > 0).
 Exit 0 iff there is nothing to resubmit and the claims hold.
 """
-import argparse, collections, gzip, json, os, re, sys
+import argparse, collections, gzip, itertools, json, os, re, sys
 
 BUDA_RE = re.compile(r'batch_[0-9]+__job_(.+)__file_result\.txt(\.gz)?\Z')
 REP_RE = re.compile(r'(.+)\.([0-9]+)\Z')
@@ -83,54 +83,97 @@ def main():
     ap.add_argument('--minrep', type=int, default=2)
     ap.add_argument('--types', help='write the per-type S5RUN lines here')
     ap.add_argument('--ref', action='append', default=[], help='a run.txt of run_case473.sh main to compare with (repeatable)')
-    ap.add_argument('filesdir'); ap.add_argument('manifest')
+    ap.add_argument('batches', nargs='+', metavar='FILESDIR MANIFEST', help='one or more pairs FILESDIR MANIFEST')
     a = ap.parse_args()
+    if len(a.batches) % 2: ap.error('FILESDIR MANIFEST come in pairs')
+    if a.minrep < 1: ap.error('--minrep must be >= 1')
+    pairs_in = list(zip(a.batches[0::2], a.batches[1::2]))
 
-    mlines = [json.loads(x) for x in open(a.manifest).read().split('\n') if x.strip()]
-    meta, man = mlines[0], {p['name']: p for p in mlines[1:]}
-    drop = meta.get('drop', '-')
-    got = read_results(a.filesdir)
-    problems = []; agreed = {}
-    for name in sorted(set(man) | set(got)):
-        if name not in man: problems.append('foreign ' + name); continue
-        reps = got.get(name, [])
-        if len(reps) < a.minrep: problems.append('missing ' + name); continue
-        parsed = [parse_result(r) for r in reps]
-        if any(p is None for p in parsed): problems.append('broken ' + name); continue
-        if any(r != reps[0] for r in reps): problems.append('mismatch ' + name); continue
-        h, ents = parsed[0]
-        want = [tuple(e.split(' ')) for e in man[name]['entries']]
-        have = [(e['type'], ','.join(map(str, e['A'])) or '-', '%d/%d' % (e['part'], e['nparts'])) for e in ents]
-        if (h['name'] != name or h['input-sha256'] != man[name]['sha256'] or have != want
-                or h['s'] != '%d drop %s' % (meta['s'], drop)):
-            problems.append('foreign ' + name); continue
-        agreed[name] = ents
-    for p in problems: print(p)
+    problems = []; S = drop = None; codes = set(); nman = nagreed = 0
+    expect = set()                                      # pairs (type, A) named by the manifests
+    have = collections.defaultdict(dict)                # (type, A) -> {(part, nparts): entry}
+    for fd, mf in pairs_in:
+        tag = '' if len(pairs_in) == 1 else mf + ':'
+        try:
+            mlines = [json.loads(x) for x in open(mf).read().split('\n') if x.strip()]
+            meta, pieces = mlines[0], mlines[1:]
+            ok_meta = (meta['pieces'] == len(pieces) == len({p['name'] for p in pieces}) > 0
+                       and meta['entries'] == sum(len(p['entries']) for p in pieces))
+        except (ValueError, KeyError, TypeError, IndexError):
+            ok_meta = False
+        if not ok_meta:
+            problems.append('manifest %s: unreadable, empty or its counts do not match' % mf); continue
+        if S is None: S, drop = meta['s'], meta.get('drop', '-')
+        if (meta['s'], meta.get('drop', '-')) != (S, drop):
+            problems.append('manifest %s: s/drop differ from the first manifest' % mf); continue
+        man = {p['name']: p for p in pieces}; nman += len(man)
+        pkeys = lambda p: {tuple(e.split(' ')[:2]) for e in p['entries']}
+        for p in pieces:
+            for e in p['entries']:
+                t, A, _ = e.split(' '); expect.add((t, A))
+        got = read_results(fd)
+        for name in sorted(set(man) | set(got)):
+            if name not in man: problems.append('foreign ' + tag + name); continue
+            reps = got.get(name, [])
+            if len(reps) < a.minrep: problems.append(('missing ' + tag + name, pkeys(man[name]))); continue
+            parsed = [parse_result(r) for r in reps]
+            if any(p is None for p in parsed): problems.append(('broken ' + tag + name, pkeys(man[name]))); continue
+            if any(r != reps[0] for r in reps): problems.append(('mismatch ' + tag + name, pkeys(man[name]))); continue
+            h, ents = parsed[0]
+            want = [tuple(e.split(' ')) for e in man[name]['entries']]
+            try:
+                keys = [(e['type'], ','.join(map(str, e['A'])) or '-', e['part'], e['nparts']) for e in ents]
+                for e in ents: [int(e[k]) for k in ('orbits', 'gens', 'pairs', 'checked', 'sigma_nonzero', 'failing')]
+            except (KeyError, TypeError, ValueError):
+                problems.append(('broken ' + tag + name, pkeys(man[name]))); continue
+            if (h['name'] != name or h['input-sha256'] != man[name]['sha256']
+                    or [(t, A, '%d/%d' % (p, n)) for t, A, p, n in keys] != want or h['s'] != '%d drop %s' % (S, drop)):
+                problems.append('foreign ' + tag + name); continue
+            codes.add(h['code']); nagreed += 1
+            for (t, A, p, n), e in zip(keys, ents):
+                old = have[(t, A)].get((p, n))
+                if old is not None and old != e: problems.append('conflict %s A=%s %d/%d' % (t, A, p, n))
+                have[(t, A)][(p, n)] = e
+    if len(codes) > 1: problems.append('code: results of %d different code versions: %s' % (len(codes), sorted(codes)))
+    if S is None:
+        for p in problems: print(p if isinstance(p, str) else p[0])
+        print('overall ok=0'); return 1
 
-    # pairs (d, A) of the manifest and what came back for them
-    expect = collections.defaultdict(set)              # (type, A) -> set of (part, nparts)
-    for p in man.values():
-        for e in p['entries']:
-            t, A, pn = e.split(' '); part, n = map(int, pn.split('/')); expect[(t, A)].add((part, n))
-    have = collections.defaultdict(list)
-    for ents in agreed.values():
-        for e in ents: have[(e['type'], ','.join(map(str, e['A'])) or '-')].append(e)
+    # a pair (d, A) is complete when all PARTs 0..n-1 of one split n are agreed
     bad_claim = 0; complete = {}
-    for key, parts in expect.items():
-        es = have.get(key, [])
-        if {(e['part'], e['nparts']) for e in es} != parts or len(es) != len(parts): continue
-        ns = {n for _, n in parts}
-        if len(ns) != 1 or {p for p, _ in parts} != set(range(ns.pop())):
-            print('PARTS %s A=%s: the manifest does not cover all parts' % key); bad_claim += 1; continue
+    for key in sorted(expect):
+        byn = collections.defaultdict(dict)
+        for (p, n), e in have.get(key, {}).items(): byn[n][p] = e
+        full = [n for n in sorted(byn) if set(byn[n]) == set(range(n))]
+        if not full: continue
+        es = [byn[full[0]][p] for p in range(full[0])]
         if len({(e['orbits'], e['gens'], e['pairs'], e['class']) for e in es}) != 1:
             print('INCONSISTENT %s A=%s: parts disagree on the orbits' % key); bad_claim += 1; continue
         if sum(e['checked'] for e in es) != es[0]['orbits']:
             print('UNCHECKED %s A=%s: checked != orbits' % key); bad_claim += 1; continue
         complete[key] = es
-    bytype = collections.defaultdict(dict); want_types = collections.Counter(t for t, _ in expect)
+    # a piece that did not come back is superseded when all its pairs are complete from another batch (resubmission)
+    rest = []
+    for p in problems:
+        if isinstance(p, tuple) and p[1] <= set(complete): print('superseded ' + p[0])
+        else: rest.append(p if isinstance(p, str) else p[0])
+    problems = rest
+    for p in problems: print(p)
+    # a type's S5RUN line only when ALL its A violating (T1) are complete (types without such A are not listed)
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'compute', 'magnus', 'case473'))
+    from s5_473 import T1
+    def nonT1(t):
+        d = [int(x) for x in t.split(',')]
+        return {','.join(map(str, A)) or '-' for r in range(len(d) + 1)
+                for A in itertools.combinations(range(len(d)), r) if not T1(d, set(A))}
+    bytype = collections.defaultdict(dict)
     for (t, A), es in complete.items(): bytype[t][tuple(int(x) for x in A.split(',')) if A != '-' else ()] = es
     pydrop = '[]' if drop == '-' else "['%s']" % drop
-    tlines = {t: s5run_line(t, bytype[t], pydrop) for t in bytype if len(bytype[t]) == want_types[t]}
+    want_types = {t for t, _ in expect}; tlines = {}; partial = []
+    for t in sorted(want_types):
+        if {','.join(map(str, A)) or '-' for A in bytype.get(t, {})} == nonT1(t): tlines[t] = s5run_line(t, bytype[t], pydrop)
+        else: partial.append(t)
+    if partial: print('PARTIAL types (not all their A agreed in these batches, no S5RUN line): %d' % len(partial))
     if a.types:
         with open(a.types, 'w') as f:
             for t in sorted(tlines, key=lambda t: [int(x) for x in t.split(',')]): f.write(tlines[t] + '\n')
@@ -156,7 +199,7 @@ def main():
         ref = {}
         for fn in a.ref:
             for ln in open(fn):
-                if ln.startswith('S5RUN '):
+                if ln.startswith('S5RUN ') and ' A 0 ' not in ln:      # types without a non-(T1) A: no line here
                     ln = re.sub(r' sec [0-9.]+ ', ' ', ln.strip()); ref[ln.split()[2]] = ln
         for t, ln in sorted(tlines.items()):
             if t not in ref: print('REF none for type %s' % t); continue
@@ -170,7 +213,7 @@ def main():
     else: claims = nfail > 0
     ok = not problems and not bad_claim and missing_pairs == 0 and claims and nref == nmatch
     print('pieces %d, agreed %d, to resubmit %d; pairs (d,A) %d, complete %d; FAILING %d%s; overall ok=%d'
-          % (len(man), len(agreed), len(problems), len(expect), len(complete), nfail,
+          % (nman, nagreed, len(problems), len(expect), len(complete), nfail,
              '' if drop == '-' else ' (control without %s: must be > 0)' % drop, int(ok)))
     return 0 if ok else 1
 

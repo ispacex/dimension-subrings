@@ -67,7 +67,14 @@ def main():
     else:
         ents = ['%s %s %d/%d' % (t, A, p, a.p) for t, A in all_pairs(a.S) for p in range(a.p)]
         source = 'all'
+    if not ents: sys.exit('no entries')
     if len(set(ents)) != len(ents): sys.exit('duplicate entries')
+    splits = {}
+    for e in ents:
+        t, A, pn = e.split(' '); p, n = map(int, pn.split('/')); splits.setdefault((t, A), {}).setdefault(n, set()).add(p)
+    for (t, A), byn in splits.items():
+        if len(byn) != 1 or any(ps != set(range(n)) for n, ps in byn.items()):
+            sys.exit('pair %s A=%s: its parts are not exactly 0..n-1 of one split n' % (t, A))
     ents.sort(key=lambda e: hashlib.sha256(('%s\n%s' % (a.seed, e)).encode()).hexdigest())
     pieces = [ents[i:i + a.n] for i in range(0, len(ents), a.n)]
     width = max(5, len(str(len(pieces) - 1)))

@@ -9,8 +9,9 @@
 #                                            line equals the one of the MATH-473 log (without 'sec').  Then a control
 #                                            batch without (D2) on the first sampled type (must fail), and the
 #                                            cross-host batch (below).
-#   pilot_tm.sh s6 PAR N SEED                N pairs (d, A) of s = 6 (the first N in the order of make_batch.py --seed
-#                                            SEED), one per piece, one replica: timings and memory per pair.
+#   pilot_tm.sh s6 PAR N SEED [NPARTS REPS]  N pairs (d, A) of s = 6 (the first N in the order of make_batch.py --seed
+#                                            SEED), each split into NPARTS parts (default 1), NPARTS entries per piece, REPS replicas
+#                                            (default 1): timings and memory per pair, replicas compared.
 #   pilot_tm.sh cross PAR                    the cross-host batch only.
 # The cross-host batch: 4 fixed small s = 5 pieces; the sha256 of their results without the '# code' line are printed (CROSS lines), the same on every
 # runner and in the image.  Results, batches and stderr (timings, peak memory) go to $JOB_OUT.
@@ -44,7 +45,7 @@ s5)
   PAR=$1 NTH=$2 NP=$3; shift 3
   refs=()
   for j in "$@"; do f=${JOB_ROOT:?}/../$j/out/run.txt; [ -s "$f" ] || { echo "no $f"; exit 1; }; refs+=(--ref "$f"); cp "$f" "$OUT/ref-$j.txt"; done
-  cat "$OUT"/ref-*.txt | awk -v n="$NTH" '/^S5RUN/ && (++k % n) == 1 {print $3}' > "$OUT/types5.txt"
+  cat "$OUT"/ref-*.txt | awk -v n="$NTH" '/^S5RUN/ && (k++ % n) == 0 {print $3}' > "$OUT/types5.txt"
   python3 - "$OUT/types5.txt" > "$OUT/s5.entries" <<'PY'
 import itertools, sys
 from s5_473 import T1
@@ -59,7 +60,8 @@ PY
   runbatch "$OUT/b5" "$PAR"
   python3 "$HERE/collect.py" --types "$OUT/types5.out" "${refs[@]}" "$OUT/b5" "$OUT/b5.manifest" || st=1
   awk '/done,/{c+=$(NF-7); n++} END{printf "s5 batch: %d jobs, cpu %.0f s\n", n, c}' "$OUT"/b5/*/stderr.txt
-  python3 - "$(head -n 1 "$OUT/types5.txt")" > "$OUT/ctl.entries" <<'PY'
+  ctype=$(head -n 1 "$OUT/s5.entries" | cut -d' ' -f1)      # the first sampled type that has a non-(T1) A
+  python3 - "$ctype" > "$OUT/ctl.entries" <<'PY'
 import itertools, sys
 from s5_473 import T1
 d = [int(x) for x in sys.argv[1].split(',')]
@@ -67,14 +69,14 @@ for r in range(len(d) + 1):
     for A in itertools.combinations(range(len(d)), r):
         if not T1(d, set(A)): print(sys.argv[1], ','.join(map(str, A)) or '-')
 PY
-  echo "== control without (D2): $(wc -l < "$OUT/ctl.entries") pairs of type $(head -n 1 "$OUT/types5.txt") (must fail)"
+  echo "== control without (D2): $(wc -l < "$OUT/ctl.entries") pairs of type $ctype (must fail)"
   python3 "$HERE/make_batch.py" -r 2 -n 64 --drop D2 --prefix c 5 "$OUT/ctl" "$OUT/ctl.entries" || st=1
   runbatch "$OUT/ctl" "$PAR"
   python3 "$HERE/collect.py" "$OUT/ctl" "$OUT/ctl.manifest" | grep -v '^FAIL ' || st=1
   cross "$PAR"
   ;;
 s6)
-  PAR=$1 N=$2 SEED=$3
+  PAR=$1 N=$2 SEED=$3 NP=${4:-1} REPS=${5:-1}
   # the first N pairs in the order of make_batch.py --seed SEED: spread over all types and classes
   python3 - "$HERE" "$SEED" "$N" > "$OUT/s6.entries" <<'PY'
 import hashlib, sys
@@ -83,10 +85,11 @@ from make_batch import all_pairs
 key = lambda e: hashlib.sha256(('%s\n%s' % (sys.argv[2], e)).encode()).hexdigest()
 for e in sorted(('%s %s 0/1' % p for p in all_pairs(6)), key=key)[:int(sys.argv[3])]: print(e)
 PY
-  python3 "$HERE/make_batch.py" -r 1 -n 1 --seed "$SEED" --prefix s6 6 "$OUT/b6" "$OUT/s6.entries" || st=1
-  echo "== s = 6 sample: $N pairs (d,A), seed $SEED, one replica"; cat "$OUT"/b6/*/piece.txt | grep -v '^#'
+  sed -i 's: 0/1$::' "$OUT/s6.entries"
+  python3 "$HERE/make_batch.py" -r "$REPS" -n "$NP" -p "$NP" --seed "$SEED" --prefix s6 6 "$OUT/b6" "$OUT/s6.entries" || st=1
+  echo "== s = 6 sample: $N pairs (d,A), seed $SEED, NPARTS $NP, $REPS replicas"; cat "$OUT"/b6/*/piece.txt | grep -v '^#'
   runbatch "$OUT/b6" "$PAR"
-  python3 "$HERE/collect.py" --minrep 1 "$OUT/b6" "$OUT/b6.manifest" | grep -v '^FAIL ' || true
+  python3 "$HERE/collect.py" --minrep "$REPS" "$OUT/b6" "$OUT/b6.manifest" | grep -v '^FAIL ' || st=1
   echo "== per pair (stderr of run_piece.py)"; grep -h 'run_piece: Space\|A=\|done,' "$OUT"/b6/*/stderr.txt
   grep -h '"orbits"' "$OUT"/b6/*/result.txt
   ;;
