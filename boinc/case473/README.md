@@ -20,7 +20,6 @@ file, and the output has the same bytes on every host.
 | `pilot_tm.sh` | the pilot: the same entry point, `make_batch.py` and `collect.py`, run natively on a tm runner |
 | `../../compute/magnus/case479/` | MATH-479: the lift-orbit reduction of the case472 check (`red479.py`) and its controls |
 | `../../.github/workflows/boinc473-image.yml` | the image workflow (tag `boinc473-v*`, see "The image") |
-| `ci/boinc473-image-case472.patch` | MATH-479: the change of that workflow that adds the 3 case472 cross pieces (to apply by hand: the agent's token cannot push `.github/workflows`) |
 
 The $2^{11}$ pipeline in `../` (its Dockerfile, `buda/`, the `boinc-v*` tags and `boinc-image.yml`) is untouched.
 
@@ -259,7 +258,7 @@ lattices under `gen_mats` (BFS over HNF keys) at $s=3$ and on the $s=4$ pairs: t
   3.12.3, 3.14.4): all 7 results identical on the three runners; the 4 case473 pieces give the sha256 of MATH-478
   (`761baf7d…`, `ad7e3172…`, `928b61c5…`, `deb3b75e…`), the case472 pieces `3f2bb698…`, `119037b2…`, `9335bef3…`.
   The image `boinc473-v1` (built before MATH-479) does **not** contain the case472 code: kind case472 needs a new
-  image `boinc473-v2` from this code, with the workflow patch `ci/boinc473-image-case472.patch` applied first; its
+  image `boinc473-v2` from this code (the workflow runs these 3 case472 pieces since #169); its
   `CROSS` lines for amd64 and arm64 must equal these 7.
 * tm's own checkout from GitHub answered 401 that day, so these jobs cloned the public repository at the commit
   themselves (key suffix `nogit`).
