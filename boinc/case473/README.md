@@ -18,6 +18,7 @@ file, and the output has the same bytes on every host.
 | `make_batch.py` | list of pairs → BUDA batch directory (one job per piece and replica) plus its manifest |
 | `collect.py` | the batch's output files → compared replicas, checked against the manifest, summed in the form of the tm logs of MATH-473 |
 | `pilot_tm.sh` | the pilot: the same entry point, `make_batch.py` and `collect.py`, run natively on a tm runner |
+| `../../compute/magnus/case479/` | MATH-479: the lift-orbit reduction of the case472 check (`red479.py`) and its controls |
 | `ci/boinc473-image.yml` | the image workflow (tag `boinc473-v*`); it has to be copied to `.github/workflows/` (see "The image") |
 
 The $2^{11}$ pipeline in `../` (its Dockerfile, `buda/`, the `boinc-v*` tags and `boinc-image.yml`) is untouched.
@@ -222,6 +223,60 @@ batch of the $2^{11}$ search (2 606 short jobs) took 7.2 days, almost all of it 
 resubmit the pieces `collect.py` lists.
 
 Total pilot compute: about **3.2 core-hours** claimed on tm (≈ 3.1 h of CPU), from the probe `kimmy/tm/20261115-070245-case478-probe-3de9246` (`Space(6)` alone: 42 s, 765 MB) to the jobs above; one job (`ax42/…-case478-s5-final-3240753`) failed because the cross batch was rejected by the new split check of `make_batch.py`, which was fixed in `dd36632`, and one queued job was cancelled.
+
+## Kind case472: non-elementary chains at $s=5$ (MATH-479)
+
+The same image also runs the MATH-472 check (wiki 891 §18): non-elementary chains mod 27 on the capped types of
+length 5 **without** the invariant 9, every $A$: 427 types, **13 664 pairs** $(d,A)$. A piece of this kind has the
+header `# ds piece v2 kind=case472 name=NAME s=5 [drop=D2|Kt]` and the same entries `TYPE A PART/NPARTS` (every
+$A$ is allowed; `PART/NPARTS` picks every NPARTS-th non-elementary pair-orbit representative). Its result starts
+with `# ds piece result v2` and `# kind case472`, and each JSON line holds `pair_orbits`, `nonelem_orbits`,
+`nonelem_checked`, `lifts` (MATH-472's "chains"), `lift_orbits` = `checked`, `sigma_nonzero`, `failing`,
+`fail_reps` ([pair, lift]). The kind `case472full` checks every lift (MATH-472's own run) and is the control. Pieces
+of kind case473 keep the v1 header and their bytes: the CROSS lines below are those of MATH-478.
+
+**Reduction** (`compute/magnus/case479/red479.py`). MATH-472 took one pair $(Y\supseteq X)$ per orbit and checked
+all its lifts $c$. Here the stabiliser of the pair (Schreier elements from a BFS transversal of the orbit, as
+integer matrices mod 27, products of the `gen_mats` generators and their inverses) acts on the lifts by affine maps
+over $\mathbb F_3$, and one lift per orbit is checked. At $s=4$ this checks 209 593 of 1 978 124 lifts (×9.4), at
+$s=5$ about 1 lift in 44.
+
+Controls (`run_case479.sh controls`, `kimmy/tm/20261115-103356-case479-controls-nogit`, exit 0):
+(a) all 134 types of $s=3,4$, all $A$: pair orbits, non-elementary orbits and lifts equal MATH-472's (4 396 / 18 244
+and 135 104 / 1 978 124), FAILING 0; (b) `cmp` (every lift **and** the reduced run, per lift its verdict against
+its orbit's representative) on three $s=4$ pairs and one $s=5$ pair, with the full model (0 failures) and without
+(D$_2$) (3 268 failing lifts in 273 failing orbits, every failing orbit has a failing representative, no orbit with
+mixed verdicts); (c) `act`: 1 800 samples, the affine map against the HNF image of the lattice under the integer
+Schreier element: 0 mismatches. The independent reviewer also compared the lift orbits with true orbits of the
+lattices under `gen_mats` (BFS over HNF keys) at $s=3$ and on the $s=4$ pairs: the same partition.
+
+**Pilot** (`pilot_tm.sh ne5ref`, `ne5`, `cross`):
+
+* `ax42/tm/20261115-103356-case479-ne5ref-nogit`: the 4 pairs of the MATH-472 pilot. Kind `case472full` (32
+  pieces): all four `S5NEA` lines **identical** to the pilot's log, every field. Kind `case472` (2 replicas,
+  identical): pair orbits, non-elementary orbits, lifts = chains equal, FAILING 0, 3 313 of 146 240 lifts checked.
+  Control without (D$_2$): FAILING 1 454.
+* `hel24/tm/20261115-103356-case479-ne5-time-nogit`: 48 pairs in the order of `make_batch.py --seed t479`, 2
+  replicas, all identical, FAILING 0: **35.3 s of CPU per pair on average** (28–58 s), peak 185 MB per job.
+* `kimmy/tm/20261115-103356-case479-473s5-nogit`: the case473 path re-run (s=5 sample of MATH-478 main0: 6 of 6
+  types identical to the MATH-473 log, D$_2$ control 3 305 failing).
+* Cross-host (`pilot_tm.sh cross` at `36eec55`): `kimmy/tm/20261115-104955-case479-cross-nogit`,
+  `hel24/tm/20261115-104955-case479-cross-nogit.2`, `ax42/tm/20261115-104956-case479-cross-nogit` (Python 3.14.4,
+  3.12.3, 3.14.4): all 7 results identical on the three runners; the 4 case473 pieces give the sha256 of MATH-478
+  (`761baf7d…`, `ad7e3172…`, `928b61c5…`, `deb3b75e…`), the case472 pieces `3f2bb698…`, `119037b2…`, `9335bef3…`.
+  The image workflow prints the same 7 `CROSS` lines for amd64 and arm64.
+* tm's own checkout from GitHub answered 401 that day, so these jobs cloned the public repository at the commit
+  themselves (key suffix `nogit`).
+
+**Estimate for the whole case472 part:** 13 664 × 35.3 s ≈ **134 core-hours** per replica (MATH-472's estimate
+without the lift reduction: ≈ 1 250). Pieces of 100 pairs (`-n 100`): 137 pieces of ≈ 1 h, **274 jobs** with 2
+replicas, ≈ **270 core-hours**. Together with $s=6$ of case473 (4 402 jobs, ≈ 3 800 core-hours):
+
+```bash
+boinc/case473/make_batch.py --seed v1 --set case473:6:25 --set case472:5:100 batch
+```
+
+≈ **4 676 jobs, ≈ 4 070 core-hours**, all of about one hour; on BOINC the same 1–2 weeks as $s=6$ alone.
 
 ## Limits
 
