@@ -15,6 +15,9 @@ parametrisation, no orbit reduction) report how often each of the following FAIL
     c      R(L(K'), St(K''))
 and the indices [L(K'):L(K)], [S(K):S(K')] (log_3).  One summary line EXP480 ... per (type, A).
 
+Mode 'diag S': all capped types of length S without 9, all A, all diagonal K: R = 0 (with Prop. 13.3 this gives
+R = 0 for every diagonal K at any s; wiki 891 Sec. 19).
+
 Mode 'certf TYPE [A] [loose]': the filtration certificate.  For every pair of elementary chains K' <= K'' (X' <= X''
 in K_3/3K_3, X'' != everything -- exactly the pairs (K', K'') of non-elementary K) the K with this pair (all lifts psi)
 have sum K' (if X' != 0; if X' = 0 the only such K is 3K'') and intersection 3K'', so the domain D = L(sum) x S(3K'') contains L(K) x S(K) for EVERY such K
@@ -147,6 +150,23 @@ def certf(d, As, loose=False):
         print("CERTF" + ("-loose" if loose else ""), "type", ",".join(map(str, d)), "A", ",".join(map(str, sorted(A))) or "-", "pairs", n, "not9", n - nine,
               "zero", zero, "cert", cert, "uni", "yes" if uni else "no", "sec %.1f" % (time.time() - t0), flush=True)
 
+def diag(S, As=None):
+    """all capped types of length S without 9, all A, all DIAGONAL K: K = sum 3^(j_h) b_h Z, j_h in {0,1,2}
+    (b_h = e_h for h in N, 3e_h for h in A), i.e. every diagonal K with 9K_3 <= K <= K_3.  Checks R = 0."""
+    from nonel472 import types_no9
+    tot = fail = 0; t0 = time.time()
+    E = np.eye(S, dtype=np.int64)
+    for d in types_no9(S):
+        M = Model(d, MOD)
+        for A in (As or [set(c) for r in range(S + 1) for c in itertools.combinations(range(S), r)]):
+            k3 = K3(S, A)
+            for js in itertools.product(range(3), repeat=S):
+                Kg = [3 ** j * k3[h] for h, j in zip(range(S), js)] + [27 * E[h] for h in range(S)]
+                ok, _ = M.check({3: k3, 27: Kg}); tot += 1; fail += (not ok)
+    print("DIAG480 S", S, "types", len(types_no9(S)), "cases", tot, "sec %.1f" % (time.time() - t0), "FAILING", fail,
+          flush=True)
+    return fail
+
 if __name__ == '__main__':
     mode = sys.argv[1]
     if mode == 'test':
@@ -154,6 +174,8 @@ if __name__ == '__main__':
         if len(sys.argv) > 3: As = [set(int(a) for a in sys.argv[3].split(',') if a not in ('', '-'))]
         else: As = [set(c) for r in range(s + 1) for c in itertools.combinations(range(s), r)]
         test(d, As)
+    if mode == 'diag':
+        sys.exit(1 if diag(int(sys.argv[2])) else 0)
     if mode == 'certf':
         d = [int(a) for a in sys.argv[2].split(',')]; s = len(d)
         loose = sys.argv[-1] == 'loose'; args = [a for a in sys.argv[3:] if a != 'loose']

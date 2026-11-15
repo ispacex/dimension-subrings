@@ -1,5 +1,6 @@
 #!/bin/bash
 # MATH-480 (wiki 891 Sec. 19).  Usage: run_case480.sh MODE [PAR]
+#   diag PAR      exp480.py 'diag' S = 1..4: all diagonal K on capped types without 9 (R = 0); control without (D2)
 #   certf PAR     exp480.py 'certf' on every capped type of length 3 without 9 (filtration certificate)
 #   explore PAR   exp480.py 'test' on every capped type of length 3 without 9 (all A, all non-elementary K)
 # Progress: $JOB_ROOT/progress.  Exit status 1 iff the base check R(L(K),S(K)) = 0 fails somewhere or a line is missing.
@@ -34,5 +35,34 @@ if [ "$MODE" = certf ]; then
   [ "$n" -eq $((NA * 8)) ] || { echo "missing lines: $n of $((NA*8))"; st=1; }
   grep -q ' not9 0 ' "$OUT/ctotal.txt" || st=1
   grep -v '^CERTF ' "$OUT/c.txt" | head -20
+  echo "== (d,A) with a pair without certificate (cert < pairs) or without a uniform c"
+  awk '/^CERTF /{ if ($13 < $7 || $15 != "yes") print }' "$OUT/c.txt"
+  echo "== loose domain"
+  python3 ../case472/nonel472.py types 3 | awk '{print "certf " $0 " all loose"}' > "$OUT/cl.args"
+  xargs -P "$PAR" -L 1 python3 exp480.py < "$OUT/cl.args" > "$OUT/cl.txt" 2>&1
+  awk '/^CERTF-loose /{N+=$7; b+=$9; z+=$11; c+=$13; if($15=="yes")u++; L++} END{printf "TOTAL-loose (d,A) %d pairs %d not9 %d zero %d cert %d uni-yes %d\n", L, N, b, z, c, u}' "$OUT/cl.txt"
+  [ "$(grep -c '^CERTF-loose ' "$OUT/cl.txt")" -eq $((NA * 8)) ] || st=1
+fi
+if [ "$MODE" = diag ]; then
+  for S in 1 2 3 4; do echo "diag $S"; done | xargs -P "$PAR" -L 1 python3 exp480.py > "$OUT/d.txt" 2>&1
+  cat "$OUT/d.txt"
+  [ "$(grep -c '^DIAG480 ' "$OUT/d.txt")" -eq 4 ] && [ "$(awk '/^DIAG480 /{s+=$NF} END{print s+0}' "$OUT/d.txt")" -eq 0 ] || st=1
+  echo "== control: diagonal K without (D2) at S=3 (must fail)"
+  python3 - <<'PY' || true
+import sys, itertools, numpy as np
+sys.path[:0] = ['.', '../case467', '../case472', '../case473']
+from exp480 import K3, MOD
+from diag467 import Model
+from nonel472 import types_no9
+f = n = 0
+for d in types_no9(3):
+    M = Model(d, MOD, ('D2',))
+    for A in [set(c) for r in range(4) for c in itertools.combinations(range(3), r)]:
+        k3 = K3(3, A)
+        for js in itertools.product(range(3), repeat=3):
+            Kg = [3 ** j * k3[h] for h, j in zip(range(3), js)] + [27 * np.eye(3, dtype=np.int64)[h] for h in range(3)]
+            ok, _ = M.check({3: k3, 27: Kg}); n += 1; f += (not ok)
+print("DIAG480-CONTROL noD2 S 3 cases", n, "failing", f)
+PY
 fi
 echo "exit $st"; exit $st
