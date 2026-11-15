@@ -153,11 +153,84 @@ pull it anonymously.
 
 ## Pilot on tm
 
-PILOT
+Docker is not available on the tm runners, and the image workflow could not be pushed (see "The image"). So the
+pilot runs the **same entry point** natively: `run_piece.py`, `make_batch.py` and `collect.py` from the repository,
+under the runner's Python (3.14.4 on kimmy and ax42, 3.12.3 on hel24) with numpy 2.5.4. `pilot_tm.sh` builds a
+batch exactly as for BUDA, runs every job directory, and collects the results.
+
+**(a) $s=5$ against MATH-473.** A sample of types was taken from each of the four `run_case473.sh main` jobs. The
+sample used every $k$-th `S5RUN` line of that job's `out/run.txt`, all non-(T1) $A$ of each type, and 2 replicas
+per piece. `collect.py --ref` then compared each type's line with the log line (without `sec`).
+
+| tm job | reference | types | pairs $(d,A)$ | parts | jobs | identical to the log | CPU |
+|---|---|---:|---:|---:|---:|---|---:|
+| `kimmy/tm/20261115-070952-case478-s5-main0-c9bc3aa` | main0 | 6 | 96 | 1 | 24 | 6 of 6 | 1 515 s |
+| `ax42/tm/20261115-071000-case478-s5-main12-c9bc3aa` | main1, main2 | 6 | 93 | 2 | 48 | 6 of 6 | 1 611 s |
+| `hel24/tm/20261115-071006-case478-s5-main3-c9bc3aa` | main3 | 7 | 120 | 1 | 30 | 7 of 7 | 1 743 s |
+| `ax42/tm/20261115-072407-case478-s5-final-dd36632` | main1 | 1 | 7 | 1 | 2 | 1 of 1 | 64 s |
+| `hel24/tm/20261115-072413-case478-s5-final-dd36632` | main3 | 2 | 22 | 1 | 6 | 2 of 2 | 254 s |
+
+In every batch all replicas agreed, the manifest was covered, checked = orbits held for every pair, and FAILING was
+0. Over 22 types (6 + 6 + 7 + 1 + 2) and 338 pairs, every per-type line equals the MATH-473 line. In the first kimmy
+and ax42 samples one of the 7 sampled types (`3,3,3,3,9` and `3,3,9,27,27`) has no non-(T1) $A$ and therefore no line.
+
+Two kinds of control ran alongside:
+
+* **Without (D$_2$)**, using the same entry point and `drop=D2`, on all non-(T1) $A$ of one type, with 2 replicas.
+  On hel24 the type `3,3,3,9,81` gave 1 314 failing of 1 926 orbits. On ax42 the type `9,27,243,243,243` gave
+  1 869 failing of 2 139 orbits. As required, `collect.py` passes such a batch only when FAILING > 0.
+* **Cross-host.** The same 4 pieces (`pilot_tm.sh cross`, the entries are in the script and in the workflow) gave
+  byte-identical results, ignoring the `# code` line, on kimmy and ax42 (Python 3.14.4) and hel24 (Python 3.12.3),
+  in the first round (`c9bc3aa`, all three runners) and in the final cross batch on ax42 and hel24 (`dd36632`). The sha256 values are `761baf7d…`, `ad7e3172…`,
+  `928b61c5…`, `deb3b75e…`. The image workflow prints the same `CROSS` lines for amd64 and arm64; compare them there.
+
+**(b) $s=6$ timings.** A sample of pairs was taken in the order of `make_batch.py --seed`, spread over types and
+classes:
+
+| tm job | pairs | split | replicas | orbits per pair | CPU per pair | identical replicas |
+|---|---:|---|---:|---|---|---|
+| `kimmy/tm/20261115-071012-case478-s6-time-c9bc3aa` | 8 | whole (`0/1`) | 1 | 828–2 062 | 103–149 s | – |
+| `kimmy/tm/20261115-072401-case478-s6-parts-dd36632` | 8 | `-p 2` | 2 | 1 125–3 060 | ≈ 115–180 s (both parts, one orbit pass) | 8 of 8 pieces |
+
+Both jobs: every pair checked = orbits, $\Sigma\ne0$ on every representative, FAILING 0. In the second job the two
+parts of each pair agree on the orbits and partition the representatives, and the replicas are byte-identical.
+Over the 16 pairs a pair costs ≈ 60 s + 41 ms × (number of orbits). The mean is 1 577 orbits, so ≈ 125 s; the
+maximum in the sample is 3 060 orbits, ≈ 180 s.
+
+* `Space(6)` takes 41 s and 752 MB, once per job: 56 632 subspaces and 4 376 095 pairs $X_9\supseteq X_{27}$.
+  Peak memory per job is **≈ 0.9 GB**.
+* A pair $(d,A)$ costs **103–149 s of CPU (mean ≈ 125 s)** on a kimmy core. About half of that is `orbit_reps`
+  (union-find over 4.4 M pairs with 15–20 generators, ≈ 60 s); the rest is `Model.check` on the 800–2 100 orbit
+  representatives. There are far fewer orbits per pair than the "×63 pairs" suggested: 828–2 062 at $s=6$ against
+  276–828 at $s=5$.
+* Splitting a pair into parts (`-p`) saves little, because each part recomputes all the orbits. It is not needed:
+  no pair comes near 0.5 h.
+
+**(c) The whole $s=6$ batch** (55 012 pairs over 1 324 of the 1 365 types; the other 41 have no non-(T1) $A$):
+
+| | |
+|---|---|
+| CPU, one replica | 55 012 × 125 s ≈ **1 900 core-hours** (kimmy cores) |
+| pieces of 25 pairs (`-n 25 -p 1`) | **2 201 pieces**, ≈ 25 × 125 + 41 s ≈ **53 min** each, ≈ 0.9 GB |
+| jobs with 2 replicas | **4 402 jobs**, ≈ **3 800 core-hours** on the volunteers' side (slower cores: up to ×2) |
+| input / output per job | ≈ 0.7 KB / ≈ 5 KB |
+| BUDA run times for the form | expected 1 h, maximum 6 h |
+
+The wall-clock time on BOINC depends on how many hosts BOINC Central gives the batch. At 100 concurrent cores it
+is ≈ 1.6 days of computation, at 25 cores ≈ 6.5 days, plus the tail of late and failed jobs. The earlier BUDA
+batch of the $2^{11}$ search (2 606 short jobs) took 7.2 days, almost all of it tail. Expect **1–2 weeks**, and
+resubmit the pieces `collect.py` lists.
+
+Total pilot compute: about **3.2 core-hours** claimed on tm (≈ 3.1 h of CPU), from the probe `kimmy/tm/20261115-070245-case478-probe-3de9246` (`Space(6)` alone: 42 s, 765 MB) to the jobs above; one job (`ax42/…-case478-s5-final-3240753`) failed because the cross batch was rejected by the new split check of `make_batch.py`, which was fixed in `dd36632`, and one queued job was cancelled.
 
 ## Limits
 
 * The variants name the image by digest. Every change of the code means a new tag `boinc473-vN` and new digests
   in both variants.
-* BUDA has no replication of its own and no memory requirement per job. Two replicas per piece handle the first
-  problem; the memory need (below) is stated in the app's description.
+* BUDA has no replication of its own and no memory requirement per job. Two replicas per piece cover the first; a
+  job needs ≈ 0.9 GB, which nearly every host has.
+* `collect.py` counts only types that have a non-(T1) $A$: 312 of the 341 at $s=5$, 1 324 of 1 365 at $s=6$.
+  `run_case473.sh main` also prints `A 0` lines for the others, and `--ref` skips those lines.
+* `collect.py` accepts several `FILESDIR MANIFEST` pairs: the main batch and its resubmissions. A piece whose pairs
+  all came back from another batch is reported as `superseded`. If two complete splits of one pair disagree, it
+  reports `CONFLICT`.

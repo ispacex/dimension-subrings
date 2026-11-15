@@ -147,15 +147,19 @@ def main():
         full = [n for n in sorted(byn) if set(byn[n]) == set(range(n))]
         if not full: continue
         es = [byn[full[0]][p] for p in range(full[0])]
+        summ = lambda es: (es[0]['orbits'], es[0]['gens'], es[0]['pairs'], es[0]['class'],
+                           sum(e['checked'] for e in es), sum(e['sigma_nonzero'] for e in es), sum(e['failing'] for e in es))
+        if len({summ([byn[n][p] for p in range(n)]) for n in full}) != 1:
+            print('CONFLICT %s A=%s: two complete splits disagree' % key); bad_claim += 1; continue
         if len({(e['orbits'], e['gens'], e['pairs'], e['class']) for e in es}) != 1:
             print('INCONSISTENT %s A=%s: parts disagree on the orbits' % key); bad_claim += 1; continue
         if sum(e['checked'] for e in es) != es[0]['orbits']:
             print('UNCHECKED %s A=%s: checked != orbits' % key); bad_claim += 1; continue
         complete[key] = es
     # a piece that did not come back is superseded when all its pairs are complete from another batch (resubmission)
-    rest = []
+    rest = []; nsup = 0
     for p in problems:
-        if isinstance(p, tuple) and p[1] <= set(complete): print('superseded ' + p[0])
+        if isinstance(p, tuple) and p[1] <= set(complete): print('superseded ' + p[0]); nsup += 1
         else: rest.append(p if isinstance(p, str) else p[0])
     problems = rest
     for p in problems: print(p)
@@ -212,8 +216,8 @@ def main():
     if drop == '-': claims = nfail == 0
     else: claims = nfail > 0
     ok = not problems and not bad_claim and missing_pairs == 0 and claims and nref == nmatch
-    print('pieces %d, agreed %d, to resubmit %d; pairs (d,A) %d, complete %d; FAILING %d%s; overall ok=%d'
-          % (nman, nagreed, len(problems), len(expect), len(complete), nfail,
+    print('pieces %d, agreed %d, superseded %d, to resubmit %d; pairs (d,A) %d, complete %d; FAILING %d%s; overall ok=%d'
+          % (nman, nagreed, nsup, len(problems), len(expect), len(complete), nfail,
              '' if drop == '-' else ' (control without %s: must be > 0)' % drop, int(ok)))
     return 0 if ok else 1
 

@@ -85,7 +85,7 @@ from make_batch import all_pairs
 key = lambda e: hashlib.sha256(('%s\n%s' % (sys.argv[2], e)).encode()).hexdigest()
 for e in sorted(('%s %s 0/1' % p for p in all_pairs(6)), key=key)[:int(sys.argv[3])]: print(e)
 PY
-  sed -i 's: 0/1$::' "$OUT/s6.entries"
+  sed 's: 0/1$::' "$OUT/s6.entries" > "$OUT/s6.e" && mv "$OUT/s6.e" "$OUT/s6.entries"
   python3 "$HERE/make_batch.py" -r "$REPS" -n "$NP" -p "$NP" --seed "$SEED" --prefix s6 6 "$OUT/b6" "$OUT/s6.entries" || st=1
   echo "== s = 6 sample: $N pairs (d,A), seed $SEED, NPARTS $NP, $REPS replicas"; cat "$OUT"/b6/*/piece.txt | grep -v '^#'
   runbatch "$OUT/b6" "$PAR"
