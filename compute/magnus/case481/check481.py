@@ -66,6 +66,9 @@ def rref3(A):
 
 def rank3(A):
     A = np.asarray(A)
+    if A.ndim < 2:  # an empty sum of maps is the integer 0: the zero map, rank 0
+        assert A.ndim == 0 and int(A) % 3 == 0, A
+        return 0
     return 0 if A.size == 0 else len(rref3(A)[1])
 
 
