@@ -18,7 +18,7 @@ file, and the output has the same bytes on every host.
 | `make_batch.py` | list of pairs → BUDA batch directory (one job per piece and replica) plus its manifest |
 | `collect.py` | the batch's output files → compared replicas, checked against the manifest, summed in the form of the tm logs of MATH-473 |
 | `pilot_tm.sh` | the pilot: the same entry point, `make_batch.py` and `collect.py`, run natively on a tm runner |
-| `ci/boinc473-image.yml` | the image workflow (tag `boinc473-v*`); it has to be copied to `.github/workflows/` (see "The image") |
+| `../../.github/workflows/boinc473-image.yml` | the image workflow (tag `boinc473-v*`, see "The image") |
 
 The $2^{11}$ pipeline in `../` (its Dockerfile, `buda/`, the `boinc-v*` tags and `boinc-image.yml`) is untouched.
 
@@ -110,17 +110,10 @@ docker run --rm -v "$PWD:/app" ds-case473-boinc piece.txt result.txt
 * `PYTHONHASHSEED=0` and one thread for any BLAS. The results are integer counts, so the arithmetic does not depend
   on the CPU.
 
-**Workflow.** `ci/boinc473-image.yml` builds the image on a tag `boinc473-v*` (its own prefix, so `boinc-v*` and
+**Workflow.** `.github/workflows/boinc473-image.yml` builds the image on a tag `boinc473-v*` (its own prefix, so `boinc-v*` and
 `boinc-image.yml` are unaffected) on native amd64 and arm64 runners. It pushes
 `ghcr.io/ispacex/dimension-subrings-case473-boinc:<tag>-amd64` and `-arm64` and writes their digests into the job
-summary. The agent's GitHub token lacks the `workflow` scope, so it could not push this file into
-`.github/workflows/`. To install it:
-
-```bash
-git mv boinc/case473/ci/boinc473-image.yml .github/workflows/boinc473-image.yml   # drop the 3 "TO INSTALL" lines
-git commit -m "boinc473 image workflow" && git push
-git tag boinc473-v1 && git push origin boinc473-v1
-```
+summary. It was installed from `ci/` in a separate commit (the agent's token lacked the `workflow` scope, MATH-478).
 
 Then put the two digests into `buda/Dockerfile.intel` and `buda/Dockerfile.arm` (`DIGEST_amd64`, `DIGEST_arm64`),
 and make the package `dimension-subrings-case473-boinc` public in the registry settings, because volunteers' hosts
