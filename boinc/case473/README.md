@@ -19,7 +19,8 @@ file, and the output has the same bytes on every host.
 | `collect.py` | the batch's output files → compared replicas, checked against the manifest, summed in the form of the tm logs of MATH-473 |
 | `pilot_tm.sh` | the pilot: the same entry point, `make_batch.py` and `collect.py`, run natively on a tm runner |
 | `../../compute/magnus/case479/` | MATH-479: the lift-orbit reduction of the case472 check (`red479.py`) and its controls |
-| `ci/boinc473-image.yml` | the image workflow (tag `boinc473-v*`); it has to be copied to `.github/workflows/` (see "The image") |
+| `../../.github/workflows/boinc473-image.yml` | the image workflow (tag `boinc473-v*`, see "The image") |
+| `ci/boinc473-image-case472.patch` | MATH-479: the change of that workflow that adds the 3 case472 cross pieces (to apply by hand: the agent's token cannot push `.github/workflows`) |
 
 The $2^{11}$ pipeline in `../` (its Dockerfile, `buda/`, the `boinc-v*` tags and `boinc-image.yml`) is untouched.
 
@@ -111,17 +112,10 @@ docker run --rm -v "$PWD:/app" ds-case473-boinc piece.txt result.txt
 * `PYTHONHASHSEED=0` and one thread for any BLAS. The results are integer counts, so the arithmetic does not depend
   on the CPU.
 
-**Workflow.** `ci/boinc473-image.yml` builds the image on a tag `boinc473-v*` (its own prefix, so `boinc-v*` and
+**Workflow.** `.github/workflows/boinc473-image.yml` builds the image on a tag `boinc473-v*` (its own prefix, so `boinc-v*` and
 `boinc-image.yml` are unaffected) on native amd64 and arm64 runners. It pushes
 `ghcr.io/ispacex/dimension-subrings-case473-boinc:<tag>-amd64` and `-arm64` and writes their digests into the job
-summary. The agent's GitHub token lacks the `workflow` scope, so it could not push this file into
-`.github/workflows/`. To install it:
-
-```bash
-git mv boinc/case473/ci/boinc473-image.yml .github/workflows/boinc473-image.yml   # drop the 3 "TO INSTALL" lines
-git commit -m "boinc473 image workflow" && git push
-git tag boinc473-v1 && git push origin boinc473-v1
-```
+summary. It was installed from `ci/` in a separate commit (the agent's token lacked the `workflow` scope, MATH-478).
 
 Then put the two digests into `buda/Dockerfile.intel` and `buda/Dockerfile.arm` (`DIGEST_amd64`, `DIGEST_arm64`),
 and make the package `dimension-subrings-case473-boinc` public in the registry settings, because volunteers' hosts
@@ -264,8 +258,9 @@ lattices under `gen_mats` (BFS over HNF keys) at $s=3$ and on the $s=4$ pairs: t
   `hel24/tm/20261115-104955-case479-cross-nogit.2`, `ax42/tm/20261115-104956-case479-cross-nogit` (Python 3.14.4,
   3.12.3, 3.14.4): all 7 results identical on the three runners; the 4 case473 pieces give the sha256 of MATH-478
   (`761baf7d…`, `ad7e3172…`, `928b61c5…`, `deb3b75e…`), the case472 pieces `3f2bb698…`, `119037b2…`, `9335bef3…`.
-  The image workflow (not run yet: it is not installed) runs the same 7 pieces; its `CROSS` lines for amd64 and
-  arm64 must equal these.
+  The image `boinc473-v1` (built before MATH-479) does **not** contain the case472 code: kind case472 needs a new
+  image `boinc473-v2` from this code, with the workflow patch `ci/boinc473-image-case472.patch` applied first; its
+  `CROSS` lines for amd64 and arm64 must equal these 7.
 * tm's own checkout from GitHub answered 401 that day, so these jobs cloned the public repository at the commit
   themselves (key suffix `nogit`).
 

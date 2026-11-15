@@ -1,11 +1,9 @@
-# TO INSTALL: copy to .github/workflows/boinc473-image.yml (a push of that path needs a token with the "workflow"
-# scope, which the agent's token lacks -- MATH-478).
 
 # Builds the volunteer-computing image of case473 (boinc/case473/Dockerfile) for x86_64 and aarch64 on native runners
 # and pushes it to ghcr.io/<owner>/dimension-subrings-case473-boinc:<tag>-amd64 / -arm64.  The digests are written to
 # the job summary: boinc/case473/buda/Dockerfile.* name the image by digest.  Its own tag prefix boinc473-v*: the
 # image of the 2^11 search (boinc-image.yml, boinc-v*) is not touched.  Each image runs the build-time self-test and
-# then the 4 + 3 pieces (case473, case472) of the cross-host batch of pilot_tm.sh, whose sha256 (without the '# code' line) go into the
+# then the 4 pieces of the cross-host batch of pilot_tm.sh, whose sha256 (without the '# code' line) go into the
 # summary as well.
 name: boinc473 image
 on:
@@ -37,11 +35,8 @@ jobs:
           mkdir -p cross && cd cross
           printf '%s\n' '3,9,27,243,729 0 0/1' '9,9,27,81,243 0,1 0/2' '9,9,27,81,243 0,1 1/2' '3,9,81,243,729 1,2 0/1' > cross.entries
           docker run --rm -v "$PWD:/w" -w /w --entrypoint python3 "$tag" /opt/ds/boinc/case473/make_batch.py -r 1 -n 1 --prefix x 5 b cross.entries
-          printf '%s\n' '3,27,81,729 0,2' '27,27,81,243 1' > y.entries; printf '%s\n' '3,81,81,2187,59049 1,2,3' > z.entries
-          docker run --rm -v "$PWD:/w" -w /w --entrypoint python3 "$tag" /opt/ds/boinc/case473/make_batch.py -r 1 -n 1 --kind case472 --prefix y 4 b472 y.entries
-          docker run --rm -v "$PWD:/w" -w /w --entrypoint python3 "$tag" /opt/ds/boinc/case473/make_batch.py -r 1 -n 1 --kind case472 --prefix z 5 b472z z.entries
-          for j in b/* b472/* b472z/*; do docker run --rm --cpus 1 -v "$PWD/$j:/app" "$tag" piece.txt result.txt; done
+          for j in b/*; do docker run --rm --cpus 1 -v "$PWD/$j:/app" "$tag" piece.txt result.txt; done
           cd ..
           docker push "$tag"
           echo "$tag → $(docker inspect --format '{{index .RepoDigests 0}}' "$tag")" >> "$GITHUB_STEP_SUMMARY"
-          for f in cross/b/*/result.txt cross/b472/*/result.txt cross/b472z/*/result.txt; do echo "CROSS $(basename "$(dirname "$f")") $(grep -v '^# code ' "$f" | sha256sum | cut -c1-64)"; done | tee -a "$GITHUB_STEP_SUMMARY"
+          for f in cross/b/*/result.txt; do echo "CROSS $(basename "$(dirname "$f")") $(grep -v '^# code ' "$f" | sha256sum | cut -c1-64)"; done | tee -a "$GITHUB_STEP_SUMMARY"
