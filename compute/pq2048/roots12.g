@@ -20,11 +20,15 @@
 # Each drawn V goes through the filters of tree.g at level a ((Г_N) p5b of prune.g) and, if kept, is
 # expanded by its step 1 to the leaves exactly as in sample12.g (SA_Expand: Theorem B, Tahara, TIGHT,
 # (Г_N)), with up to M3 parents timed by MC_Data.
-# Input: D, LOGQ, NS (samples), SEED, OUTFILE (appended), [M3 = 2].
-# Output: a line {"D","s","m","w","total","surv","gl"} (counts as strings), then per sample a line
+# The number of invariants >= 4 of V_ab is dim Phi(V)/V' = m - dim(W+U) = i - imin.  Theorem A1 (README)
+# drops the V with i = imin + 1 (one invariant >= 4) too: with THMA1 (default true) only the U with
+# i >= imin + 2 are drawn, and "surv1" (i = imin + 1) / "surv2" (i >= imin + 2) count both kinds.
+# Input: D, LOGQ, NS (samples), SEED, OUTFILE (appended), [M3 = 2, THMA1 = true].
+# Output: a line {"D","s","m","w","total","surv","surv1","surv2","gl","thma1"} (counts as strings), then per sample a line
 #   {"start":j} and {"j","i","kept",["steps","ms_steps","by","cov"],"ms_build","ms_keep"}.
 SA_NORUN := true;;
 if not IsBound(M3) then M3 := 2; fi;
+if not IsBound(THMA1) then THMA1 := true; fi;
 M2 := 0;;
 Read("sample12.g");
 RT_RS := RandomSource(IsMersenneTwister, SEED);;
@@ -56,7 +60,7 @@ end;;
 
 RT_Run := function()
   local E, R, pcs, n, m, Mb, W, w, s, u, imin, counts, total, surv, gl, i, x, j, A, C, Bbar, U, gens,
-        hom, V, t0, t1, kept, e, resP, cov, out, cum, all;
+        hom, V, t0, t1, kept, e, resP, cov, out, cum, all, surv1, surv2, ilo, pool;
   s := LOGQ - 2 - D;
   E := ElementaryAbelianGroup(2 ^ D);
   R := PqPCover(E);
@@ -69,10 +73,15 @@ RT_Run := function()
   counts := List([0 .. Minimum(w, u)], i -> 2 ^ ((w - i) * (u - i)) * RT_GB(w, i) * RT_GB(m - w, u - i));
   total := Sum(counts);
   surv := Sum([imin + 2 .. Length(counts)], k -> counts[k]);  # i = k - 1 > imin
+  surv1 := counts[imin + 2];                                       # i = imin + 1: one invariant >= 4
+  surv2 := surv - surv1;                                           # i >= imin + 2
+  if THMA1 then ilo := imin + 2; pool := surv2; else ilo := imin + 1; pool := surv; fi;
   gl := Product([0 .. D - 1], k -> 2 ^ D - 2 ^ k);
   FileString(OUTFILE, Concatenation("{\"D\":", String(D), ",\"s\":", String(s), ",\"m\":", String(m),
     ",\"w\":", String(w), ",\"total\":\"", String(total), "\",\"surv\":\"", String(surv),
-    "\",\"gl\":\"", String(gl), "\"}\n"), true);
+    "\",\"surv1\":\"", String(surv1), "\",\"surv2\":\"", String(surv2),
+    "\",\"gl\":\"", String(gl), "\",\"thma1\":", String(THMA1), "}\n"), true);
+  if pool = 0 then return; fi;
   # a complement C of W in M
   Mb := IdentityMat(m, GF(2));
   C := [];
@@ -83,8 +92,8 @@ RT_Run := function()
     FileString(OUTFILE, Concatenation("{\"start\":", String(j), "}\n"), true);
     t0 := SA_Rt();
     # i > imin with weights counts[i+1]
-    x := Random(RT_RS, 1, surv);
-    i := imin + 1; cum := counts[i + 1];
+    x := Random(RT_RS, 1, pool);
+    i := ilo; cum := counts[i + 1];
     while x > cum do i := i + 1; cum := cum + counts[i + 1]; od;
     if i > 0 then A := RT_RandSub(W, i); else A := []; fi;
     Bbar := RT_RandSub(C, u - i);
@@ -97,7 +106,7 @@ RT_Run := function()
     PrimePGroup(V);
     t1 := SA_Rt();
     if Size(V) <> 2 ^ (LOGQ - 2) or RankPGroup(V) <> D or MS_PClass(V) <> 2
-       or ForAll(AbelianInvariants(V), y -> y = 2) then
+       or Number(AbelianInvariants(V), y -> y >= 4) <> i - imin then
       Error("roots12: bad quotient");
     fi;
     kept := PR_Data(V, LOGQ).p5b;

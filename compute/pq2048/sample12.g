@@ -15,9 +15,10 @@
 # (reservoir sample) MC_Data is timed: the cost of the cover search, and whether the parent has
 # admissible hyperplanes.
 #
-# Input: NN, D, LOGQ, IDFILE (one library id per line), OUTFILE (appended), [M2 = 3, M3 = 2, SEED, RULES = true].
+# Input: NN, D, LOGQ, IDFILE (one library id per line), OUTFILE (appended), [M2 = 3, M3 = 2, SEED, RULES = true,
+#   THMA1 = RULES].  a1 counts the level-a children dropped by Theorem A1 (also in rej).
 # Output: per id, a line {"start":id} before X is touched and then one result line
-#   {"id","rank","pclass","cls","kept",["steps","ms_steps","by":[{"s","n","a","b","par","ms_desc","ms_filter","rej","cut"}],
+#   {"id","rank","pclass","cls","kept",["steps","ms_steps","by":[{"s","n","a1","a","b","par","ms_desc","ms_filter","rej","cut"}],
 #    "s2":[{"steps","ms_steps","n","b","par","ms_desc","ms_filter"}],"cov":[{"lev","ms","count"}]]}
 # (an id with a start line and no result line ran out of time or memory: the driver records it as heavy).
 Read("../pq1024/lib.g");
@@ -29,6 +30,8 @@ if not IsBound(M3) then M3 := 2; fi;
 if not IsBound(SEED) then SEED := 1; fi;
 # RULES := false: without Theorems A, B and Tahara's rule (as the rank 2-4 runs at 2^11, for the check)
 if not IsBound(RULES) then RULES := true; fi;
+# THMA1 (README, Theorem A1): drop the level-a children of 2-class 2 with at most one invariant >= 4
+if not IsBound(THMA1) then THMA1 := RULES; fi;
 NMAX := LOGQ - 1;;
 SA_RS := RandomSource(IsMersenneTwister, SEED);;
 SA_LA := LOGQ - 2;;   # level a
@@ -62,7 +65,7 @@ end;;
 # Expand the kept vertex G by its allowed steps s with k + s in levs; children filtered as tree.g.
 # resA, resP: reservoirs for level-a children and for parents at level b.
 SA_Expand := function(G, levs, resA, resP)
-  local k, st, steps, out, s, tb, ds, t0, t1, n, a, b, par, rej, cut, H, c, ms_desc, pqb;
+  local k, st, steps, out, s, tb, ds, t0, t1, n, a, b, par, rej, cut, H, c, ms_desc, pqb, a1;
   k := Log(Size(G), 2);
   st := TS_Steps(G, NMAX, LOGQ);
   steps := Filtered(st.steps, s -> k + s in levs);
@@ -80,7 +83,7 @@ SA_Expand := function(G, levs, resA, resP)
       ds := MS_Desc(G, s);
     fi;
     t1 := SA_Rt(); ms_desc := t1 - t0;
-    n := Length(ds); a := 0; b := 0; par := 0; rej := 0; cut := 0;
+    n := Length(ds); a1 := 0; a := 0; b := 0; par := 0; rej := 0; cut := 0;
     for H in ds do
       c := NilpotencyClassOfGroup(H);
       if c > 3 then rej := rej + 1; continue; fi;
@@ -88,6 +91,8 @@ SA_Expand := function(G, levs, resA, resP)
       if c = 3 and not IsCyclic(LowerCentralSeriesOfGroup(H)[3]) then rej := rej + 1; continue; fi;
       if RULES and k + s = LOGQ - 2 and c <= 2 and MS_PClass(H) = 2
          and ForAll(AbelianInvariants(H), x -> x = 2) then rej := rej + 1; continue; fi;   # Theorem A
+      if THMA1 and k + s = LOGQ - 2 and c <= 2 and MS_PClass(H) = 2
+         and Number(AbelianInvariants(H), x -> x >= 4) <= 1 then rej := rej + 1; a1 := a1 + 1; continue; fi;  # Theorem A1
       if RULES and k + s = LOGQ - 1 and Number(AbelianInvariants(H), x -> x >= 4) <= 1 then
         rej := rej + 1; continue; fi;                                          # Tahara, Cor. 19
       if c <= 2 and k + s = LOGQ - 1 then
@@ -102,7 +107,7 @@ SA_Expand := function(G, levs, resA, resP)
         fi;
       fi;
     od;
-    Add(out.by, rec(s := s, n := n, a := a, b := b, par := par, rej := rej, cut := cut,
+    Add(out.by, rec(s := s, n := n, a1 := a1, a := a, b := b, par := par, rej := rej, cut := cut,
                     ms_desc := ms_desc, ms_filter := SA_Rt() - t1));
     Unbind(ds);
   od;
@@ -110,7 +115,7 @@ SA_Expand := function(G, levs, resA, resP)
 end;;
 
 SA_ByJ := by -> Concatenation("[", JoinStringsWithSeparator(List(by, r -> Concatenation(
-  "{\"s\":", String(r.s), ",\"n\":", String(r.n), ",\"a\":", String(r.a), ",\"b\":", String(r.b),
+  "{\"s\":", String(r.s), ",\"n\":", String(r.n), ",\"a1\":", String(r.a1), ",\"a\":", String(r.a), ",\"b\":", String(r.b),
   ",\"par\":", String(r.par), ",\"rej\":", String(r.rej), ",\"cut\":", String(r.cut),
   ",\"ms_desc\":", String(r.ms_desc), ",\"ms_filter\":", String(r.ms_filter), "}")), ","), "]");;
 

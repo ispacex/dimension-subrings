@@ -27,6 +27,10 @@
 #     CH_DEFERCHUNK (default 50000) library ids, {..,"steps":[s],"ids":[a,b]}: the pieces of stage B.
 #   THMA (environment PQ2048_THMA=1) — Theorem A of README: a kept-to-be vertex of order 2^(LOGQ-2),
 #     2-class 2, with elementary abelianization is dropped before (G_N) (counted in thmA[k]).
+#   THMA1 (environment PQ2048_THMA1=1, with THMB and TAH19) — Theorem A1 of README: a kept-to-be vertex of
+#     order 2^(LOGQ-2), 2-class 2, whose abelianization has at most one invariant >= 4, is dropped before
+#     (G_N): Theorem B drops its step-1 children of class 3 and Tahara's rule those of class <= 2
+#     (counted in thmA1[k]; the elementary ones stay in thmA[k] when THMA is set).
 #   THMB (environment PQ2048_THMB=1) — Theorem B of README: for a vertex of order 2^(LOGQ-2), 2-class 2,
 #     whose abelianization has fewer than two invariants >= 4, its step-1 children of class 3 are
 #     dropped before (G_N) (counted in thmB[k+1]).  (Building only the class-2 children, CH_StepC(V, 3),
@@ -76,6 +80,7 @@ TR_OneStage := function(G)
 end;;
 NOSTAB := IsBound(GAPInfo.SystemEnvironment.PQ2048_NOSTAB) and GAPInfo.SystemEnvironment.PQ2048_NOSTAB = "1";;
 THMA := IsBound(GAPInfo.SystemEnvironment.PQ2048_THMA) and GAPInfo.SystemEnvironment.PQ2048_THMA = "1";;
+THMA1 := IsBound(GAPInfo.SystemEnvironment.PQ2048_THMA1) and GAPInfo.SystemEnvironment.PQ2048_THMA1 = "1";;
 TAH19 := IsBound(GAPInfo.SystemEnvironment.PQ2048_TAH19) and GAPInfo.SystemEnvironment.PQ2048_TAH19 = "1";;
 # TR_Consume(l): the list l of descendants walked as an iterator that unbinds each entry as it hands it
 # out, so a descendant and what the tests cache on it can be collected once it is handled, instead of
@@ -92,7 +97,7 @@ TR_Live := function() local g; g := GasmanStatistics();
 TR_Run := function()
   local tb, nd, prof, pv, ps, r0, r1, t1, nrej, nkept, ncut, ds, mc, dump, dlev, defer, fixed, S, stack, covers, G, k, s, H, c, t, r, cs, x, n, out, line, nm, j, st, steps, pqb;
   S := rec(vert := [], cut := [], par := [], cand := [], fallback := [], ms_desc := [], ms_cover := [],
-           ms_steps := [], calls := [], skipped := [], noexp := [], thmA := [], thmB := [], onestage := [], tah19 := []);
+           ms_steps := [], calls := [], skipped := [], noexp := [], thmA := [], thmA1 := [], thmB := [], onestage := [], tah19 := []);
   if IsBound(OUTFILE) then out := OutputTextFile(OUTFILE, false); SetPrintFormattingStatus(out, false); fi;
   if IsBound(STARTFILE) then
     stack := [];
@@ -206,6 +211,12 @@ TR_Run := function()
         if THMA and k + s = LOGQ - 2 and NMAX = LOGQ - 1 and c <= 2 and MS_PClass(H) = 2
            and ForAll(AbelianInvariants(H), x -> x = 2) then
           TR_Add(S.thmA, k + s, 1); continue;
+        fi;
+        # Theorem A1 (README): the same with at most one invariant >= 4 in H_ab; its step-1 children are
+        # dropped by Theorem B (class 3) and Tahara's rule (class <= 2), so H itself is.
+        if THMA1 and THMB and TAH19 and k + s = LOGQ - 2 and NMAX = LOGQ - 1 and c <= 2 and MS_PClass(H) = 2
+           and Number(AbelianInvariants(H), x -> x >= 4) <= 1 then
+          TR_Add(S.thmA1, k + s, 1); continue;
         fi;
         # Tahara 1977, Cor. 19: a leaf with at most one invariant >= 4 in H_ab has no counterexample above it.
         if TAH19 and k + s = LOGQ - 1 and NMAX = LOGQ - 1

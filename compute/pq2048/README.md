@@ -786,6 +786,19 @@ $2$-class 2, $H$ a step-1 descendant of $V$ and $P_3(H) = \langle z \rangle$.
 * **Theorem B** (`THMB`): the step-1 descendants of class 3 of $V$ are dropped before (Г$_N$) when
   $V_{ab}$ has fewer than two invariants $\ge 4$. This is statement 1 of "Not proved" (the proved
   part), which does not need the condition on $V_{ab}$. Checked in the rank-5 work ([D5-3](https://math.kaiku.tech/issue/D5-3)).
+* **Theorem A1** (`THMA1`, used only with `THMB` and `TAH19`): if $V_{ab}$ has at most one
+  invariant $\ge 4$, $V$ is dropped: no step-1 descendant of $V$ survives Theorem B and Tahara's rule.
+  This extends Theorem A (zero invariants $\ge 4$), with the same step (1). *Proof.* Let $H$ be a
+  step-1 descendant, so $V = H/P_3(H)$ with $P_3(H) = [\Phi(H), H]\,\Phi(H)^2$. If $H$ has class 3,
+  Theorem B drops it (its condition on $V$ is ours). Let $H$ have class $\le 2$. Then
+  $[x^2, y] = [x, y]^2$ and $(xy)^2 = x^2y^2[y,x]$, so $[\Phi(H), H] \le \gamma_2(H)$ and
+  $\Phi(H)^2 \le H^4\gamma_2(H)$; hence $P_3(H) \le H^4\gamma_2(H)$, and the kernel $K$ of
+  $H_{ab} \to V_{ab}$ lies in $4H_{ab} = \Phi(2H_{ab})$. So $2V_{ab} = 2H_{ab}/K$ needs as many
+  generators as $2H_{ab}$. The number of invariants $\ge 4$ of a finite abelian 2-group $A$ is the
+  rank of $2A$; so $H_{ab}$ has at most one invariant $\ge 4$, and Tahara's rule drops $H$. $V$ is
+  no parent (2-class 2) and its steps $\ge 2$ go past $2^{N-1}$. $\square$
+  Seen in the samples of the $2^{12}$ estimate before the rule was written: 184 elementary-abelian
+  roots of ranks 4–6 with one invariant $\ge 4$, 0 leaves among their ≈ 380 000 step-1 children.
 * **Tahara's rule** (`TAH19`): a leaf $H$ of order $2^{N-1}$ whose $H_{ab}$ has at most one invariant
   $\ge 4$ is dropped before (Г$_N$) and the cover search. A candidate $Q$ over $H$ has
   $n \in \gamma_3(Q) \le \gamma_2(Q)$, so $Q_{ab} = H_{ab}$, and $D_4(Q) = \gamma_4(Q) = 1$ by
@@ -892,3 +905,30 @@ them is used for pruning beyond what is said below.
    checked on a sample.
 
 † — not checked against the source.
+
+## Estimate for $2^{12}$
+
+[MATH-40](https://math.kaiku.tech/issue/MATH-40), branch `math40-est12`. The walk of `tree.g` with
+$N_{\max} = 11$ is measured on random vertices instead of walked (`sample12.g`, `run_sample12.sh`,
+`est12.py`): every vertex of order $\le 2^{9}$ is in SmallGroups, and a vertex of level a
+($2^{10}$) or a leaf ($2^{11}$) has a unique tree parent of order $\le 2^9$ (or, for a leaf, of
+level a). Random ids of one rank and order are expanded to levels a and b with the filters of
+`tree.g`; up to `M2` of their level-a children are expanded to the leaves, and `MC_Data` is timed on up
+to `M3` parents.
+
+The level-a children of the elementary abelian roots $2^d$ have order $2^{10}$, outside the library;
+`roots12.g` draws them as quotients $R/U$ of the $p$-cover $R$ of $2^d$, with exact counts. With
+$M$ the multiplicator ($\dim m = d(d+1)/2$), $W = R'$ ($\dim w = d(d-1)/2$), $U \le M$ of
+codimension $s = 10 - d$, $u = m - s$ and $i = \dim(U \cap W)$, the number of $U$ with a given $i$ is
+$2^{(w-i)(u-i)}[w, i]_2[m-w, u-i]_2$, and $V_{ab}$ has $i - i_{\min}$ invariants $\ge 4$,
+$i_{\min} = w + u - m$ (Theorem A drops $i = i_{\min}$, Theorem A1 also $i = i_{\min}+1$). Classes are
+taken as $\#U/|GL(d,2)|$ (trivial stabilisers; a lower bound).
+
+Check of the method on $2^{11}$, rank 4, without Theorems A/B and Tahara (as MATH-71): level 9
+$2.09\cdot10^4$ (exact 21 256), leaves $5.22\cdot10^4$ (exact 52 181).
+
+Result (20.11.2026, before Theorem A1 was in the code): walk ≈ 92 CPU-days (rank 5, order 512:
+71 ± 33), $1.7\cdot10^5$ parents, cover search ≈ 35 ms each. Roots after Theorem A: $1.8\cdot10^3$,
+$1.1\cdot10^7$, $2.1\cdot10^7$, $2.3\cdot10^3$ classes for $d = 4..7$, ≈ 5 600 CPU-days, almost all
+on roots with one invariant $\ge 4$ (0 leaves), which Theorem A1 drops. Left after A1: 298,
+$5.0\cdot10^4$, $1.5\cdot10^3$ classes ($d = 4, 5, 6$; $d \ge 7$: none).
