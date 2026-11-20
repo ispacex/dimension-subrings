@@ -49,20 +49,20 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from xml.sax.saxutils import escape
 
-DEFAULT_CONFIG = Path("~/.config/boinc-fetcher/config.json")
+DEFAULT_CONFIG = Path("/etc/boinc-fetcher/config.json")
 
 DEFAULTS: dict = {
     "boinc_url": "https://boinc.berkeley.edu/central/",
-    "results_dir": "~/boinc-results",
-    "secrets_dir": "~/.config/boinc-fetcher/secrets",
-    "registry": "~/.config/boinc-fetcher/registry.json",
-    "state_dir": "~/.local/state/boinc-fetcher",
+    "results_dir": "/srv/boinc-results",
+    "secrets_dir": "/etc/boinc-fetcher/secrets",
+    "registry": "/etc/boinc-fetcher/registry.json",
+    "state_dir": "/var/lib/boinc-fetcher",
     # a download needs announced size (x2 with extract) + min_free_gb left over;
     # below min_free_gb on the results filesystem at any time -> low-disk alert
     "min_free_gb": 20,
     "extract": False,
     # also download complete batches that are not in the registry, if id >= min_batch_id
-    "download_unregistered": True,
+    "download_unregistered": False,
     "min_batch_id": 0,
     "error_fraction_threshold": 0.05,
     "default_expected_hours": 120,
@@ -99,7 +99,7 @@ GB = 1024 ** 3
 
 
 def log(msg: str) -> None:
-    print(time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()) + " " + msg, flush=True)
+    print(time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()) + " " + SCRUB(msg), flush=True)
 
 
 def human(n: float) -> str:
@@ -370,10 +370,15 @@ class Notifier:
             self.outbox.append({"ch": "tracker", "issue": issue, "text": text, "t": time.time()})
 
     def flush(self) -> None:
+        if self.dry_run:
+            for m in self.outbox:
+                log(f"dry-run: would send via {m['ch']}: {m['text'].splitlines()[0]}")
+            return
         keep = []
+        down: set[str] = set()  # channels that failed in this run: not tried again now
         for m in self.outbox:
-            if self.dry_run:
-                log(f"dry-run: would send via {m['ch']}")
+            if m["ch"] in down:
+                keep.append(m)
                 continue
             try:
                 if m["ch"] == "telegram":
@@ -383,6 +388,7 @@ class Notifier:
                 self.sent.append(m)
             except Exception as e:  # noqa: BLE001 - keep it for the next run
                 m["tries"] = m.get("tries", 0) + 1
+                down.add(m["ch"])
                 log(SCRUB(f"delivery via {m['ch']} failed (try {m['tries']}): {type(e).__name__}: {e}"))
                 # drop after ~2 days of failures, so the outbox does not grow forever
                 if m["tries"] < 100 and time.time() - m["t"] < 2 * 86400:
@@ -392,7 +398,8 @@ class Notifier:
     def _post(self, url: str, body: bytes, headers: dict) -> None:
         req = urllib.request.Request(url, data=body, headers=headers)
         try:
-            with urllib.request.urlopen(req, timeout=60) as r:
+            # no redirects: a redirect must not carry the token to another host
+            with urllib.request.build_opener(NoRedirect).open(req, timeout=60) as r:
                 r.read()
         except urllib.error.HTTPError as e:
             detail = e.read(500).decode("utf-8", "replace")
@@ -477,6 +484,14 @@ class Fetcher:
         self.notifier = Notifier(cfg, self.secrets, self.state["outbox"], dry_run)
         self.dry_run = dry_run
         self._free = free_bytes or (lambda p: shutil.disk_usage(p).free)
+        # every secret is known to the scrubber before anything can be logged
+        for name in (cfg["boinc_auth_file"], cfg["telegram"]["token_file"], cfg["tracker"]["token_file"]):
+            with contextlib.suppress(SecretError, OSError):
+                SCRUB.add(read_secret(self.secrets / name))
+
+    def save(self) -> None:
+        if not self.dry_run:  # a dry run leaves no trace in the state
+            save_json(self.state_path, self.state)
 
     # -- helpers
     def free(self) -> int:
@@ -528,14 +543,24 @@ class Fetcher:
                         if not self.handle(b):
                             rc = 1
                     except Exception as e:  # noqa: BLE001 - one batch must not stop the others
-                        log(SCRUB(f"batch {b['id']}: unexpected {type(e).__name__}: {e}"))
                         rc = 1
+                        msg = SCRUB(f"unexpected {type(e).__name__}: {e}")
+                        log(f"batch {b['id']}: {msg}")
+                        rec = self.state["batches"].setdefault(str(b["id"]), {})
+                        if rec.get("last_unexpected") != msg or due(rec, "unexpected", self.cfg["realert_hours"], self.now):
+                            self.notifier.notify("error", f"{self.title(b)}: boinc-fetcher error: {msg}",
+                                                 self.reg(b["id"]).get("issue"))
+                            mark(rec, "unexpected", self.now)
+                            rec["last_unexpected"] = msg
+                    # after every batch: a run killed later (timeout, reboot) loses nothing
+                    self.notifier.flush()
+                    self.save()
             self.check_registry_missing({b["id"] for b in batches})
         self.check_disk()
         self.heartbeat()
         self.notifier.flush()
         self.state["last_run"] = self.now
-        save_json(self.state_path, self.state)
+        self.save()
         return rc
 
     def check_registry_missing(self, seen: set) -> None:
@@ -566,7 +591,7 @@ class Fetcher:
         url = self.cfg.get("heartbeat_url")
         if url and g.get("last_ok_poll") == self.now and not self.dry_run:
             try:
-                with urllib.request.urlopen(url, timeout=30) as r:
+                with urllib.request.build_opener(NoRedirect).open(url, timeout=30) as r:
                     r.read()
             except Exception as e:  # noqa: BLE001
                 log(SCRUB(f"heartbeat ping failed: {e}"))
@@ -596,20 +621,26 @@ class Fetcher:
                    fraction_done=b["fraction_done"], name=b["name"])
         realert = self.cfg["realert_hours"]
 
-        thr = r.get("error_fraction_threshold") or self.cfg["error_fraction_threshold"]
+        thr = r.get("error_fraction_threshold")
+        if thr is None:
+            thr = self.cfg["error_fraction_threshold"]
         if b["njobs"] and b["nerror_jobs"] / b["njobs"] > thr:
+            # first time; again when the count doubles, or after realert_hours if it grew at all
             last_n = rec.get("error_alert_n")
-            if last_n is None or b["nerror_jobs"] >= 2 * last_n or due(rec, "error_fraction", realert, self.now):
-                if last_n != b["nerror_jobs"]:
-                    self.notifier.notify("error_fraction",
-                                         f"{self.title(b)}: {b['nerror_jobs']} of {b['njobs']} jobs failed "
-                                         f"({100 * b['nerror_jobs'] / b['njobs']:.1f}% > {100 * thr:.1f}%), "
-                                         f"state {b['state']}.", issue)
-                    mark(rec, "error_fraction", self.now)
-                    rec["error_alert_n"] = b["nerror_jobs"]
+            nerr = b["nerror_jobs"]
+            if (last_n is None or nerr >= 2 * last_n
+                    or (nerr > last_n and due(rec, "error_fraction", realert, self.now))):
+                self.notifier.notify("error_fraction",
+                                     f"{self.title(b)}: {nerr} of {b['njobs']} jobs failed "
+                                     f"({100 * nerr / b['njobs']:.1f}% > {100 * thr:.1f}%), "
+                                     f"state {b['state']}.", issue)
+                mark(rec, "error_fraction", self.now)
+                rec["error_alert_n"] = nerr
 
         if b["state"] in ("init", "in_progress"):
-            exp_h = r.get("expected_hours") or self.cfg["default_expected_hours"]
+            exp_h = r.get("expected_hours")
+            if exp_h is None:
+                exp_h = self.cfg["default_expected_hours"]
             limit = exp_h * self.cfg["long_running_factor"] * 3600
             if b["create_time"] and self.now - b["create_time"] > limit and due(rec, "long_running", realert, self.now):
                 self.notifier.notify("long_running",
@@ -627,6 +658,12 @@ class Fetcher:
 
         if b["state"] != "complete" or rec.get("downloaded"):
             return True
+        if rec.get("download_started"):
+            # the previous run died while downloading (timeout, kill, reboot)
+            rec.pop("download_started")
+            self.cleanup_part(b["id"])
+            return self._fail(b, rec, issue, "download_failed",
+                              "previous download was interrupted (run killed or timed out)")
         if rec.get("gave_up"):
             return True
         if rec.get("next_attempt", 0) > self.now:
@@ -649,6 +686,9 @@ class Fetcher:
             mark(rec, event, self.now)
         return False
 
+    def cleanup_part(self, bid: int) -> None:
+        (self.results / str(bid) / f"batch_{bid}.tar.part").unlink(missing_ok=True)
+
     def download(self, b: dict, rec: dict, issue, r: dict) -> bool:
         bid = b["id"]
         bdir = self.results / str(bid)
@@ -658,12 +698,17 @@ class Fetcher:
         log(f"batch {bid}: complete, downloading")
         try:
             with self.boinc.open_batch_tar(bid) as resp:
-                size = int(resp.headers.get("Content-Length") or -1)
+                try:
+                    size = int(resp.headers.get("Content-Length") or -1)
+                except ValueError:
+                    size = -1
+                if size < 0:
+                    return self._fail(b, rec, issue, "download_failed",
+                                      "server sent no usable Content-Length; not downloading blind")
                 free = self.free()
-                need = max(size, 0) * mult + self.min_free()
-                if size < 0 or free < need:
-                    why = ("server sent no Content-Length" if size < 0 else
-                           f"needs {human(size * mult)} + {self.cfg['min_free_gb']} GB reserve, "
+                need = size * mult + self.min_free()
+                if free < need:
+                    why = (f"needs {human(size * mult)} + {self.cfg['min_free_gb']} GB reserve, "
                            f"{human(free)} free under {self.results}")
                     # not counted as an attempt and no backoff: checked again on the next run
                     rec["last_error"] = "low disk: " + why
@@ -677,6 +722,8 @@ class Fetcher:
                     log(f"dry-run: batch {bid}: would download {human(size)} to {final}")
                     return True
                 bdir.mkdir(parents=True, exist_ok=True)
+                rec["download_started"] = self.now
+                self.save()
                 n = 0
                 with open(part, "wb") as f:
                     while True:
@@ -685,11 +732,13 @@ class Fetcher:
                             break
                         f.write(chunk)
                         n += len(chunk)
+                rec.pop("download_started", None)
                 if n != size:
                     part.unlink(missing_ok=True)
                     return self._fail(b, rec, issue, "download_failed",
                                       f"download truncated: {n} of {size} bytes")
         except (BoincError, SecretError, OSError) as e:
+            rec.pop("download_started", None)
             part.unlink(missing_ok=True)
             return self._fail(b, rec, issue, "download_failed", SCRUB(f"download failed: {e}"))
         os.replace(part, final)
@@ -700,6 +749,8 @@ class Fetcher:
         v["downloaded_at"] = utc(self.now)
         v["batch"] = b
         if not v["ok"]:
+            for old in bdir.glob(f"batch_{bid}.tar.bad-*"):  # keep only the latest bad copy
+                old.unlink(missing_ok=True)
             bad = final.with_name(final.name + f".bad-{int(self.now)}")
             os.replace(final, bad)
             return self._fail(b, rec, issue, "verify_failed",
@@ -761,32 +812,62 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
     cfg = load_config(Path(a.config).expanduser(), {"min_free_gb": a.min_free_gb})
     state_dir = Path(cfg["state_dir"]).expanduser()
+    if a.status:
+        print(json.dumps(load_json(state_dir / "state.json", {}), indent=1, sort_keys=True))
+        return 0
     state_dir.mkdir(parents=True, exist_ok=True)
     with open(state_dir / "lock", "w") as lock:
         try:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             log("another run holds the lock; exiting")
-            return 0
-        if a.status:
-            print(json.dumps(load_json(state_dir / "state.json", {}), indent=1, sort_keys=True))
-            return 0
+            return 0 if not (a.retry is not None or a.test_notify) else 2
         if a.retry is not None:
             st = load_json(state_dir / "state.json", {})
             rec = st.get("batches", {}).get(str(a.retry), {})
-            for k in ("attempts", "next_attempt", "gave_up", "last_error", "downloaded", "alerts"):
+            for k in ("attempts", "next_attempt", "gave_up", "last_error", "downloaded", "alerts", "download_started"):
                 rec.pop(k, None)
             save_json(state_dir / "state.json", st)
             log(f"batch {a.retry}: state reset; it is fetched again on the next run")
             return 0
-        f = Fetcher(cfg, dry_run=a.dry_run)
+        try:
+            f = Fetcher(cfg, dry_run=a.dry_run)
+        except Exception as e:  # noqa: BLE001 - e.g. a broken state/registry/config file
+            crash_alert(cfg, state_dir, a.dry_run, f"boinc-fetcher cannot start: {type(e).__name__}: {e}")
+            return 3
         if a.test_notify:
             # its own outbox: a test line that fails is not queued for retry
             n = Notifier(cfg, f.secrets, [], a.dry_run)
             n.notify("test", f"boinc-fetcher on {os.uname().nodename}: test notification.", a.test_issue)
             n.flush()
             return 0 if not n.outbox else 1
-        return f.run()
+        try:
+            return f.run()
+        except Exception as e:  # noqa: BLE001
+            crash_alert(cfg, state_dir, a.dry_run, f"boinc-fetcher run crashed: {type(e).__name__}: {e}")
+            return 3
+
+
+def crash_alert(cfg: dict, state_dir: Path, dry_run: bool, msg: str) -> None:
+    """Notify about a crash outside the state file (which may be the broken part).
+
+    Repeated at most every realert_hours for the same message.
+    """
+    msg = SCRUB(f"{msg} (on {os.uname().nodename})")
+    log(msg)
+    mark_file = state_dir / "crash-alert.json"
+    try:
+        last = load_json(mark_file, {})
+    except Exception:  # noqa: BLE001
+        last = {}
+    if last.get("msg") == msg and time.time() - last.get("t", 0) < cfg["realert_hours"] * 3600:
+        return
+    n = Notifier(cfg, Path(cfg["secrets_dir"]).expanduser(), [], dry_run)
+    n.notify("error", msg)
+    n.flush()
+    if not dry_run:
+        with contextlib.suppress(OSError):
+            save_json(mark_file, {"msg": msg, "t": time.time()})
 
 
 if __name__ == "__main__":

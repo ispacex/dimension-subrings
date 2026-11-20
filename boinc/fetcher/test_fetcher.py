@@ -227,6 +227,61 @@ class FetcherTest(unittest.TestCase):
         self.assertEqual(f2.state["outbox"], [])
         self.assertTrue(any("downloaded" in s[-1] for s in self.sent))
 
+    def test_dry_run_leaves_no_trace(self):
+        Fake.batches = [batch(state=1, njobs=100, nerr=20, create=1.0)]
+        f = fetcher.Fetcher(self.cfg, now=1_000_000.0, free_bytes=lambda p: 100 * fetcher.GB, dry_run=True)
+        f.notifier._telegram = f.notifier._tracker = lambda *a: self.fail("dry run sent")
+        f.run()
+        self.assertFalse((self.d / "state" / "state.json").exists())
+        self.run_once(now=1_000_100.0)  # the real run still alerts
+        self.assertTrue(any("20 of 100 jobs failed" in s[-1] for s in self.sent))
+
+    def test_interrupted_download_counts_as_attempt(self):
+        st = {"batches": {"7": {"download_started": 999_000.0}}}
+        (self.d / "state").mkdir()
+        (self.d / "state" / "state.json").write_text(json.dumps(st))
+        (self.d / "results" / "7").mkdir(parents=True)
+        (self.d / "results" / "7" / "batch_7.tar.part").write_bytes(b"x")
+        rc, f = self.run_once()
+        rec = f.state["batches"]["7"]
+        self.assertEqual(rec["attempts"], 1)
+        self.assertNotIn("download_started", rec)
+        self.assertFalse((self.d / "results" / "7" / "batch_7.tar.part").exists())
+        self.assertTrue(any("interrupted" in s[-1] for s in self.sent))
+
+    def test_only_latest_bad_copy_kept(self):
+        Fake.tar = b"not a tar at all" * 100
+        self.run_once(now=1_000_000.0)
+        self.run_once(now=1_000_000.0 + 3600)
+        self.assertEqual(len(list((self.d / "results" / "7").glob("*.bad-*"))), 1)
+
+    def test_missing_content_length_is_failure(self):
+        f = fetcher.Fetcher(self.cfg, now=1_000_000.0, free_bytes=lambda p: 100 * fetcher.GB)
+        f.notifier._telegram = lambda text: self.sent.append(("tg", text))
+        f.notifier._tracker = lambda issue, text: None
+        import contextlib as cl
+
+        class R:
+            headers = {}
+        f.boinc.open_batch_tar = lambda bid: cl.nullcontext(R())
+        f.run()
+        self.assertEqual(f.state["batches"]["7"]["attempts"], 1)
+
+    def test_broken_registry_alerts(self):
+        (self.d / "registry.json").write_text("{broken")
+        cfgp = self.d / "config.json"
+        cfgp.write_text(json.dumps(self.cfg))
+        sent = []
+        orig = fetcher.Notifier._telegram
+        fetcher.Notifier._telegram = lambda self_, text: sent.append(text)
+        try:
+            self.assertEqual(fetcher.main(["--config", str(cfgp)]), 3)
+            self.assertEqual(fetcher.main(["--config", str(cfgp)]), 3)
+        finally:
+            fetcher.Notifier._telegram = orig
+        self.assertEqual(len(sent), 1)  # not repeated within realert_hours
+        self.assertIn("cannot start", sent[0])
+
 
 if __name__ == "__main__":
     unittest.main()

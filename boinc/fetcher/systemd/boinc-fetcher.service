@@ -5,13 +5,19 @@ After=network-online.target
 
 [Service]
 Type=oneshot
-User=leancheck
-Group=leancheck
-ExecStart=/usr/bin/python3 -I /home/leancheck/boinc-fetcher/fetcher.py
+User=boinc-fetcher
+Group=boinc-fetcher
+ExecStart=/usr/bin/python3 -I /opt/boinc-fetcher/fetcher.py --config /etc/boinc-fetcher/config.json
+StateDirectory=boinc-fetcher
+StateDirectoryMode=0700
+# results are readable by the other users on kimmy (the agent, tm jobs)
+UMask=0022
 Nice=10
 IOSchedulingClass=idle
-# a large batch tar can take a while
-TimeoutStartSec=4h
-UMask=0077
+# a large batch tar can take a while; a killed run is noticed by the next one
+TimeoutStartSec=12h
 NoNewPrivileges=yes
 PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/srv/boinc-results /var/lib/boinc-fetcher
+ProtectHome=yes

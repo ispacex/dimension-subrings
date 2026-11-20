@@ -34,11 +34,16 @@ Python 3.9+ standard library only; it reuses the protocol of the `boinc-central`
      12 h); after `max_attempts` (10) it gives up and says so (`fetcher.py --retry ID` resets).
      A failed archive is kept as `batch_<id>.tar.bad-<time>` for inspection.
    - **error jobs** above `error_fraction_threshold` (5%, per batch overridable) → alert
-     (again when the count doubles or after `realert_hours`).
+     (again when the count doubles, or after `realert_hours` if it has grown at all).
+   - a download that dies with the run (timeout, kill, reboot) is noticed by the next run and
+     counted as a failed attempt; the state is saved after every batch.
    - **running long**: still `init`/`in_progress` after `expected_hours` × 1.5 (registry, or
      `default_expected_hours` = 120) → alert, repeated daily.
    - registry batch **aborted**, or **not listed** at all (retired / wrong id) and never
-     downloaded → alert.
+     downloaded → alert. Outputs of aborted batches are not collected.
+   - any unexpected error on a batch → alert (same message at most once per `realert_hours`);
+     a run that cannot start or crashes (e.g. a broken `config.json`/`registry.json`/state)
+     → alert, rate-limited the same way.
 3. Free space under `results_dir` below `min_free_gb` → **low-disk** alert (every 6 h while it
    lasts). kimmy's disk has filled before (GAP `gaptempdir*`; the hourly `gap-tmp-clean` cron
    handles those and is not touched by this service).
@@ -53,19 +58,23 @@ two days).
 
 ## Where things are on kimmy
 
-Runs as user **leancheck** (the user tm jobs run as) from a **system** systemd unit with
-`User=leancheck` (leancheck has no lingering user systemd):
+Runs from a system systemd unit as its own system user **boinc-fetcher** — not `leancheck`, the
+user tm jobs run as, so a job cannot read the secrets or change the code:
 
 | What | Path |
 |---|---|
-| code | `/home/leancheck/boinc-fetcher/` (`fetcher.py`, this README) |
+| code | `/opt/boinc-fetcher/fetcher.py` (root-owned, read-only for the service) |
 | units | `/etc/systemd/system/boinc-fetcher.service`, `boinc-fetcher.timer` (`*:07,37`) |
-| config | `/home/leancheck/.config/boinc-fetcher/config.json` |
-| registry | `/home/leancheck/.config/boinc-fetcher/registry.json` |
-| secrets (600, dir 700) | `/home/leancheck/.config/boinc-fetcher/secrets/` `boinc-authenticator`, `telegram-bot-token`, `tracker-token` |
-| state, lock | `/home/leancheck/.local/state/boinc-fetcher/state.json` |
-| results | `/home/leancheck/boinc-results/<batch_id>/batch_<id>.tar`, `manifest.json` (+ `files/` with `extract`, `post_collect.log`) |
+| config | `/etc/boinc-fetcher/config.json` (root:boinc-fetcher 640) |
+| registry | `/etc/boinc-fetcher/registry.json` (root:boinc-fetcher 640, edit as root) |
+| secrets | `/etc/boinc-fetcher/secrets/` (boinc-fetcher 700): `boinc-authenticator`, `telegram-bot-token`, `tracker-token`, each 600 |
+| state | `/var/lib/boinc-fetcher/state.json`, `crash-alert.json`, `lock` |
+| results | `/srv/boinc-results/<batch_id>/batch_<id>.tar`, `manifest.json` (+ `files/` with `extract`, `post_collect.log`); world-readable |
 | log | `journalctl -u boinc-fetcher` |
+
+The unit is sandboxed (`ProtectSystem=strict`, `ProtectHome=yes`): the service, and a
+registry `post_collect` command, can write only under `/srv/boinc-results` and
+`/var/lib/boinc-fetcher`.
 
 ## Install / update
 
@@ -75,34 +84,38 @@ From the Mac, in this directory:
 ./deploy.sh            # = ./deploy.sh root@157.22.134.209
 ```
 
-It copies the code to `/home/leancheck/boinc-fetcher/` and runs `install.sh` as root there:
-creates the directories, installs `config.example.json` / `registry.example.json` as config and
-registry **only if they do not exist yet**, installs and enables the timer. Then put the secrets
-(never through the terminal output; each file mode 600, owner leancheck):
+It unpacks the files into a root-owned temporary directory on kimmy and runs `install.sh` from
+there as root: creates the user and the directories, installs the code and the units,
+installs `config.example.json` / `registry.example.json` as config and registry **only if they
+do not exist yet**, enables and restarts the timer. Then put the secrets — never through the
+terminal output; the file is written straight from stdin:
 
 ```sh
 # BOINC Central account key (the same file the boinc-central MCP server reads on the Mac)
-ssh root@157.22.134.209 'umask 077; cat > /home/leancheck/.config/boinc-fetcher/secrets/boinc-authenticator; chown leancheck: /home/leancheck/.config/boinc-fetcher/secrets/boinc-authenticator' \
+ssh root@157.22.134.209 'f=/etc/boinc-fetcher/secrets/boinc-authenticator; umask 077; cat > $f; chown boinc-fetcher: $f' \
   < ~/.config/boinc-central/authenticator
 ```
 
 The Telegram bot token (bot @math_tasks_tmless_bot, credential 21 on MATH-75) goes to
-`secrets/telegram-bot-token` the same way.
+`secrets/telegram-bot-token`, a tracker API token to `secrets/tracker-token`, the same way.
 
-Useful commands on kimmy (as leancheck: `sudo -u leancheck …` or `runuser -u leancheck --`):
+Useful commands on kimmy, as root (`F="runuser -u boinc-fetcher -- python3 -I /opt/boinc-fetcher/fetcher.py"`):
 
 ```sh
-python3 ~/boinc-fetcher/fetcher.py --status          # state file
-python3 ~/boinc-fetcher/fetcher.py --dry-run         # query and check, no download, nothing sent
-python3 ~/boinc-fetcher/fetcher.py --test-notify     # a test line through the enabled channels
-python3 ~/boinc-fetcher/fetcher.py --min-free-gb 100000 --dry-run   # see the low-disk path
-python3 ~/boinc-fetcher/fetcher.py --retry 194       # forget failures (and a done download) of 194
-systemctl start boinc-fetcher                        # a run now (as root)
+$F --status                   # state file
+$F --dry-run                  # query and check; nothing downloaded, sent or saved (the tar GET is
+                              # opened for its size and closed)
+$F --test-notify [--test-issue MATH-478]   # a test line through the enabled channels
+$F --retry 194                # forget failures (and a done download) of 194
+systemctl start boinc-fetcher # a run now
 ```
+
+To see the low-disk path without touching the real state, run it with a copy of the config whose
+`state_dir` points to a temporary directory and `--min-free-gb 100000`.
 
 ## Adding a batch to the registry
 
-Edit `/home/leancheck/.config/boinc-fetcher/registry.json` on kimmy (keys are batch ids as
+Edit `/etc/boinc-fetcher/registry.json` on kimmy as root (keys are batch ids as
 strings):
 
 ```json
@@ -119,11 +132,13 @@ strings):
 - `error_fraction_threshold` — overrides the global one.
 - `post_collect` — shell command run once after a verified download, in the batch directory,
   with `BATCH_ID`, `BATCH_DIR`, `BATCH_TAR`, `BATCH_ISSUE` in the environment; output to
-  `post_collect.log`, exit code reported. Keep it light — kimmy is the tm runner.
+  `post_collect.log`, exit code reported. Runs as boinc-fetcher inside the unit's sandbox (it
+  can write only under the results and state directories). Keep it light — kimmy is the tm
+  runner.
 
-A batch that is not in the registry is still downloaded if `download_unregistered` is on and its
-id is at least `min_batch_id` (194: the older batches 97 and 100 were collected by hand); its
-notifications go to Telegram only.
+A batch that is not in the registry is still downloaded if `download_unregistered` is on (off by
+default, on in the installed config) and its id is at least `min_batch_id` (194: the older
+batches 97 and 100 were collected by hand); its notifications go to Telegram only.
 
 ## Notification channels
 
@@ -133,7 +148,8 @@ notifications go to Telegram only.
   task.math.tmless.org (MATH-75).
 - **Tracker comment** (`tracker.enabled`, `base_url`, `events`): `POST
   {base_url}/rest/api/2/issue/<issue>/comment` with `Authorization: Bearer <token>` (the
-  tracker's compatible API), token in `secrets/tracker-token`. Off until a token for this
+  tracker's compatible API), token in `secrets/tracker-token`. Redirects are not followed, so
+  the token cannot be carried to another host. Off until a token for this
   service exists. The heartbeat and disk alerts that belong to no batch go to Telegram only.
 
 ## Tests
@@ -143,5 +159,7 @@ python3 -m unittest boinc/fetcher/test_fetcher.py
 ```
 
 A fake BOINC server on localhost: download and verification once, low disk skips the download,
-truncated download and backoff, corrupt archive, error-fraction and running-long alerts, the
-read-only guard, secret scrubbing, daily heartbeat, outbox retry. Nothing talks to BOINC.
+truncated download and backoff, corrupt archive (only the latest bad copy kept), missing
+Content-Length, interrupted download, dry run leaves no state, crash alert on a broken registry,
+error-fraction and running-long alerts, the read-only guard, secret scrubbing, daily heartbeat,
+outbox retry. Nothing talks to BOINC.

@@ -1,5 +1,5 @@
 {
- "results_dir": "~/boinc-results",
+ "results_dir": "/srv/boinc-results",
  "min_free_gb": 20,
  "download_unregistered": true,
  "min_batch_id": 194,
@@ -7,6 +7,12 @@
  "default_expected_hours": 120,
  "heartbeat_hour_utc": 6,
  "heartbeat_url": null,
- "telegram": {"enabled": true, "chat_id": 634017},
- "tracker": {"enabled": false, "base_url": "https://math.kaiku.tech"}
+ "telegram": {
+  "enabled": true,
+  "chat_id": 634017
+ },
+ "tracker": {
+  "enabled": false,
+  "base_url": "https://math.kaiku.tech"
+ }
 }
