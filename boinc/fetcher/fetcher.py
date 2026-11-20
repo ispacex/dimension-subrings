@@ -359,6 +359,8 @@ class Notifier:
         self.outbox = outbox  # persisted in state; undelivered messages are retried
         self.dry_run = dry_run
         self.sent: list[dict] = []
+        self.down: set[str] = set()  # channels that failed in this run: not tried again in it
+        self.logged = 0  # dry run: outbox entries already shown
 
     def notify(self, event: str, text: str, issue: str | None = None) -> None:
         log(f"notify [{event}]{' ' + issue if issue else ''}: {text.splitlines()[0]}")
@@ -371,11 +373,12 @@ class Notifier:
 
     def flush(self) -> None:
         if self.dry_run:
-            for m in self.outbox:
+            for m in self.outbox[self.logged:]:
                 log(f"dry-run: would send via {m['ch']}: {m['text'].splitlines()[0]}")
+            self.logged = len(self.outbox)
             return
         keep = []
-        down: set[str] = set()  # channels that failed in this run: not tried again now
+        down = self.down
         for m in self.outbox:
             if m["ch"] in down:
                 keep.append(m)
@@ -661,7 +664,8 @@ class Fetcher:
         if rec.get("download_started"):
             # the previous run died while downloading (timeout, kill, reboot)
             rec.pop("download_started")
-            self.cleanup_part(b["id"])
+            if not self.dry_run:
+                self.cleanup_part(b["id"])
             return self._fail(b, rec, issue, "download_failed",
                               "previous download was interrupted (run killed or timed out)")
         if rec.get("gave_up"):
@@ -772,12 +776,14 @@ class Fetcher:
                    sha256=v["sha256"], warnings=warn)
         rec.pop("next_attempt", None)
         rec.pop("last_error", None)
+        self.save()  # a kill during post_collect must not look like an interrupted download
         msg = (f"{self.title(b)} downloaded on {os.uname().nodename}: {final} ({human(v['bytes'])}, "
                f"{v['files']} files, {v['jobs_with_output']} jobs with output; "
                f"{b['nerror_jobs']} of {b['njobs']} jobs failed). Archive verified (sha256 {v['sha256'][:16]}…).")
         if warn:
             msg += " WARNING: " + "; ".join(warn) + "."
         self.notifier.notify("complete", msg, issue)
+        self.notifier.flush()
         if r.get("post_collect"):
             self.post_collect(b, rec, issue, r["post_collect"], bdir, final)
         return True
@@ -815,8 +821,13 @@ def main(argv=None) -> int:
     if a.status:
         print(json.dumps(load_json(state_dir / "state.json", {}), indent=1, sort_keys=True))
         return 0
+    if os.geteuid() == 0:
+        # files it would create (lock, state) would be root-owned and break the service
+        log("refusing to run as root: use  runuser -u boinc-fetcher -- python3 -I " + sys.argv[0])
+        return 2
     state_dir.mkdir(parents=True, exist_ok=True)
-    with open(state_dir / "lock", "w") as lock:
+    fd = os.open(state_dir / "lock", os.O_RDWR | os.O_CREAT, 0o600)
+    with os.fdopen(fd, "r+") as lock:
         try:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
@@ -855,19 +866,22 @@ def crash_alert(cfg: dict, state_dir: Path, dry_run: bool, msg: str) -> None:
     """
     msg = SCRUB(f"{msg} (on {os.uname().nodename})")
     log(msg)
+    key = msg.split(":", 1)[0] + ":" + msg.split(":", 2)[1] if msg.count(":") >= 2 else msg
     mark_file = state_dir / "crash-alert.json"
     try:
         last = load_json(mark_file, {})
     except Exception:  # noqa: BLE001
         last = {}
-    if last.get("msg") == msg and time.time() - last.get("t", 0) < cfg["realert_hours"] * 3600:
+    if last.get("key") == key and time.time() - last.get("t", 0) < cfg["realert_hours"] * 3600:
         return
     n = Notifier(cfg, Path(cfg["secrets_dir"]).expanduser(), [], dry_run)
     n.notify("error", msg)
     n.flush()
     if not dry_run:
-        with contextlib.suppress(OSError):
-            save_json(mark_file, {"msg": msg, "t": time.time()})
+        try:
+            save_json(mark_file, {"key": key, "msg": msg, "t": time.time()})
+        except OSError as e:
+            log(f"cannot write {mark_file} ({e}); crash alerts are not rate-limited")
 
 
 if __name__ == "__main__":

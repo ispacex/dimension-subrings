@@ -42,8 +42,10 @@ Python 3.9+ standard library only; it reuses the protocol of the `boinc-central`
    - registry batch **aborted**, or **not listed** at all (retired / wrong id) and never
      downloaded → alert. Outputs of aborted batches are not collected.
    - any unexpected error on a batch → alert (same message at most once per `realert_hours`);
-     a run that cannot start or crashes (e.g. a broken `config.json`/`registry.json`/state)
-     → alert, rate-limited the same way.
+     a run that cannot start or crashes (e.g. a broken `registry.json` or state file) → alert,
+     rate-limited the same way. A broken `config.json` cannot be alerted (the channels are in
+     it): only the missing heartbeat shows it. The script refuses to run as root (it would
+     leave root-owned state files behind); use `runuser -u boinc-fetcher --`.
 3. Free space under `results_dir` below `min_free_gb` → **low-disk** alert (every 6 h while it
    lasts). kimmy's disk has filled before (GAP `gaptempdir*`; the hourly `gap-tmp-clean` cron
    handles those and is not touched by this service).
