@@ -28,13 +28,18 @@ GAP=${GAP:-gap}; PY=${PY:-python3}
 # LOGQ (default 11): candidates of order 2^LOGQ, NMAX = LOGQ - 1 (2^12: README "Estimate for 2^12")
 LOGQ=${LOGQ:-11}
 STEPRULES=${STEPRULES:-true}; COMPACT=${COMPACT:-false}; GAPMEM_A=${GAPMEM_A:-10g}; GAPMEM=${GAPMEM:-6g}; GAPMEM_D=${GAPMEM_D:-4g}; PD=${PD:-3}
-export here GAP d out LOGQ STEPRULES COMPACT GAPMEM GAPMEM_D l2
+# pq writes its descendants (GBs for the deferred steps) under TMPDIR: a directory per piece on disk, removed after
+# it, not the tmpfs /tmp (8 GB pq files filled kimmy's 9.8 GB /tmp in m40-pilot12-r4 and failed every later piece)
+TMPBASE=${TMPBASE:-$out/tmp}
+export here GAP d out LOGQ STEPRULES COMPACT GAPMEM GAPMEM_D l2 TMPBASE
 mkdir -p "$out/A" "$out/B" "$out/C" "$out/Cin"
 log() { echo "$(date -u +%FT%TZ) $*"; }
 tree() { # NAME EXTRA — one tree.g piece into $out/NAME.{json,jsonl,log}
   [ -s "$out/$1.json" ] && return 0
+  mkdir -p "$TMPBASE/a"
   ( cd "$here" && printf '%s\n' "D:=$d;; STEPRULES:=${STEPRULES:-true};; COMPACT:=${COMPACT:-false};; NMAX:=$((LOGQ - 1));; LOGQ:=$LOGQ;; COVERMAX:=10;; $2 STATFILE:=\"$out/$1.json\";; OUTFILE:=\"$out/$1.jsonl\";;" \
-      | cat - tree.g | nice -n "${NICE:-15}" "$GAP" -q -b -o "$GAPMEM_A" --quitonbreak ) > "$out/$1.log" 2>&1
+      | cat - tree.g | TMPDIR="$TMPBASE/a" nice -n "${NICE:-15}" "$GAP" -q -b -o "$GAPMEM_A" --quitonbreak ) > "$out/$1.log" 2>&1
+  rc=$?; rm -rf "$TMPBASE/a"; return $rc
 }
 # Progress for a job monitor (when run under remote/ds-remote.sh): "DONE/TOTAL" pieces into $JOB_ROOT/progress every
 # 30 s.  TOTAL grows as the stages split: 1 during A, 1 + B's pieces during B, then 1 + B + C.
@@ -69,11 +74,13 @@ log "B: $(wc -l < "$out/B/in.jsonl") vertices of order < 2^$l2 and deferred step
 piece_b() { # PARALLEL MEM < ids
   M=$2 xargs -P "$1" -I{} sh -c '
   [ -s "$out/B/b_{}.json" ] && exit 0
+  mkdir -p "$TMPBASE/b_{}"
   dl="DUMPLEVEL:=$l2;; DUMPFILE:=\"$out/B/dump_{}.jsonl\";;"
   # an id-range piece (LIBROOT) walks its vertices of order 2^l2 itself: no dump, no stage C for them
   grep -q "\"ids\"" "$out/B/in_{}" && dl=""
   cd "$here" && printf "%s\n" "D:=$d;; STEPRULES:=${STEPRULES:-true};; COMPACT:=${COMPACT:-false};; NMAX:=$((LOGQ - 1));; LOGQ:=$LOGQ;; COVERMAX:=10;; STARTFILE:=\"$out/B/in_{}\";; $dl STATFILE:=\"$out/B/b_{}.json\";; OUTFILE:=\"$out/B/b_{}.jsonl\";;" \
-    | cat - tree.g | nice -n "${NICE:-15}" "$GAP" -q -b -o "$M" --quitonbreak > "$out/B/b_{}.log" 2>&1'
+    | cat - tree.g | TMPDIR="$TMPBASE/b_{}" nice -n "${NICE:-15}" "$GAP" -q -b -o "$M" --quitonbreak > "$out/B/b_{}.log" 2>&1
+  rm -rf "$TMPBASE/b_{}"'
 }
 [ -n "${STOP_AFTER_A:-}" ] && { log "stop after A: $nb pieces in B"; exit 0; }
 ids=$(ls "$out/B" | grep '^in_d' | sed 's/^in_//' | todo "$out/B" b_); left=$((left - $(echo "$ids" | grep -c .)))
@@ -100,8 +107,10 @@ log "C: $(wc -l < "$out/Cin/all.jsonl") vertices of order >= 2^$l2 in $nc pieces
 ids=$(ls "$out/Cin" | grep '^c_' | todo "$out/C" ""); left=$((left - $(echo "$ids" | grep -c .)))
 echo "$ids" | grep . | xargs -P "$par" -I{} sh -c '
   [ -s "$out/C/{}.json" ] && exit 0
+  mkdir -p "$TMPBASE/c_{}"
   cd "$here" && printf "%s\n" "D:=$d;; STEPRULES:=${STEPRULES:-true};; COMPACT:=${COMPACT:-false};; NMAX:=$((LOGQ - 1));; LOGQ:=$LOGQ;; COVERMAX:=10;; STARTFILE:=\"$out/Cin/{}\";; STATFILE:=\"$out/C/{}.json\";; OUTFILE:=\"$out/C/{}.jsonl\";;" \
-    | cat - tree.g | nice -n "${NICE:-15}" "$GAP" -q -b -o "$GAPMEM" --quitonbreak > "$out/C/{}.log" 2>&1'
+    | cat - tree.g | TMPDIR="$TMPBASE/c_{}" nice -n "${NICE:-15}" "$GAP" -q -b -o "$GAPMEM" --quitonbreak > "$out/C/{}.log" 2>&1
+  rm -rf "$TMPBASE/c_{}"'
 ncd=$(ls "$out/C"/c_*.json 2>/dev/null | wc -l)
 [ "$ncd" -lt "$nc" ] && [ "$left" -le 0 ] && { log "batch done (LIMIT=$LIMIT): C $ncd of $nc"; exit 3; }
 [ "$ncd" -eq "$nc" ] || { log "C: $ncd of $nc pieces done"; exit 1; }
