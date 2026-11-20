@@ -1,0 +1,17 @@
+[Unit]
+Description=boinc-fetcher: collect finished BOINC Central batches, notify on problems
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=leancheck
+Group=leancheck
+ExecStart=/usr/bin/python3 -I /home/leancheck/boinc-fetcher/fetcher.py
+Nice=10
+IOSchedulingClass=idle
+# a large batch tar can take a while
+TimeoutStartSec=4h
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes

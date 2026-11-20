@@ -1,0 +1,11 @@
+{
+ "batches": {
+  "194": {
+   "issue": "MATH-478",
+   "note": "buda_38542_1794745432, BUDA app ds473: case473 s=6 + case472 s=5 (MATH-478/MATH-479)",
+   "expected_hours": null,
+   "error_fraction_threshold": null,
+   "post_collect": null
+  }
+ }
+}
