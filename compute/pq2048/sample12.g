@@ -167,4 +167,4 @@ SA_Run := function()
   od;
 end;;
 # SA_NORUN: only define the functions (roots12.g reads this file)
-if not IsBound(SA_NORUN) then SA_Run(); QUIT; fi;
+if not IsBound(SA_NORUN) then SA_Run(); QuitGap(0); fi;
