@@ -166,5 +166,5 @@ SA_Run := function()
     FileString(OUTFILE, Concatenation(out, "}\n"), true);
   od;
 end;;
-SA_Run();
-QUIT;
+# SA_NORUN: only define the functions (roots12.g reads this file)
+if not IsBound(SA_NORUN) then SA_Run(); QUIT; fi;
