@@ -25,13 +25,15 @@ here=$(cd "$(dirname "$0")" && pwd)
 [ $# -ge 2 ] || { echo "usage: run_rank.sh D OUTDIR [PARALLEL] [L1] [L2] [CHUNK] [BCHUNK]"; exit 2; }
 d=$1 out=$2 par=${3:-6} l1=${4:-8} l2=${5:-9} chunk=${6:-40} bchunk=${7:-20}
 GAP=${GAP:-gap}; PY=${PY:-python3}
+# LOGQ (default 11): candidates of order 2^LOGQ, NMAX = LOGQ - 1 (2^12: README "Estimate for 2^12")
+LOGQ=${LOGQ:-11}
 STEPRULES=${STEPRULES:-true}; COMPACT=${COMPACT:-false}; GAPMEM_A=${GAPMEM_A:-10g}; GAPMEM=${GAPMEM:-6g}; GAPMEM_D=${GAPMEM_D:-4g}; PD=${PD:-3}
-export here GAP d out STEPRULES COMPACT GAPMEM GAPMEM_D l2
+export here GAP d out LOGQ STEPRULES COMPACT GAPMEM GAPMEM_D l2
 mkdir -p "$out/A" "$out/B" "$out/C" "$out/Cin"
 log() { echo "$(date -u +%FT%TZ) $*"; }
 tree() { # NAME EXTRA — one tree.g piece into $out/NAME.{json,jsonl,log}
   [ -s "$out/$1.json" ] && return 0
-  ( cd "$here" && printf '%s\n' "D:=$d;; STEPRULES:=${STEPRULES:-true};; COMPACT:=${COMPACT:-false};; NMAX:=10;; LOGQ:=11;; COVERMAX:=10;; $2 STATFILE:=\"$out/$1.json\";; OUTFILE:=\"$out/$1.jsonl\";;" \
+  ( cd "$here" && printf '%s\n' "D:=$d;; STEPRULES:=${STEPRULES:-true};; COMPACT:=${COMPACT:-false};; NMAX:=$((LOGQ - 1));; LOGQ:=$LOGQ;; COVERMAX:=10;; $2 STATFILE:=\"$out/$1.json\";; OUTFILE:=\"$out/$1.jsonl\";;" \
       | cat - tree.g | nice -n "${NICE:-15}" "$GAP" -q -b -o "$GAPMEM_A" --quitonbreak ) > "$out/$1.log" 2>&1
 }
 # Progress for a job monitor (when run under remote/ds-remote.sh): "DONE/TOTAL" pieces into $JOB_ROOT/progress every
@@ -70,7 +72,7 @@ piece_b() { # PARALLEL MEM < ids
   dl="DUMPLEVEL:=$l2;; DUMPFILE:=\"$out/B/dump_{}.jsonl\";;"
   # an id-range piece (LIBROOT) walks its vertices of order 2^l2 itself: no dump, no stage C for them
   grep -q "\"ids\"" "$out/B/in_{}" && dl=""
-  cd "$here" && printf "%s\n" "D:=$d;; STEPRULES:=${STEPRULES:-true};; COMPACT:=${COMPACT:-false};; NMAX:=10;; LOGQ:=11;; COVERMAX:=10;; STARTFILE:=\"$out/B/in_{}\";; $dl STATFILE:=\"$out/B/b_{}.json\";; OUTFILE:=\"$out/B/b_{}.jsonl\";;" \
+  cd "$here" && printf "%s\n" "D:=$d;; STEPRULES:=${STEPRULES:-true};; COMPACT:=${COMPACT:-false};; NMAX:=$((LOGQ - 1));; LOGQ:=$LOGQ;; COVERMAX:=10;; STARTFILE:=\"$out/B/in_{}\";; $dl STATFILE:=\"$out/B/b_{}.json\";; OUTFILE:=\"$out/B/b_{}.jsonl\";;" \
     | cat - tree.g | nice -n "${NICE:-15}" "$GAP" -q -b -o "$M" --quitonbreak > "$out/B/b_{}.log" 2>&1'
 }
 [ -n "${STOP_AFTER_A:-}" ] && { log "stop after A: $nb pieces in B"; exit 0; }
@@ -98,7 +100,7 @@ log "C: $(wc -l < "$out/Cin/all.jsonl") vertices of order >= 2^$l2 in $nc pieces
 ids=$(ls "$out/Cin" | grep '^c_' | todo "$out/C" ""); left=$((left - $(echo "$ids" | grep -c .)))
 echo "$ids" | grep . | xargs -P "$par" -I{} sh -c '
   [ -s "$out/C/{}.json" ] && exit 0
-  cd "$here" && printf "%s\n" "D:=$d;; STEPRULES:=${STEPRULES:-true};; COMPACT:=${COMPACT:-false};; NMAX:=10;; LOGQ:=11;; COVERMAX:=10;; STARTFILE:=\"$out/Cin/{}\";; STATFILE:=\"$out/C/{}.json\";; OUTFILE:=\"$out/C/{}.jsonl\";;" \
+  cd "$here" && printf "%s\n" "D:=$d;; STEPRULES:=${STEPRULES:-true};; COMPACT:=${COMPACT:-false};; NMAX:=$((LOGQ - 1));; LOGQ:=$LOGQ;; COVERMAX:=10;; STARTFILE:=\"$out/Cin/{}\";; STATFILE:=\"$out/C/{}.json\";; OUTFILE:=\"$out/C/{}.jsonl\";;" \
     | cat - tree.g | nice -n "${NICE:-15}" "$GAP" -q -b -o "$GAPMEM" --quitonbreak > "$out/C/{}.log" 2>&1'
 ncd=$(ls "$out/C"/c_*.json 2>/dev/null | wc -l)
 [ "$ncd" -lt "$nc" ] && [ "$left" -le 0 ] && { log "batch done (LIMIT=$LIMIT): C $ncd of $nc"; exit 3; }
