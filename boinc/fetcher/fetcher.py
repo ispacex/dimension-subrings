@@ -762,6 +762,8 @@ class Fetcher:
         warn = []
         if v["files"] < expected:
             warn.append(f"only {v['files']} files for {expected} successful jobs")
+        if 0 < v["jobs_with_output"] < expected:
+            warn.append(f"output files name {v['jobs_with_output']} distinct jobs, {expected} succeeded")
         if v["empty_files"]:
             warn.append(f"{v['empty_files']} empty files")
         if self.cfg["extract"]:
