@@ -138,6 +138,7 @@ TR_Run := function()
     G := Remove(stack);
     fixed := G[2]; CH_IDS := G[3]; G := G[1];
     if IsRecord(G) then G := PcGroupCode(G.code, G.order); fi;
+    PrimePGroup(G);   # stored: ANUPQ asks for the option Prime on library/code groups otherwise
     k := Log(Size(G), 2);
     if IsBound(TRACE) then Print("vertex ", Size(G), " ", CodePcGroup(G), "\n"); fi;
     if prof <> fail then
@@ -262,6 +263,7 @@ TR_Run := function()
     # the cover search on each parent just found
     for H in covers do
       H := PcGroupCode(H.code, H.order);
+      PrimePGroup(H);
       k := Log(Size(H), 2);
       t := TS_Cpu();
       r := MC_Data(H);

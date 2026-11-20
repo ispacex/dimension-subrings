@@ -10,7 +10,9 @@ for D in "$@"; do
     printf "%s\n" "D:=$D;; STEPRULES:=true;; COMPACT:=true;; NMAX:=$((logq - 1));; LOGQ:=$logq;; COVERMAX:=10;; STATFILE:=\"$out/t_${logq}_${D}_$v.json\";; OUTFILE:=\"$out/t_${logq}_${D}_$v.jsonl\";;" \
       | cat - tree.g | PQ2048_THMA1=$v PQ2048_TAH19=1 PQ2048_NOSTAB=1 PQ2048_TIGHT=1 PQ2048_THMB=1 PQ2048_THMA=1 PQ2048_LIBROOT=1 \
         $GAP -q -b -o 6g --quitonbreak > "$out/t_${logq}_${D}_$v.log" 2>&1
-    echo "2^$logq rank $D thma1 $v: rc $? sec $(( $(date +%s) - s )) cand $(wc -l < "$out/t_${logq}_${D}_$v.jsonl" 2>/dev/null)"
+    rc=$?
+    [ -s "$out/t_${logq}_${D}_$v.json" ] || { echo "2^$logq rank $D thma1 $v: FAILED rc $rc (no stat file)"; tail -5 "$out/t_${logq}_${D}_$v.log"; exit 1; }
+    echo "2^$logq rank $D thma1 $v: rc $rc sec $(( $(date +%s) - s )) cand $(wc -l < "$out/t_${logq}_${D}_$v.jsonl" 2>/dev/null)"
   done
   grep -o '"code":[0-9]*' "$out/t_${logq}_${D}_0.jsonl" | sort > "$out/k0"
   grep -o '"code":[0-9]*' "$out/t_${logq}_${D}_1.jsonl" | sort > "$out/k1"
