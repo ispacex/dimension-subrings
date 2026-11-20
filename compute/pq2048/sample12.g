@@ -119,6 +119,7 @@ SA_Cov := function(resP, lev)
   l := [];
   for x in resP.items do
     H := PcGroupCode(x.code, x.order);
+    PrimePGroup(H);   # stored: ANUPQ (PqPCover) asks for the option Prime otherwise
     t := SA_Rt();
     r := MC_Data(H);
     Add(l, Concatenation("{\"lev\":\"", lev, "\",\"ms\":", String(SA_Rt() - t), ",\"count\":", String(r.count), "}"));
@@ -154,6 +155,7 @@ SA_Run := function()
       resP2 := rec(seen := 0, items := [], cap := M3);
       for x in resA.items do
         V := PcGroupCode(x.code, x.order);
+        PrimePGroup(V);
         e2 := SA_Expand(V, [SA_LB], rec(seen := 0, items := [], cap := 0), resP2);
         Add(s2, Concatenation("{\"steps\":", SA_J(e2.steps), ",\"ms_steps\":", String(e2.ms_steps),
           ",\"by\":", SA_ByJ(e2.by), "}"));

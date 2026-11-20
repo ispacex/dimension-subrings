@@ -94,6 +94,7 @@ RT_Run := function()
     else hom := NaturalHomomorphismByNormalSubgroupNC(R, SubgroupNC(R, gens)); fi;
     V := Image(hom);
     V := PcGroupCode(CodePcGroup(V), Size(V));
+    PrimePGroup(V);
     t1 := SA_Rt();
     if Size(V) <> 2 ^ (LOGQ - 2) or RankPGroup(V) <> D or MS_PClass(V) <> 2
        or ForAll(AbelianInvariants(V), y -> y = 2) then
