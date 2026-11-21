@@ -270,9 +270,10 @@ def tag_errors(data, base=None):
                     errors.append(f"the tag {tag} was the D5 term {old_id} (term {key} of the base), now "
                                   + (f"{now} {key2}" if now != "term" else f"the D5 term {data['terms'][key2].get('id')}"))
             elif what == "node":
-                # the same label; or the label was renamed (the old one is no longer a node); or the statement
+                # the same label; or the label was renamed (the old one is no longer a node, the new one was
+                # not a node of the base); or the statement
                 # changed and the tag went to [superseded] with the old label
-                ok = ((now == "node" and (key2 == key or key not in data["nodes"]))
+                ok = ((now == "node" and (key2 == key or (key not in data["nodes"] and key2 not in base["nodes"])))
                       or (now == "superseded" and data["superseded"][key2].get("label") == key))
                 if not ok:
                     errors.append(f"the tag {tag} was node {key} in the base, now {now} {key2}: a tag never "
