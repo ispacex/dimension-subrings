@@ -17,6 +17,11 @@ and build_site.py builds results.html and blueprint.html from the same data.
                                                              (groups/D5Tags.lean) with the nodes
     python3 site/blueprint.py src [--paper PAPER_DIR] OUT_DIR  the leanblueprint source; without the
                                                              paper the statements are placeholders (CI)
+    python3 site/blueprint.py tagcheck [--data TOML] [--base OLD_TOML] [--d5 PAGE]
+                                                             the permanent tags (MATH-457): their format,
+                                                             that each is used once, that none of OLD_TOML
+                                                             is gone, and that they are those of D5 page 911
+                                                             (PAGE: its URL or a saved copy of it)
 
 Checks: every labelled statement of the paper has a node and every node a statement; a node with Lean
 declarations is one the paper says is formally verified (in the statement, its proof or the section on
@@ -27,9 +32,15 @@ named in the section on the formalization; a row of results.html marked Lean cit
 whose proof is in Lean, and every {{lean:...}} of a row is a declaration of some node. `tags`: the
 declarations tagged @[d5 "label"] (or a tag @[d5 XXXX]) in groups/ (GroupDimension/D5Tag.lean, MATH-453) are exactly those of
 the nodes, label by label; this file stays the source of truth and the attribute is checked against it.
+`tagcheck` (wiki 912, §4.1): every node and every term has a tag of four characters 0-9 A-Z without I
+and O; no tag is used twice (nodes, terms and superseded tags together); every tag of an older
+blueprint.toml (the base of a PR) is still here, current or superseded, and a term keeps its D5 id;
+and the tags are those of the public D5 page 911 (math.kaiku.tech): the same set, each statement's
+tag with its label and each term's with its word.
 """
 import json
 import pathlib
+import urllib.request
 import re
 import sys
 import tomllib
@@ -43,6 +54,12 @@ SITE = "https://ispacex.github.io/d5/"
 ENVS = ("theorem", "proposition", "lemma", "corollary", "question", "remark")
 NAMES = {"theorem": "Theorem", "proposition": "Proposition", "lemma": "Lemma", "corollary": "Corollary", "question": "Question",
          "remark": "Remark"}
+# The open questions of the paper's last section are items \item\label{oq:...} of an enumerate, not
+# environments: statements() gives them the environment OPENQ and the item's number.
+OPENQ = "openq"
+# A permanent tag (wiki 912, §4.1): four characters, digits and capital letters without I and O.
+TAG = re.compile(r"[0-9A-HJ-NP-Z]{4}")
+D5_PAGE = "https://math.kaiku.tech/api/wiki/pages/911"  # the public list of tags of the project D5
 LEAN_REF = re.compile(r"\{\{lean:([^|}]+)\|([^}]*)\}\}")
 NOTE_REF = re.compile(r"\[\[([A-Za-z0-9:._-]+)\|#\]\]")  # a number of the paper in a note
 # a results row outside the paper names its node by a link blueprint.html#b-own-ab399 (own:ab399)
@@ -70,14 +87,24 @@ def load():
         n.setdefault("note_ru", "")
         n.setdefault("not_in_paper", [])
         n.setdefault("not_formalized", False)
-        unknown = set(n) - {"lean", "proved", "computer", "uses", "uses_drop", "note", "note_ru", "title", "title_ru", "statement",
-                                "not_in_paper", "not_formalized"}
+        unknown = set(n) - {"tag", "lean", "proved", "computer", "uses", "uses_drop", "note", "note_ru", "title", "title_ru",
+                                "statement", "not_in_paper", "not_formalized"}
         if unknown:
             sys.exit(f"blueprint.toml: node {label}: unknown fields {sorted(unknown)}")
         if n["proved"] and not n["lean"]:
             sys.exit(f"blueprint.toml: node {label} is proved but names no Lean declaration")
         if n["not_formalized"] and n["lean"]:
             sys.exit(f"blueprint.toml: node {label} is not_formalized but names Lean declarations")
+    data.setdefault("terms", {})
+    data.setdefault("superseded", {})
+    for slug, t in data["terms"].items():
+        unknown = set(t) - {"tag", "id", "name"}
+        if unknown:
+            sys.exit(f"blueprint.toml: term {slug}: unknown fields {sorted(unknown)}")
+    for old, t in data["superseded"].items():
+        unknown = set(t) - {"superseded_by", "label", "text"}
+        if unknown:
+            sys.exit(f"blueprint.toml: superseded tag {old}: unknown fields {sorted(unknown)}")
     return data
 
 
@@ -152,10 +179,11 @@ def tag_entries(log):
 def tags(data, log):
     """The attribute @[d5 ...] of groups/ (GroupDimension/D5Tag.lean; MATH-453, MATH-458) against
     blueprint.toml, which stays the source of truth: the (key, declaration) pairs printed by
-    `#d5_tags` must be exactly those of the nodes. Keys are the labels of the nodes; a permanent tag
-    D5:XXXX (wiki 912) is not registered in blueprint.toml yet (MATH-457), so one in the code is a
-    difference too. A list of differences, empty if they agree."""
-    got = tag_entries(log)
+    `#d5_tags` must be exactly those of the nodes. Keys are the labels of the nodes, or their permanent
+    tags D5:XXXX (wiki 912, MATH-457), read as the label of the node with that tag; a tag that no node
+    has is a difference. A list of differences, empty if they agree."""
+    by_tag = {"D5:" + n["tag"]: label for label, n in data["nodes"].items() if n.get("tag")}
+    got = {(by_tag.get(key, key), x) for key, x in tag_entries(log)}  # a node's own tag is its label
     want = tag_pairs(data)
     errors = []
     if ": error" in log:
@@ -166,9 +194,164 @@ def tags(data, log):
         errors.append(f"{x}: in node {key} of blueprint.toml, but not tagged @[d5 \"{key}\"]")
     for key, x in sorted(got - want):
         if key.startswith("D5:"):
-            errors.append(f"{x}: tagged {key}, a tag that no node of blueprint.toml has (tags: MATH-457)")
+            errors.append(f"{x}: tagged {key}, a tag that no node of blueprint.toml has")
         else:
             errors.append(f"{x}: tagged @[d5 \"{key}\"], but not in the lean field of node {key}")
+    return errors
+
+
+# ---------------------------------------------------------------------------------------------
+# The permanent tags (wiki 912, §4.1; MATH-457)
+
+def all_tags(data):
+    """tag -> (what, key) for every tag of the file: ("node", label), ("term", slug), ("superseded", old
+    tag), in this order; a tag used twice is listed under its first use (tag_errors reports it)."""
+    out = {}
+    for label, n in data["nodes"].items():
+        if n.get("tag"):
+            out.setdefault(n["tag"], ("node", label))
+    for slug, t in data["terms"].items():
+        if t.get("tag"):
+            out.setdefault(t["tag"], ("term", slug))
+    for old in data["superseded"]:
+        out.setdefault(old, ("superseded", old))
+    return out
+
+
+def tag_errors(data, base=None):
+    """The checks of the tags of one file, and against an older one (base, as load() reads it): a list
+    of errors, empty if all is well."""
+    errors, used = [], {}
+    for label, n in data["nodes"].items():
+        if "tag" not in n:
+            errors.append(f"node {label} has no tag")
+        else:
+            used.setdefault(n["tag"], []).append(f"node {label}")
+    for slug, t in data["terms"].items():
+        for f in ("tag", "id", "name"):
+            if f not in t:
+                errors.append(f"term {slug} has no {f}")
+        if "id" in t and not isinstance(t["id"], int):
+            errors.append(f"term {slug}: id {t['id']!r} is not a number (the term's id in D5)")
+        if "tag" in t:
+            used.setdefault(t["tag"], []).append(f"term {slug}")
+    for old, t in data["superseded"].items():
+        used.setdefault(old, []).append(f"superseded {old}")
+        for f in ("superseded_by", "label", "text"):
+            if not t.get(f):
+                errors.append(f"superseded tag {old} has no {f}")
+    for tag, where in used.items():
+        if not isinstance(tag, str) or not TAG.fullmatch(tag):
+            errors.append(f"{', '.join(where)}: {tag!r} is not a tag (four characters 0-9 A-Z without I and O, no prefix)")
+        if len(where) > 1:
+            errors.append(f"the tag {tag} is used twice: {', '.join(where)}")
+    current = {n["tag"] for n in data["nodes"].values() if "tag" in n} | {t["tag"] for t in data["terms"].values() if "tag" in t}
+    for old, t in data["superseded"].items():
+        by = t.get("superseded_by")
+        if by and by not in current and by not in data["superseded"]:
+            errors.append(f"superseded tag {old}: superseded_by {by} is not a tag of this file")
+    ids = {}
+    for slug, t in data["terms"].items():
+        ids.setdefault(t.get("id"), []).append(slug)
+    for i, slugs in ids.items():
+        if i is not None and len(slugs) > 1:
+            errors.append(f"the D5 term {i} is in [terms] twice: {', '.join(slugs)}")
+    if base is not None:
+        have = all_tags(data)
+        for tag, (what, key) in all_tags(base).items():
+            if tag not in have:
+                errors.append(f"the tag {tag} ({what} {key} of the base) has disappeared: a tag is never dropped "
+                              "(a statement that changed keeps its old tag under [superseded])")
+                continue
+            now, key2 = have[tag]
+            if what == "term":
+                old_id = base["terms"][key].get("id")
+                if now != "term" or data["terms"][key2].get("id") != old_id:
+                    errors.append(f"the tag {tag} was the D5 term {old_id} (term {key} of the base), now "
+                                  + (f"{now} {key2}" if now != "term" else f"the D5 term {data['terms'][key2].get('id')}"))
+            elif what == "node":
+                # the same label; or the label was renamed (the old one is no longer a node, the new one was
+                # not a node of the base); or the statement
+                # changed and the tag went to [superseded] with the old label
+                ok = ((now == "node" and (key2 == key or (key not in data["nodes"] and key2 not in base["nodes"])))
+                      or (now == "superseded" and data["superseded"][key2].get("label") == key))
+                if not ok:
+                    errors.append(f"the tag {tag} was node {key} in the base, now {now} {key2}: a tag never "
+                                  "passes to another statement or term")
+            elif what == "superseded":
+                if now != "superseded" or data["superseded"][key2].get("label") != base["superseded"][key].get("label"):
+                    errors.append(f"the superseded tag {tag} ({base['superseded'][key].get('label')}) of the base is now {now} {key2}")
+    return errors
+
+
+def d5_page(src):
+    """The Markdown source of D5 page 911: from its public URL (the tracker's REST API, no token) or a
+    saved copy of that answer."""
+    if src.startswith("https://"):
+        req = urllib.request.Request(src, headers={"User-Agent": "d5-blueprint-check", "Accept": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=60) as r:
+                page = json.load(r)
+        except Exception as e:  # noqa: BLE001 -- the check cannot be made: stop
+            sys.exit(f"cannot read D5 page 911 from {src}: {e}")
+    else:
+        page = json.loads(pathlib.Path(src).read_text())
+    if page.get("id") != 911 or page.get("projectKey") != "D5" or not page.get("source"):
+        sys.exit(f"{src} is not D5 page 911 with its source")
+    return page["source"]
+
+
+def d5_rows(md):
+    """The rows of the tables of the page whose first cell is a tag `D5:XXXX`: tag -> ("node", label) in a
+    table with a column Label, ("term", word) in the others."""
+    out, errors, header = {}, [], []
+    for ln in md.splitlines():
+        ln = ln.strip()
+        if not ln.startswith("|"):
+            header = []
+            continue
+        cells = [c.strip() for c in ln.strip("|").split("|")]
+        m = re.fullmatch(r"`D5:([^`]*)`", cells[0])
+        if not m:
+            if not header and not set(cells[0]) <= set("-: "):
+                header = cells
+            continue
+        kind = "node" if "Label" in header else "term"
+        key = cells[1].strip("`") if kind == "node" else cells[1]
+        if m.group(1) in out:
+            errors.append(f"D5 page 911 lists D5:{m.group(1)} twice")
+        out[m.group(1)] = (kind, key)
+    return out, errors
+
+
+def plain(word):
+    """A word of D5 page 911 or of a term, compared without TeX dollars, backslashes and case."""
+    return re.sub(r"\s+", " ", word.replace("$", "").replace("\\", "")).strip().lower()
+
+
+def d5_errors(data, md):
+    """The tags of the file against those of D5 page 911: the same set (superseded ones included), and
+    each statement's with the node's label, each term's with its word."""
+    rows, errors = d5_rows(md)
+    if not rows:
+        return ["D5 page 911 has no tags (has its format changed?)"]
+    have = all_tags(data)
+    for tag, (what, key) in have.items():
+        if tag not in rows:
+            errors.append(f"D5:{tag} ({what} {key}) is not on D5 page 911")
+            continue
+        kind, word = rows[tag]
+        if what == "node" and (kind != "node" or word != key):
+            errors.append(f"D5:{tag} is node {key} here, but D5 page 911 gives it to {kind} {word!r}")
+        if what == "term":
+            name = data["terms"][key]["name"]
+            if kind != "term" or plain(word) != plain(name):
+                errors.append(f"D5:{tag} is the term {name!r} here, but D5 page 911 gives it to {kind} {word!r}")
+        if what == "superseded" and kind == "node" and word != data["superseded"][key]["label"]:
+            errors.append(f"D5:{tag} (superseded) stood for {data['superseded'][key]['label']} here, for {word} on D5 page 911")
+    for tag, (kind, word) in sorted(rows.items()):
+        if tag not in have:
+            errors.append(f"D5:{tag} ({kind} {word!r}) is on D5 page 911 but not in blueprint.toml")
     return errors
 
 
@@ -203,7 +386,9 @@ def statements(tex):
     """label -> {env, number, title, body, proof, section} for every labelled statement of the paper,
     in order; also the sections: label -> number. Numbers as amsart counts them: theorem-like
     environments share one counter within the section; after \\appendix the sections are A, B, ...
-    (build_site.py compares them with the .aux)."""
+    (build_site.py compares them with the .aux). The open questions \\item\\label{oq:...} of the
+    enumerate of the section sec:open are statements too, of the environment OPENQ, numbered by the
+    item as the .aux numbers them ("2"), with the item's text as the body and no proof."""
     body = tex[tex.index("\\begin{document}"):]
     tok = re.compile(r"\\section(\*?)\{|\\appendix\b|\\begin\{(" + "|".join(ENVS) + r")\}")
     out, sections, sec, k, appendix, pos = {}, {}, 0, 0, False, 0
@@ -242,8 +427,41 @@ def statements(tex):
         if lab:
             out[lab.group(1)] = {"env": env, "number": number, "title": title,
                                  "body": text.replace(lab.group(0), "").strip(), "proof": proof,
-                                 "section": list(sections)[-1] if sections else None}
+                                 "section": list(sections)[-1] if sections else None, "at": m.start()}
+    for lab, q in open_questions(body).items():
+        out[lab] = dict(q, section="sec:open")
+    out = dict(sorted(out.items(), key=lambda kv: kv[1].pop("at")))
     return out, sections
+
+
+def open_questions(body):
+    """label -> {env OPENQ, number, title "", body, proof "", at} for the items \\item\\label{oq:...} of the
+    first enumerate after \\label{sec:open} (items of nested lists are not questions)."""
+    a = body.find("\\label{sec:open}")
+    if a < 0:
+        return {}
+    b = body.find("\\begin{enumerate}", a)
+    nxt = re.compile(r"\\section\b|\\appendix\b").search(body, a)
+    if b < 0 or (nxt and nxt.start() < b):
+        return {}
+    end, _ = end_of_env(body, "enumerate", b + len("\\begin{enumerate}"))
+    items, depth, k = [], 0, b + len("\\begin{enumerate}")
+    for m in re.compile(r"\\begin\{(?:enumerate|itemize)\}|\\end\{(?:enumerate|itemize)\}|\\item\b").finditer(body, k, end):
+        if m.group(0).startswith("\\begin"):
+            depth += 1
+        elif m.group(0).startswith("\\end"):
+            depth -= 1
+        elif depth == 0:
+            items.append(m)
+    out = {}
+    for i, m in enumerate(items):
+        stop = items[i + 1].start() if i + 1 < len(items) else end
+        text = body[m.end():stop]
+        lab = re.match(r"\s*\\label\{(oq:[^{}]*)\}", text)
+        if lab:
+            out[lab.group(1)] = {"env": OPENQ, "number": str(i + 1), "title": "",
+                                 "body": text[lab.end():].strip(), "proof": "", "at": m.start()}
+    return out
 
 
 def end_of_brace(s, i):
@@ -290,7 +508,7 @@ def statuses(data, stmts):
     down), "lean-given" (the proof is in Lean, from statements that are not all: their labels in
     `given`: the statements below it, through those proved in Lean, whose proof is not), "lean-statement"
     (the statement, or a part, is in Lean, not the proof), "computer",
-    "paper"; with the uses."""
+    "paper", "open" (a question, q: or oq:, with nothing in Lean); with the uses."""
     nodes = data["nodes"]
     uses = {x: uses_of(x, n, stmts, nodes) for x, n in nodes.items()}
     memo = {}
@@ -321,6 +539,8 @@ def statuses(data, stmts):
             out[x] = {"status": "lean" if full(x) else "lean-given", "given": given}
         elif n["lean"]:
             out[x] = {"status": "lean-statement", "given": []}
+        elif x.split(":")[0] in ("q", "oq"):
+            out[x] = {"status": "open", "given": []}
         else:
             out[x] = {"status": "computer" if n["computer"] else "paper", "given": []}
         out[x]["uses"] = uses[x]
@@ -535,6 +755,7 @@ def src(data, index, out, tex=None, pin=None, paper_url=SITE + "viewer.html"):
     common = ("% generated by site/blueprint.py from the paper's preamble\n" + macros + "\n"
               + "\\providecommand{\\texorpdfstring}[2]{#1}\n"
               + "\n".join(f"\\newtheorem{{{e}}}[theorem]{{{NAMES[e]}}}" for e in ENVS if e != "theorem") + "\n"
+              + f"\\newtheorem{{{OPENQ}}}{{Open question}}\n"
               + "\\newtheorem{known}{Known result}\n"
               + "\\newtheorem{own}{Result beyond the paper}\n")
     (srcdir / "macros" / "common.tex").write_text(common)
@@ -544,7 +765,7 @@ def src(data, index, out, tex=None, pin=None, paper_url=SITE + "viewer.html"):
     (srcdir / "web.tex").write_text(f"""\\documentclass{{article}}
 \\usepackage{{amssymb,amsthm,mathtools}}
 \\usepackage{{hyperref}}
-\\usepackage[showmore, dep_graph, thms={"+".join(ENVS)}+known+own]{{blueprint}}
+\\usepackage[showmore, dep_graph, thms={"+".join(ENVS)}+{OPENQ}+known+own]{{blueprint}}
 \\newtheorem{{theorem}}{{Theorem}}[section]
 {common}
 \\home{{{SITE}blueprint.html}}
@@ -605,12 +826,15 @@ def src(data, index, out, tex=None, pin=None, paper_url=SITE + "viewer.html"):
             kind = {"lean": "In Lean.", "lean-given": "In Lean, from statements that are not all in Lean.",
                     "lean-statement": ("A part is in Lean, not the whole proof." if n["computer"]
                                        else "Only the statement is in Lean."),
-                    "computer": "Computer-assisted; not formalized.", "paper": "By hand; not formalized."}[s["status"]]
+                    "computer": "Computer-assisted; not formalized.", "paper": "By hand; not formalized.",
+                    "open": "An open question."}[s["status"]]
             if n["computer"] and s["status"].startswith("lean"):
                 kind += " Computer-assisted in part."
             proof += f"See {where}. {kind}\n\\end{{proof}}\n"
         number_set = ""
-        if number:
+        if number and env == OPENQ:  # numbered by its item: Open question 2
+            number_set = f"\\setcounter{{{OPENQ}}}{{{int(number) - 1}}}\n"
+        elif number:
             k = int(number.split(".")[1])
             number_set = f"\\setcounter{{theorem}}{{{k - 1}}}\n"
         return number_set + head + stat + f"\n\\end{{{env}}}\n" + proof
@@ -638,7 +862,8 @@ def src(data, index, out, tex=None, pin=None, paper_url=SITE + "viewer.html"):
         for x, n in nodes.items():
             if outside(x):
                 continue
-            kind = {"thm": "theorem", "prop": "proposition", "lem": "lemma", "cor": "corollary", "rem": "remark", "q": "question"}[x.split(":")[0]]
+            kind = {"thm": "theorem", "prop": "proposition", "lem": "lemma", "cor": "corollary", "rem": "remark", "q": "question",
+                    "oq": OPENQ}[x.split(":")[0]]
             parts.append(node_tex(x, n, kind, None, "",
                                   f"The statement \\texttt{{{tex_inline(x)}}} of the paper (placeholder: built without the paper)."))
     # numbered on their own (Known result 1, 2, ...), not as the last section of the paper
@@ -678,6 +903,30 @@ def main(argv):
         paper = pathlib.Path(args[i + 1])
         del args[i:i + 2]
     tex = (paper / "d5.tex").read_text() if paper else None
+    if cmd == "tagcheck":
+        opts = {}
+        while args:
+            if args[0] not in ("--data", "--base", "--d5") or len(args) < 2:
+                sys.exit(__doc__)
+            opts[args[0]] = args[1]
+            del args[:2]
+        global DATA
+        DATA = pathlib.Path(opts.get("--data", DATA))
+        data = load()
+        base = None
+        if "--base" in opts:
+            DATA = pathlib.Path(opts["--base"])
+            base = load()
+        errors = tag_errors(data, base)
+        if "--d5" in opts:
+            errors += d5_errors(data, d5_page(opts["--d5"]))
+        if errors:
+            sys.exit("blueprint: the tags are wrong:\n  " + "\n  ".join(errors))
+        print(f"blueprint: {len(all_tags(data))} tags ({len(data['nodes'])} nodes, {len(data['terms'])} terms, "
+              f"{len(data['superseded'])} superseded) are well formed and used once"
+              + (", none of the base is gone" if base is not None else "")
+              + (", the same as on D5 page 911" if "--d5" in opts else ""))
+        return
     data = load()
     index = lean_index()
     if cmd == "check":

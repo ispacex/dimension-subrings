@@ -2,14 +2,22 @@
 # of a statement is written down. site/blueprint.py reads it; build_site.py builds results.html and
 # blueprint.html from it, and the leanblueprint web pages (blueprint/) come from it and the paper.
 #
-# [nodes."<label>"]: one per labelled statement of paper/d5.tex (every one must be here), and a few
+# [nodes."<label>"]: one per labelled statement of paper/d5.tex (every one must be here, the open
+# questions \item\label{oq:...} of its last section too), and a few
 # results of the literature that the formalization proves too ("ext:..." labels, with their own
 # statement), and our own results that it proves but the paper does not contain ("own:..." labels,
 # the same fields; e.g. own:ab399, MATH-448). Fields:
+#   tag      the permanent tag of the statement (wiki 912, §4.1; MATH-457): four characters of
+#            0-9 A-Z without I and O, written without the prefix (the full tag is D5:<tag>), never
+#            reused and never dropped; it stays when the paper is renumbered or the \label renamed. The
+#            tags are those of the project D5 of the tracker (math.kaiku.tech, wiki page 911 of D5), and
+#            CI checks that they are the same there (blueprint.py tagcheck). A statement whose content
+#            changes gets a new tag; the old one goes to [superseded."<old tag>"] with superseded_by =
+#            the new tag, label = the label it stood for and text = what it meant;
 #   lean     the Lean declarations (full names) that state or prove it; CI checks that each exists
 #            (.github/workflows/blueprint.yml) and the build that each is named in the paper's
 #            section on the formalization; each carries the attribute @[d5 "<label>"] in groups/
-#            (MATH-453, MATH-458; permanent tags D5:XXXX come with MATH-457), and CI checks that the tagged pairs are exactly these (blueprint.py tags);
+#            (MATH-453, MATH-458; or the node's tag, @[d5 <tag>], printed D5:<tag>, MATH-457), and CI checks that the tagged pairs are exactly these (blueprint.py tags);
 #   proved   true if the proof is formalized, from the statements it uses (leanblueprint's \leanok on
 #            the proof); a statement with `lean` but not `proved` has only its statement (or a part)
 #            in Lean;
@@ -26,6 +34,8 @@
 #            written [[label|#]] (the build puts in the number and checks the label); title, title_ru and statement
 #            (LaTeX, English) of an ext: or own: node.
 #
+# [terms."<slug>"]: the definitions (terms of the project D5), each with its tag, below.
+#
 # [[results]]: the rows of results.html (they were RESULTS in build_site.py): status ("l" Lean, "p"
 # paper, "c" computer, "cp" computer + paper, "k" known from the literature, "o" open), the text in both languages, and where it is.
 # [[label]] links to the paper; {{lean:Name|text}} to the declaration (the name must be in a node);
@@ -39,11 +49,13 @@
 section4_not_nodes = ["LieRings.Publication.corollaryD", "SetupGen.gen_eq_one", "SetupA.row", "SetupA.gen_eq_one"]
 
 [nodes."q:main"]
+tag = "000E"
 lean = ["GroupDimension.DimensionQuestion5"]
 note = "Stated in Lean as a proposition, not proved: it is open."
 note_ru = "В Lean сформулирован как утверждение, не доказан: вопрос открыт."
 
 [nodes."prop:reduction"]
+tag = "000F"
 lean = ["GroupDimension.dimensionQuestion5_iff_finite_two_groups'", "GroupDimension.dimensionQuestion5_iff_class_three'",
         "GroupDimension.dimensionQuestion5_iff_finite_two_groups", "GroupDimension.dimensionQuestion5_iff_class_three"]
 proved = true
@@ -52,19 +64,23 @@ note = "Without “metabelian” (Remark [[rem:metab|#]]). The unprimed versions
 note_ru = "Без «метабелевой» (замечание [[rem:metab|#]]). Версии без штриха берут теоремы Пасси и Грюнберга гипотезами, версии со штрихом их снимают."
 
 [nodes."rem:metab"]
+tag = "0025"
 lean = ["GroupDimension.metabelian_of_class_three"]
 proved = true
 
 [nodes."rem:bounded"]
+tag = "0026"
 lean = ["GroupDimension.D_five_le_of_bounded'", "GroupDimension.D_five_le_of_bounded_class_three'",
         "GroupDimension.D_five_le_of_bounded", "GroupDimension.D_five_le_of_bounded_class_three"]
 proved = true
 uses = ["prop:reduction", "ext:passi", "ext:dthree"]
 
 [nodes."prop:computer"]
+tag = "0027"
 computer = true
 
 [nodes."lem:mincex"]
+tag = "000G"
 lean = ["GroupDimension.isCandidate_of_minimal'", "GroupDimension.isCandidate_of_minimal", "GroupDimension.isDescendant_of_minimal"]
 proved = true
 uses = ["ext:dthree", "ext:jennings"]
@@ -72,6 +88,7 @@ note = "M_n is Jennings' product ∏ γ_i^{p^j}; the inclusion of Q ∩ (1+Δ_{F
 note_ru = "M_n — произведение Дженнингса ∏ γ_i^{p^j}; включение в него Q ∩ (1+Δ_{F_2}^5) доказано (включение Дженнингса ниже), так что (b) — в смысле произведения."
 
 [nodes."prop:1024"]
+tag = "000H"
 lean = ["GroupDimension.Cert1024.D_five_cand", "GroupDimension.Cert1024.D_four_cand", "GroupDimension.Cert1024.card_cand",
         "GroupDimension.Cert1024.prop_1024'", "GroupDimension.Cert1024.prop_1024"]
 computer = true
@@ -79,15 +96,19 @@ note = "Certificates for the 3400 candidates (native_decide: they trust the comp
 note_ru = "Сертификаты для 3400 кандидатов (native_decide: доверяют компилятору, а не только ядру); prop_1024' выводит предложение из предложения [[prop:computer|#]] для порядка 2^9 и полноты списка, обе — явные гипотезы (полнота — это лемма [[lem:mincex|#]](d) и перебор ANUPQ)."
 
 [nodes."thm:small"]
+tag = "000J"
 computer = true
 
 [nodes."rem:prune"]
+tag = "0028"
 
 [nodes."lem:z4"]
+tag = "0029"
 lean = ["GroupDimension.not_isCandidate_of_quotient_z4"]
 proved = true
 
 [nodes."prop:rank8"]
+tag = "000K"
 lean = ["GroupDimension.not_isCandidate_of_rank", "GroupDimension.false_of_card_expCentral_two_le", "GroupDimension.D_five_eq_bot_of_rank'",
         "GroupDimension.D_five_eq_bot_of_rank", "GroupDimension.Cert1024.D_five_eq_bot_of_rank_of_complete'",
         "GroupDimension.Cert1024.D_five_eq_bot_of_rank_of_complete"]
@@ -98,6 +119,7 @@ note = "The second statement (|Φ(Q)| ≥ 16 for candidates) and the deduction o
 note_ru = "В Lean — второе утверждение (|Φ(Q)| ≥ 16 у кандидатов) и вывод первого из него и предложения [[prop:1024|#]]; через предложение [[prop:1024|#]] первое утверждение опирается на компьютер."
 
 [nodes."prop:central"]
+tag = "002A"
 lean = ["GroupDimension.D_n_eq_of_central_product", "GroupDimension.D_n_eq_of_dihedral", "GroupDimension.D_n_eq_of_sqrt"]
 proved = true
 uses = ["lem:root"]
@@ -105,19 +127,23 @@ note = "For Q = H⟨a,b⟩ with a, b centralising H and a, b, ab ∉ H; the pass
 note_ru = "Для Q = H⟨a,b⟩, где a, b централизуют H и a, b, ab ∉ H; переход от (H × E)/{(φ(z), z⁻¹)} к этому виду и классификация E не формализованы."
 
 [nodes."lem:root"]
+tag = "002B"
 lean = ["GroupDimension.D_n_eq_of_index"]
 proved = true
 
 [nodes."prop:2048"]
+tag = "000L"
 computer = true
 
 [nodes."rem:rank3"]
+tag = "002C"
 not_formalized = true
 uses = ["ext:tahara61"]
 note = "Paper only (MATH-41). D₅ = 1 for d(Q) ≤ 3 is Tahara's [Tah77a, Cor. 18, 21] (D₄ = γ₄), not formalized. The independent check through Tahara's Theorem 6.1 uses its formalized inclusion; the rest is not formalized (checked by independent agent reviews, MATH-41 comments 8197, 8216)."
 note_ru = "Только в статье (MATH-41). D₅ = 1 при d(Q) ≤ 3 — это [Tah77a, следствия 18, 21] Тахары (D₄ = γ₄), не формализовано. Независимая проверка через теорему 6.1 Тахары опирается на формализованное включение из неё; остальное не формализовано (проверено независимыми рецензиями агентов, MATH-41, комментарии 8197, 8216)."
 
 [nodes."lem:qpp"]
+tag = "002D"
 lean = ["GroupDimension.D_le_derivedSeries_two", "GroupDimension.mem_of_mem_D_add_two", "GroupDimension.rank_ge_three_of_D_five_ne_bot", "GroupDimension.D_le_derivedSeries_two_three", "GroupDimension.mem_of_mem_D_add_two_three", "GroupDimension.rank_ge_three_of_D_five_ne_bot_three"]
 proved = true
 uses = ["ext:guptatahara", "thm:gt3"]
@@ -125,6 +151,7 @@ note = "For general p, Gupta–Tahara's D_{p+2} = γ_{p+2} for metabelian p-grou
 note_ru = "При общем p теорема Гупты–Тахары D_{p+2} = γ_{p+2} для метабелевых p-групп — явная гипотеза; при p = 3 (ступень ≤ 4) лемма доказана без неё (версии _three): теорема Гупты–Тахары при p = 3 — это теорема [[thm:gt3|#]]."
 
 [nodes."lem:mincex3"]
+tag = "002E"
 lean = ["GroupDimension.minimal_three_three", "GroupDimension.minimal_three_of_quotients_three", "GroupDimension.minimal_three'", "GroupDimension.minimal_three", "GroupDimension.minimal_three_of_quotients"]
 proved = true
 uses = ["thm:gt3", "ext:passi"]
@@ -133,12 +160,14 @@ note = "“Least order” as: D_5(R) = γ_5(R) for every 3-group R with |R| < |Q
 note_ru = "«Наименьший порядок» в виде: D_5(R) = γ_5(R) для всякой 3-группы R с |R| < |Q|. Доказано без гипотез (minimal_three_three, minimal_three_of_quotients_three); прежние варианты берут теорему Гупты–Тахары (при p = 3 теперь теорема [[thm:gt3|#]]) явной гипотезой."
 
 [nodes."lem:lie"]
+tag = "002F"
 lean = ["GroupDimension.commutator_gamma_two_le_gamma_five", "GroupDimension.metabelian_of_class_four"]
 proved = true
 note = "Works in G/γ_5(G) instead of the Lie ring L(G)."
 note_ru = "Работает в G/γ_5(G) вместо кольца Ли L(G)."
 
 [nodes."rem:lie"]
+tag = "002G"
 lean = ["GroupDimension.LieThreeThree.exists_lie_three_three", "GroupDimension.LieThreeThree.lieSpan_eq_top",
         "GroupDimension.LieThreeThree.lcs_eq", "GroupDimension.LieThreeThree.finrank_lcs", "GroupDimension.LieThreeThree.lie_lcs_one_ne_bot"]
 computer = true
@@ -146,6 +175,7 @@ note = "Only the algebra of Appendix [[app:lie|#]] in (2) is in Lean (over any c
 note_ru = "В Lean только алгебра приложения [[app:lie|#]] из (2) (над любым коммутативным кольцом, её тип — над любым полем); подсчёты в (1)–(3) — вычисления."
 
 [nodes."prop:metab"]
+tag = "002H"
 lean = ["GroupDimension.card_ge_of_not_metabelian", "GroupDimension.metabelian_of_card_le", "GroupDimension.rank_of_card_nine",
         "GroupDimension.type_of_card_nine"]
 proved = true
@@ -153,6 +183,7 @@ note = "Class ≤ 4 instead of = 4; that both types occur for p = 3 is a computa
 note_ru = "Ступень ≤ 4 вместо = 4; что при p = 3 встречаются оба типа — вычисление, не формализовано."
 
 [nodes."thm:exp3"]
+tag = "002J"
 lean = ["GroupDimension.D_five_eq_gamma_five_of_exp_three", "GroupDimension.ExpThree.D_five_eq_gamma_five", "GroupDimension.ExpThree.D_five_eq_gamma_five_of_exp_three_of_exp_L1"]
 proved = true
 uses = ["ext:tahara61"]
@@ -160,9 +191,11 @@ note = "Also a corollary of Theorem [[thm:exp3gen|#]] (ExpThree.D_five_eq_gamma_
 note_ru = "Также следствие теоремы [[thm:exp3gen|#]] (ExpThree.D_five_eq_gamma_five_of_exp_three_of_exp_L1)."
 
 [nodes."rem:exp3"]
+tag = "002K"
 computer = true
 
 [nodes."thm:exp3plus"]
+tag = "002L"
 lean = ["GroupDimension.D_five_eq_gamma_five_of_cubes_cyclic", "GroupDimension.ExpThree.D_five_eq_gamma_five_cyclic", "GroupDimension.ExpThree.D_five_eq_gamma_five_cyclic_of_exp_L1"]
 proved = true
 uses = ["ext:tahara61"]
@@ -170,6 +203,7 @@ note = "“The cubes of G/γ_2 form a cyclic group”: for some t, every x³ is 
 note_ru = "«Кубы G/γ_2 образуют циклическую группу»: для некоторого t всякий x³ сравним по модулю γ_2 со степенью t³. Также следствие теоремы [[thm:exp3gen|#]] (ExpThree.D_five_eq_gamma_five_cyclic_of_exp_L1)."
 
 [nodes."thm:exp3gen"]
+tag = "000M"
 lean = ["GroupDimension.D_five_eq_gamma_five_of_exp_L1_three", "GroupDimension.D_five_eq_gamma_five_of_comm_cube", "GroupDimension.ExpThree.D_five_eq_gamma_five_exp_L1", "GroupDimension.ExpThree.exists_flag_ker_basis", "GroupDimension.ExpThree.socle_basis", "GroupDimension.nine_L1_of_exp_L1"]
 proved = true
 uses = ["ext:tahara61"]
@@ -177,6 +211,7 @@ note = "“γ_2/γ_3 has exponent at most 3”: a³ ∈ γ_3 for every a ∈ γ_
 note_ru = "«γ_2/γ_3 имеет экспоненту не больше 3»: a³ ∈ γ_3 для всех a ∈ γ_2 (D_five_eq_gamma_five_of_comm_cube: [x³, y] ∈ γ_3 для всех x, y). Также следствие теоремы [[thm:exp3h9|#]]: D_five_eq_gamma_five_of_exp_L1_three теперь выводится из неё (nine_L1_of_exp_L1); прямое доказательство ExpThree.D_five_eq_gamma_five_exp_L1 сохранено."
 
 [nodes."thm:exp3h9"]
+tag = "000N"
 lean = ["GroupDimension.D_five_eq_gamma_five_of_g4_cube_g2_nine", "GroupDimension.D_five_eq_bot_of_class_four_g4_cube_g2_nine", "GroupDimension.ExpThree.D_five_eq_gamma_five_g4_cube_g2_nine", "GroupDimension.ExpThree.D_five_eq_bot_of_class_four_g4_cube_g2_nine"]
 proved = true
 uses = ["ext:tahara61"]
@@ -184,6 +219,7 @@ note = "Checked by an independent review (MATH-444). Hypotheses: c³ ∈ γ_5 fo
 note_ru = "Проверено независимой рецензией (MATH-444). Гипотезы: c³ ∈ γ_5 для всех c ∈ γ_4 и a⁹ ∈ γ_4 для всех a ∈ γ_2. Доказательство в Lean отличается от статьи лишь учётом: базис Ω_1(Q/γ_2) согласован только с высотами и с ker P̄, базис L_2 произволен, и x_i не подправляются; шаги (4) и (5) получаются из тождества (∗), спаренного с x_i (SetupA.row). Теорема [[thm:exp3gen|#]] — частный случай при exp(γ_2/γ_3) ≤ 3 и выводится из неё в Lean. Теперь и сама — частный случай теоремы [[thm:g4cube|#]] (с дополнительным условием γ_2^9 ⊆ γ_4): два утверждения без префикса ExpThree выводятся из неё в Lean под прежними именами; прямые доказательства ExpThree.D_five_eq_gamma_five_g4_cube_g2_nine и ExpThree.D_five_eq_bot_of_class_four_g4_cube_g2_nine (ExpNine.lean) сохранены."
 
 [nodes."thm:g4cube"]
+tag = "000P"
 lean = ["GroupDimension.D_five_eq_gamma_five_of_g4_cube", "GroupDimension.D_five_eq_bot_of_class_four_g4_cube", "GroupDimension.ExpThree.D_five_eq_gamma_five_g4_cube", "GroupDimension.ExpThree.D_five_eq_bot_of_class_four_g4_cube"]
 proved = true
 uses = ["ext:tahara61"]
@@ -191,10 +227,13 @@ note = "Paper proof and Lean code each checked by an independent review (MATH-44
 note_ru = "Доказательство в статье и код Lean проверены каждый независимой рецензией (MATH-444). Гипотеза: c³ ∈ γ_5 для всех c ∈ γ_4; на γ_2/γ_3 и G/γ_2 (кроме того, что это конечная 3-группа) условий нет. Теоремы [[thm:exp3gen|#]] и [[thm:exp3h9|#]] — частные случаи; в Lean теорема [[thm:exp3h9|#]] выводится из неё под прежними именами (а [[thm:exp3gen|#]] — из [[thm:exp3h9|#]]). Доказательство в Lean (G4Cube.lean) следует статье в суммировании тождеств строк из (B) и (E) по всем строкам и в дефектах Δ, но идёт короче, чем через (⋆): w-часть тривиальна сразу по (D) по модулю 3, (E) используется по модулю 3, v-часть — по (F₁) и (F₂), и из членов (⋆) возникает лишь T₁; само тождество (⋆), верное без γ_4³ = 1, позже доказано в Lean отдельно (Star.two_smul_gen_eq, MATH-448; см. результат для Q_ab ≅ C_3 × C_9 × C_9 вне статьи ниже) и здесь не используется."
 
 [nodes."cor:g4cube"]
+tag = "000Q"
 
 [nodes."rem:g4c9"]
+tag = "002M"
 
 [nodes."thm:gt3"]
+tag = "002V"
 lean = ["GroupDimension.GuptaTahara.D_five_eq_gamma_five_of_metabelian", "GroupDimension.guptaTaharaMetabelian_three"]
 proved = true
 uses = ["ext:tahara61"]
@@ -203,21 +242,25 @@ note = "“G/γ_2 a finite p-group, p odd, [γ_2, γ_2] ⊆ γ_5”; through Tah
 note_ru = "«G/γ_2 — конечная p-группа, p нечётно, [γ_2, γ_2] ⊆ γ_5»; через теорему 6.1 Тахары с любым базисом единственности (MATH-445). guptaTaharaMetabelian_three — случай p = 3 утверждения GuptaTaharaMetabelian."
 
 [nodes."lem:filter"]
+tag = "002N"
 lean = ["GroupDimension.filter_on_parents"]
 proved = true
 note = "For Q = E/U with U ≤ M subgroups of any group E and the nucleus replaced by any subgroup N ⊄ U."
 note_ru = "Для Q = E/U, где U ≤ M — подгруппы любой группы E, и ядро заменено любой подгруппой N ⊄ U."
 
 [nodes."thm:pcover"]
+tag = "002P"
 lean = ["GroupDimension.metabelian_of_central_elementary", "GroupDimension.metabelian_of_central_quotient"]
 proved = true
 note = "For every central extension of P by a subgroup of exponent p (Mathlib has no p-covering group)."
 note_ru = "Для любого центрального расширения P подгруппой экспоненты p (в Mathlib нет p-накрывающей группы)."
 
 [nodes."rem:pcover"]
+tag = "002Q"
 computer = true
 
 [nodes."thm:nonterm"]
+tag = "002R"
 lean = ["GroupDimension.nonterminal_necessary", "GroupDimension.nonterminal_sufficient", "GroupDimension.nonterminal_iff"]
 proved = true
 uses = ["thm:pcover"]
@@ -226,16 +269,31 @@ note = "“Nonterminal” is stated in the form of Lemma [[lem:ntQ|#]] (a centra
 note_ru = "«Нетерминальна» сформулировано в форме леммы [[lem:ntQ|#]] (центральное расширение подгруппой порядка p с γ_4 ≠ 1); сама лемма [[lem:ntQ|#]] (что это и есть наличие непосредственных потомков) не формализована; нормальная форма шага 3 дана, а не построена."
 
 [nodes."rem:nonterm"]
+tag = "002S"
 computer = true
 
 [nodes."thm:3e9"]
+tag = "000R"
 computer = true
 
+# The open questions of the paper's last section (\item\label{oq:...}, numbered by the item).
+
+[nodes."oq:main"]
+tag = "002T"
+
+[nodes."oq:torsion"]
+tag = "000S"
+
+[nodes."oq:theoremc"]
+tag = "000T"
+
 [nodes."lem:ntQ"]
+tag = "002U"
 
 # Results of the literature that the formalization proves too.
 
 [nodes."ext:dthree"]
+tag = "002W"
 title = "Higman, Rees, Passi"
 title_ru = "Хигмен, Рис, Пасси"
 statement = '''$D_3(G)=\gamma_3(G)$ for every group $G$.'''
@@ -245,6 +303,7 @@ note = "For finite groups through Tahara's Theorem 4.1 (his §§2–4, formalize
 note_ru = "Для конечных групп — через теорему 4.1 Тахары (его §§2–4, формализованы вместе с его теоремой 6.1), затем сведением."
 
 [nodes."ext:passi"]
+tag = "002X"
 title = "Passi"
 title_ru = "Пасси"
 statement = '''$D_4(G)^2\subseteq\gamma_4(G)$ for every group $G$.'''
@@ -255,6 +314,7 @@ note = "Not Passi's argument: through Tahara's map ψ_3 (his §5, formalized wit
 note_ru = "Не рассуждение Пасси: через отображение ψ_3 Тахары (его §5, формализован вместе с его теоремой 6.1) для конечных p-групп ступени ≤ 3, затем сведением."
 
 [nodes."ext:gruenberg"]
+tag = "002Y"
 title = "Gruenberg"
 title_ru = "Грюнберг"
 statement = '''In a finitely generated nilpotent group an element none of whose odd powers is trivial survives in some finite $2$-group quotient.'''
@@ -262,6 +322,7 @@ lean = ["GroupDimension.GruenbergResidualTwo", "GroupDimension.gruenbergResidual
 proved = true
 
 [nodes."ext:tahara61"]
+tag = "002Z"
 title = "Tahara, Theorem 6.1, the inclusion"
 title_ru = "Тахара, теорема 6.1, включение"
 statement = '''For a finite group of class $\le4$ and any uniqueness bases with their structure constants, $D_5$ lies in the subgroup generated by the elements $g$ over the integer families satisfying Tahara's conditions (A)--(F).'''
@@ -269,6 +330,7 @@ lean = ["GroupDimension.TaharaFiveOne", "GroupDimension.taharaFiveOne"]
 proved = true
 
 [nodes."ext:jennings"]
+tag = "0030"
 title = "Jennings, the inclusion for $p=2$, $n=5$"
 title_ru = "Дженнингс, включение при $p=2$, $n=5$"
 statement = '''For a finite $2$-group $Q$ of class $\le3$, $D_5(Q)\subseteq Q\cap(1+\Delta_{\mathbb F_2}(Q)^5)\subseteq Q^8\gamma_2(Q)^4\gamma_3(Q)^2$.'''
@@ -278,6 +340,7 @@ note = "The general theorem of Jennings and Lazard's description of the series a
 note_ru = "Общая теорема Дженнингса и описание ряда Лазаром не формализованы."
 
 [nodes."ext:guptatahara"]
+tag = "0031"
 title = "Gupta–Tahara"
 title_ru = "Гупта–Тахара"
 statement = '''$D_{p+2}(G)=\gamma_{p+2}(G)$ for every finite metabelian $p$-group $G$, $p$ odd.'''
@@ -287,6 +350,7 @@ note_ru = "В Lean сформулирована; при p = 3 доказана (
 
 
 [nodes."own:ab399"]
+tag = "0032"
 title = "$D_5=1$ for $Q_{ab}\\cong C_3\\times C_9\\times C_9$"
 title_ru = "$D_5=1$ при $Q_{ab}\\cong C_3\\times C_9\\times C_9$"
 statement = '''Let $Q$ be a finite group of class $\le4$ with $Q/\gamma_2(Q)\cong C_3\times C_9\times C_9$. Then $D_5(Q)=1$. No condition on $\gamma_4(Q)$ is assumed.'''
@@ -298,6 +362,7 @@ note = "Not in the paper (the authors' decision): the proof on paper is MATH-446
 note_ru = "Не в статье (решение авторов): доказательство на бумаге — MATH-446 (вики 891 §10, одна рецензия по 703), в Lean — group-dimension#48 (MATH-448). Покрывает γ_4 экспоненты 9 (например, γ_4 ≅ C_9) — случай, который замечание [[rem:g4c9|#]] оставляет открытым, — для этого типа Q_ab; при γ_4^3 = 1 это частный случай теоремы [[thm:g4cube|#]]. Star.two_smul_gen_eq — точное тождество (⋆) из доказательства теоремы [[thm:g4cube|#]] для данных Тахары и любого допустимого τ в группе ступени ≤ 4, без условий на γ_4; Lean-доказательство теоремы [[thm:g4cube|#]] его не использует. GroupDimension.Ab399.D_five_eq_bot_of_class_four_ab399 берёт включение Тахары гипотезой, версия без префикса её снимает. В Lean только конечная форма для ступени ≤ 4; общая форма D_5(G) = γ_5(G) при G_ab ≅ C_3 × C_9 × C_9 не формализована. Типы с не более чем двумя инвариантами ≥ 9 покрывает own:thm126 (MATH-468); типы с тремя инвариантами ≥ 9 открыты (MATH-450)."
 
 [nodes."own:thm126"]
+tag = "0033"
 title = "$D_5\\subseteq\\Omega_{\\mu-1}$: the third invariant of $Q_{ab}$"
 title_ru = "$D_5\\subseteq\\Omega_{\\mu-1}$: третий инвариант $Q_{ab}$"
 statement = '''Let $Q$ be a finite $3$-group of class $\le4$ and $\mu\ge0$ such that at most two invariants of $Q/\gamma_2(Q)$ exceed $3^\mu$ (e.g. $3^\mu$ the third largest invariant). Then $z^{3^{\mu-1}}=1$ for every $z\in D_5(Q)$ (with $3^{\mu-1}:=1$ for $\mu=0$). In particular, if at most two invariants of $Q/\gamma_2(Q)$ are $\ge9$, then $D_5(Q)=1$, with no condition on $\gamma_4(Q)$.'''
@@ -306,6 +371,450 @@ proved = true
 uses = ["ext:tahara61", "own:ab399"]
 note = "Not in the paper: the proof on paper is Theorem 12.6 of wiki 891 §12.3 (MATH-451, reviewed per 703) with its case μ ≤ 1, Theorem 11.2 (§11.2, MATH-450); the Lean proof is group-dimension#54 (MATH-468). It evaluates the exact identity (⋆) (Star.two_smul_gen_eq, node own:ab399) term by term after multiplying by 3^{μ-1}. In Lean the hypothesis is stated intrinsically: the 3^μ-th powers of Q_ab contain at most 9 elements of order dividing 3. The conclusion is the exponent bound on D_5(Q); together with D_5(Q) ⊆ γ_4(Q)^3 (Corollary [[cor:g4cube|#]]) it gives D_5(Q) ⊆ Ω_{μ-1}(γ_4(Q)), but that combination is not stated in Lean. The case μ = 1 contains the type [3,9,9] of own:ab399. Only the finite form of class ≤ 4 is in Lean; the general form D_5(G) = γ_5(G) is not formalized. Types with three invariants ≥ 9 (μ ≥ 2) are open."
 note_ru = "Не в статье: доказательство на бумаге — теорема 12.6 вики 891 §12.3 (MATH-451, рецензия по 703) и её случай μ ≤ 1, теорема 11.2 (§11.2, MATH-450); в Lean — group-dimension#54 (MATH-468). Доказательство раскладывает точное тождество (⋆) (Star.two_smul_gen_eq, узел own:ab399) по членам после умножения на 3^{μ-1}. В Lean условие записано внутренне: среди 3^μ-х степеней Q_ab не больше 9 элементов порядка, делящего 3. Вывод — оценка экспоненты D_5(Q); вместе с D_5(Q) ⊆ γ_4(Q)^3 (следствие [[cor:g4cube|#]]) это даёт D_5(Q) ⊆ Ω_{μ-1}(γ_4(Q)), но такое объединение в Lean не сформулировано. Случай μ = 1 содержит тип [3,9,9] из own:ab399. В Lean только конечная форма для ступени ≤ 4; общая форма D_5(G) = γ_5(G) не формализована. Типы с тремя инвариантами ≥ 9 (μ ≥ 2) открыты."
+
+# ---------------------------------------------------------------------------------------------
+# The definitions: the terms of the project D5 of the tracker (math.kaiku.tech), by tag (wiki 912, §4.1).
+# [terms."<slug>"]: tag, id (the term's id in D5) and name (its word there, as on D5 page 911).
+
+[terms."augmentation-ideal"]
+tag = "0001"
+id = 4444
+name = "augmentation ideal"
+
+[terms."dimension-subgroup"]
+tag = "0002"
+id = 4445
+name = "dimension subgroup"
+
+[terms."commutator"]
+tag = "0003"
+id = 5221
+name = "commutator"
+
+[terms."lower-central-series"]
+tag = "0004"
+id = 4446
+name = "lower central series"
+
+[terms."problem-20-84"]
+tag = "0005"
+id = 4447
+name = "Problem 20.84"
+
+[terms."jennings-subgroups"]
+tag = "0006"
+id = 5222
+name = "Jennings subgroups"
+
+[terms."lower-exponent-p-central-series"]
+tag = "0007"
+id = 5223
+name = "lower exponent-p central series"
+
+[terms."p-covering-group"]
+tag = "0008"
+id = 5224
+name = "p-covering group"
+
+[terms."multiplier"]
+tag = "0009"
+id = 5225
+name = "multiplier"
+
+[terms."nucleus"]
+tag = "000A"
+id = 5226
+name = "nucleus"
+
+[terms."immediate-descendant"]
+tag = "000B"
+id = 5227
+name = "immediate descendant"
+
+[terms."candidate"]
+tag = "000C"
+id = 5228
+name = "candidate"
+
+[terms."lower-central-type"]
+tag = "000D"
+id = 5229
+name = "lower central type"
+
+[terms."metabelian-group"]
+tag = "000U"
+id = 5253
+name = "metabelian group"
+
+[terms."augmentation"]
+tag = "000V"
+id = 5254
+name = "augmentation"
+
+[terms."group-ring"]
+tag = "000W"
+id = 5255
+name = "group ring"
+
+[terms."lie-ring-of-the-lower-central-series"]
+tag = "000X"
+id = 5256
+name = "Lie ring of the lower central series"
+
+[terms."metabelian-lie-ring"]
+tag = "000Y"
+id = 5257
+name = "metabelian Lie ring"
+
+[terms."halls-inclusion"]
+tag = "000Z"
+id = 5258
+name = "Hall's inclusion"
+
+[terms."abelianization"]
+tag = "0010"
+id = 5259
+name = "abelianization"
+
+[terms."pc-presentation"]
+tag = "0011"
+id = 5260
+name = "pc-presentation"
+
+[terms."p-group-generation-algorithm"]
+tag = "0012"
+id = 5261
+name = "p-group generation algorithm"
+
+[terms."hermite-normal-form"]
+tag = "0013"
+id = 5262
+name = "Hermite normal form"
+
+[terms."dimension-quotient"]
+tag = "0014"
+id = 5263
+name = "dimension quotient"
+
+[terms."generalized-dimension-subgroup"]
+tag = "0015"
+id = 5264
+name = "generalized dimension subgroup"
+
+[terms."higman-rees-theorem"]
+tag = "0016"
+id = 5267
+name = "Higman–Rees theorem"
+
+[terms."bartholdi-passi-theorem"]
+tag = "0017"
+id = 5275
+name = "Bartholdi–Passi theorem"
+
+[terms."passi-sicking-theorem"]
+tag = "0018"
+id = 5284
+name = "Passi–Sicking theorem"
+
+[terms."bartholdi-mikhailov-theorem"]
+tag = "0019"
+id = 5285
+name = "Bartholdi–Mikhailov theorem"
+
+[terms."theorem-c-of-ionin-mikhailov-petrov"]
+tag = "001A"
+id = 5286
+name = "Theorem C of Ionin–Mikhailov–Petrov"
+
+[terms."corollary-d-of-ionin-mikhailov-petrov"]
+tag = "001B"
+id = 5287
+name = "Corollary D of Ionin–Mikhailov–Petrov"
+
+[terms."taharas-bound"]
+tag = "001C"
+id = 5288
+name = "Tahara's bound"
+
+[terms."ring-equality"]
+tag = "001D"
+id = 5298
+name = "ring equality"
+
+[terms."filtered-projection"]
+tag = "001E"
+id = 5299
+name = "filtered projection"
+
+[terms."central-product"]
+tag = "001F"
+id = 5300
+name = "central product"
+
+[terms."proper-gluing"]
+tag = "001G"
+id = 5301
+name = "proper gluing"
+
+[terms."lemma-r"]
+tag = "001H"
+id = 5302
+name = "Lemma R"
+
+[terms."splitting-criterion"]
+tag = "001J"
+id = 5303
+name = "splitting criterion"
+
+[terms."reduction-to-two-generators"]
+tag = "001K"
+id = 5304
+name = "reduction to two generators"
+
+[terms."proposition-b1"]
+tag = "001L"
+id = 5305
+name = "Proposition B1"
+
+[terms."proposition-b2"]
+tag = "001M"
+id = 5306
+name = "Proposition B2"
+
+[terms."nonterminality-criterion-for-type-d-2-1"]
+tag = "001N"
+id = 5307
+name = "nonterminality criterion for type (d,2,1)"
+
+[terms."nonterminality-by-a-central-extension"]
+tag = "001P"
+id = 5308
+name = "nonterminality by a central extension"
+
+[terms."test-word"]
+tag = "001Q"
+id = 5309
+name = "test word"
+
+[terms."guptas-2002-claim"]
+tag = "001R"
+id = 5310
+name = "Gupta's 2002 claim"
+
+[terms."homomorphism-v-n"]
+tag = "001S"
+id = 5311
+name = "homomorphism v_n"
+
+[terms."filtration-along-the-derived-series"]
+tag = "001T"
+id = 5312
+name = "filtration along the derived series"
+
+[terms."partial-dimension-congruence"]
+tag = "001U"
+id = 5313
+name = "partial dimension congruence"
+
+[terms."free-presentation"]
+tag = "001V"
+id = 5314
+name = "free presentation"
+
+[terms."homotopical-chaos"]
+tag = "001W"
+id = 5315
+name = "homotopical chaos"
+
+[terms."curtis-spectral-sequences"]
+tag = "001X"
+id = 5316
+name = "Curtis spectral sequences"
+
+[terms."basis-of-uniqueness"]
+tag = "001Y"
+id = 5317
+name = "basis of uniqueness"
+
+[terms."admissible-tuple"]
+tag = "001Z"
+id = 5318
+name = "admissible tuple"
+
+[terms."filter-on-parents"]
+tag = "0020"
+id = 5319
+name = "filter on parents"
+
+[terms."exponent-3-condition"]
+tag = "0021"
+id = 5320
+name = "exponent-3 condition"
+
+[terms."axiom-audit"]
+tag = "0022"
+id = 5321
+name = "axiom audit"
+
+[terms."computer-paper"]
+tag = "0023"
+id = 5322
+name = "computer + paper"
+
+[terms."pbw-theorem"]
+tag = "0024"
+id = 5323
+name = "PBW theorem"
+
+[terms."dimension-subgroup-conjecture"]
+tag = "0034"
+id = 4448
+name = "dimension subgroup conjecture"
+
+[terms."ripss-abyss"]
+tag = "0035"
+id = 4449
+name = "Rips's abyss"
+
+[terms."s-n"]
+tag = "0036"
+id = 4450
+name = "s(n)"
+
+[terms."rips-group"]
+tag = "0037"
+id = 4451
+name = "Rips group"
+
+[terms."truncated-free-algebra"]
+tag = "0038"
+id = 4452
+name = "truncated free algebra"
+
+[terms."magnus-map"]
+tag = "0039"
+id = 4453
+name = "Magnus map"
+
+[terms."relator-ideal"]
+tag = "003A"
+id = 4454
+name = "relator ideal"
+
+[terms."variant-a"]
+tag = "003B"
+id = 4455
+name = "variant A"
+
+[terms."variant-b"]
+tag = "003C"
+id = 4456
+name = "variant B"
+
+[terms."howell-form"]
+tag = "003D"
+id = 4457
+name = "Howell form"
+
+[terms."exactness-certificate"]
+tag = "003E"
+id = 4458
+name = "exactness certificate"
+
+[terms."quillen-rank"]
+tag = "003F"
+id = 4459
+name = "Quillen rank"
+
+[terms."jennings-count"]
+tag = "003G"
+id = 4460
+name = "Jennings count"
+
+[terms."schreier-generators"]
+tag = "003H"
+id = 4461
+name = "Schreier generators"
+
+[terms."weight-cut-off"]
+tag = "003J"
+id = 4462
+name = "weight cut-off"
+
+[terms."sieve"]
+tag = "003K"
+id = 4463
+name = "sieve"
+
+[terms."standard-monomials"]
+tag = "003L"
+id = 4464
+name = "standard monomials"
+
+[terms."plateau-group"]
+tag = "003M"
+id = 4465
+name = "plateau group"
+
+[terms."cocyclic-quotient"]
+tag = "003N"
+id = 4466
+name = "cocyclic quotient"
+
+[terms."shifted-plateau"]
+tag = "003P"
+id = 4467
+name = "shifted plateau"
+
+[terms."f-met"]
+tag = "003Q"
+id = 4468
+name = "f_met"
+
+[terms."pairing-lemma"]
+tag = "003R"
+id = 4469
+name = "pairing lemma"
+
+[terms."pairing-multiplier"]
+tag = "003S"
+id = 4470
+name = "pairing multiplier"
+
+[terms."binomial-error"]
+tag = "003T"
+id = 4471
+name = "binomial error"
+
+[terms."carrier"]
+tag = "003U"
+id = 4472
+name = "carrier"
+
+[terms."quadratic-pairing"]
+tag = "003V"
+id = 4473
+name = "quadratic pairing"
+
+[terms."conjecture-h"]
+tag = "003W"
+id = 4474
+name = "conjecture H"
+
+[terms."central-test-for-all-k"]
+tag = "003X"
+id = 4475
+name = "central test for all K"
+
+[terms."dimension-subring"]
+tag = "003Y"
+id = 4476
+name = "dimension subring"
+
+[terms."l-n"]
+tag = "003Z"
+id = 4477
+name = "L'_N"
 
 # ---------------------------------------------------------------------------------------------
 # The rows of results.html, in their order.
