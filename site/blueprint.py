@@ -250,16 +250,36 @@ def tag_errors(data, base=None):
         by = t.get("superseded_by")
         if by and by not in current and by not in data["superseded"]:
             errors.append(f"superseded tag {old}: superseded_by {by} is not a tag of this file")
+    ids = {}
+    for slug, t in data["terms"].items():
+        ids.setdefault(t.get("id"), []).append(slug)
+    for i, slugs in ids.items():
+        if i is not None and len(slugs) > 1:
+            errors.append(f"the D5 term {i} is in [terms] twice: {', '.join(slugs)}")
     if base is not None:
         have = all_tags(data)
         for tag, (what, key) in all_tags(base).items():
             if tag not in have:
                 errors.append(f"the tag {tag} ({what} {key} of the base) has disappeared: a tag is never dropped "
                               "(a statement that changed keeps its old tag under [superseded])")
-        ids = {t.get("tag"): t.get("id") for t in data["terms"].values()}
-        for slug, t in base["terms"].items():
-            if t.get("tag") in ids and ids[t["tag"]] != t.get("id"):
-                errors.append(f"the tag {t['tag']} was the D5 term {t.get('id')} (term {slug} of the base), now {ids[t['tag']]}")
+                continue
+            now, key2 = have[tag]
+            if what == "term":
+                old_id = base["terms"][key].get("id")
+                if now != "term" or data["terms"][key2].get("id") != old_id:
+                    errors.append(f"the tag {tag} was the D5 term {old_id} (term {key} of the base), now "
+                                  + (f"{now} {key2}" if now != "term" else f"the D5 term {data['terms'][key2].get('id')}"))
+            elif what == "node":
+                # the same label; or the label was renamed (the old one is no longer a node); or the statement
+                # changed and the tag went to [superseded] with the old label
+                ok = ((now == "node" and (key2 == key or key not in data["nodes"]))
+                      or (now == "superseded" and data["superseded"][key2].get("label") == key))
+                if not ok:
+                    errors.append(f"the tag {tag} was node {key} in the base, now {now} {key2}: a tag never "
+                                  "passes to another statement or term")
+            elif what == "superseded":
+                if now != "superseded" or data["superseded"][key2].get("label") != base["superseded"][key].get("label"):
+                    errors.append(f"the superseded tag {tag} ({base['superseded'][key].get('label')}) of the base is now {now} {key2}")
     return errors
 
 

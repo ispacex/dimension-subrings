@@ -1888,7 +1888,7 @@ def main():
     check_registry()
     print("registry set", EMBED_SET[:8], "read:", len(REGISTRY["terms"]), "terms,", len(REGISTRY["claims"]), "claims, sha256",
           hashlib.sha256(json.dumps([REGISTRY, REGISTRY_RU], sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12],
-          "(with the English texts)")
+          "(with the Russian texts)")
     pdate = paper_date()
     date = fmt_date(max(pdate, TIMELINE[-1][0]))
     paper = {lang: read_abstract(PAPER / f"{PDF[lang]}.tex") for lang in LANGS}
