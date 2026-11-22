@@ -106,7 +106,7 @@ def load():
         if unknown:
             sys.exit(f"blueprint.toml: term {slug}: unknown fields {sorted(unknown)}")
     for old, t in data["superseded"].items():
-        unknown = set(t) - {"superseded_by", "label", "text"}
+        unknown = set(t) - {"superseded_by", "deleted", "label", "text"}
         if unknown:
             sys.exit(f"blueprint.toml: superseded tag {old}: unknown fields {sorted(unknown)}")
     return data
@@ -241,9 +241,13 @@ def tag_errors(data, base=None):
             used.setdefault(t["tag"], []).append(f"term {slug}")
     for old, t in data["superseded"].items():
         used.setdefault(old, []).append(f"superseded {old}")
-        for f in ("superseded_by", "label", "text"):
+        # replaced by another tag (superseded_by), or its statement or term removed without a
+        # replacement (deleted = true); never both
+        for f in ("label", "text"):
             if not t.get(f):
                 errors.append(f"superseded tag {old} has no {f}")
+        if bool(t.get("superseded_by")) == (t.get("deleted") is True):
+            errors.append(f"superseded tag {old} needs exactly one of superseded_by and deleted = true")
     for tag, where in used.items():
         if not isinstance(tag, str) or not TAG.fullmatch(tag):
             errors.append(f"{', '.join(where)}: {tag!r} is not a tag (four characters 0-9 A-Z without I and O, no prefix)")
@@ -270,7 +274,9 @@ def tag_errors(data, base=None):
             now, key2 = have[tag]
             if what == "term":
                 old_id = base["terms"][key].get("id")
-                if now != "term" or data["terms"][key2].get("id") != old_id:
+                if now == "superseded" and data["superseded"][key2].get("label") == key:
+                    pass  # the term changed or was deleted: its tag went to [superseded] with the slug as label
+                elif now != "term" or data["terms"][key2].get("id") != old_id:
                     errors.append(f"the tag {tag} was the D5 term {old_id} (term {key} of the base), now "
                                   + (f"{now} {key2}" if now != "term" else f"the D5 term {data['terms'][key2].get('id')}"))
             elif what == "node":
@@ -307,7 +313,7 @@ def d5_tags(src):
     else:
         answer = json.loads(pathlib.Path(src).read_text())
     tags = answer.get("tags") if isinstance(answer, dict) else None
-    if answer.get("project") != "D5" or not isinstance(tags, list) or answer.get("total") != len(tags):
+    if not isinstance(tags, list) or answer.get("project") != "D5" or answer.get("total") != len(tags):
         sys.exit(f"{src} is not the list of tags of the project D5 (GET /api/projects/D5/tags)")
     return tags
 
@@ -319,11 +325,14 @@ def d5_errors(data, entries):
       label the claim has, a current one of a term the tag of the term with that D5 id (and its word);
       no object has two tags, and no tag passes to another object.
     * A tag the registry has superseded (supersededBy) is under [superseded] here, with the same
-      superseded_by; a tag of a deleted object (gone) is not a current tag here, it is under [superseded].
+      superseded_by; a tag of an object deleted there without a replacement (gone) is under
+      [superseded] with deleted = true; either way its label (a node's label, a term's slug) names the
+      registry's object.
     * Every term of the file is in the registry (it has a D5 id); a node may not be there yet: the
       claims of the register are synced from the paper separately (wiki 912, stage 3), so only a count
       of them is reported (d5_missing).
-    * Every tag of [superseded] that the registry has is superseded there by the same tag."""
+    * Every tag of [superseded] that the registry has is superseded or deleted there; one it lacks is an
+      error for a term and counted (d5_missing) for a statement."""
     if not entries:
         return ["the D5 registry has no tags (has the API changed?)"]
     errors, reg = [], {}
@@ -346,10 +355,16 @@ def d5_errors(data, entries):
             if here != "superseded":
                 errors.append(f"D5:{t} is {here} {key} here, but the D5 registry has "
                               + (f"superseded it by D5:{by}" if by else "deleted its " + kind)
-                              + ": it belongs under [superseded]" + (f" with superseded_by = \"{by}\"" if by else ""))
-            elif by and data["superseded"][key].get("superseded_by") != by:
-                errors.append(f"D5:{t} is superseded by D5:{data['superseded'][key].get('superseded_by')} here, "
-                              f"by D5:{by} in the D5 registry")
+                              + ": it belongs under [superseded]"
+                              + (f" with superseded_by = \"{by}\"" if by else " with deleted = true"))
+                continue
+            sup = data["superseded"][key]
+            mine = sup.get("superseded_by")
+            if mine != by:
+                errors.append(f"D5:{t} is " + (f"superseded by D5:{mine}" if mine else "deleted") + " here, "
+                              + (f"superseded by D5:{by}" if by else "deleted without a replacement") + " in the D5 registry")
+            if not same_object(kind, name, sup.get("label") or ""):
+                errors.append(f"D5:{t} (superseded) stood for {sup.get('label')} here, for the {kind} {name!r} in the D5 registry")
             continue
         if kind == "claim":
             if here != "node" or key != name:
@@ -377,16 +392,30 @@ def d5_errors(data, entries):
             errors.append(f"D5:{term.get('tag')} (term {slug}, D5 term {term.get('id')}) is not in the D5 registry")
     for old, s in data["superseded"].items():
         e = reg.get(old)  # a different supersededBy is reported above
-        if e is not None and not e.get("supersededBy") and not e.get("gone"):
+        if e is None and ":" not in (s.get("label") or ":"):  # a term's (its label is the slug, no ':')
+            errors.append(f"D5:{old} (superseded, term {s.get('label')}) is not in the D5 registry")
+        elif e is not None and not e.get("supersededBy") and not e.get("gone"):
             errors.append(f"D5:{old} is superseded here (by D5:{s.get('superseded_by')}), but current in the D5 registry "
                           f"({e.get('kind')} {e.get('name')!r})")
     return errors
 
 
 def d5_missing(data, entries):
-    """The nodes of the file whose tags the D5 registry does not have yet (no claim there)."""
+    """The nodes of the file whose tags the D5 registry does not have yet (no claim there), and the
+    superseded tags of statements it does not have (as "<tag> (superseded)")."""
     reg = {e.get("tag") for e in entries}
-    return sorted(label for label, n in data["nodes"].items() if n.get("tag") not in reg)
+    return (sorted(label for label, n in data["nodes"].items() if n.get("tag") not in reg)
+            + sorted(f"{old} (superseded)" for old, s in data["superseded"].items()
+                     if old not in reg and ":" in (s.get("label") or ":")))
+
+
+def same_object(kind, name, label):
+    """Whether the registry's object (a claim by its label, a term by its word) is the one a [superseded]
+    entry names (a node's label; a term's slug, compared by letters and digits only)."""
+    if kind == "claim":
+        return name == label
+    alnum = lambda w: re.sub(r"[^0-9a-z]", "", plain(w))  # noqa: E731
+    return alnum(name or "") == alnum(label)
 
 
 # ---------------------------------------------------------------------------------------------
