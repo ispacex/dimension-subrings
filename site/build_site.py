@@ -25,7 +25,8 @@ settles each (order, rank); nothing is computed anew. The output is a static sit
 SVG, KaTeX from jsDelivr, the two PDFs) published from the public repository ispacex/d5 via GitHub
 Pages; the code that makes it is this file and the page of the PDF viewer, site/viewer.html. The
 definitions and main statements (definitions.html, and the clouds over marked words) are read from the
-tracker's registry at build time, and the build needs the network for them (EMBED_SET below).
+tracker's registry at build time (the public project D5, MATH-457), and the build needs the network
+for them (EMBED_SET below).
 
 Links into the paper. The drafts are compiled with hyperref's `destlabel`, so every \\label is a named
 destination of the PDF under its own name (`thm:small`, `prop:reduction`, `sec:three`); sections
@@ -777,34 +778,38 @@ OPEN = [  # (id, ru, en, task): the id is the anchor on open.html; task is the D
      "Central products glued along a proper subgroup when $\\sigma$ is not a $2^{j+1}$-th power: $12$ of the $212$ splittings of candidates of orders $2^8$–$2^9$ are covered by nothing. A projection to $H$ cannot do it in general: for $D_8\\circ_{\\langle t\\rangle}M_{16}$ the ring equality fails at $n=4,5$.", "D5-8"),
 ]
 
-# Definitions and main statements from the tracker's registry (MATH-316). The project MATH of the tracker
-# keeps a register of terms and of the paper's claims (label, number, statement, status); the set
-# EMBED_SET puts a hand-picked list of them out. The set is public data: CORS lets browsers read it only
-# on this origin, but anyone may fetch it. They come in twice: the build reads the set (registry()) and writes its texts into
+# Definitions and main statements from the tracker's registry (MATH-316, MATH-457). The public project
+# D5 of the tracker (math.kaiku.tech) keeps a register of terms and of the paper's claims (label, number,
+# statement, status), each with its permanent tag (D5 page 911; the tags are in site/blueprint.toml); the
+# set EMBED_SET puts a hand-picked list of them out: the 13 terms and 14 claims this site showed from the
+# project MATH (its set no. 1) until MATH-457. The set is public data: CORS lets browsers read it only on
+# this origin, but anyone may fetch it. They come in twice: the build reads the set (registry()) and writes its texts into
 # definitions.html, so the page has them without scripts and in the search; and embed_script(), the
 # tracker's script, opens the current text of a term or claim in a cloud over every mark
-#     <span data-kaiku-term="кандидат">…</span>    <span data-kaiku-claim="thm:g4cube">…</span>
-# (term(), claim_mark()). A term is named by its word or a spelling of it, a claim by its label. The texts
-# are the registry's, in Russian, each checked against the paper when it was put into the set; the build
+#     <span data-kaiku-term="candidate">…</span>    <span data-kaiku-claim="thm:g4cube">…</span>
+# (term(), claim_mark()). A term is named by its word or a spelling of it (in D5 the words are English),
+# a claim by its label. The texts are the registry's, in English, the language of D5, each checked
+# against the paper when it was put into the set (MATH-316, MATH-455); the build
 # checks only that a claim's number is the number of its label in the .aux and that every mark names an
-# entry of the set: references inside the texts ("лемма 5.2") are not checked, so a renumbering of the
+# entry of the set: references inside the texts ("Lemma 5.2") are not checked, so a renumbering of the
 # paper means a look at the registry. The site is then no longer a function of the commits alone: the
 # build prints a hash of the set it read. kaiku.js is our tracker's own script, loaded without SRI on
 # the pages with marks. SCENE is the anim
-# scene of the MATH wiki page 899, one block per language (its embed id, the caption, the frame's
+# scene of the MATH wiki page 899 (on the tracker SCENE_ORIGIN), one block per language (its embed id, the caption, the frame's
 # title), shown in a frame the tracker serves only to this origin.
-# The English pages show the tracker's machine translations of the texts (PM-1373): the build reads the
-# set a second time with ?lang=en (REGISTRY_EN) and the clouds ask for English (data-kaiku-lang="en" on
-# the script). A translation is made by the tracker off the request, so the first request after a text
-# changes may answer "pending": the build then stops (run it again in a few minutes) rather than publish
-# the Russian text or an outdated translation on an English page. Every machine-translated text carries
-# the tracker's note ("Machine-translated from Russian"), on the page as in the cloud.
-EMBED_ORIGIN = "https://default.kaiku.tech"
-EMBED_SET = "b05bdc8cc4fcbe702bbb57f83374b96502b3ffa34bdc6bfd"
+# The Russian pages show the registry's Russian translations of the texts (PM-1373): the build reads the
+# set a second time with ?lang=ru (REGISTRY_RU) and the clouds ask for Russian (data-kaiku-lang="ru" on
+# the script). The Russian texts of the set are people's translations; if one were a machine's, made by
+# the tracker off the request, the first request after a text changes may answer "pending": the build then
+# stops (run it again in a few minutes) rather than publish the English text or an outdated translation
+# on a Russian page, and a machine-translated text carries the tracker's note, on the page as in the cloud.
+EMBED_ORIGIN = "https://math.kaiku.tech"
+EMBED_SET = "407041d4b2010d0b86f47ae87156e8256ffa27d241107ada"  # D5, set no. 2 "D5 site (ispacex.github.io/d5)"
+SCENE_ORIGIN = "https://default.kaiku.tech"  # the scene stays on the MATH wiki (page 899)
 
 
 def embed_script(lang):
-    ask = ' data-kaiku-lang="en"' if lang == "en" else ""
+    ask = ' data-kaiku-lang="ru"' if lang == "ru" else ""
     return f'<script src="{EMBED_ORIGIN}/embed/kaiku.js" data-kaiku-set="{EMBED_SET}"{ask} async></script>'
 
 
@@ -816,11 +821,17 @@ SCENE = {"ru": ("112e0a885b56ad8911a65c34f33c488546ef849be52dcc48",
                 "The lower central series, dimension subgroups and the question D₅ ⊆ γ₄")}
 OPEN_CLAIM = {"q-main": "q:main", "q-tahara": "oq:torsion", "q-theoremc": "oq:theoremc"}  # open.html id -> claim
 CLAIM_STATUS = {"paper": "p", "computer": "c", "open": "o", "lean": "l"}
-REGISTRY = {}  # the set as the tracker gives it: {"terms": [...], "claims": [...]}, filled by main()
-REGISTRY_EN = {}  # the same set with its texts in English (?lang=en), filled by main()
-# the English words of the set's terms that have no English spelling in the registry, as the paper writes them
-TERM_EN = {"коммутатор": "commutator", "подгруппы Дженнингса": "Jennings subgroups", "мультипликатор": "multiplier",
-           "кандидат": "candidate", "тип нижнего центрального ряда": "type (of the lower central series)"}
+REGISTRY = {}  # the set as the tracker gives it, in English: {"terms": [...], "claims": [...]}, filled by main()
+REGISTRY_RU = {}  # the same set with its texts in Russian (?lang=ru), filled by main()
+# the Russian words of the set's terms (the registry translates the definitions, not the words), as the
+# Russian page wrote them from the project MATH
+TERM_RU = {"dimension subgroup": "Размерные подгруппы", "augmentation ideal": "аугментационный идеал",
+           "lower central series": "Нижний центральный ряд", "commutator": "коммутатор",
+           "Jennings subgroups": "подгруппы Дженнингса",
+           "lower exponent-p central series": "нижний экспоненциально-$p$-центральный ряд",
+           "p-covering group": "$p$-накрывающая группа", "multiplier": "мультипликатор",
+           "nucleus": "ядро $p$-накрывающей группы", "immediate descendant": "непосредственный потомок",
+           "candidate": "кандидат", "lower central type": "тип нижнего центрального ряда", "Problem 20.84": "Задача $D_5$"}
 
 
 def registry(lang=None):
@@ -840,22 +851,32 @@ def registry(lang=None):
 
 def check_registry():
     """Every claim of the set is a label of both drafts, with the same number (an open question of §7 is
-    numbered there "§7, п. 2", the section being that of sec:open, and in the .aux "2")."""
+    numbered there "§7, item 2", the section being that of sec:open, and in the .aux "2"); every term has
+    its Russian word in TERM_RU."""
     sec = paper_entry("sec:open", "en")[1]
     for c in REGISTRY["claims"]:
         number = paper_entry(c["label"], "en")[1]
         want = c["number"]
-        m = re.fullmatch(r"§(\d+), п\. (\d+)", want or "")
+        m = re.fullmatch(r"§(\d+), (?:item|п\.) (\d+)", want or "")
         if (m.group(2) if m and m.group(1) == sec else want) != number:
             sys.exit(f"the registry gives {c['label']} the number {want!r}, the .aux of {PDF['en']}.tex {number!r}")
-    # the English set: the same entries in the same order, each translated and up to date
+    for x in REGISTRY["terms"]:
+        if x["name"] not in TERM_RU:
+            sys.exit(f"the term {x['name']!r} has no Russian word: add it to TERM_RU")
+    # the set as written is English (D5's own language), not a translation
     for kind, key in (("terms", "name"), ("claims", "label")):
-        ru, en = REGISTRY[kind], REGISTRY_EN.get(kind) or []
-        if [x[key] for x in ru] != [x[key] for x in en]:
-            sys.exit(f"the English registry set lists other {kind} than the Russian one")
-        for x in en:
-            if x.get("translation") not in ("machine", "human") or x.get("lang") != "en" or x.get("translationOutdated"):
-                sys.exit(f"the English text of {x[key]!r} is {x.get('translation')!r}"
+        for x in REGISTRY[kind]:
+            if x.get("translation") or x.get("machineTranslated") or x.get("lang") not in (None, "en"):
+                sys.exit(f"the registry set gives {x[key]!r} as a translation ({x.get('translation')!r}, "
+                         f"{x.get('lang')!r}), not as written in English")
+    # the Russian set: the same entries in the same order, each translated and up to date
+    for kind, key in (("terms", "name"), ("claims", "label")):
+        en, ru = REGISTRY[kind], REGISTRY_RU.get(kind) or []
+        if [x[key] for x in en] != [x[key] for x in ru]:
+            sys.exit(f"the Russian registry set lists other {kind} than the English one")
+        for x in ru:
+            if x.get("translation") not in ("machine", "human") or x.get("lang") != "ru" or x.get("translationOutdated"):
+                sys.exit(f"the Russian text of {x[key]!r} is {x.get('translation')!r}"
                          f"{' (outdated)' if x.get('translationOutdated') else ''}: the tracker translates it in the "
                          "background, build again in a few minutes")
             if (x.get("translation") == "machine" or x.get("machineTranslated")) and not x.get("translationNote"):
@@ -864,10 +885,10 @@ def check_registry():
 
 def registry_text(kind, i, lang):
     """The entry number i of the set in the page's language: (item, lang of its text, its note or "")."""
-    if lang == "en":
-        x = REGISTRY_EN[kind][i]
-        return x, "en", x.get("translationNote") or ""  # check_registry: an English translation
-    return REGISTRY[kind][i], "ru", ""
+    if lang == "ru":
+        x = REGISTRY_RU[kind][i]
+        return x, "ru", x.get("translationNote") or ""  # check_registry: a Russian translation
+    return REGISTRY[kind][i], "en", ""
 
 
 def note(s):
@@ -896,7 +917,7 @@ def claim_mark(label, text):
 
 def scene(lang):
     sid, caption, title = SCENE[lang]
-    return (f'<figure class="scene"><iframe src="{EMBED_ORIGIN}/embed/anim/{sid}" width="640" height="460" '
+    return (f'<figure class="scene"><iframe src="{SCENE_ORIGIN}/embed/anim/{sid}" width="640" height="460" '
             f'title="{html.escape(title)}" loading="lazy" allowfullscreen></iframe>'
             f'<figcaption>{caption}</figcaption></figure>')
 
@@ -1863,11 +1884,11 @@ def main():
     if BLUEPRINT:
         copy_blueprint(tex)
     REGISTRY.update(registry())
-    REGISTRY_EN.update(registry("en"))
+    REGISTRY_RU.update(registry("ru"))
     check_registry()
     print("registry set", EMBED_SET[:8], "read:", len(REGISTRY["terms"]), "terms,", len(REGISTRY["claims"]), "claims, sha256",
-          hashlib.sha256(json.dumps([REGISTRY, REGISTRY_EN], sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12],
-          "(with the English texts)")
+          hashlib.sha256(json.dumps([REGISTRY, REGISTRY_RU], sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12],
+          "(with the Russian texts)")
     pdate = paper_date()
     date = fmt_date(max(pdate, TIMELINE[-1][0]))
     paper = {lang: read_abstract(PAPER / f"{PDF[lang]}.tex") for lang in LANGS}
@@ -1900,8 +1921,8 @@ def site(lang, date, paper, pdfs, pdate):
     qmark = claim_mark("q:main", t("Верно ли $D_5(G)\\subseteq\\gamma_4(G)$ для всякой группы?",
                                    "Is $D_5(G)\\subseteq\\gamma_4(G)$ for every group?"))
     P("index.html", t("Задача о $D_5$: где мы сейчас", "The $D_5$ problem: where we are"), t(f"""
-<div class="box"><p><b>Вопрос</b> (Коуровская тетрадь, задача 20.84). Пусть $\\Delta$&nbsp;— {term("аугментационный идеал", "фундаментальный идеал")} $\\mathbb Z[G]$,
-$D_n(G)=G\\cap(1+\\Delta^n)$&nbsp;— {term("Размерные подгруппы", "размерные подгруппы")}, $\\gamma_n(G)$&nbsp;— {term("Нижний центральный ряд", "нижний центральный ряд")}. Всегда $\\gamma_n\\subseteq D_n$,
+<div class="box"><p><b>Вопрос</b> (Коуровская тетрадь, задача 20.84). Пусть $\\Delta$&nbsp;— {term("augmentation ideal", "фундаментальный идеал")} $\\mathbb Z[G]$,
+$D_n(G)=G\\cap(1+\\Delta^n)$&nbsp;— {term("dimension subgroup", "размерные подгруппы")}, $\\gamma_n(G)$&nbsp;— {term("lower central series", "нижний центральный ряд")}. Всегда $\\gamma_n\\subseteq D_n$,
 и $D_n=\\gamma_n$ при $n\\le3$; при $n=4$ это неверно (Рипс). <b>{qmark}</b></p>
 <p>Определения и основные утверждения статьи (из реестра трекера; подчёркнутые слова открываются при наведении или нажатии)&nbsp;— на странице <a href="definitions.html">«Определения»</a>.</p>
 <p>Для колец Ли ответ «да» (Ионин, Михайлов, Петров, 2026, с формализацией в Lean). Для групп вопрос открыт;
@@ -1972,7 +1993,7 @@ No cell is open here any more: order $2^{11}$ is settled for every rank (Proposi
       + grid(range(4, 12), range(2, 10), cover2, 2, lang, highlight=()) + legend(lang) + t("""
 <ul>
 <li>До $2^8$&nbsp;— решётка $\\Delta^n$ для всех групп; $2^9$&nbsp;— сито Дженнингса и решётка.</li>
-<li>$2^{10}$&nbsp;— лемма о минимальном контрпримере: достаточно шаг-$1$ потомков групп порядка $2^9$ (ANUPQ), $3400$ """ + term("кандидат", "кандидатов") + """.</li>
+<li>$2^{10}$&nbsp;— лемма о минимальном контрпримере: достаточно шаг-$1$ потомков групп порядка $2^9$ (ANUPQ), $3400$ """ + term("candidate", "кандидатов") + """.</li>
 <li>$2^{11}$&nbsp;— то же с отсечением целых поддеревьев; кандидатов ранга $\\ge8$ нет: у всякого кандидата $|\\Phi(Q)|\\ge16$ (предложение [[prop:rank8|#]]).</li>
 </ul>
 <h2 id="c3">$3$-группы: $D_5(Q)=\\gamma_5(Q)$?</h2>
@@ -1982,7 +2003,7 @@ $\\ge3^{d+5}$ (предложение [[prop:metab|#]]); при $d=2$ факто
 Открытые клетки заштрихованы: в них доказан случай, когда $\\gamma_2/\\gamma_3$ имеет экспоненту $3$ (теорема [[thm:exp3gen|#]]).</p>""", """
 <ul>
 <li>Up to $2^8$: the lattice $\\Delta^n$ for all groups; $2^9$: the Jennings sieve and the lattice.</li>
-<li>$2^{10}$: the minimal-counterexample lemma reduces to step-$1$ descendants of groups of order $2^9$ (ANUPQ), $3400$ """ + term("кандидат", "candidates") + """.</li>
+<li>$2^{10}$: the minimal-counterexample lemma reduces to step-$1$ descendants of groups of order $2^9$ (ANUPQ), $3400$ """ + term("candidate", "candidates") + """.</li>
 <li>$2^{11}$: the same, with whole subtrees cut; there are no candidates of rank $\\ge8$: every candidate has $|\\Phi(Q)|\\ge16$ (Prop. [[prop:rank8|#]]).</li>
 </ul>
 <h2 id="c3">$3$-groups: is $D_5(Q)=\\gamma_5(Q)$?</h2>
@@ -2019,12 +2040,8 @@ Magnus algebra, with the exactness certificate); <span class="tag p">paper</span
     defs = []
     for i, x0 in enumerate(REGISTRY["terms"]):
         x, xl, xn = registry_text("terms", i, lang)
-        # the mark names the registry's (Russian) word; the English page shows the paper's English word: the
-        # registry's English spelling if it has one, else TERM_EN
-        word = x0["name"] if lang != "en" else TERM_EN.get(x0["name"]) or next(
-            (v for v in x0.get("variants", []) if not re.search("[а-яё]", v, re.I)), None)
-        if not word:
-            sys.exit(f"the term {x0['name']!r} has no English word: add it to TERM_EN")
+        # the mark names the registry's (English) word; the Russian page shows the Russian word of TERM_RU
+        word = TERM_RU[x0["name"]] if lang == "ru" else x0["name"]
         defs.append(f'<dt>{term(x0["name"], html.escape(word, quote=False))}</dt>'
                     f'<dd lang="{xl}">{registry_md(x["definition"])}{note(xn)}</dd>')
     defs = "".join(defs)
@@ -2038,16 +2055,17 @@ Magnus algebra, with the exactness certificate); <span class="tag p">paper</span
                       f'<span lang="{cl}">{claim_mark(c["label"], html.escape(c["title"] or ""))}</span> '
                       f'{tag(CLAIM_STATUS[c0["status"]], lang)}</p><div class="st" lang="{cl}">{registry_md(c["statement"])}{note(cn)}</div></div>')
     P("definitions.html", t("Определения и основные утверждения", "Definitions and main statements"), t("""
-<p>Термины и утверждения статьи, как они записаны в реестре проекта MATH нашего трекера на момент сборки сайта. Каждый текст
-был сверен со статьёй (<a href="paper.html">версия на этом сайте</a>), когда его добавляли в этот набор; при сборке проверяется,
+<p>Термины и утверждения статьи, как они записаны в реестре открытого проекта <a href="https://math.kaiku.tech/board/D5">D5</a> нашего трекера на момент сборки сайта;
+у каждого есть постоянный тег (<a href="https://math.kaiku.tech/wiki/D5?page=911">список тегов</a>). Реестр ведётся по-английски;
+здесь&nbsp;— его русские переводы (<a href="../definitions.html" hreflang="en">английская страница</a>&nbsp;— с оригиналами). Каждый текст
+был сверен со статьёй (<a href="paper.html">версия на этом сайте</a>), когда его добавляли в реестр; при сборке проверяется,
 что номера утверждений совпадают с номерами в статье. Подчёркнутое слово открывает (при наведении или нажатии) облако с текущей
-записью реестра; так же размечены слова на других страницах сайта. Номер утверждения открывает статью на нём.</p>""", """
-<p>Terms and statements of the paper as they are written in the register of the project MATH of our tracker when the site was
-built. Each text was checked against the paper (<a href="paper.html">the version on this site</a>) when it was added to this set; the
-build checks that the numbers of the statements are those of the paper. The registry is kept in Russian; the texts below are the
-tracker's translations of its entries, a machine translation marked as such (the <a href="ru/definitions.html" hreflang="ru">Russian page</a>
-has the originals). The formulas and the numbers are those of the English draft too. An underlined word opens (on hover or tap) a
-cloud with the current registry entry, in English as well; the number of a statement opens the paper at it.</p>""")
+записью реестра, тоже по-русски; так же размечены слова на других страницах сайта. Номер утверждения открывает статью на нём.</p>""", """
+<p>Terms and statements of the paper as they are written in the register of the public project <a href="https://math.kaiku.tech/board/D5">D5</a> of our tracker when the site was
+built; each has a permanent tag (<a href="https://math.kaiku.tech/wiki/D5?page=911">the list of tags</a>). Each text was checked against the paper (<a href="paper.html">the version on this site</a>) when it was added to the registry; the
+build checks that the numbers of the statements are those of the paper. The registry is kept in English; the
+<a href="ru/definitions.html" hreflang="ru">Russian page</a> shows its Russian translations. An underlined word opens (on hover or tap) a
+cloud with the current registry entry; the number of a statement opens the paper at it.</p>""")
       + scene(lang)
       + t("<h2 id=\"terms\">Определения</h2>", "<h2 id=\"terms\">Definitions</h2>") + f'<dl class="terms">{defs}</dl>'
       + t("<h2 id=\"claims\">Основные утверждения и открытые вопросы</h2>", "<h2 id=\"claims\">Main statements and open questions</h2>")
@@ -2076,7 +2094,8 @@ cloud with the current registry entry, in English as well; the number of a state
                  "lean-statement": ("l", t("Lean: часть", "Lean: part") if n["computer"]
                                     else t("Lean: формулировка", "Lean: statement")),
                  "computer": ("c", t("компьютер", "computer")),
-                 "paper": ("p", t("на бумаге", "paper"))}[st["status"]]
+                 "paper": ("p", t("на бумаге", "paper")),
+                 "open": ("o", t("открыто", "open"))}[st["status"]]
         extra = t(" + компьютер", " + computer") if n["computer"] and st["status"].startswith("lean") else ""
         return f'<span class="tag {words[0]}">{words[1]}{extra}</span>'
 
@@ -2094,12 +2113,14 @@ cloud with the current registry entry, in English as well; the number of a state
         facets = (("type", t("Тип", "Type"), kinds,
                    {"theorem": t("теорема", "theorem"), "proposition": t("предложение", "proposition"),
                     "lemma": t("лемма", "lemma"), "corollary": t("следствие", "corollary"),
-                    "question": t("вопрос", "question"), "remark": t("замечание", "remark"),
+                    "question": t("вопрос", "question"), blueprint.OPENQ: t("открытый вопрос", "open question"),
+                    "remark": t("замечание", "remark"),
                     "ext": t("литература", "literature"), "own": t("вне статьи", "not in the paper")}),
                   ("status", t("Статус", "Status"), sts,
                    {"lean": t("Lean", "Lean"), "lean-given": t("Lean при условии", "Lean, given"),
                     "lean-statement": t("Lean: формулировка или часть", "Lean: statement or part"),
-                    "computer": t("компьютер", "computer"), "paper": t("на бумаге", "paper")}))
+                    "computer": t("компьютер", "computer"), "paper": t("на бумаге", "paper"),
+                    "open": t("открыто", "open")}))
         out = ""
         for key, label, vals, names in facets:
             unknown = set(vals) - set(names)

@@ -7,6 +7,9 @@
 #         It also compares the attribute @[d5 ...] of the package (MATH-453; `#d5_tags`, printed by
 #         groups/D5Tags.lean) with the nodes: the (label, declaration) pairs must be the same, so a
 #         tag in the code cannot drift from blueprint.toml, which stays the source of truth;
+#   tags: the permanent tags of blueprint.toml (MATH-457, wiki 912 §4.1): four characters 0-9 A-Z
+#         without I and O, each used once, none of the base of the PR (or of the commit before a push)
+#         gone, and the same as on the public D5 page 911 (math.kaiku.tech); with negative controls;
 #   web:  the leanblueprint pages build (plasTeX, versions pinned in site/blueprint-requirements.txt).
 #         The paper is not in this repository, so here the statements are placeholders; the pages
 #         on the site are built with the paper (site/build_site.py --blueprint).
@@ -18,16 +21,75 @@ on:
     branches: [main]
     paths: ['site/blueprint*', 'groups', '.github/workflows/blueprint.yml']
   workflow_dispatch:
+  # daily: page 911 of D5 is edited on the tracker, where no PR runs this; only the job tags runs then
+  schedule:
+    - cron: '17 5 * * *'
 permissions:
   contents: read
 jobs:
   data:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: git submodule update --init groups
       - run: python3 site/blueprint.py check
+  tags:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: the tags (format, used once, none gone since the base, the same as on D5 page 911)
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          set -euo pipefail
+          args=()
+          if [ -n "$BASE" ] && [ "$BASE" != 0000000000000000000000000000000000000000 ]; then
+            git fetch -q --depth=1 origin "$BASE"
+            git show "$BASE:site/blueprint.toml" > base.toml
+            args=(--base base.toml)
+          else
+            echo "no base commit: the check that no tag is gone is skipped"
+          fi
+          curl -fsS --retry 3 -A d5-blueprint-check -H 'Accept: application/json' https://math.kaiku.tech/api/wiki/pages/911 > page911.json
+          python3 site/blueprint.py tagcheck "${args[@]}" --d5 page911.json
+      - name: negative controls (a malformed tag, a tag used twice, a lost tag, a tag D5 gives to another label, a tag D5 has and the file not, swapped tags, a D5 term twice)
+        run: |
+          set -euo pipefail
+          T=site/blueprint.toml
+          check() {  # check MESSAGE ARGS...: the tag check must fail, with MESSAGE
+            msg=$1; shift
+            if python3 site/blueprint.py tagcheck "$@" > neg.out 2>&1; then echo "::error::the tag check passes $*"; exit 1; fi
+            cat neg.out
+            grep -qF "$msg" neg.out || { echo "::error::the tag check of $* fails for another reason"; exit 1; }
+          }
+          sed 's/^tag = "000E"$/tag = "000O"/' $T > bad-format.toml
+          sed 's/^tag = "000F"$/tag = "000E"/' $T > bad-twice.toml
+          sed 's/^tag = "0003"$/tag = "ZZZZ"/' $T > bad-lost.toml
+          # a tag that passes to another object: q:main and commutator swap tags, here and on the page
+          sed -e 's/^tag = "000E"$/tag = "@@"/' -e 's/^tag = "0003"$/tag = "000E"/' -e 's/^tag = "@@"$/tag = "0003"/' $T > bad-swap.toml
+          sed -e 's/`D5:000E`/`D5:@@`/' -e 's/`D5:0003`/`D5:000E`/' -e 's/`D5:@@`/`D5:0003`/' page911.json > page-swap.json
+          sed 's/^id = 5221$/id = 4444/' $T > bad-id.toml
+          python3 - <<'PY'
+          import re
+          s = open("site/blueprint.toml").read()
+          open("bad-missing.toml", "w").write(re.sub(r'\[terms\."commutator"\]\ntag = "0003"\nid = 5221\nname = "commutator"\n', "", s))
+          PY
+          sed 's/`oq:torsion`/`oq:main`/' page911.json > page-other.json
+          for f in bad-format bad-twice bad-lost bad-missing bad-swap bad-id; do cmp -s $T $f.toml && { echo "::error::$f.toml is not changed"; exit 1; }; done
+          cmp -s page911.json page-other.json && { echo "::error::page-other.json is not changed"; exit 1; }
+          cmp -s page911.json page-swap.json && { echo "::error::page-swap.json is not changed"; exit 1; }
+          python3 site/blueprint.py tagcheck --data bad-swap.toml --d5 page-swap.json  # consistent with the page: only the base catches it
+          check 'is not a tag' --data bad-format.toml
+          check 'is used twice' --data bad-twice.toml
+          check 'has disappeared' --data bad-lost.toml --base $T
+          check 'but D5 page 911 gives it to' --d5 page-other.json
+          check 'is on D5 page 911 but not in blueprint.toml' --data bad-missing.toml --d5 page911.json
+          check 'a tag never passes to another statement or term' --data bad-swap.toml --base $T --d5 page-swap.json
+          check 'is in [terms] twice' --data bad-id.toml
+          echo "negative controls: a malformed, a doubled, a lost tag, one D5 gives to another label, one only D5 has, two tags swapped, a D5 term twice: all fail, as they should"
   lean:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -57,7 +119,7 @@ jobs:
           lake build GroupDimension GroupDimension.Cert1024.Prop1024
           lake env lean D5Tags.lean 2>&1 | tee tags.log
           python3 ../site/blueprint.py tags tags.log
-      - name: negative controls (a missing tag, an extra label, an unregistered D5 tag must fail)
+      - name: negative controls (a missing tag, an extra label, a D5 tag no node has must fail)
         working-directory: groups
         run: |
           # drop the last tag line; add a wrong label and an unregistered tag to a real tagged declaration;
@@ -66,7 +128,8 @@ jobs:
           n=$(grep -n '"key":' tags.log | tail -1 | cut -d: -f1)
           sed "${n}d" tags.log > tags-missing.log
           { cat tags.log; echo "{\"key\":\"thm:no_such_label\",\"decl\":\"$d\",\"comment\":\"\"}"; } > tags-extra.log
-          { cat tags.log; echo "{\"key\":\"D5:000P\",\"decl\":\"$d\",\"comment\":\"\"}"; } > tags-tag.log
+          # D5:ZZZZ is a well-formed tag that no node has (D5:000P, the tag of thm:g4cube, would be read as its label)
+          { cat tags.log; echo "{\"key\":\"D5:ZZZZ\",\"decl\":\"$d\",\"comment\":\"\"}"; } > tags-tag.log
           check() {
             if python3 ../site/blueprint.py tags "$1" > neg.out 2>&1; then echo "::error::the tag check passes $1"; exit 1; fi
             cat neg.out
@@ -75,6 +138,10 @@ jobs:
           check tags-missing.log 'but not tagged @[d5'
           check tags-extra.log 'but not in the lean field of node thm:no_such_label'
           check tags-tag.log 'a tag that no node of blueprint.toml has'
+          # positive control: the node's own tag D5:000P in place of its label thm:g4cube is read as the label
+          sed 's/"key":"thm:g4cube"/"key":"D5:000P"/' tags.log > tags-bytag.log
+          cmp -s tags.log tags-bytag.log && { echo "::error::tags.log has no thm:g4cube entry"; exit 1; }
+          python3 ../site/blueprint.py tags tags-bytag.log
           echo "negative controls: a missing tag, an extra label and an unregistered tag fail, as they should"
       - name: negative control (a name that is not a declaration must fail)
         working-directory: groups
@@ -85,6 +152,7 @@ jobs:
           grep -qi "unknown constant\|unknown identifier" neg.log || { echo "::error::the negative control failed for another reason"; exit 1; }
           echo "negative control: a missing declaration fails, as it should"
   web:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
