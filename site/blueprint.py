@@ -39,7 +39,7 @@ blueprint.toml (the base of a PR) is still here, current or superseded, and a te
 and the tags agree with the registry of the project D5 (math.kaiku.tech, public GET
 /api/projects/D5/tags, PM-1495): each tag there is here, a claim's with the node of its label, a term's
 with the term of its D5 id and word; a tag the registry superseded or whose object it deleted is under
-[superseded] here (with the same superseded_by); every term here is there; nodes whose claims are not in
+[superseded] here (with the same superseded_by, or deleted = true); every term here is there; nodes whose claims are not in
 the registry yet are only counted (d5_errors).
 """
 import json
@@ -395,7 +395,8 @@ def d5_errors(data, entries):
         if e is None and ":" not in (s.get("label") or ":"):  # a term's (its label is the slug, no ':')
             errors.append(f"D5:{old} (superseded, term {s.get('label')}) is not in the D5 registry")
         elif e is not None and not e.get("supersededBy") and not e.get("gone"):
-            errors.append(f"D5:{old} is superseded here (by D5:{s.get('superseded_by')}), but current in the D5 registry "
+            errors.append(f"D5:{old} is " + (f"superseded here (by D5:{s['superseded_by']})" if s.get("superseded_by") else "deleted here")
+                          + ", but current in the D5 registry "
                           f"({e.get('kind')} {e.get('name')!r})")
     return errors
 
