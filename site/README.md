@@ -29,7 +29,7 @@ reuses a finished build of the same commits, e.g. the one a `--dry-run` made. Th
 `tm_build.sh` of the dimension-subrings commit it builds, so a change to it is tried with
 `--ds origin/<branch>`.
 
-The job runs on hel24 (`--runner R` for another; kimmy is kept for the Lean and GAP jobs). The tools
+The job runs on ax42 (`--runner R` for another; kimmy is kept for the Lean and GAP jobs). The tools
 are installed by the first job on a runner into `$JOB_CACHE/d5site` of the cache `mikh` (TeX Live,
 scheme-full without docs; a micromamba environment with Python 3.12, graphviz, pandoc 3.9, node and
 `blueprint-requirements.txt`, from a micromamba of its own); later jobs reuse them. Off macOS the kernel PDFs use DejaVu Sans and

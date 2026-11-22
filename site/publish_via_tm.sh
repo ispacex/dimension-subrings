@@ -14,7 +14,7 @@
 #      main of GitLab). The mikh commit must descend from the one the live site names (the newest
 #      "mikh <sha>" of the last 50 commit messages of ispacex/d5), or the site would go back in time;
 #      if no message names one, stop unless --no-ancestry-check.
-#   2. Submit the job (tm submit, cache mikh, 2 cores, runner hel24 unless --runner: kimmy is kept for
+#   2. Submit the job (tm submit, cache mikh, 2 cores, runner ax42 unless --runner: kimmy is kept for
 #      the Lean and GAP jobs; the tools are installed per runner, once) and wait, at most 2 hours;
 #      --job JOB skips this and reuses a finished job (built from the same commits: step 3 checks).
 #   3. tm fetch; check that manifest.txt names the commits of step 1; unpack site.tar.gz into a fresh
@@ -34,7 +34,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 
-DRY=0 ALLOW_DEL=0 ANCESTRY=1 JOB="" RUNNER=hel24 DS_REV=origin/main MIKH_REV=origin/main KERNEL_REV=main MSG="Rebuild"
+DRY=0 ALLOW_DEL=0 ANCESTRY=1 JOB="" RUNNER=ax42 DS_REV=origin/main MIKH_REV=origin/main KERNEL_REV=main MSG="Rebuild"
 while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) DRY=1 ;;

@@ -17,11 +17,12 @@ and build_site.py builds results.html and blueprint.html from the same data.
                                                              (groups/D5Tags.lean) with the nodes
     python3 site/blueprint.py src [--paper PAPER_DIR] OUT_DIR  the leanblueprint source; without the
                                                              paper the statements are placeholders (CI)
-    python3 site/blueprint.py tagcheck [--data TOML] [--base OLD_TOML] [--d5 PAGE]
-                                                             the permanent tags (MATH-457): their format,
-                                                             that each is used once, that none of OLD_TOML
-                                                             is gone, and that they are those of D5 page 911
-                                                             (PAGE: its URL or a saved copy of it)
+    python3 site/blueprint.py tagcheck [--data TOML] [--base OLD_TOML] [--d5 TAGS]
+                                                             the permanent tags (MATH-457, MATH-506): their
+                                                             format, that each is used once, that none of
+                                                             OLD_TOML is gone, and that they agree with the
+                                                             registry of D5 (TAGS: the URL of
+                                                             GET /api/projects/D5/tags or a saved answer)
 
 Checks: every labelled statement of the paper has a node and every node a statement; a node with Lean
 declarations is one the paper says is formally verified (in the statement, its proof or the section on
@@ -35,8 +36,11 @@ the nodes, label by label; this file stays the source of truth and the attribute
 `tagcheck` (wiki 912, §4.1): every node and every term has a tag of four characters 0-9 A-Z without I
 and O; no tag is used twice (nodes, terms and superseded tags together); every tag of an older
 blueprint.toml (the base of a PR) is still here, current or superseded, and a term keeps its D5 id;
-and the tags are those of the public D5 page 911 (math.kaiku.tech): the same set, each statement's
-tag with its label and each term's with its word.
+and the tags agree with the registry of the project D5 (math.kaiku.tech, public GET
+/api/projects/D5/tags, PM-1495): each tag there is here, a claim's with the node of its label, a term's
+with the term of its D5 id and word; a tag the registry superseded or whose object it deleted is under
+[superseded] here (with the same superseded_by); every term here is there; nodes whose claims are not in
+the registry yet are only counted (d5_errors).
 """
 import json
 import pathlib
@@ -59,7 +63,7 @@ NAMES = {"theorem": "Theorem", "proposition": "Proposition", "lemma": "Lemma", "
 OPENQ = "openq"
 # A permanent tag (wiki 912, §4.1): four characters, digits and capital letters without I and O.
 TAG = re.compile(r"[0-9A-HJ-NP-Z]{4}")
-D5_PAGE = "https://math.kaiku.tech/api/wiki/pages/911"  # the public list of tags of the project D5
+D5_TAGS = "https://math.kaiku.tech/api/projects/D5/tags"  # the public list of tags of the project D5 (PM-1495)
 LEAN_REF = re.compile(r"\{\{lean:([^|}]+)\|([^}]*)\}\}")
 NOTE_REF = re.compile(r"\[\[([A-Za-z0-9:._-]+)\|#\]\]")  # a number of the paper in a note
 # a results row outside the paper names its node by a link blueprint.html#b-own-ab399 (own:ab399)
@@ -284,75 +288,105 @@ def tag_errors(data, base=None):
     return errors
 
 
-def d5_page(src):
-    """The Markdown source of D5 page 911: from its public URL (the tracker's REST API, no token) or a
-    saved copy of that answer."""
+def plain(word):
+    """A word of a term, compared without TeX dollars, backslashes and case."""
+    return re.sub(r"\s+", " ", word.replace("$", "").replace("\\", "")).strip().lower()
+
+
+def d5_tags(src):
+    """The tags of the project D5 in the tracker's registry (PM-1495): the answer of its public REST API
+    GET /api/projects/D5/tags (no token), from its URL or a saved copy. A list of entries
+    {tag, kind ("term" or "claim"), id, name (a term's word, a claim's label), supersededBy, gone}."""
     if src.startswith("https://"):
         req = urllib.request.Request(src, headers={"User-Agent": "d5-blueprint-check", "Accept": "application/json"})
         try:
             with urllib.request.urlopen(req, timeout=60) as r:
-                page = json.load(r)
+                answer = json.load(r)
         except Exception as e:  # noqa: BLE001 -- the check cannot be made: stop
-            sys.exit(f"cannot read D5 page 911 from {src}: {e}")
+            sys.exit(f"cannot read the D5 tags from {src}: {e}")
     else:
-        page = json.loads(pathlib.Path(src).read_text())
-    if page.get("id") != 911 or page.get("projectKey") != "D5" or not page.get("source"):
-        sys.exit(f"{src} is not D5 page 911 with its source")
-    return page["source"]
+        answer = json.loads(pathlib.Path(src).read_text())
+    tags = answer.get("tags") if isinstance(answer, dict) else None
+    if answer.get("project") != "D5" or not isinstance(tags, list) or answer.get("total") != len(tags):
+        sys.exit(f"{src} is not the list of tags of the project D5 (GET /api/projects/D5/tags)")
+    return tags
 
 
-def d5_rows(md):
-    """The rows of the tables of the page whose first cell is a tag `D5:XXXX`: tag -> ("node", label) in a
-    table with a column Label, ("term", word) in the others."""
-    out, errors, header = {}, [], []
-    for ln in md.splitlines():
-        ln = ln.strip()
-        if not ln.startswith("|"):
-            header = []
-            continue
-        cells = [c.strip() for c in ln.strip("|").split("|")]
-        m = re.fullmatch(r"`D5:([^`]*)`", cells[0])
-        if not m:
-            if not header and not set(cells[0]) <= set("-: "):
-                header = cells
-            continue
-        kind = "node" if "Label" in header else "term"
-        key = cells[1].strip("`") if kind == "node" else cells[1]
-        if m.group(1) in out:
-            errors.append(f"D5 page 911 lists D5:{m.group(1)} twice")
-        out[m.group(1)] = (kind, key)
-    return out, errors
+def d5_errors(data, entries):
+    """The tags of the file against the registry of D5 (d5_tags): a list of errors, empty if they agree.
 
-
-def plain(word):
-    """A word of D5 page 911 or of a term, compared without TeX dollars, backslashes and case."""
-    return re.sub(r"\s+", " ", word.replace("$", "").replace("\\", "")).strip().lower()
-
-
-def d5_errors(data, md):
-    """The tags of the file against those of D5 page 911: the same set (superseded ones included), and
-    each statement's with the node's label, each term's with its word."""
-    rows, errors = d5_rows(md)
-    if not rows:
-        return ["D5 page 911 has no tags (has its format changed?)"]
+    * Every tag of the registry is in the file: a current one of a claim is the tag of the node whose
+      label the claim has, a current one of a term the tag of the term with that D5 id (and its word);
+      no object has two tags, and no tag passes to another object.
+    * A tag the registry has superseded (supersededBy) is under [superseded] here, with the same
+      superseded_by; a tag of a deleted object (gone) is not a current tag here, it is under [superseded].
+    * Every term of the file is in the registry (it has a D5 id); a node may not be there yet: the
+      claims of the register are synced from the paper separately (wiki 912, stage 3), so only a count
+      of them is reported (d5_missing).
+    * Every tag of [superseded] that the registry has is superseded there by the same tag."""
+    if not entries:
+        return ["the D5 registry has no tags (has the API changed?)"]
+    errors, reg = [], {}
+    for e in entries:
+        t = e.get("tag")
+        if t in reg:
+            errors.append(f"the D5 registry lists D5:{t} twice")
+        reg[t] = e
     have = all_tags(data)
-    for tag, (what, key) in have.items():
-        if tag not in rows:
-            errors.append(f"D5:{tag} ({what} {key}) is not on D5 page 911")
+    node_tag = {label: n.get("tag") for label, n in data["nodes"].items()}
+    term_by_id = {t.get("id"): slug for slug, t in data["terms"].items()}
+    for t, e in sorted(reg.items()):
+        kind, name, by, gone = e.get("kind"), e.get("name"), e.get("supersededBy"), e.get("gone")
+        what = f"{kind} {name!r}" + (" (deleted in D5)" if gone else "")
+        if t not in have:
+            errors.append(f"D5:{t} ({what}) is in the D5 registry but not in blueprint.toml")
             continue
-        kind, word = rows[tag]
-        if what == "node" and (kind != "node" or word != key):
-            errors.append(f"D5:{tag} is node {key} here, but D5 page 911 gives it to {kind} {word!r}")
-        if what == "term":
-            name = data["terms"][key]["name"]
-            if kind != "term" or plain(word) != plain(name):
-                errors.append(f"D5:{tag} is the term {name!r} here, but D5 page 911 gives it to {kind} {word!r}")
-        if what == "superseded" and kind == "node" and word != data["superseded"][key]["label"]:
-            errors.append(f"D5:{tag} (superseded) stood for {data['superseded'][key]['label']} here, for {word} on D5 page 911")
-    for tag, (kind, word) in sorted(rows.items()):
-        if tag not in have:
-            errors.append(f"D5:{tag} ({kind} {word!r}) is on D5 page 911 but not in blueprint.toml")
+        here, key = have[t]
+        if by or gone:
+            if here != "superseded":
+                errors.append(f"D5:{t} is {here} {key} here, but the D5 registry has "
+                              + (f"superseded it by D5:{by}" if by else "deleted its " + kind)
+                              + ": it belongs under [superseded]" + (f" with superseded_by = \"{by}\"" if by else ""))
+            elif by and data["superseded"][key].get("superseded_by") != by:
+                errors.append(f"D5:{t} is superseded by D5:{data['superseded'][key].get('superseded_by')} here, "
+                              f"by D5:{by} in the D5 registry")
+            continue
+        if kind == "claim":
+            if here != "node" or key != name:
+                errors.append(f"D5:{t} is {here} {key} here, but the D5 registry gives it to the claim {name}")
+        elif kind == "term":
+            slug = term_by_id.get(e.get("id"))
+            if here != "term" or key != slug:
+                errors.append(f"D5:{t} is {here} {key} here, but the D5 registry gives it to the term {e.get('id')} {name!r}")
+            elif plain(name or "") != plain(data["terms"][key]["name"]):
+                errors.append(f"D5:{t}: the term {key} is {data['terms'][key]['name']!r} here, {name!r} in the D5 registry")
+        else:
+            errors.append(f"D5:{t}: unknown kind {kind!r} in the D5 registry")
+    # the same object with another tag (one direction of a mismatch, said plainly)
+    for t, e in sorted(reg.items()):
+        if e.get("supersededBy") or e.get("gone"):
+            continue
+        if e.get("kind") == "claim" and e.get("name") in node_tag and node_tag[e["name"]] != t:
+            errors.append(f"the D5 registry tags the claim {e['name']} D5:{t}, blueprint.toml tags it D5:{node_tag[e['name']]}")
+        if e.get("kind") == "term" and e.get("id") in term_by_id:
+            mine = data["terms"][term_by_id[e["id"]]].get("tag")
+            if mine != t:
+                errors.append(f"the D5 registry tags the term {e['id']} {e.get('name')!r} D5:{t}, blueprint.toml tags it D5:{mine}")
+    for slug, term in data["terms"].items():
+        if term.get("tag") not in reg:
+            errors.append(f"D5:{term.get('tag')} (term {slug}, D5 term {term.get('id')}) is not in the D5 registry")
+    for old, s in data["superseded"].items():
+        e = reg.get(old)  # a different supersededBy is reported above
+        if e is not None and not e.get("supersededBy") and not e.get("gone"):
+            errors.append(f"D5:{old} is superseded here (by D5:{s.get('superseded_by')}), but current in the D5 registry "
+                          f"({e.get('kind')} {e.get('name')!r})")
     return errors
+
+
+def d5_missing(data, entries):
+    """The nodes of the file whose tags the D5 registry does not have yet (no claim there)."""
+    reg = {e.get("tag") for e in entries}
+    return sorted(label for label, n in data["nodes"].items() if n.get("tag") not in reg)
 
 
 # ---------------------------------------------------------------------------------------------
@@ -918,14 +952,18 @@ def main(argv):
             DATA = pathlib.Path(opts["--base"])
             base = load()
         errors = tag_errors(data, base)
+        missing = None
         if "--d5" in opts:
-            errors += d5_errors(data, d5_page(opts["--d5"]))
+            entries = d5_tags(opts["--d5"])
+            errors += d5_errors(data, entries)
+            missing = d5_missing(data, entries)
         if errors:
             sys.exit("blueprint: the tags are wrong:\n  " + "\n  ".join(errors))
         print(f"blueprint: {len(all_tags(data))} tags ({len(data['nodes'])} nodes, {len(data['terms'])} terms, "
               f"{len(data['superseded'])} superseded) are well formed and used once"
               + (", none of the base is gone" if base is not None else "")
-              + (", the same as on D5 page 911" if "--d5" in opts else ""))
+              + (f", the same as in the D5 registry ({len(entries)} tags there; {len(missing)} nodes not yet there: "
+                 + " ".join(missing) + ")" if missing is not None else ""))
         return
     data = load()
     index = lean_index()
