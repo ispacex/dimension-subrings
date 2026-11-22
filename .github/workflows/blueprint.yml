@@ -9,7 +9,9 @@
 #         tag in the code cannot drift from blueprint.toml, which stays the source of truth;
 #   tags: the permanent tags of blueprint.toml (MATH-457, wiki 912 §4.1): four characters 0-9 A-Z
 #         without I and O, each used once, none of the base of the PR (or of the commit before a push)
-#         gone, and the same as on the public D5 page 911 (math.kaiku.tech); with negative controls;
+#         gone, and the same as in the registry of the project D5 (MATH-506: the public
+#         GET https://math.kaiku.tech/api/projects/D5/tags; a superseded or deleted tag there must be
+#         under [superseded] here); with negative controls;
 #   web:  the leanblueprint pages build (plasTeX, versions pinned in site/blueprint-requirements.txt).
 #         The paper is not in this repository, so here the statements are placeholders; the pages
 #         on the site are built with the paper (site/build_site.py --blueprint).
@@ -21,7 +23,7 @@ on:
     branches: [main]
     paths: ['site/blueprint*', 'groups', '.github/workflows/blueprint.yml']
   workflow_dispatch:
-  # daily: page 911 of D5 is edited on the tracker, where no PR runs this; only the job tags runs then
+  # daily: the registry of D5 is edited on the tracker, where no PR runs this; only the job tags runs then
   schedule:
     - cron: '17 5 * * *'
 permissions:
@@ -38,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: the tags (format, used once, none gone since the base, the same as on D5 page 911)
+      - name: the tags (format, used once, none gone since the base, the same as in the D5 registry)
         env:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
@@ -51,9 +53,9 @@ jobs:
           else
             echo "no base commit: the check that no tag is gone is skipped"
           fi
-          curl -fsS --retry 3 -A d5-blueprint-check -H 'Accept: application/json' https://math.kaiku.tech/api/wiki/pages/911 > page911.json
-          python3 site/blueprint.py tagcheck "${args[@]}" --d5 page911.json
-      - name: negative controls (a malformed tag, a tag used twice, a lost tag, a tag D5 gives to another label, a tag D5 has and the file not, swapped tags, a D5 term twice)
+          curl -fsS --retry 3 -A d5-blueprint-check -H 'Accept: application/json' https://math.kaiku.tech/api/projects/D5/tags > d5tags.json
+          python3 site/blueprint.py tagcheck "${args[@]}" --d5 d5tags.json
+      - name: negative controls (a malformed, a doubled, a lost tag; D5 gives a tag to another object; a tag only D5 has; a term D5 lacks; another tag for the same claim; swapped tags; a D5 term twice; superseded and deleted in D5 but current here; another replacement, another superseded label, a deletion D5 calls a replacement, a superseded term D5 lacks)
         run: |
           set -euo pipefail
           T=site/blueprint.toml
@@ -66,28 +68,73 @@ jobs:
           sed 's/^tag = "000E"$/tag = "000O"/' $T > bad-format.toml
           sed 's/^tag = "000F"$/tag = "000E"/' $T > bad-twice.toml
           sed 's/^tag = "0003"$/tag = "ZZZZ"/' $T > bad-lost.toml
-          # a tag that passes to another object: q:main and commutator swap tags, here and on the page
+          # a tag that passes to another object: q:main and commutator swap tags, here and in the registry
           sed -e 's/^tag = "000E"$/tag = "@@"/' -e 's/^tag = "0003"$/tag = "000E"/' -e 's/^tag = "@@"$/tag = "0003"/' $T > bad-swap.toml
-          sed -e 's/`D5:000E`/`D5:@@`/' -e 's/`D5:0003`/`D5:000E`/' -e 's/`D5:@@`/`D5:0003`/' page911.json > page-swap.json
           sed 's/^id = 5221$/id = 4444/' $T > bad-id.toml
+          # thm:g4cube (D5:000P, a claim in the registry) under another, unused tag
+          sed 's/^tag = "000P"$/tag = "ZZZY"/' $T > bad-tag.toml
+          # the same, with 000P kept as superseded by ZZZY: right if the registry says so
+          { cat bad-tag.toml; printf '\n[superseded."000P"]\nsuperseded_by = "ZZZY"\nlabel = "thm:g4cube"\ntext = "a test of CI"\n'; } > sup.toml
+          sed 's/^label = "thm:g4cube"$/label = "thm:no_such_label"/' sup.toml > sup-label.toml
+          sed 's/^superseded_by = "ZZZY"$/superseded_by = "ZZZY"\ndeleted = true/' sup.toml > sup-both.toml
           python3 - <<'PY'
-          import re
+          import json, re
           s = open("site/blueprint.toml").read()
-          open("bad-missing.toml", "w").write(re.sub(r'\[terms\."commutator"\]\ntag = "0003"\nid = 5221\nname = "commutator"\n', "", s))
+          missing = re.sub(r'\[terms\."commutator"\]\ntag = "0003"\nid = 5221\nname = "commutator"\n', "", s)
+          open("bad-missing.toml", "w").write(missing)
+          # the term commutator deleted without a replacement: its tag kept with deleted = true
+          open("del.toml", "w").write(missing + '\n[superseded."0003"]\ndeleted = true\nlabel = "commutator"\ntext = "a test of CI"\n')
+          d = json.load(open("d5tags.json"))
+          by = {e["tag"]: e for e in d["tags"]}
+          for t in ("000E", "0003", "000P", "000S"):
+              assert t in by and not by[t]["gone"] and not by[t]["supersededBy"], t
+          def write(name, change):
+              x = json.loads(json.dumps(d))
+              change({e["tag"]: e for e in x["tags"]}, x)
+              x["total"] = len(x["tags"])
+              assert x != d, name
+              json.dump(x, open(name, "w"))
+          def swap(r, x):  # q:main and commutator swap tags
+              r["000E"]["tag"], r["0003"]["tag"] = "0003", "000E"
+          write("tags-swap.json", swap)
+          write("tags-other.json", lambda r, x: r["000S"].update(name="oq:main"))
+          write("tags-noterm.json", lambda r, x: x["tags"].remove(r["0003"]))
+          write("tags-superseded.json", lambda r, x: r["000P"].update(supersededBy="000Q"))
+          write("tags-gone.json", lambda r, x: r["0003"].update(gone=True))
+          write("tags-gone-claim.json", lambda r, x: r["000P"].update(gone=True))
+          write("tags-replaced-term.json", lambda r, x: r["0003"].update(gone=True, supersededBy="000E"))
+          def sup(by):
+              def f(r, x):
+                  r["000P"].update(supersededBy=by, gone=True)
+                  x["tags"].append(dict(r["000P"], tag="ZZZY", ref="D5:ZZZY", supersededBy=None, gone=False, id=999999))
+              return f
+          write("tags-sup.json", sup("ZZZY"))
+          write("tags-sup-other.json", sup("000Q"))
           PY
-          sed 's/`oq:torsion`/`oq:main`/' page911.json > page-other.json
-          for f in bad-format bad-twice bad-lost bad-missing bad-swap bad-id; do cmp -s $T $f.toml && { echo "::error::$f.toml is not changed"; exit 1; }; done
-          cmp -s page911.json page-other.json && { echo "::error::page-other.json is not changed"; exit 1; }
-          cmp -s page911.json page-swap.json && { echo "::error::page-swap.json is not changed"; exit 1; }
-          python3 site/blueprint.py tagcheck --data bad-swap.toml --d5 page-swap.json  # consistent with the page: only the base catches it
+          for f in bad-format bad-twice bad-lost bad-missing bad-swap bad-id bad-tag sup del; do cmp -s $T $f.toml && { echo "::error::$f.toml is not changed"; exit 1; }; done
+          python3 site/blueprint.py tagcheck --data bad-swap.toml --d5 tags-swap.json  # consistent with the registry: only the base catches it
+          python3 site/blueprint.py tagcheck --data sup.toml --base $T --d5 tags-sup.json  # a replacement made in both places passes
+          python3 site/blueprint.py tagcheck --data del.toml --base $T --d5 tags-gone.json  # so does a deletion
+          cmp -s sup.toml sup-label.toml && { echo "::error::sup-label.toml is not changed"; exit 1; }
+          cmp -s sup.toml sup-both.toml && { echo "::error::sup-both.toml is not changed"; exit 1; }
           check 'is not a tag' --data bad-format.toml
           check 'is used twice' --data bad-twice.toml
           check 'has disappeared' --data bad-lost.toml --base $T
-          check 'but D5 page 911 gives it to' --d5 page-other.json
-          check 'is on D5 page 911 but not in blueprint.toml' --data bad-missing.toml --d5 page911.json
-          check 'a tag never passes to another statement or term' --data bad-swap.toml --base $T --d5 page-swap.json
+          check 'but the D5 registry gives it to the claim oq:main' --d5 tags-other.json
+          check 'is in the D5 registry but not in blueprint.toml' --data bad-missing.toml --d5 d5tags.json
+          check '(term commutator, D5 term 5221) is not in the D5 registry' --d5 tags-noterm.json
+          check 'the D5 registry tags the claim thm:g4cube D5:000P, blueprint.toml tags it D5:ZZZY' --data bad-tag.toml --d5 d5tags.json
+          check 'a tag never passes to another statement or term' --data bad-swap.toml --base $T --d5 tags-swap.json
           check 'is in [terms] twice' --data bad-id.toml
-          echo "negative controls: a malformed, a doubled, a lost tag, one D5 gives to another label, one only D5 has, two tags swapped, a D5 term twice: all fail, as they should"
+          check 'but the D5 registry has superseded it by D5:000Q' --d5 tags-superseded.json
+          check 'but the D5 registry has deleted its term' --d5 tags-gone.json
+          check 'is superseded by D5:ZZZY here, superseded by D5:000Q in the D5 registry' --data sup.toml --d5 tags-sup-other.json
+          check 'but the D5 registry has deleted its claim' --d5 tags-gone-claim.json
+          check '(superseded) stood for thm:no_such_label here, for the claim' --data sup-label.toml --d5 tags-sup.json
+          check 'is deleted here, superseded by D5:000E in the D5 registry' --data del.toml --d5 tags-replaced-term.json
+          check '(superseded, term commutator) is not in the D5 registry' --data del.toml --d5 tags-noterm.json
+          check 'needs exactly one of superseded_by and deleted = true' --data sup-both.toml
+          echo "negative controls: all fail with their own message, as they should; the swap consistent with the registry, a replacement and a deletion made in both places pass"
   lean:
     if: github.event_name != 'schedule'
     runs-on: ubuntu-latest

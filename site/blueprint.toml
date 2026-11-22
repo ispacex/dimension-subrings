@@ -10,10 +10,13 @@
 #   tag      the permanent tag of the statement (wiki 912, §4.1; MATH-457): four characters of
 #            0-9 A-Z without I and O, written without the prefix (the full tag is D5:<tag>), never
 #            reused and never dropped; it stays when the paper is renumbered or the \label renamed. The
-#            tags are those of the project D5 of the tracker (math.kaiku.tech, wiki page 911 of D5), and
-#            CI checks that they are the same there (blueprint.py tagcheck). A statement whose content
+#            tags are those of the project D5 of the tracker (math.kaiku.tech; its registry of claims
+#            and terms, GET /api/projects/D5/tags, MATH-506; listed on wiki page 911 of D5), and CI checks
+#            that they are the same there (blueprint.py tagcheck). A statement whose content
 #            changes gets a new tag; the old one goes to [superseded."<old tag>"] with superseded_by =
-#            the new tag, label = the label it stood for and text = what it meant;
+#            the new tag, label = the label it stood for and text = what it meant (a statement or a
+#            term removed without a replacement: deleted = true instead of superseded_by; a term's
+#            label is its slug);
 #   lean     the Lean declarations (full names) that state or prove it; CI checks that each exists
 #            (.github/workflows/blueprint.yml) and the build that each is named in the paper's
 #            section on the formalization; each carries the attribute @[d5 "<label>"] in groups/
@@ -374,7 +377,7 @@ note_ru = "Не в статье: доказательство на бумаге 
 
 # ---------------------------------------------------------------------------------------------
 # The definitions: the terms of the project D5 of the tracker (math.kaiku.tech), by tag (wiki 912, §4.1).
-# [terms."<slug>"]: tag, id (the term's id in D5) and name (its word there, as on D5 page 911).
+# [terms."<slug>"]: tag, id (the term's id in D5) and name (its word there, as in the D5 registry).
 
 [terms."augmentation-ideal"]
 tag = "0001"
