@@ -11,9 +11,16 @@ STREAM := true;; STREAMFILE := true;; GZ := true;;
 Read("children.g");
 CH_FILEKEEP := GZC_KEEP;;
 GZC_Info := function(H)
-  local a;
+  local a, e;
+  # ANUPQ's automorphism record with every group element as its exponent vector (two runs give
+  # different group objects, whose elements never compare equal)
   a := fail;
-  if HasANUPQAutomorphisms(H) then a := ANUPQAutomorphisms(H); fi;
+  if HasANUPQAutomorphisms(H) then
+    a := ANUPQAutomorphisms(H);
+    e := x -> ExponentsOfPcElement(Pcgs(H), x);
+    a := [List(a.gens, e), List(a.centralAutos, l -> List(l, e)), List(a.otherAutos, l -> List(l, e)),
+          a.relativeOrders, a.isSoluble];
+  fi;
   return [CodePcGroup(H), Size(H), a];
 end;;
 GZC_CASES := [
@@ -40,7 +47,8 @@ for c in GZC_CASES do
   ok := res[1][1] = res[2][1];
   GZC_OK := GZC_OK and ok;
   Print("case ", Size(G), " ", CodePcGroup(G), " step ", c[2], " nostab ", c[3], ": ", Length(res[1][1]), " / ",
-        Length(res[2][1]), " descendants, equal ", ok, ", files ", res[1][2], " ", res[2][2],
+        Length(res[2][1]), " descendants, codes equal ", List(res[1][1], x -> x[1]) = List(res[2][1], x -> x[1]),
+        ", all equal ", ok, ", files ", res[1][2], " ", res[2][2],
         ", pq ms ", res[1][3], " ", res[2][3], "\n");
 od;
 Print("gz_check: ", GZC_OK, "\n");
