@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 OUT=${JOB_OUT:-out}; mkdir -p "$OUT"; mkdir -p "${JOB_ROOT:-.}"
 PY=python3
 if ! $PY -c 'import numpy' 2>/dev/null; then
-  # kimmy: the system python has neither numpy nor pip; use the cache's numpy venv (PY overrides)
+  # kimmy: the system python has neither numpy nor pip; use the cache's numpy venv (MATH519_PY overrides it)
   PY=${MATH519_PY:-${JOB_CACHE:-$HOME/.cache}/venv-e13b2c068d/bin/python3}
 fi
 $PY -c 'import numpy, sys; print(sys.executable, numpy.__version__)'

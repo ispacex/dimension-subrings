@@ -1,9 +1,9 @@
 """MATH-519 driver: the fixed-two-factor functional test (lie_lambda3.py) on controls and families.
 
-  python lie_lambda3_run.py controls            L_1 (IMP26) at q=2,3; free rings; unmet (L'' free);
-                                                BM (9.1) at n=7, length-3 block (positive 3-control)
-  python lie_lambda3_run.py controls [none|lin|pow|let]   (all but BM)
-  python lie_lambda3_run.py bm CUT                         BM (9.1) alone, read mod 3^(19-CUT)
+  python lie_lambda3_run.py controls [none|lin|pow|let]   free rings; F(x,y)/(3[x,y]); L_1 (IMP26)
+                                                           and unmet (L'' free) at q=2,3
+  python lie_lambda3_run.py bm CUT                         BM (9.1), n=7, length-3 block (positive
+                                                           3-control), read mod 3^(19-CUT)
   python lie_lambda3_run.py FAM Q SEED COUNT [none|lin|pow|let] [CUT]   one JSON line per ring
       (with lin/pow/let also Lambda(Sym_3) = 0 is imposed, see lie_lambda3.sym3_dicts). A positive
       (tors_fix > 0) counts only if it is stable under a second CUT. FAM in
