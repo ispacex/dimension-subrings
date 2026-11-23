@@ -1,8 +1,11 @@
 # gz_check.g — children.g's GZ (MATH-525) against the plain file, one pq call at a time: for each
-# (group, step, binary) of GZC_CASES, CH_Stream with GZ = false and with GZ = true, each file kept in
-# GZC_KEEP (CH_FILEKEEP).  Prints one line per case: the number of descendants both ways and whether
-# their codes (CodePcGroup) and automorphism data agree; gz_check.sh then compares the kept files
-# byte for byte (the plain file minus its ANUPQmagic header lines against the decompressed .gz).
+# (group, step, binary) of GZC_CASES, CH_Stream with GZ = false twice and with GZ = true once, each file
+# kept in GZC_KEEP (CH_FILEKEEP).  Prints one line per case: the number of descendants and whether
+# their codes (CodePcGroup) agree all three times (required), and whether the automorphism data agree
+# between the two plain runs and between plain and gz.  When Aut(G) is insoluble pq has GAP compute
+# stabilisers, whose generators are random: then the two plain runs differ too.  gz_check.sh compares
+# the kept files byte for byte (the plain file minus its ANUPQmagic header lines against the
+# decompressed .gz) and requires plain = gz wherever plain = plain.
 # Input: GZC_KEEP (a directory).  Needs pqrun.sh (ANUPQData.binary_gz, binary_nostab_gz).
 Read("../pq1024/lib.g");
 Read("../pq1024/cover.g");
@@ -34,7 +37,7 @@ GZC_OK := true;;
 for c in GZC_CASES do
   G := c[1]; PrimePGroup(G);
   res := [];
-  for gz in [false, true] do
+  for gz in [false, false, true] do
     GZ := gz;
     pqb := ANUPQData.binary;
     if c[3] then ANUPQData.binary := ANUPQData.binary_nostab; fi;
@@ -44,12 +47,13 @@ for c in GZC_CASES do
     ANUPQData.binary := pqb;
     Add(res, [l, CH_FILESEQ, t]);
   od;
-  ok := res[1][1] = res[2][1];
+  codes := List(res, r -> List(r[1], x -> x[1]));
+  ok := codes[1] = codes[2] and codes[1] = codes[3];
   GZC_OK := GZC_OK and ok;
-  Print("case ", Size(G), " ", CodePcGroup(G), " step ", c[2], " nostab ", c[3], ": ", Length(res[1][1]), " / ",
-        Length(res[2][1]), " descendants, codes equal ", List(res[1][1], x -> x[1]) = List(res[2][1], x -> x[1]),
-        ", all equal ", ok, ", files ", res[1][2], " ", res[2][2],
-        ", pq ms ", res[1][3], " ", res[2][3], "\n");
+  Print("case ", Size(G), " ", CodePcGroup(G), " step ", c[2], " nostab ", c[3], ": ",
+        List(res, r -> Length(r[1])), " descendants, codes equal ", ok,
+        ", auts plain=plain ", res[1][1] = res[2][1], " plain=gz ", res[1][1] = res[3][1],
+        ", files ", List(res, r -> r[2]), ", pq ms ", List(res, r -> r[3]), "\n");
 od;
 Print("gz_check: ", GZC_OK, "\n");
 QUIT;

@@ -46,6 +46,9 @@
 #     and pq with PQ_NOSTAB set (ANUPQData.binary_nostab, pqrun.sh): no automorphism groups of the
 #     children.  The default stages compute stabilisers of the reduced p-covers, in GAP one by one
 #     when Aut(G) is insoluble: 3/4 of the time of a heavy vertex of order 512 (counted in onestage[k]).
+#   GZ (environment PQ2048_GZ=1, with PQ2048_STREAM=1 and PQ2048_STREAMFILE=1; children.g) — pq writes the
+#     descendants of each step gzip-compressed (GAP_library.gz) and the walk reads them from there: about
+#     10 times less temporary disk on the pq-heavy vertices, the same walk (README "Compressed pq output").
 #   TRACE — print each vertex (order, CodePcGroup) before it is expanded, to name the one that fails.
 #   PROFILE (environment PQ2048_PROFILE=FILE) — per vertex, appended to FILE (flushed line by line):
 #     {"start":k,"code":..} before it is expanded, then {"k":..,"code":..,"steps":[..],"ms_steps":..,

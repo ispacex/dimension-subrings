@@ -30,6 +30,8 @@ LOGQ=${LOGQ:-11}
 STEPRULES=${STEPRULES:-true}; COMPACT=${COMPACT:-false}; GAPMEM_A=${GAPMEM_A:-10g}; GAPMEM=${GAPMEM:-6g}; GAPMEM_D=${GAPMEM_D:-4g}; PD=${PD:-3}
 # pq writes its descendants (GBs for the deferred steps) under TMPDIR: a directory per piece on disk, removed after
 # it, not the tmpfs /tmp (8 GB pq files filled kimmy's 9.8 GB /tmp in m40-pilot12-r4 and failed every later piece)
+# (with PQ2048_STREAM=1 PQ2048_STREAMFILE=1 PQ2048_GZ=1 in the environment, which tree.g reads, they are written
+# gzip-compressed: README "Compressed pq output", MATH-525)
 TMPBASE=${TMPBASE:-$out/tmp}
 export here GAP d out LOGQ STEPRULES COMPACT GAPMEM GAPMEM_D l2 TMPBASE
 mkdir -p "$out/A" "$out/B" "$out/C" "$out/Cin"
