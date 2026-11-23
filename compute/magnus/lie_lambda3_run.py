@@ -94,7 +94,7 @@ def build_famB(q, spec):
     return P
 
 
-def controls(sym3=None):
+def controls(sym3=None, cut=6):
     for d in (2, 3, 4):
         print("free Lie ring, d=%d, p=3:" % d)
         analyse_fix(Pres([("x%d" % i, 1) for i in range(d)], n=5, p=3), sym3=sym3)
@@ -110,6 +110,10 @@ def controls(sym3=None):
         print("unmet, all L'' free, q=%d:" % q)
         P, u = build_unmet(q, SPEC_L1, {t: None for t in range(len(QUADS))})
         analyse_fix(P, tests={"u3": u[3], "q^5 u3": P.sc(q ** 5, u[3])}, sym3=sym3)
+    bm_control(cut, sym3)
+
+
+def bm_control(cut, sym3=None):
     print("BM (9.1), n=7, p=3, length-3 block:")
     P = Pres([("e%d" % i, 1) for i in range(4)] + [("y%d" % i, 2) for i in range(4)] +
              [(y, 3) for y in ("y01", "y02", "y13", "y23")], n=7, p=3)
@@ -119,7 +123,7 @@ def controls(sym3=None):
     for (i, j, a, b, c) in ((0, 1, 11, 12, 10), (0, 2, 10, 12, 8), (1, 3, 9, 11, 4), (2, 3, 9, 10, 2)):
         P.rel(add(sc(3 ** a, g("e%d" % i)), sc(3 ** b, g("e%d" % j)), sc(-3 ** c, g("y%d%d" % (i, j)))))
     om = P.lnc(g("e2"), g("e1"), g("e0"))
-    analyse_fix(P, blocks=[3], tests={"omega": sc(3 ** 9, om), "omega/3": sc(3 ** 8, om)}, sym3=sym3)
+    analyse_fix(P, blocks=[3], tests={"omega": sc(3 ** 9, om), "omega/3": sc(3 ** 8, om)}, sym3=sym3, cut=cut)
 
 
 def search(fam, q, seed, count, sym3=None):
@@ -143,7 +147,11 @@ def search(fam, q, seed, count, sym3=None):
 
 
 if __name__ == "__main__":
-    if sys.argv[1] == "controls":
+    if sys.argv[1] == "bm":
+        # BM alone, read modulo 3^(19 - cut): omega = 3^9 [e2,e1,e0] has order 3 mod gamma_7, which
+        # the invariants see only when 19 - cut is well above 10 (cut = 6 is too coarse for it)
+        bm_control(int(sys.argv[2]))
+    elif sys.argv[1] == "controls":
         for mode in [None, "lin", "pow"] if len(sys.argv) < 3 else [None if sys.argv[2] == "none" else sys.argv[2]]:
             print("=== two-factor part fixed; three-factor symmetrisations killed: %s ===" % mode)
             controls(mode)

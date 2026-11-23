@@ -31,7 +31,7 @@ import itertools
 import numpy as np
 
 from dimsub import Ring, howell, reduce_rows
-from liedim import Block, invariants
+from liedim import Block, invariants, order_mod
 
 
 def sym2_dicts(P, want=None):
@@ -133,12 +133,14 @@ def analyse_fix(P, blocks=None, verbose=True, tests=None, sym3=None, cut=6):
     for name, x in (tests or {}).items():
         cx = P.coords(x) % R2.D
         d = dfix = True
+        go = 0
         for b, (blk, K2, Kfix2) in BL.items():
             v = cx[blk.lj]
             if v.any():
                 d &= bool(reduce_rows(R2, K2, v[None, :])[0])
                 dfix &= bool(reduce_rows(R2, Kfix2, v[None, :])[0])
-        res[name] = dict(delta=d, kfix=dfix)
+                go = max(go, order_mod(R2, _trunc(R2, blk.J, len(blk.lj)), v))
+        res[name] = dict(delta=d, kfix=dfix, gamma_order=go)
     out["tests"] = res
     if verbose:
         print("n=%d p=%d E=%d(read mod p^%d) gens=%d | delta/gamma: free %d tors p^%d exp p^%d | K_fix/gamma: free %d tors p^%d exp p^%d"
@@ -147,5 +149,5 @@ def analyse_fix(P, blocks=None, verbose=True, tests=None, sym3=None, cut=6):
         for o, w in out["extra"]:
             print("  K_fix \\ K: order p^%d  [%s]" % (o, ",".join(P.names[i] for i in w)))
         for name, r in res.items():
-            print("  %-12s in delta: %s ; in K_fix: %s" % (name, r["delta"], r["kfix"]))
+            print("  %-12s in delta: %s ; in K_fix: %s ; order mod gamma: p^%d" % (name, r["delta"], r["kfix"], r["gamma_order"]))
     return out

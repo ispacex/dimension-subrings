@@ -25,4 +25,6 @@ $PY lie_lambda3_run.py famB 2 14 500 > "$OUT/famB_q2_sym2.jsonl"
 $PY lie_lambda3_run.py unmet 2 15 100 > "$OUT/unmet_q2_sym2.jsonl"
 $PY lie_lambda3_run.py unmet 3 16 300 > "$OUT/unmet_q3_sym2.jsonl"
 $PY lie_lambda3_run.py unmet 3 16 100 let > "$OUT/unmet_q3_let.jsonl"
+$PY lie_lambda3_run.py bm 0 > "$OUT/bm_cut0.txt"
+$PY lie_lambda3_run.py bm 3 > "$OUT/bm_cut3.txt"
 echo done
