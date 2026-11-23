@@ -18,7 +18,7 @@ odd p).  Then Lambda exists for l  <=>  l vanishes on
 and without the two-factor condition  <=>  l vanishes on K = F_{<n} cap I, i.e. on delta_n.  So
 
     every l admits Lambda (no two-factor condition)  <=>  delta_n/gamma_n has no p-torsion,
-    every l admits Lambda with fixed 2-part           <=>  K_fix/J has no p-torsion,
+    every l admits Lambda with fixed 2-part           <=>  K_fix/J has no p-torsion and no free part,
 
 and delta_n/gamma_n = K/J <= K_fix/J.  The function below returns both invariants and witnesses
 (Lyndon words whose basis element has finite order in K_fix/J but is not in K).
@@ -30,8 +30,8 @@ import itertools
 
 import numpy as np
 
+from liedim import Block, invariants, order_mod  # noqa: I001  (liedim puts compute/ on sys.path)
 from dimsub import Ring, howell, reduce_rows
-from liedim import Block, invariants, order_mod
 
 
 def sym2_dicts(P, want=None):
@@ -57,7 +57,7 @@ def sym3_dicts(P, mode, want=None):
     """Three-factor symmetrisations of Lyndon basis elements f <= g <= h (wt sum < n).
     mode 'lin': sum over all 6 permutations (multilinear, gives 6 f^3 for f = g = h);
     mode 'pow': sum over the distinct arrangements (the span of all cubes F^3 after polarisation,
-    for odd p); mode 'let': as 'pow', but only for three generators (no factor of length > 1)."""
+    for odd p only); mode 'let': as 'pow', but only for three generators (no factor of length > 1)."""
     rows = []
     B = list(zip(P.lyndon, P.basis))
     W = [P.wt(w) for w, _ in B]                    # P.lyndon is sorted by weight
@@ -91,10 +91,15 @@ def _trunc(R2, H, ncols):
     return howell(R2, np.array([r for _, _, r in H], dtype=np.int64).reshape(-1, ncols) % R2.D)
 
 
+MODES = (None, "lin", "pow", "let")
+
+
 def analyse_fix(P, blocks=None, verbose=True, tests=None, sym3=None, cut=6):
     """Returns dict(free, tors, exp, free_fix, tors_fix, exp_fix, extra) where tors = log_p|tors(K/J)|,
     tors_fix = log_p |tors(K_fix/J)|, and extra = [(order, Lyndon word)] for basis elements in
     K_fix of finite order mod J that are not in K."""
+    if sym3 not in MODES:
+        raise ValueError("sym3 must be one of %r" % (MODES,))
     R = P.R
     P.key(())
     want = set(blocks) if (blocks is not None and P._homog) else None
@@ -104,7 +109,7 @@ def analyse_fix(P, blocks=None, verbose=True, tests=None, sym3=None, cut=6):
     if want is not None:
         keys = [b for b in keys if b in want]
     # Work modulo p^E, then read the answer modulo p^E2, E2 = E - cut.  A Lie element f with
-    # p^(E-e) f in I + S + p^E T only because T/(I+S) has p-torsion of exponent e <= cut (not
+    # p^(E-e) f in I + S + p^E T only because T/(F+I+S) has p-torsion of exponent e <= cut (not
     # because f is in (I+S) tensor Z_(p)) is divisible by p^(E-e) and vanishes modulo p^E2; for
     # the ideal I alone this does not happen at the orders seen here, but for S it does (e.g.
     # [x,[x,y]] = xxy + xyx + yxx mod 3, a Sym_3 element).  Stability under cut is checked by the caller.
@@ -128,18 +133,21 @@ def analyse_fix(P, blocks=None, verbose=True, tests=None, sym3=None, cut=6):
         for (c, _, row), o in zip(Kfix2, orders2):
             if 0 < o <= R2.E - 3 and not (K2 and reduce_rows(R2, K2, row[None, :])[0]):
                 out["extra"].append((o, P.lyndon[blk.lj[c]]))
-        BL[b] = (blk, K2, Kfix2)
+        BL[b] = (blk, K2, Kfix2, J2)
     res = {}
     for name, x in (tests or {}).items():
         cx = P.coords(x) % R2.D
         d = dfix = True
         go = 0
-        for b, (blk, K2, Kfix2) in BL.items():
+        missed = any(cx[j] for j, w in enumerate(P.lyndon) if P.key(w) not in BL)
+        for b, (blk, K2, Kfix2, J2) in BL.items():
             v = cx[blk.lj]
             if v.any():
                 d &= bool(reduce_rows(R2, K2, v[None, :])[0])
                 dfix &= bool(reduce_rows(R2, Kfix2, v[None, :])[0])
-                go = max(go, order_mod(R2, _trunc(R2, blk.J, len(blk.lj)), v))
+                go = max(go, order_mod(R2, J2, v))
+        if missed:
+            raise ValueError("test %s has components outside the computed blocks" % name)
         res[name] = dict(delta=d, kfix=dfix, gamma_order=go)
     out["tests"] = res
     if verbose:

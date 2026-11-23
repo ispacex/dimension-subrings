@@ -2,9 +2,11 @@
 
   python lie_lambda3_run.py controls            L_1 (IMP26) at q=2,3; free rings; unmet (L'' free);
                                                 BM (9.1) at n=7, length-3 block (positive 3-control)
-  python lie_lambda3_run.py controls [none|lin|pow]
-  python lie_lambda3_run.py FAM Q SEED COUNT [lin|pow]   one JSON line per ring (with lin/pow also
-      Lambda(Sym_3) = 0 is imposed, see lie_lambda3.sym3_dicts), FAM in
+  python lie_lambda3_run.py controls [none|lin|pow|let]   (all but BM)
+  python lie_lambda3_run.py bm CUT                         BM (9.1) alone, read mod 3^(19-CUT)
+  python lie_lambda3_run.py FAM Q SEED COUNT [none|lin|pow|let] [CUT]   one JSON line per ring
+      (with lin/pow/let also Lambda(Sym_3) = 0 is imposed, see lie_lambda3.sym3_dicts). A positive
+      (tors_fix > 0) counts only if it is stable under a second CUT. FAM in
       famA   L/L' free: d = 3..4 generators of weight 1, relators in F' of MIXED weight
              q^a h2 + s q^b h3 + s q^c h4 (h_k random left-normed or [[.,.],[.,.]] of weight k),
              q^g h3 + s q^c h4, and torsion q^g h4; L'' left alive in weight 4
@@ -19,7 +21,7 @@ import sys
 import time
 
 from liedim import Pres
-from lie_lambda3 import analyse_fix
+from lie_lambda3 import MODES, analyse_fix
 from lie_imp_l1 import SPEC_L1, build as build_l1
 from lie_nonmet5 import QUADS, build_unmet, sample_ties
 
@@ -95,6 +97,7 @@ def build_famB(q, spec):
 
 
 def controls(sym3=None, cut=6):
+    """Everything except BM (run BM alone: 'bm CUT'; cut=6 is too coarse for omega)."""
     for d in (2, 3, 4):
         print("free Lie ring, d=%d, p=3:" % d)
         analyse_fix(Pres([("x%d" % i, 1) for i in range(d)], n=5, p=3), sym3=sym3)
@@ -110,7 +113,6 @@ def controls(sym3=None, cut=6):
         print("unmet, all L'' free, q=%d:" % q)
         P, u = build_unmet(q, SPEC_L1, {t: None for t in range(len(QUADS))})
         analyse_fix(P, tests={"u3": u[3], "q^5 u3": P.sc(q ** 5, u[3])}, sym3=sym3)
-    bm_control(cut, sym3)
 
 
 def bm_control(cut, sym3=None):
@@ -126,7 +128,7 @@ def bm_control(cut, sym3=None):
     analyse_fix(P, blocks=[3], tests={"omega": sc(3 ** 9, om), "omega/3": sc(3 ** 8, om)}, sym3=sym3, cut=cut)
 
 
-def search(fam, q, seed, count, sym3=None):
+def search(fam, q, seed, count, sym3=None, cut=6):
     rng = random.Random(seed)
     for _ in range(count):
         t0 = time.time()
@@ -140,21 +142,28 @@ def search(fam, q, seed, count, sym3=None):
             ties = sample_ties(rng)
             P, _ = build_unmet(q, SPEC_L1, ties)
             spec = {"ties": {str(t): v for t, v in ties.items()}}
-        r = analyse_fix(P, verbose=False, sym3=sym3)
+        r = analyse_fix(P, verbose=False, sym3=sym3, cut=cut)
         r.pop("tests")
         r["extra"] = [[o, [P.names[i] for i in w]] for o, w in r["extra"]][:6]
         print(json.dumps({"fam": fam, "q": q, "sym3": sym3, "spec": spec, **r, "sec": round(time.time() - t0, 2)}), flush=True)
 
 
+def mode(arg):
+    m = None if arg == "none" else arg
+    if m not in MODES:
+        raise SystemExit("mode must be none|lin|pow|let, got %r" % arg)
+    return m
+
+
 if __name__ == "__main__":
     if sys.argv[1] == "bm":
-        # BM alone, read modulo 3^(19 - cut): omega = 3^9 [e2,e1,e0] has order 3 mod gamma_7, which
-        # the invariants see only when 19 - cut is well above 10 (cut = 6 is too coarse for it)
         bm_control(int(sys.argv[2]))
     elif sys.argv[1] == "controls":
-        for mode in [None, "lin", "pow"] if len(sys.argv) < 3 else [None if sys.argv[2] == "none" else sys.argv[2]]:
-            print("=== two-factor part fixed; three-factor symmetrisations killed: %s ===" % mode)
-            controls(mode)
-    else:
+        for m in [None, "lin", "pow", "let"] if len(sys.argv) < 3 else [mode(sys.argv[2])]:
+            print("=== two-factor part fixed; three-factor symmetrisations killed: %s ===" % m)
+            controls(m)
+    elif sys.argv[1] in ("famA", "famB", "unmet"):
         search(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]),
-               sys.argv[5] if len(sys.argv) > 5 else None)
+               mode(sys.argv[5]) if len(sys.argv) > 5 else None, int(sys.argv[6]) if len(sys.argv) > 6 else 6)
+    else:
+        raise SystemExit(__doc__)
