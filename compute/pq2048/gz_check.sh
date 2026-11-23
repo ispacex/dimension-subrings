@@ -3,8 +3,9 @@
 # GAP_library with the GAP_library.gz of the same call: without its ANUPQmagic header lines the plain
 # file must be the decompressed one byte for byte.  Exit 0 when every case and every pair agree.
 here=$(cd "$(dirname "$0")" && pwd)
-dir=$1; mkdir -p "$dir"
-( cd "$here" && printf 'GZC_KEEP := "%s";;\n' "$dir" | cat - gz_check.g | "${GAP:-gap}" -q -b -o 4g --quitonbreak ) | tee "$dir/gz_check.log"
+dir=$1; mkdir -p "$dir/tmp"
+# pq's directory on the same file system as DIR (the kept files are hard links)
+( cd "$here" && printf 'GZC_KEEP := "%s";;\n' "$dir" | cat - gz_check.g | TMPDIR="$dir/tmp" "${GAP:-gap}" -q -b -o 4g --quitonbreak ) | tee "$dir/gz_check.log"
 grep -q '^gz_check: true' "$dir/gz_check.log" || { echo "gz_check.g failed"; exit 1; }
 bad=0 i=1
 while [ -e "$dir/GAP_library.$i" ]; do

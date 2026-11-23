@@ -140,7 +140,7 @@ if not IsBound(STREAMFILE) then
                 and GAPInfo.SystemEnvironment.PQ2048_STREAMFILE = "1";
 fi;
 # GZ (with STREAM and STREAMFILE; default the environment variable PQ2048_GZ, 1 = on): the pq of CH_Stream
-# writes its descendants gzip-compressed (zlib level 1) to GAP_library.gz instead of GAP_library, and
+# writes its descendants gzip-compressed (through gzip -1) to GAP_library.gz instead of GAP_library, and
 # CH_FileIterator reads that file (InputTextFile decompresses a *.gz name as it reads), one block at a
 # time as before.  Decompressed it is byte for byte the part of GAP_library after its header, so the
 # groups and the walk are the same; on disk it is about 10 times smaller (MATH-525).  It needs the pq of
