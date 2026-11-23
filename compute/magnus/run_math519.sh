@@ -6,10 +6,13 @@ cd "$(dirname "$0")"
 OUT=${JOB_OUT:-out}; mkdir -p "$OUT"; mkdir -p "${JOB_ROOT:-.}"
 PY=python3
 if ! $PY -c 'import numpy' 2>/dev/null; then
-  V=${JOB_CACHE:-$HOME/.cache}/venv-math519
-  [ -x "$V/bin/python3" ] || { python3 -m venv "$V" && "$V/bin/pip" install -q numpy; }
-  PY=$V/bin/python3
+  # kimmy: the system python has neither numpy nor pip; take a cached venv that has numpy
+  rm -rf "${JOB_CACHE:-/nonexistent}/venv-math519"     # a broken venv left by an earlier attempt
+  for v in "${JOB_CACHE:-$HOME/.cache}"/venv-*/bin/python3; do
+    if "$v" -c 'import numpy' 2>/dev/null; then PY=$v; break; fi
+  done
 fi
+$PY -c 'import numpy, sys; print(sys.executable, numpy.__version__)'
 $PY lie_lambda3_run.py controls none > "$OUT/controls_sym2.txt"
 $PY lie_lambda3_run.py controls let > "$OUT/controls_let.txt"
 $PY lie_lambda3_run.py controls pow > "$OUT/controls_pow.txt"
