@@ -143,9 +143,11 @@ fi;
 # writes its descendants gzip-compressed (through gzip -1) to GAP_library.gz instead of GAP_library, and
 # CH_FileIterator reads that file (InputTextFile decompresses a *.gz name as it reads), one block at a
 # time as before.  Decompressed it is byte for byte the part of GAP_library after its header, so the
-# groups and the walk are the same; on disk it is about 10 times smaller (MATH-525).  It needs the pq of
-# ispacex/anupq with PQ_GZ (pq-gz-library) and pqrun.sh's wrappers ANUPQData.binary_gz and
-# ANUPQData.binary_nostab_gz (that pq with PQ_GZ=1): only the pq calls of CH_Stream run with PQ_GZ, every
+# groups and the walk are the same; on disk it is about 30 times smaller (MATH-525).  The same pq call
+# also runs with PQ_NOCLASSFILE: the covers of the capable descendants, which pq saves on <ident>_class<n>
+# for a next class that PqDescendants never asks for, go to /dev/null (they were about 3/4 of pq's
+# files).  It needs the pq of ispacex/anupq pq-gz-library and pqrun.sh's wrappers ANUPQData.binary_gz and
+# ANUPQData.binary_nostab_gz (that pq with PQ_GZ=1 PQ_NOCLASSFILE=1): only the pq calls of CH_Stream run with PQ_GZ, every
 # other PqDescendants (MS_Desc, the cover search's fallback) reads the plain GAP_library as before.
 if not IsBound(GZ) then
   GZ := IsBound(GAPInfo.SystemEnvironment.PQ2048_GZ) and GAPInfo.SystemEnvironment.PQ2048_GZ = "1";
