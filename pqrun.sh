@@ -12,7 +12,11 @@ cd "$s"
 pq=$(ls "$s"/bin/*/pq | head -1); echo "pq: $pq"
 # pq-nostab: the same pq with PQ_NOSTAB set (no automorphisms of the descendants; tree.g, leaves)
 printf '#!/bin/sh\nPQ_NOSTAB=1 exec "%s" "$@"\n' "$pq" > "$JOB_ROOT/pq-nostab"; chmod +x "$JOB_ROOT/pq-nostab"
-printf 'LoadPackage("anupq");; ANUPQData.binary := "%s";; ANUPQData.binary_nostab := "%s";;\n' "$pq" "$JOB_ROOT/pq-nostab" > "$JOB_ROOT/pqbin.g"
+# pq-gz, pq-nostab-gz: the same with PQ_GZ=1 (descendants to GAP_library.gz; ispacex/anupq pq-gz-library,
+# compute/pq2048/children.g GZ, MATH-525); an older pq ignores PQ_GZ and children.g then stops on the missing file
+printf '#!/bin/sh\nPQ_GZ=1 exec "%s" "$@"\n' "$pq" > "$JOB_ROOT/pq-gz"; chmod +x "$JOB_ROOT/pq-gz"
+printf '#!/bin/sh\nPQ_GZ=1 PQ_NOSTAB=1 exec "%s" "$@"\n' "$pq" > "$JOB_ROOT/pq-nostab-gz"; chmod +x "$JOB_ROOT/pq-nostab-gz"
+printf 'LoadPackage("anupq");; ANUPQData.binary := "%s";; ANUPQData.binary_nostab := "%s";; ANUPQData.binary_gz := "%s";; ANUPQData.binary_nostab_gz := "%s";;\n' "$pq" "$JOB_ROOT/pq-nostab" "$JOB_ROOT/pq-gz" "$JOB_ROOT/pq-nostab-gz" > "$JOB_ROOT/pqbin.g"
 realgap=$(command -v "${GAP:-gap}")
 printf '#!/bin/sh\nexec "%s" "$@" "%s"\n' "$realgap" "$JOB_ROOT/pqbin.g" > "$JOB_ROOT/gap"; chmod +x "$JOB_ROOT/gap"
 echo 'Print(ANUPQData.binary, "\n");' | "$JOB_ROOT/gap" -q -b
