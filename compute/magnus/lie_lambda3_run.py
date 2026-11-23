@@ -98,6 +98,11 @@ def controls(sym3=None):
     for d in (2, 3, 4):
         print("free Lie ring, d=%d, p=3:" % d)
         analyse_fix(Pres([("x%d" % i, 1) for i in range(d)], n=5, p=3), sym3=sym3)
+    print("graded F(x,y)/(3[x,y], gamma_5) (wiki 579 sec. 8, Prop. 4), p=3:")
+    P = Pres([("x", 1), ("y", 1)], n=5, p=3)
+    c = P.br(P.g("x"), P.g("y"))
+    P.rel(P.sc(3, c))
+    analyse_fix(P, tests={"w=[x,[x,c]]": P.br(P.g("x"), P.br(P.g("x"), c))}, sym3=sym3)
     for q in (2, 3):
         print("L_1 (IMP26), q=%d:" % q)
         P, u = build_l1(q, SPEC_L1)

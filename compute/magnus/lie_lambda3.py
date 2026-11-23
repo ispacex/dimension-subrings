@@ -60,19 +60,29 @@ def sym3_dicts(P, mode, want=None):
     for odd p); mode 'let': as 'pow', but only for three generators (no factor of length > 1)."""
     rows = []
     B = list(zip(P.lyndon, P.basis))
-    for i, j, k in itertools.combinations_with_replacement(range(len(B)), 3):
-        ws = [B[t][0] for t in (i, j, k)]
-        if sum(P.wt(w) for w in ws) >= P.n:
-            continue
-        if want is not None and P._homog and sum(len(w) for w in ws) not in want:
-            continue
-        if mode == "let" and any(len(w) > 1 for w in ws):
-            continue
-        perms = itertools.permutations((i, j, k)) if mode == "lin" else set(itertools.permutations((i, j, k)))
-        x = P.add(*[P.mul(P.mul(B[a][1], B[b][1]), B[c][1]) for a, b, c in perms])
-        if x:
-            rows.append(x)
+    W = [P.wt(w) for w, _ in B]                    # P.lyndon is sorted by weight
+    for i in range(len(B)):
+        if 3 * W[i] >= P.n:
+            break
+        for j in range(i, len(B)):
+            if W[i] + 2 * W[j] >= P.n:
+                break
+            for k in range(j, len(B)):
+                if W[i] + W[j] + W[k] >= P.n:
+                    break
+                ws = [B[t][0] for t in (i, j, k)]
+                if want is not None and P._homog and sum(len(w) for w in ws) not in want:
+                    continue
+                if mode == "let" and any(len(w) > 1 for w in ws):
+                    continue
+                rows.extend(_sym3_row(P, B, mode, i, j, k))
     return rows
+
+
+def _sym3_row(P, B, mode, i, j, k):
+    perms = itertools.permutations((i, j, k)) if mode == "lin" else set(itertools.permutations((i, j, k)))
+    x = P.add(*[P.mul(P.mul(B[a][1], B[b][1]), B[c][1]) for a, b, c in perms])
+    return [x] if x else []
 
 
 def _trunc(R2, H, ncols):
