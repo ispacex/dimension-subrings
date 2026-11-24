@@ -38,7 +38,7 @@ while read -r Q SEED COUNT EXPS TIES; do
     sleep 60; echo "$((DONE + $(wc -l < "$F")))/$TOTAL" > "${JOB_ROOT:-.}/progress"
   done
   wait $PID
-  DONE=$((DONE + COUNT))
-  $PY -c "import json,sys; L=[json.loads(l) for l in open(sys.argv[1])]; h=[r for r in L if r['tors']>0]; k=[r for r in h if r.get('ker_tors',0)>0]; print(sys.argv[1], len(L), 'hits', len(h), 'ker', len(k), 'ker_in_u3', sum(bool(r.get('ker_in_u3')) for r in k))" "$F" | tee -a "$OUT/summary.txt"
+  DONE=$((DONE + COUNT)); echo "$DONE/$TOTAL" > "${JOB_ROOT:-.}/progress"
+  $PY -c "import json,sys; L=[json.loads(l) for l in open(sys.argv[1])]; h=[r for r in L if r['tors']>0]; k=[r for r in h if r.get('ker_tors',0)>0]; print(sys.argv[1], len(L), 'hits', len(h), 'ker', len(k), 'ker_in_u3', sum(bool(r.get('ker_in_u3')) for r in k), 'image_ok', all(r['tors'] - r.get('ker_tors', 0) <= r.get('m_tors', 0) for r in h))" "$F" | tee -a "$OUT/summary.txt"
 done <<< "$PLAN"
 echo done

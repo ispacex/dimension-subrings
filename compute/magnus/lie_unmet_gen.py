@@ -35,7 +35,8 @@ Usage:
         TIES in  u (= unmet), x, c, b, uc, ub, ux, uinh (u + uc/ub/ux), mix, inh (see KINDS);  one JSON line per ring:
         tors/exp = log_q of delta_5/gamma_5 and its exponent; for tors > 0 also
         ker_tors/ker_exp (the L''-part) and m_tors (delta_5/gamma_5 of M = L/L'').
-  python lie_unmet_gen.py one Q 'SPEC-JSON' [E]     one ring, verbose (re-check of a hit)"""
+  python lie_unmet_gen.py one Q 'SPEC-JSON' [E]     one ring (re-check of a hit)
+  python lie_unmet_gen.py rehits FILE.jsonl [E]       re-run all hits of a run (other E = precision check)"""
 import itertools
 import json
 import random
@@ -45,6 +46,7 @@ import time
 import numpy as np
 
 from liedim import Block, Pres, invariants
+from dimsub import reduce_rows  # noqa: E402
 from dimsub import howell  # noqa: E402  (liedim puts compute/ on sys.path)
 from lie_imp_l1 import SPEC_L1, sample as sample_rand, sample_local
 from lie_nonmet5 import QUADS
@@ -80,8 +82,8 @@ def build(q, spec, E=None, kill_lpp=False):
     for t in range(len(QUADS)):
         tie = ties.get(t, "kill")
         if kill_lpp or tie == "kill":
-            P.rel(quad[t])
-        elif tie is None or tie[0] == "x":
+            P.rel(quad[t])                # M = L/L'': all 45 quads killed, and every tie below kept
+        if tie == "kill" or tie is None or tie[0] == "x":
             continue
         elif tie[0] == "u":
             _, s, k = tie
@@ -128,6 +130,7 @@ def study(q, spec, E=None, with_ker=True):
     if tors > 0 and with_ker:
         Pm, _ = build(q, spec, E, kill_lpp=True)
         bM = block(Pm)
+        assert reduce_rows(R, bM.J, np.array([r for _, _, r in bL.J], dtype=np.int64)).all(), "J_L not in J_M"
         Ki = intersect(R, bL.K, bM.J, len(P.basis))
         kf, kt, ko = invariants(R, Ki, bL.J) if Ki else (0, 0, [])
         out.update(ker_free=kf, ker_tors=kt, ker_exp=max([o for o in ko if 0 < o <= R.E - 3], default=0))
@@ -190,6 +193,14 @@ def main():
                   study(q, dict(l1, ties={})), flush=True)
             print("unmet q=%d (all L'' free)" % q,
                   study(q, dict(l1, ties={str(t): None for t in range(len(QUADS))})), flush=True)
+        return
+    if cmd == "rehits":                     # re-run every hit of a .jsonl (optionally at another E)
+        E = int(sys.argv[3]) if len(sys.argv) > 3 else None
+        for line in open(sys.argv[2]):
+            r = json.loads(line)
+            if r["tors"] > 0:
+                print(json.dumps({"q": r["q"], "spec": r["spec"], "E": E, "old": {k: r.get(k) for k in
+                      ("tors", "exp", "ker_tors", "ker_in_u3")}, **study(r["q"], r["spec"], E)}), flush=True)
         return
     if cmd == "one":
         q, spec = int(sys.argv[2]), json.loads(sys.argv[3])
