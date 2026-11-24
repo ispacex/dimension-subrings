@@ -10,7 +10,7 @@ for n in "$@"; do
   r=ok
   for f in "b_$n.json" "b_$n.jsonl" "dump_$n.jsonl"; do [ -e "$a/$f" ] && [ -e "$b/$f" ] || r="missing $f"; done
   # a gz_vertex.sh run (r_NAME present) must have ended with rc 0
-  for x in "$a" "$b"; do [ ! -e "$x/r_$n" ] || grep -q " rc 0 " "$x/r_$n" || r="$r; $x: not rc 0"; done
+  for x in "$a" "$b"; do [ ! -e "$x/r_$n" ] || grep -q " rc 0 " "$x/r_$n" || { [ "$r" = ok ] && r="$x: not rc 0" || r="$r; $x: not rc 0"; }; done
   if [ "$r" = ok ]; then
     [ "$(counts "$a/b_$n.json")" = "$(counts "$b/b_$n.json")" ] || r="STAT DIFFERS"
     [ "$(sort "$a/b_$n.jsonl" | md5sum)" = "$(sort "$b/b_$n.jsonl" | md5sum)" ] || r="$r OUTFILE DIFFERS"
