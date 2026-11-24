@@ -159,7 +159,8 @@ if GZ and not (IsBound(ANUPQData.binary_gz) and IsBound(ANUPQData.binary_nostab_
   Error("children.g: GZ (PQ2048_GZ=1) needs ANUPQData.binary_gz and binary_nostab_gz (pqrun.sh)");
 fi;
 # CH_FILEKEEP (a directory): CH_FileIterator also links each file it reads there, as GAP_library.<seq>
-# (GAP_library.<seq>.gz with GZ), so that the same step can be walked again in parts (CH_FILERANGE below).
+# (GAP_library.<seq>.gz with GZ), so that the same step can be walked again in parts (CH_FILERANGE below;
+# split_library.sh reads plain files only: gzip -dc a kept .gz first).
 CH_FILESEQ := 0;
 CH_FileIterator := function(file, n, p)
   local path, ext;

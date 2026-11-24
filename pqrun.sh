@@ -3,9 +3,13 @@
 # GAP = a wrapper that reads pqbin.g (ANUPQData.binary := the patched pq) before its stdin.
 set -u
 top=$(pwd)
-# anupq-src/ (a local copy) if present, else ispacex/anupq branch nostab (master + PQ_NOSTAB, 3ea52b4)
+# anupq-src/ (a local copy) if present; else, with PQ2048_GZ=1 in the environment (children.g GZ, MATH-525),
+# ispacex/anupq pq-gz-library at 0690fc2 (PQ_NOSTAB, PQ_GZ, PQ_NOCLASSFILE); else branch nostab (master +
+# PQ_NOSTAB, 3ea52b4)
 s=$JOB_ROOT/pqfork; rm -rf "$s"
 if [ -d "$top/anupq-src" ]; then cp -r "$top/anupq-src" "$s"
+elif [ "${PQ2048_GZ:-0}" = 1 ]; then
+  { git clone -q https://github.com/ispacex/anupq "$s" && git -C "$s" checkout -q 0690fc2; } || exit 1
 else git clone -q -b nostab https://github.com/ispacex/anupq "$s" || exit 1; fi
 cd "$s"
 ( ./autogen.sh && ./configure --with-gaproot="$JOB_CACHE/gap" && make -j2 ) > "$JOB_OUT/build.log" 2>&1 || { tail -30 "$JOB_OUT/build.log"; exit 1; }

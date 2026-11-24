@@ -8,7 +8,9 @@
 # where peak_du is the largest size of the vertex's TMPDIR and peak_tmp that plus the deleted files the
 # pq processes in it hold open (sampled every 10 s).  A vertex starts only with MINFREE_G (default 40)
 # GB free on OUTDIR's disk and is killed when its TMPDIR passes CAP_M (default 71680) MB (rc "cap").
-# Run under pqrun.sh; TMPDIR of a vertex: TMPBASE/NAME (default OUTDIR/tmp), removed after it.
+# Run under pqrun.sh (with PQ2048_GZ=1 in its environment, or an anupq-src/ of ispacex/anupq pq-gz-library,
+# for MODE gz); TMPDIR of a vertex: TMPBASE/MODE.NAME (default OUTDIR/tmp), removed after it.  Exit 1 unless
+# every vertex ended with rc 0.
 here=$(cd "$(dirname "$0")" && pwd)
 list=$1 out=$2 mode=$3 par=${4:-1} to=${5:-24h}
 case $mode in plain) gz=0;; gz) gz=1;; *) echo "MODE: plain or gz"; exit 2;; esac
@@ -30,13 +32,14 @@ one() {
     sleep 10
     d=$(du -sb "$t" 2>/dev/null | cut -f1); d=${d:-0}; del=0
     for p in $(pgrep -x pq); do
-      case "$(readlink /proc/$p/cwd 2>/dev/null)" in "$t"*) ;; *) continue;; esac
+      case "$(readlink /proc/$p/cwd 2>/dev/null)" in "$t"|"$t"/*) ;; *) continue;; esac
       for fd in /proc/$p/fd/*; do
         case "$(readlink "$fd" 2>/dev/null)" in *"(deleted)"*) z=$(stat -L -c %s "$fd" 2>/dev/null); del=$((del + ${z:-0}));; esac
       done
     done
     [ "$d" -gt "$pd" ] && pd=$d; [ $((d + del)) -gt "$pt" ] && pt=$((d + del))
-    if [ $((d / 1048576)) -gt "$CAP_M" ]; then cap=cap; kill -TERM -- -$pid 2>/dev/null; sleep 20; kill -KILL -- -$pid 2>/dev/null; fi
+    # the whole session of setsid (timeout puts gap and pq in a process group of their own)
+    if [ $((d / 1048576)) -gt "$CAP_M" ]; then cap=cap; pkill -TERM -s $pid 2>/dev/null; kill -TERM -- -$pid 2>/dev/null; sleep 20; pkill -KILL -s $pid 2>/dev/null; kill -KILL -- -$pid 2>/dev/null; fi
   done
   wait $pid; rc=${cap:-$?}
   rm -rf "$t" "$t.head"
@@ -44,3 +47,5 @@ one() {
 }
 export -f one
 ls "$out/$mode/in" | xargs -P "$par" -I{} bash -c 'one {}'
+# exit 1 unless every vertex ended with rc 0
+for f in "$out/$mode"/in/*; do grep -q " rc 0 " "$out/$mode/r_${f##*/}" 2>/dev/null || exit 1; done

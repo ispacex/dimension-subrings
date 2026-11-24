@@ -48,8 +48,8 @@
 #     when Aut(G) is insoluble: 3/4 of the time of a heavy vertex of order 512 (counted in onestage[k]).
 #   GZ (environment PQ2048_GZ=1, with PQ2048_STREAM=1 and PQ2048_STREAMFILE=1; children.g) — pq writes the
 #     descendants of each step gzip-compressed (GAP_library.gz), the walk reads them from there, and pq's
-#     unread <ident>_class<n> files are not written: 5-24 times less temporary disk on order-256 vertices,
-#     the same walk and time (README "Compressed pq output").
+#     unread <ident>_class<n> files are not written: 5-24 times less temporary disk on the 5 order-256
+#     vertices checked (0.6-3.8 GB plain), the same walk and time (README "Compressed pq output").
 #   TRACE — print each vertex (order, CodePcGroup) before it is expanded, to name the one that fails.
 #   PROFILE (environment PQ2048_PROFILE=FILE) — per vertex, appended to FILE (flushed line by line):
 #     {"start":k,"code":..} before it is expanded, then {"k":..,"code":..,"steps":[..],"ms_steps":..,

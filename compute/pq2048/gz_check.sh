@@ -1,8 +1,9 @@
 #!/bin/sh
 # gz_check.sh DIR — run gz_check.g (under pqrun.sh) with its files kept in DIR, then compare the kept files
-# (gz_check.g).  Exit 0 when the codes agree in every case and plain = gz wherever plain = plain.
+# (gz_check.g), then the negative controls of gz_neg.g.  Exit 0 when the codes agree in every case,
+# plain = gz wherever plain = plain, and every negative control said no.
 here=$(cd "$(dirname "$0")" && pwd)
-dir=$1; mkdir -p "$dir/tmp"
+dir=$1; mkdir -p "$dir/tmp"; dir=$(cd "$dir" && pwd)
 # pq's directory on the same file system as DIR (the kept files are hard links)
 ( cd "$here" && printf 'GZC_KEEP := "%s";;\n' "$dir" | cat - gz_check.g | TMPDIR="$dir/tmp" "${GAP:-gap}" -q -b -o 4g --quitonbreak ) | tee "$dir/gz_check.log"
 grep -q '^gz_check: true' "$dir/gz_check.log" || { echo "gz_check.g failed"; exit 1; }
@@ -23,4 +24,8 @@ done
 rm -f "$dir/p"
 rm -f "$dir/u"
 [ "$i" -gt 1 ] || { echo "no files kept"; exit 1; }
+mkdir -p "$dir/neg"
+( cd "$here" && printf 'GZN_DIR := "%s";;\n' "$dir/neg" | cat - gz_neg.g | TMPDIR="$dir/tmp" "${GAP:-gap}" -q -b -o 4g ) 2>&1 | tee "$dir/gz_neg.log"
+grep -q '^gz_neg: true' "$dir/gz_neg.log" || { echo "a negative control did not say no"; bad=1; }
+rm -rf "$dir/neg"
 exit $bad

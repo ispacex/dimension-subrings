@@ -936,8 +936,10 @@ $5.0\cdot10^4$, $1.5\cdot10^3$ classes ($d = 4, 5, 6$; $d \ge 7$: none).
 ## Compressed pq output
 
 [MATH-525](https://math.kaiku.tech/issue/MATH-525). The heavy order-256 vertices of the $2^{12}$ walk
-left 40+ GB of pq files each (two died with "No space left" on ax42). Measured on two vertices of
-`m40-vertices40` with the stock pq (ecdf1a7; sampled every 10 s): at the peak, **about 3/4 is pq's
+left 40+ GB of pq files each (two died with "No space left" on ax42 in
+`ax42/tm/20261123-151153-m40-heavy15-8cc20e4`). Measured on two vertices of `m40-vertices40` with the
+stock pq (ecdf1a7; sampled every 10 s; `kimmy/tm/20261123-223133-m525-measure-8cc20e4`; GB = $10^9$
+bytes): at the peak, **about 3/4 is pq's
 `<ident>_class<n>`** — the p-covering groups of the capable descendants, which pq's `iteration()` saves
 for a next class that `PqDescendants` (default `ClassBound`) never asks for — and the rest is
 `GAP_library`; pq's unlinked temporary files (`tmpfile()`, always in `/tmp` under glibc, a 9.8 GB tmpfs
@@ -961,22 +963,28 @@ documented in `tree.g` and `run_rank.sh`) runs the pq call of `CH_Stream` throug
   all, it stops with an error instead of reading an empty file.
 
 That pq's `TemporaryFile()` also honours `TMPDIR` (mkstemp + unlink), with or without the flags.
+pqrun.sh builds it (ispacex/anupq at 0690fc2) when `PQ2048_GZ=1` is in its environment and there is no
+`anupq-src/`. With GZ, `CH_FILEKEEP` keeps `.gz` files: `gzip -dc` one before `split_library.sh`.
 
-**Checks.** Per pq call (`gz_check.g`/`gz_check.sh`; 8 cases, orders 16–256, steps 1–2, ±`PQ_NOSTAB`):
-the descendants' codes agree in all; where plain pq repeats itself byte for byte (3 cases) the
-decompressed `GAP_library.gz` is that file byte for byte (elsewhere plain pq differs from itself:
-random stabiliser generators from GAP). Whole vertices (`gz_vertex.sh`, `gz_compare.sh`: STATFILE counts
+**Checks.** Per pq call (`gz_check.g`/`gz_check.sh`, `ax42/tm/20261123-224014-m525-gzcheck-cc54244`
+without and `ax42/tm/20261123-232200-m525-gzcheck-2552cdc` with `PQ_NOCLASSFILE`; 8 cases, orders
+16–256, steps 1–2, ±`PQ_NOSTAB`, of which 7 have descendants — $SmallGroup(64, 260)$ with step 2 has
+none): the descendants' codes agree in all; where plain pq repeats itself byte for byte (3 cases, one
+of them — order 256 with stabilisers — with automorphism data) the decompressed `GAP_library.gz` is
+that file byte for byte (elsewhere plain pq differs from itself: random stabiliser generators from
+GAP). Negative controls (`gz_neg.g`, run by `gz_check.sh`): a `.gz` cut short, a pq without `PQ_GZ`,
+and `PQ_NOCLASSFILE` asked for two classes each end in an error. Whole vertices (`gz_vertex.sh`, `gz_compare.sh`: STATFILE counts
 without the times, sorted OUTFILE and DUMPFILE), kimmy, `kimmy/tm/20261123-232549-m525-vert5-2552cdc`:
 plain and GZ agree on all 5, and GZ agrees with the earlier plain run `m40-vertices40`. Peak of pq's
-files per vertex (TMPDIR plus the unlinked files pq holds open), wall time:
+files per vertex (TMPDIR plus the unlinked files pq holds open; MiB), wall time:
 
 | vertex | plain | GZ | ratio | wall plain / GZ |
 |---|---|---|---|---|
-| v0000_12 | 614 MB | 110 MB | ×5.6 | 637 / 617 s |
-| v0033_13 | 1546 MB | 110 MB | ×14 | 1106 / 1135 s |
-| v0004_14 | 2380 MB | 221 MB | ×10.8 | 1885 / 1915 s |
-| v0029_11 | 3345 MB | 142 MB | ×23.6 | 3057 / 3044 s |
-| v0078_11 | 3760 MB | 436 MB | ×8.6 | 3233 / 3266 s |
+| v0000_12 | 614 MiB | 110 MiB | ×5.6 | 637 / 617 s |
+| v0033_13 | 1546 MiB | 110 MiB | ×14 | 1106 / 1135 s |
+| v0004_14 | 2380 MiB | 221 MiB | ×10.8 | 1885 / 1915 s |
+| v0029_11 | 3345 MiB | 142 MiB | ×23.6 | 3057 / 3044 s |
+| v0078_11 | 3760 MiB | 436 MiB | ×8.6 | 3233 / 3266 s |
 
-With GZ almost all that is left are pq's unlinked temporary files (the files in TMPDIR peak at 4–25 MB).
+With GZ almost all that is left are pq's unlinked temporary files (the files in TMPDIR peak at 4–25 MiB).
 The time is the same.
