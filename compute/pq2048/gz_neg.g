@@ -1,5 +1,6 @@
 # gz_neg.g — negative controls for children.g's GZ (MATH-525): each check must say "no".
-#   1. a GAP_library.gz cut short is not read as a complete file: CH_FileBlocks errors;
+#   1. a GAP_library.gz whose text stops inside a block (cut at a line, gzipped again) is not read as a
+#      complete file: CH_FileBlocks errors;
 #   2. a pq without PQ_GZ (binary_gz := the plain pq): CH_FileIterator errors (no GAP_library.gz);
 #   3. pq with PQ_NOCLASSFILE asked for two classes (ClassBound := class + 2): pq stops, PqDescendants
 #      does not return the plain result.

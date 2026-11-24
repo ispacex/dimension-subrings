@@ -26,6 +26,7 @@ rm -f "$dir/u"
 [ "$i" -gt 1 ] || { echo "no files kept"; exit 1; }
 mkdir -p "$dir/neg"
 ( cd "$here" && printf 'GZN_DIR := "%s";;\n' "$dir/neg" | cat - gz_neg.g | TMPDIR="$dir/tmp" "${GAP:-gap}" -q -b -o 4g ) 2>&1 | tee "$dir/gz_neg.log"
-grep -q '^gz_neg: true' "$dir/gz_neg.log" || { echo "a negative control did not say no"; bad=1; }
+{ grep -q '^gz_neg: true' "$dir/gz_neg.log" && [ "$(grep -c '^neg [123]: caught' "$dir/gz_neg.log")" = 3 ]; } \
+  || { echo "a negative control did not say no"; bad=1; }
 rm -rf "$dir/neg"
 exit $bad

@@ -972,8 +972,9 @@ without and `ax42/tm/20261123-232200-m525-gzcheck-2552cdc` with `PQ_NOCLASSFILE`
 none): the descendants' codes agree in all; where plain pq repeats itself byte for byte (3 cases, one
 of them — order 256 with stabilisers — with automorphism data) the decompressed `GAP_library.gz` is
 that file byte for byte (elsewhere plain pq differs from itself: random stabiliser generators from
-GAP). Negative controls (`gz_neg.g`, run by `gz_check.sh`): a `.gz` cut short, a pq without `PQ_GZ`,
-and `PQ_NOCLASSFILE` asked for two classes each end in an error. Whole vertices (`gz_vertex.sh`, `gz_compare.sh`: STATFILE counts
+GAP). Negative controls (`gz_neg.g`, run by `gz_check.sh`; `kimmy/tm/20261124-022748-m525-gzcheck-neg-787f8d6`):
+a `.gz` whose text stops inside a block, a pq without `PQ_GZ`, and `PQ_NOCLASSFILE` asked for two
+classes each end in an error; `gz_compare.sh` says DIFFERS on two different vertices. Whole vertices (`gz_vertex.sh`, `gz_compare.sh`: STATFILE counts
 without the times, sorted OUTFILE and DUMPFILE), kimmy, `kimmy/tm/20261123-232549-m525-vert5-2552cdc`:
 plain and GZ agree on all 5, and GZ agrees with the earlier plain run `m40-vertices40`. Peak of pq's
 files per vertex (TMPDIR plus the unlinked files pq holds open; MiB), wall time:
