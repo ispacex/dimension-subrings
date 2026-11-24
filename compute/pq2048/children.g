@@ -139,16 +139,41 @@ if not IsBound(STREAMFILE) then
   STREAMFILE := IsBound(GAPInfo.SystemEnvironment.PQ2048_STREAMFILE)
                 and GAPInfo.SystemEnvironment.PQ2048_STREAMFILE = "1";
 fi;
-# CH_FILEKEEP (a directory): CH_FileIterator also links each file it reads there, as GAP_library.<seq>,
-# so that the same step can be walked again in parts (CH_FILERANGE below).
+# GZ (with STREAM and STREAMFILE; default the environment variable PQ2048_GZ, 1 = on): the pq of CH_Stream
+# writes its descendants gzip-compressed (through gzip -1) to GAP_library.gz instead of GAP_library, and
+# CH_FileIterator reads that file (InputTextFile decompresses a *.gz name as it reads), one block at a
+# time as before.  Decompressed it is byte for byte the part of GAP_library after its header, so the
+# groups and the walk are the same; on disk it is about 30 times smaller (MATH-525).  The same pq call
+# also runs with PQ_NOCLASSFILE: the covers of the capable descendants, which pq saves on <ident>_class<n>
+# for a next class that PqDescendants never asks for, go to /dev/null (they were about 3/4 of pq's
+# files).  It needs the pq of ispacex/anupq pq-gz-library and pqrun.sh's wrappers ANUPQData.binary_gz and
+# ANUPQData.binary_nostab_gz (that pq with PQ_GZ=1 PQ_NOCLASSFILE=1): only the pq calls of CH_Stream run with PQ_GZ, every
+# other PqDescendants (MS_Desc, the cover search's fallback) reads the plain GAP_library as before.
+if not IsBound(GZ) then
+  GZ := IsBound(GAPInfo.SystemEnvironment.PQ2048_GZ) and GAPInfo.SystemEnvironment.PQ2048_GZ = "1";
+fi;
+if GZ and not (STREAM and STREAMFILE) then
+  Error("children.g: GZ (PQ2048_GZ=1) needs STREAM and STREAMFILE (PQ2048_STREAM=1, PQ2048_STREAMFILE=1)");
+fi;
+if GZ and not (IsBound(ANUPQData.binary_gz) and IsBound(ANUPQData.binary_nostab_gz)) then
+  Error("children.g: GZ (PQ2048_GZ=1) needs ANUPQData.binary_gz and binary_nostab_gz (pqrun.sh)");
+fi;
+# CH_FILEKEEP (a directory): CH_FileIterator also links each file it reads there, as GAP_library.<seq>
+# (GAP_library.<seq>.gz with GZ), so that the same step can be walked again in parts (CH_FILERANGE below;
+# split_library.sh reads plain files only: gzip -dc a kept .gz first).
 CH_FILESEQ := 0;
 CH_FileIterator := function(file, n, p)
-  local path;
+  local path, ext;
   CH_FILESEQ := CH_FILESEQ + 1;
-  path := Concatenation(file, ".", String(CH_FILESEQ));
-  Exec(Concatenation("mv '", file, "' '", path, "'"));
+  ext := "";
+  if GZ then ext := ".gz"; fi;
+  path := Concatenation(file, ".", String(CH_FILESEQ), ext);
+  if not IsExistingFile(Concatenation(file, ext)) then
+    Error("CH_FileIterator: pq wrote no ", file, ext, " (", n, " descendants)");
+  fi;
+  Exec(Concatenation("mv '", file, ext, "' '", path, "'"));
   if IsBound(CH_FILEKEEP) then
-    Exec(Concatenation("ln '", path, "' '", CH_FILEKEEP, "/GAP_library.", String(CH_FILESEQ), "'"));
+    Exec(Concatenation("ln '", path, "' '", CH_FILEKEEP, "/GAP_library.", String(CH_FILESEQ), ext, "'"));
   fi;
   return CH_FileBlocks(path, 1, n, p, true);
 end;;
@@ -203,9 +228,16 @@ CH_FileBlocks := function(path, first, last, p, remove)
 end;;
 
 CH_Stream := function(V, s)
-  local datarec, p, class, n, r;
+  local datarec, p, class, n, r, pqb;
   PushOptions(rec(StepSize := s));
+  # GZ: this pq call (only this one) with PQ_GZ=1, writing GAP_library.gz
+  pqb := ANUPQData.binary;
+  if GZ then
+    if IsBound(ANUPQData.binary_nostab) and pqb = ANUPQData.binary_nostab then ANUPQData.binary := ANUPQData.binary_nostab_gz;
+    else ANUPQData.binary := ANUPQData.binary_gz; fi;
+  fi;
   datarec := ANUPQ_ARG_CHK("PqDescendants", [V]);
+  ANUPQData.binary := pqb;
   PQ_AUT_GROUP(datarec.group);
   if HasIsCapable(datarec.group) and not IsCapable(datarec.group) then
     PQ_COMPLETE_NONINTERACTIVE_FUNC_CALL(datarec);
