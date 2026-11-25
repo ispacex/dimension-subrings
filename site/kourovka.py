@@ -23,6 +23,7 @@ the answers and comments, so the AI flags are the editors' words, not ours.
 LaTeX is turned into HTML with the math left as $...$ / $$...$$ for KaTeX in the reader's browser; the
 Notebook's own macros (\\goth, \\Bbb, \\f, \\Z, ...) are kept and defined for KaTeX in MACROS.
 """
+import html
 import io
 import json
 import re
@@ -64,7 +65,7 @@ DROP0 = {"hf", "hfill", "vs", "lb", "linebreak", "newline", "noindent", "par", "
          "flushbottom", "phantomsection", "ul", "hs", "ds", "vv", "vsh", "sm", "bsl", "bmp", "emp", "rmp", "centering",
          "clearpage", "newpage", "pagebreak", "nopagebreak", "indent", "relax", "protect", "hss", "hfil", "vfill",
          "displaystyle", "nolinebreak", "goodbreak", "allowbreak", "break", "unskip", "null", "kern", "sloppy",
-         "raggedright", "leavevmode", "strut", "item", "otv", "oai", "mb", "thinspace"}
+         "raggedright", "leavevmode", "strut", "item", "mb", "thinspace"}
 DROP1 = {"label", "pageref", "vspace", "hspace", "index", "enlargethispage", "phantom", "vphantom", "hphantom", "cite"}
 DIM = re.compile(r"\s*-?[\d.]+\s*(?:pt|ex|em|cm|mm|in|bp|sp)\b|\s*\\[a-z]+skip\b")
 
@@ -223,6 +224,17 @@ class TeX:
             self.i += 1
             return ""
         self.i += m.end()
+        if name == "verb" and self.peek():
+            d = self.peek()
+            j = self.s.find(d, self.i + 1)
+            j = len(self.s) if j < 0 else j
+            body = self.s[self.i + 1:j]
+            self.i = j + 1
+            return "<code>%s</code>" % html.escape(body, quote=False)
+        if name == "otv":
+            return '<span class="kmark solved" title="solved">*</span> '
+        if name == "oai":
+            return '<span class="kmark ai" title="unverified AI solution">♯</span> '
         if name in ("[",):
             return self.math("\\]", True)
         if name == "(":
@@ -277,9 +289,11 @@ class TeX:
             tag = WRAP[name]
             return f"<{tag}>{body}</{tag}>" if tag else body
         if name in ("url", "href"):
-            u = self.raw_group().strip()
-            text = self.group() if name == "href" else u
-            return f'<a href="{u.replace(chr(34), "%22")}">{text}</a>'
+            u = re.sub(r"\s+", "", self.raw_group())
+            text = self.group() if name == "href" else html.escape(u, quote=False)
+            if not re.match(r"https?://", u):
+                return text
+            return f'<a href="{html.escape(u)}">{text}</a>'
         if name in ("makebox", "framebox"):
             self.opt()
             self.opt()
@@ -365,41 +379,36 @@ def flags(text):
     if re.search(r"ai(?: |-)(?:solutions?|proofs?) (confirmed|verified)|ai(?: |-)solutions? by|ai-proof confirmed", low):
         f.append("ai_confirmed")
     if "unverified ai solution" in low:
-        f.append("ai_unverified")
-    if not f and re.search(r"\bai\b", text.replace("\\ai", "")) and re.search(r"artificial intelligence|\bAI\b", text):
-        f.append("ai_mention")
+        f.append("ai_cited")  # an unverified AI solution is cited; the Notebook's own mark is \ai (parse())
     return f
-
-
-def ai_authors(text):
-    """Names after 'AI solution confirmed by X:' / 'unverified AI solution:' up to the {\\it Preprint."""
-    out = []
-    for m in re.finditer(r"(?:AI(?: |-)(?:solutions?|proofs?) (?:confirmed|verified) by\s*(?P<v>[^:]+):|AI solutions? by\s*|unverified AI solutions?:)\s*\\?\s*(?P<a>.*?)\{?\\it",
-                         text, re.S):
-        who = plain_of(html_of(m.group("a"))[0]).strip(" ,;")
-        ver = plain_of(html_of(m.group("v"))[0]).strip() if m.group("v") else ""
-        out.append({"by": who, "verified_by": ver})
-    return out
 
 
 def parse(tex):
     arch = tex.find("\\label{archiv}")
     probs, unknown = [], set()
+    blocks = []
     for m in re.finditer(r"\\bmp(?![A-Za-z])(.*?)(?:\\emp|\\rmp)(?![A-Za-z])", tex, re.S):
-        body = m.group(1)
+        # one minipage may hold two problems sharing an answer (11.54 and 11.55): split at an inner
+        # heading; a piece with no answer of its own gets the next piece's
+        pieces = re.split(r"\n\s*(?=(?:\\textbf\{|\{\\bf)\s*(?:\\zva?|\\ai)?\s*\d+\.\d+\.?\s*\})", m.group(1))
+        pieces = [x for x in pieces if x.strip()]
+        for k, piece in enumerate(pieces):
+            blocks.append((m.start(), piece, k + 1 < len(pieces)))
+    pending = []  # pieces of one minipage waiting for the answer a later piece carries
+    for start, body, more in blocks:
         h = (re.match(r"\s*\\textbf\{\s*(\\zv|\\zva|\\ai|\\oai)?\s*(\d+\.\d+)\.?\s*\}", body)
              or re.match(r"\s*\{\\bf\s*(\\zv|\\zva|\\ai|\\oai)?\s*(\d+\.\d+)\.?\s*\}", body))
         if not h:
             continue
         num, mark = h.group(2), (h.group(1) or "").strip("\\")
         rest = body[h.end():]
-        archive = arch >= 0 and m.start() > arch
+        archive = arch >= 0 and start > arch
         stmt, authors, after = split_author(rest)
         st_html, u1 = html_of(stmt)
         an_html, u2 = html_of(after)
         unknown |= u1 | u2
-        parts_solved = len(re.findall(r"\\makebox\[[^\]]*\]\[r\]\{\s*\\zva?\b", stmt))
-        parts_ai = len(re.findall(r"\\makebox\[[^\]]*\]\[r\]\{\s*\\ai\b", stmt))
+        parts_solved = len(re.findall(r"\\zva?(?![A-Za-z])", stmt))  # "\makebox[25pt][r]{\zv a)}" or "\zva a)" (19.10)
+        parts_ai = len(re.findall(r"\\ai(?![A-Za-z])", stmt))
         if archive:
             status = "solved"
         elif mark in ("zv", "zva"):
@@ -410,11 +419,20 @@ def parse(tex):
             status = "open"
         fl = sorted(set(flags(after) + flags(stmt)))
         if mark in ("ai", "oai") or parts_ai:
-            fl = sorted(set(fl) | {"ai_unverified"})
+            fl = sorted((set(fl) - {"ai_cited"}) | {"ai_unverified"})
         probs.append({"n": num, "ed": int(num.split(".")[0]), "archive": archive, "status": status,
                       "mark": {"zv": "*", "zva": "*", "ai": "♯", "oai": "♯"}.get(mark, ""),
                       "ai": fl, "authors": authors,
                       "statement": st_html, "answer": an_html})
+        if not an_html and more:
+            pending.append(probs[-1])
+        elif an_html and pending:
+            for q in pending:  # the answer below both: shared
+                q["answer"] = an_html
+                q["status"] = status if q["status"] == "open" else q["status"]
+            pending = []
+        if not more:
+            pending = []
     seen, out = {}, []
     for p in probs:  # a number twice: the main part first, then the Archive; keep the first and report
         if p["n"] in seen:

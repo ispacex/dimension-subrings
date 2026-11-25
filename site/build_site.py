@@ -316,7 +316,7 @@ KATEX = """<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],
- macros:{'\\\\D':'\\\\Delta','\\\\Z':'\\\\mathbb{Z}'},ignoredTags:['script','noscript','style','textarea','pre','code','svg']})"></script>"""
+ macros:{'\\\\D':'\\\\Delta','\\\\Z':'\\\\mathbb{Z}'},ignoredTags:['script','noscript','style','textarea','pre','code','svg'],ignoredClasses:['knomath']})"></script>"""
 
 
 def plain(s):
@@ -507,7 +507,7 @@ def check_kourovka(d, probs):
 def kourovka_text(s):
     """Our own text: $...$ kept for KaTeX; [text](https://...) becomes a link."""
     s = html.escape(s, quote=False)
-    return re.sub(r"\[([^\]]+)\]\((https://[^)\s]+)\)", lambda m: f'<a href="{html.escape(m[2])}">{m[1]}</a>', s)
+    return re.sub(r"\[([^\]]+)\]\((https://[^)\s]+)\)", lambda m: f'<a href="{html.escape(html.unescape(m[2]))}">{m[1]}</a>', s)
 
 
 KOUROVKA_JS = r"""<script>
@@ -519,11 +519,12 @@ function norm(s){return s.toLowerCase().replace(/<[^>]+>/g,' ').replace(/\\[a-z]
   .normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ')}
 function ed(p){return T.ed[p.ed]||''}
 function noteAI(p){return (NOTES[p.n]||[]).some(function(n){return n.ai})}
-function human(p){return p.status==='solved'&&!p.ai.length&&!noteAI(p)}
+function nbAI(p){return p.ai.some(function(a){return a!=='ai_cited'})}
+function human(p){return p.status==='solved'&&!nbAI(p)&&!noteAI(p)}
 function badge(p){var s='<span class="tag kst-'+p.status+'">'+T.status[p.status]+'</span>';
   if(p.ai.indexOf('ai_confirmed')>=0)s+=' <span class="tag kai-ok" title="'+T.ai_confirmed_t+'">'+T.ai_confirmed+'</span>';
   if(p.ai.indexOf('ai_unverified')>=0)s+=' <span class="tag kai-un" title="'+T.ai_unverified_t+'">♯ '+T.ai_unverified+'</span>';
-  if(p.ai.indexOf('ai_mention')>=0)s+=' <span class="tag kai-m">'+T.ai_mention+'</span>';
+  if(p.ai.indexOf('ai_cited')>=0)s+=' <span class="tag kai-m" title="'+T.ai_cited_t+'">'+T.ai_cited+'</span>';
   (NOTES[p.n]||[]).forEach(function(n){s+=' <span class="tag kn-'+n.kind+'">'+T.kinds[n.kind]+'</span>'});
   return s}
 function card(p){
@@ -535,12 +536,14 @@ function card(p){
   (NOTES[p.n]||[]).forEach(function(n){h+='<div class="knote kn-'+n.kind+'"><div class="kl">'+T.kinds[n.kind]+' · '+n.date+'</div>'+n.html+'</div>'});
   return h+'</article>'}
 function filt(){
+  if(!DATA)return;
   var q=norm($('kq').value).trim(), st=$('kstatus').value, ai=$('kai').value, e=$('ked').value;
   var words=q?q.split(' '):[], exact=/^\d+\.\d+$/.test(q)?q:null;
   list=ITEMS.filter(function(it){var p=it.p;
     if(st&&p.status!==st)return false;
     if(ai==='any'&&!p.ai.length&&!NOTES[p.n])return false;
-    if(ai==='ai_note'&&!(noteAI(p)&&!p.ai.length))return false;
+    if(ai==='ai_note'&&!(noteAI(p)&&!nbAI(p)))return false;
+    if(ai==='ai_cited'&&p.ai.indexOf('ai_cited')<0)return false;
     if(ai==='ai_all'&&!p.ai.length&&!noteAI(p))return false;
     if(ai==='ai_confirmed'||ai==='ai_unverified'){if(p.ai.indexOf(ai)<0)return false}
     if(ai==='none'&&(p.ai.length||noteAI(p)))return false;
@@ -553,9 +556,10 @@ function filt(){
   shown=0;$('klist').innerHTML='';more();
   $('kcount').textContent=T.found.replace('{n}',list.length).replace('{all}',ITEMS.length);
   var u=new URLSearchParams();if($('kq').value)u.set('q',$('kq').value);if(st)u.set('status',st);if(ai)u.set('ai',ai);if(e)u.set('ed',e);
-  history.replaceState(null,'',location.pathname+(u.toString()?'?'+u:'')+(location.hash||''))}
-function render(el){if(window.renderMathInElement)renderMathInElement(el,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],
-  macros:Object.assign({},DATA.macros),throwOnError:false,strict:false});else setTimeout(function(){render(el)},200)}
+  var h=location.hash&&decodeURIComponent(location.hash.slice(1))===$('kq').value?location.hash:'';
+  history.replaceState(null,'',location.pathname+(u.toString()?'?'+u:'')+h)}
+function render(el,n){n=n||0;if(window.renderMathInElement)renderMathInElement(el,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],
+  macros:Object.assign({},DATA.macros),throwOnError:false,strict:false});else if(n<150)setTimeout(function(){render(el,n+1)},200)}
 function more(){var box=document.createElement('div');box.innerHTML=list.slice(shown,shown+PAGE).map(function(it){return card(it.p)}).join('');
   shown+=PAGE;$('klist').appendChild(box);render(box);$('kmore').hidden=shown>=list.length}
 function go(){var h=decodeURIComponent(location.hash.slice(1));if(/^\d+\.\d+$/.test(h)){$('kq').value=h;$('kstatus').value='';$('kai').value='';$('ked').value='';filt()}}
@@ -564,7 +568,7 @@ fetch($('kourovka-app').dataset.src).then(function(r){return r.json()}).then(fun
     return {p:p,t:norm(p.n+' '+p.authors+' '+p.statement+' '+p.answer+' '+(p.archived_parts?p.archived_parts.answer:'')+' '+notes+' '+p.ai.join(' ')+(p.ai.length?' ai':''))}});
   var c={open:0,partial:0,solved:0,ai_confirmed:0,ai_unverified:0,human:0,ai_note:0};
   d.problems.forEach(function(p){c[p.status]++;p.ai.forEach(function(a){if(a in c)c[a]++});if(human(p))c.human++;
-    if(noteAI(p)&&!p.ai.length)c.ai_note++});
+    if(noteAI(p)&&!nbAI(p))c.ai_note++});
   Object.keys(c).forEach(function(k){var x=$('kc-'+k);if(x)x.textContent=c[k]});
   var u=new URLSearchParams(location.search);['q','status','ai','ed'].forEach(function(k){if(u.get(k))$(k==='q'?'kq':'k'+k).value=u.get(k)});
   if(location.hash)go();else filt()});
@@ -602,7 +606,9 @@ def kourovka_page(lang):
                                                                                      "AI solution confirmed by a mathematician (per the Notebook)"),
           "ai_unverified": t("ИИ, не проверено", "AI, unverified"), "ai_unverified_t": t("Решение ИИ ещё не проверено; задача считается открытой",
                                                                                        "AI solution not yet verified; the problem counts as open"),
-          "ai_mention": t("ИИ упомянут", "AI mentioned"), "archive": t("архив", "Archive"),
+          "ai_cited": t("упомянуто решение ИИ", "AI solution cited"),
+          "ai_cited_t": t("В комментарии тетради упомянуто непроверенное решение ИИ (задача не помечена ♯)",
+                          "The Notebook's comment cites an unverified AI solution (the problem is not marked ♯)"), "archive": t("архив", "Archive"),
           "answer": t("Ответ", "Answer"), "comments": t("Комментарии", "Comments"),
           "archived_parts": t("Решённые части (архив)", "Solved parts (Archive)"),
           "found": t("Найдено: {n} из {all}", "{n} of {all} problems"),
@@ -648,10 +654,11 @@ Last checked: <b>{d["checked"]}</b>; updated weekly.</p></div>""")
 <option value="ai_confirmed">{t("ИИ, подтверждено", "AI, confirmed")}</option><option value="ai_unverified">{t("♯ ИИ, не проверено", "♯ AI, unverified")}</option>
 <option value="ai_all">{t("любое участие ИИ", "any AI involvement")}</option>
 <option value="ai_note">{t("ИИ по нашим заметкам (тетрадь не отмечает)", "AI per our notes (not marked in the Notebook)")}</option>
+<option value="ai_cited">{t("упомянуто непроверенное решение ИИ (без ♯)", "an unverified AI solution cited (no ♯)")}</option>
 <option value="human">{t("решены без ИИ", "solved without AI")}</option><option value="none">{t("без ИИ", "no AI")}</option><option value="notes">{t("с нашей заметкой", "with our note")}</option></select>
 <select id="ked" aria-label="{t("Выпуск", "Issue")}"><option value="">{t("все выпуски", "all issues")}</option>{opts_ed}</select></div>
 <p id="kcount" class="muted" aria-live="polite">{t("Загрузка…", "Loading…")}</p>
-<div id="klist"></div><p><button id="kmore" type="button" hidden>{t("Показать ещё", "Show more")}</button></p>
+<div id="klist" class="knomath"></div><p><button id="kmore" type="button" hidden>{t("Показать ещё", "Show more")}</button></p>
 <noscript><p>{t("Для поиска нужен JavaScript; данные&nbsp;—", "The search needs JavaScript; the data:")} <a href="{pre}kourovka-problems.json">kourovka-problems.json</a>.</p></noscript></div>
 <script type="application/json" id="k-ui">{json.dumps(ui, ensure_ascii=False).replace("</", "<\\/")}</script>
 <script type="application/json" id="k-notes">{json.dumps(notes, ensure_ascii=False).replace("</", "<\\/")}</script>"""
