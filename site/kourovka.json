@@ -1,0 +1,38 @@
+{
+  "checked": "2026-11-25",
+  "notes": [
+    {
+      "problem": "20.84",
+      "kind": "self",
+      "date": "2026-11-25",
+      "text": {
+        "ru": "Наша работа над этой задачей. Вопрос сведён к конечным метабелевым $2$-группам ступени $3$; контрпример среди конечных $2$-групп ступени $3$, если он есть, имеет порядок не меньше $2^{12}$; $3$-кручения в $D_5/\\gamma_5$ нет для $3$-групп порядка до $3^9$. Задача остаётся открытой.",
+        "en": "Our own work on this problem. The question is reduced to finite metabelian $2$-groups of class $3$; a counterexample among finite $2$-groups of class $3$, if any, has order at least $2^{12}$; there is no $3$-torsion in $D_5/\\gamma_5$ for $3$-groups of order up to $3^9$. The problem remains open."
+      },
+      "sources": [
+        {
+          "text": "ispacex.github.io/d5",
+          "url": "https://ispacex.github.io/d5/"
+        }
+      ]
+    }
+  ],
+  "ai_groups": [],
+  "queries": [
+    "arXiv:1401.0300 — latest version of the source (site/kourovka.py fetch)",
+    "arxiv.org full text: \"Kourovka\" (sorted by date, last 2 weeks)",
+    "arxiv.org: \"Kourovka notebook\" AND (\"language model\" OR GPT OR Gemini OR Claude OR \"AI-assisted\" OR AlphaEvolve OR \"AlphaProof\")",
+    "arxiv.org: \"Kourovka\" AND Lean",
+    "zenodo.org: \"Kourovka\"",
+    "kourovkanotebookorg.wordpress.com — new posts and uploads",
+    "MathOverflow: \"Kourovka\" (newest)",
+    "web: \"Kourovka problem\" solved AI"
+  ],
+  "log": [
+    {
+      "date": "2026-11-25",
+      "ru": "Страница заведена: все задачи тетради по исходнику arXiv:1401.0300v50 (MATH-526).",
+      "en": "Page started: every problem of the Notebook, from the source of arXiv:1401.0300v50 (MATH-526)."
+    }
+  ]
+}
