@@ -4,9 +4,10 @@
 #   lean: every Lean declaration the blueprint names exists, checked by Lean itself (the equivalent of
 #         `leanblueprint checkdecls`): a generated file #checks each of them against the package
 #         pinned in groups/;
-#         It also compares the attribute @[d5 ...] of the package (MATH-453; `#d5_tags`, printed by
-#         groups/D5Tags.lean) with the nodes: the (label, declaration) pairs must be the same, so a
-#         tag in the code cannot drift from blueprint.toml, which stays the source of truth;
+#         It also compares the attribute @[d5 XXXX] of the package (MATH-453; `#d5_tags`, printed by
+#         groups/D5Tags.lean), the source of truth since MATH-458, with the lean fields of the nodes:
+#         the (node with tag XXXX, declaration) pairs must be the same, so the fields, which
+#         `blueprint.py sync` writes from the attribute, cannot be edited by hand; and it checks sync;
 #   tags: the permanent tags of blueprint.toml (MATH-457, wiki 912 §4.1): four characters 0-9 A-Z
 #         without I and O, each used once, none of the base of the PR (or of the commit before a push)
 #         gone, and the same as in the registry of the project D5 (MATH-506: the public
@@ -166,30 +167,69 @@ jobs:
           lake build GroupDimension GroupDimension.Cert1024.Prop1024
           lake env lean D5Tags.lean 2>&1 | tee tags.log
           python3 ../site/blueprint.py tags tags.log
-      - name: negative controls (a missing tag, an extra label, a D5 tag no node has must fail)
+      - name: negative controls (a missing tag, a tag on another node, a label, a D5 tag no node has must fail)
         working-directory: groups
         run: |
-          # drop the last tag line; add a wrong label and an unregistered tag to a real tagged declaration;
-          # each must fail with its own message (not with any error)
+          # drop the last tag line; tag a real declaration with another node's tag, with a label, with an
+          # unregistered tag; each must fail with its own message (not with any error)
           d=GroupDimension.ExpThree.D_five_eq_gamma_five_g4_cube
+          grep -qF "\"decl\":\"$d\"" tags.log || { echo "::error::tags.log has no $d"; exit 1; }
           n=$(grep -n '"key":' tags.log | tail -1 | cut -d: -f1)
           sed "${n}d" tags.log > tags-missing.log
-          { cat tags.log; echo "{\"key\":\"thm:no_such_label\",\"decl\":\"$d\",\"comment\":\"\"}"; } > tags-extra.log
-          # D5:ZZZZ is a well-formed tag that no node has (D5:000P, the tag of thm:g4cube, would be read as its label)
+          # D5:000E is the tag of q:main, not of thm:g4cube
+          { cat tags.log; echo "{\"key\":\"D5:000E\",\"decl\":\"$d\",\"comment\":\"\"}"; } > tags-other.log
+          { cat tags.log; echo "{\"key\":\"thm:g4cube\",\"decl\":\"$d\",\"comment\":\"\"}"; } > tags-label.log
           { cat tags.log; echo "{\"key\":\"D5:ZZZZ\",\"decl\":\"$d\",\"comment\":\"\"}"; } > tags-tag.log
-          check() {
-            if python3 ../site/blueprint.py tags "$1" > neg.out 2>&1; then echo "::error::the tag check passes $1"; exit 1; fi
+          check() {  # check CMD LOG MESSAGE
+            if python3 ../site/blueprint.py "$1" "$2" > neg.out 2>&1; then echo "::error::$1 passes $2"; exit 1; fi
             cat neg.out
-            grep -qF "$2" neg.out || { echo "::error::$1 fails for another reason"; exit 1; }
+            grep -qF "$3" neg.out || { echo "::error::$1 $2 fails for another reason"; exit 1; }
           }
-          check tags-missing.log 'but not tagged @[d5'
-          check tags-extra.log 'but not in the lean field of node thm:no_such_label'
-          check tags-tag.log 'a tag that no node of blueprint.toml has'
-          # positive control: the node's own tag D5:000P in place of its label thm:g4cube is read as the label
-          sed 's/"key":"thm:g4cube"/"key":"D5:000P"/' tags.log > tags-bytag.log
-          cmp -s tags.log tags-bytag.log && { echo "::error::tags.log has no thm:g4cube entry"; exit 1; }
-          python3 ../site/blueprint.py tags tags-bytag.log
-          echo "negative controls: a missing tag, an extra label and an unregistered tag fail, as they should"
+          check tags tags-missing.log 'but not tagged @[d5'
+          check tags tags-other.log 'tagged @[d5 000E], but not in the lean field of node q:main'
+          check tags tags-label.log 'which is not a tag D5:XXXX'
+          check tags tags-tag.log 'a tag that no node of blueprint.toml has'
+          # sync refuses a log with a label or an unregistered tag, and leaves the file alone
+          cp ../site/blueprint.toml bp.saved
+          check sync tags-label.log 'which is not a tag D5:XXXX'
+          check sync tags-tag.log 'a tag that no node of blueprint.toml has'
+          # a proved node (thm:g4cube, D5:000P) left without declarations: the rewritten file fails load(), so sync puts the old one back
+          grep -vF '"key":"D5:000P"' tags.log > tags-noproof.log
+          cmp -s tags.log tags-noproof.log && { echo "::error::tags.log has no D5:000P"; exit 1; }
+          check sync tags-noproof.log 'node thm:g4cube is proved but names no Lean declaration'
+          cmp -s bp.saved ../site/blueprint.toml || { echo "::error::a refused sync changed blueprint.toml"; exit 1; }
+          echo "negative controls: a missing tag, another node's tag, a label and an unregistered tag fail, as they should"
+      - name: sync (the lean fields from the attribute) changes nothing on the real tags, and does the right thing on altered ones
+        working-directory: groups
+        run: |
+          set -euo pipefail
+          T=../site/blueprint.toml
+          cp $T bp.saved
+          python3 ../site/blueprint.py sync tags.log | tee sync.out
+          grep -qF 'already agree' sync.out && cmp -s bp.saved $T || { echo "::error::sync changes the file on the real tags"; exit 1; }
+          # a declaration moved from thm:g4cube to q:main, and one of ext:gruenberg (3 declarations) dropped:
+          # sync must write exactly that
+          d=GroupDimension.ExpThree.D_five_eq_gamma_five_g4_cube
+          dropped=GroupDimension.Gruenberg.residuallyFinite
+          grep -qF "\"decl\":\"$dropped\"" tags.log || { echo "::error::tags.log has no $dropped"; exit 1; }
+          grep -vF "\"decl\":\"$dropped\"" tags.log \
+            | sed "s/\"decl\":\"$d\",\"key\":\"D5:000P\"/\"decl\":\"$d\",\"key\":\"D5:000E\"/" > tags-moved.log
+          grep -qF "\"decl\":\"$d\",\"key\":\"D5:000E\"" tags-moved.log || { echo "::error::tags-moved.log does not move $d"; exit 1; }
+          python3 ../site/blueprint.py sync tags-moved.log
+          python3 ../site/blueprint.py tags tags-moved.log
+          python3 - "$d" "$dropped" <<'PY'
+          import sys, tomllib
+          d, dropped = sys.argv[1], sys.argv[2]
+          old = tomllib.load(open("bp.saved", "rb"))["nodes"]
+          new = tomllib.load(open("../site/blueprint.toml", "rb"))["nodes"]
+          assert set(old) == set(new)
+          for label in old:
+              a, b = old[label].get("lean", []), new[label].get("lean", [])
+              want = [x for x in a if x not in (d, dropped)] + ([d] if label == "q:main" else [])
+              assert b == want, (label, a, b)
+          print(f"sync: moved {d} to q:main, dropped {dropped}; the other nodes untouched, order kept")
+          PY
+          cp bp.saved $T
       - name: negative control (a name that is not a declaration must fail)
         working-directory: groups
         run: |

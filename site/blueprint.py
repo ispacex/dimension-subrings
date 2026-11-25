@@ -15,6 +15,8 @@ and build_site.py builds results.html and blueprint.html from the same data.
     python3 site/blueprint.py lean OUT.lean                    the #check file (run in groups/)
     python3 site/blueprint.py tags LOG                         compare the output of `#d5_tags`
                                                              (groups/D5Tags.lean) with the nodes
+    python3 site/blueprint.py sync LOG                         rewrite the `lean` fields of the nodes
+                                                             from the output of `#d5_tags`
     python3 site/blueprint.py src [--paper PAPER_DIR] OUT_DIR  the leanblueprint source; without the
                                                              paper the statements are placeholders (CI)
     python3 site/blueprint.py tagcheck [--data TOML] [--base OLD_TOML] [--d5 TAGS]
@@ -31,8 +33,10 @@ the formalization), and a statement the paper calls formally verified has declar
 namespace and name; that Lean knows it is the CI check), and every declaration of a paper statement is
 named in the section on the formalization; a row of results.html marked Lean cites only statements
 whose proof is in Lean, and every {{lean:...}} of a row is a declaration of some node. `tags`: the
-declarations tagged @[d5 "label"] (or a tag @[d5 XXXX]) in groups/ (GroupDimension/D5Tag.lean, MATH-453) are exactly those of
-the nodes, label by label; this file stays the source of truth and the attribute is checked against it.
+declarations tagged @[d5 XXXX] in groups/ (GroupDimension/D5Tag.lean, MATH-453) are exactly those of
+the `lean` fields of the nodes, the node being the one with the tag XXXX. The attribute is the source of
+truth (MATH-458): `sync` writes the `lean` fields from it (keeping the order of the declarations that
+stay, adding new ones at the end), and `tags` is the CI check that nobody edited them by hand.
 `tagcheck` (wiki 912, §4.1): every node and every term has a tag of four characters 0-9 A-Z without I
 and O; no tag is used twice (nodes, terms and superseded tags together); every tag of an older
 blueprint.toml (the base of a PR) is still here, current or superseded, and a term keeps its D5 id;
@@ -163,9 +167,30 @@ def lean_file(data, index):
 
 
 def tag_pairs(data):
-    """The (key, declaration) pairs of the blueprint: one per declaration of a node's `lean`, the key
-    being the node's label."""
+    """The (label, declaration) pairs of the blueprint: one per declaration of a node's `lean`."""
     return {(label, x) for label, n in data["nodes"].items() for x in n["lean"]}
+
+
+def attr_pairs(data, log):
+    """The (label, declaration) pairs of the attribute @[d5 XXXX] (the output of `#d5_tags`), the label
+    being that of the node with the tag XXXX, and the errors: Lean reported an error, no entries at
+    all, a key that is not a tag (a label: the attribute refuses them since MATH-458), a tag that no
+    node has."""
+    by_tag = {"D5:" + n["tag"]: label for label, n in data["nodes"].items() if n.get("tag")}
+    got, errors = set(), []
+    if ": error" in log:
+        errors.append("Lean reported an error (see the log)")
+    entries = tag_entries(log)
+    if not entries:
+        errors.append("no @[d5] entries in the log")
+    for key, x in sorted(entries):
+        if not (key.startswith("D5:") and TAG.fullmatch(key[3:])):
+            errors.append(f"{x}: tagged {key!r}, which is not a tag D5:XXXX (labels are no longer keys, MATH-458)")
+        elif key not in by_tag:
+            errors.append(f"{x}: tagged {key}, a tag that no node of blueprint.toml has")
+        else:
+            got.add((by_tag[key], x))
+    return got, errors
 
 
 def tag_entries(log):
@@ -181,27 +206,85 @@ def tag_entries(log):
 
 
 def tags(data, log):
-    """The attribute @[d5 ...] of groups/ (GroupDimension/D5Tag.lean; MATH-453, MATH-458) against
-    blueprint.toml, which stays the source of truth: the (key, declaration) pairs printed by
-    `#d5_tags` must be exactly those of the nodes. Keys are the labels of the nodes, or their permanent
-    tags D5:XXXX (wiki 912, MATH-457), read as the label of the node with that tag; a tag that no node
-    has is a difference. A list of differences, empty if they agree."""
-    by_tag = {"D5:" + n["tag"]: label for label, n in data["nodes"].items() if n.get("tag")}
-    got = {(by_tag.get(key, key), x) for key, x in tag_entries(log)}  # a node's own tag is its label
+    """The attribute @[d5 XXXX] of groups/ (GroupDimension/D5Tag.lean; MATH-453, MATH-458), the source
+    of truth, against the `lean` fields of blueprint.toml: the pairs printed by `#d5_tags` must be
+    exactly those of the nodes (attr_pairs). A list of differences, empty if they agree."""
+    got, errors = attr_pairs(data, log)
     want = tag_pairs(data)
-    errors = []
-    if ": error" in log:
-        errors.append("Lean reported an error (see the log)")
-    if not got:
-        errors.append("no @[d5] entries in the log")
-    for key, x in sorted(want - got):
-        errors.append(f"{x}: in node {key} of blueprint.toml, but not tagged @[d5 \"{key}\"]")
-    for key, x in sorted(got - want):
-        if key.startswith("D5:"):
-            errors.append(f"{x}: tagged {key}, a tag that no node of blueprint.toml has")
-        else:
-            errors.append(f"{x}: tagged @[d5 \"{key}\"], but not in the lean field of node {key}")
+    tag = {label: n.get("tag") for label, n in data["nodes"].items()}
+    for label, x in sorted(want - got):
+        errors.append(f"{x}: in the lean field of node {label} of blueprint.toml, but not tagged @[d5 {tag[label]}] "
+                      "(the attribute is the source of truth: run blueprint.py sync)")
+    for label, x in sorted(got - want):
+        errors.append(f"{x}: tagged @[d5 {tag[label]}], but not in the lean field of node {label} "
+                      "(the attribute is the source of truth: run blueprint.py sync)")
     return errors
+
+
+def toml_list(key, items, width=120, indent=8):
+    """`key = ["a", "b", ...]` as blueprint.toml writes it: wrapped so that no line passes `width`
+    (unless one name does), continuation lines indented by `indent`."""
+    lines, cur = [], f"{key} = ["
+    for i, x in enumerate(items):
+        piece = json.dumps(x, ensure_ascii=False) + ("]" if i == len(items) - 1 else ",")
+        if i > 0 and len(cur) + 1 + len(piece) > width:
+            lines.append(cur)
+            cur = " " * indent + piece
+        else:
+            cur += (" " if i > 0 else "") + piece
+    lines.append(cur)
+    return "\n".join(lines) + "\n"
+
+
+def sync(data, log, text):
+    """blueprint.toml (its text) with the `lean` field of every node rewritten from the attribute
+    (attr_pairs): the declarations that stay keep their order, new ones follow, sorted; a node left
+    without declarations loses the field. Returns (new text, errors, changes). The command `sync`
+    writes the text only if it reads back as the attribute's pairs and passes load() and check()
+    (e.g. a proved node left without declarations is refused); otherwise the file is left as it was.
+    (Not the synchronization with the tracker of wiki 912 §4.3, which never writes blueprint.toml.)"""
+    got, errors = attr_pairs(data, log)
+    if errors:
+        return text, errors, []
+    new = {label: sorted(x for l, x in got if l == label) for label in data["nodes"]}
+    lines = text.splitlines(keepends=True)
+    # the sections [nodes."<label>"]: their first and last line (exclusive)
+    heads = [(i, ln) for i, ln in enumerate(lines) if re.match(r'\[\[?[A-Za-z_]+[.\]]', ln)]
+    out, changes, i = [], [], 0
+    section = {}  # label -> (first line, last line exclusive)
+    for k, (start, ln) in enumerate(heads):
+        end = heads[k + 1][0] if k + 1 < len(heads) else len(lines)
+        if ln.startswith('[nodes."'):
+            section[ln[len('[nodes."'):ln.index('"]')]] = (start, end)
+    edits = []  # (first line, last line exclusive, replacement)
+    for label, (start, end) in section.items():
+        old = data["nodes"][label]["lean"]
+        want = [x for x in old if x in new[label]] + [x for x in new[label] if x not in old]
+        if want == old:
+            continue
+        changes.append(f"node {label}: " + ", ".join(
+            [f"+{x}" for x in want if x not in old] + [f"-{x}" for x in old if x not in want]) if set(want) != set(old)
+            else f"node {label}: (order)")
+        a = next((j for j in range(start, end) if lines[j].startswith("lean = [")), None)
+        if a is None:  # no field yet: after the tag (or the header)
+            at = next((j + 1 for j in range(start, end) if lines[j].startswith("tag = ")), start + 1)
+            edits.append((at, at, toml_list("lean", want)))
+            continue
+        b = a
+        while "]" not in lines[b]:
+            b += 1
+        edits.append((a, b + 1, toml_list("lean", want) if want else ""))
+    for a, b, rep in sorted(edits):
+        out += lines[i:a]
+        out.append(rep)
+        i = b
+    out += lines[i:]
+    text = "".join(out)
+    # the result, read back, must have exactly the pairs of the attribute
+    back = tomllib.loads(text)["nodes"]
+    if {(label, x) for label, n in back.items() for x in n.get("lean", [])} != got:
+        return text, ["the rewritten blueprint.toml does not read back as the @[d5] tags (a bug of sync)"], changes
+    return text, [], changes
 
 
 # ---------------------------------------------------------------------------------------------
@@ -1013,7 +1096,23 @@ def main(argv):
         errors = tags(data, pathlib.Path(args[0]).read_text())
         if errors:
             sys.exit("blueprint: @[d5] tags and blueprint.toml differ:\n  " + "\n  ".join(errors))
-        print("blueprint: the @[d5] tags of groups/ are exactly the", len(tag_pairs(data)), "(label, declaration) pairs of the nodes")
+        print("blueprint: the @[d5] tags of groups/ are exactly the", len(tag_pairs(data)), "(node, declaration) pairs of the lean fields")
+    elif cmd == "sync":
+        if len(args) != 1:
+            sys.exit(__doc__)
+        text, errors, changes = sync(data, pathlib.Path(args[0]).read_text(), DATA.read_text())
+        if errors:
+            sys.exit("blueprint: cannot sync from the @[d5] tags:\n  " + "\n  ".join(errors))
+        if changes:
+            old = DATA.read_text()
+            DATA.write_text(text)
+            try:  # the rewritten file must pass load() and check(), or the old one is put back
+                check(load(), lean_index())
+            except SystemExit as e:
+                DATA.write_text(old)
+                sys.exit(f"blueprint: sync refused, {DATA.name} left as it was: the rewritten file fails the checks: {e.code}")
+        print(f"blueprint: {DATA.name}: " + ("\n  ".join(["lean fields rewritten from the @[d5] tags:"] + changes)
+                                           if changes else "the lean fields already agree with the @[d5] tags"))
     elif cmd == "src":
         check(data, index, tex)
         out = pathlib.Path(args[0])

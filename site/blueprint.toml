@@ -17,10 +17,12 @@
 #            the new tag, label = the label it stood for and text = what it meant (a statement or a
 #            term removed without a replacement: deleted = true instead of superseded_by; a term's
 #            label is its slug);
-#   lean     the Lean declarations (full names) that state or prove it; CI checks that each exists
-#            (.github/workflows/blueprint.yml) and the build that each is named in the paper's
-#            section on the formalization; each carries the attribute @[d5 "<label>"] in groups/
-#            (MATH-453, MATH-458; or the node's tag, @[d5 <tag>], printed D5:<tag>, MATH-457), and CI checks that the tagged pairs are exactly these (blueprint.py tags);
+#   lean     the Lean declarations (full names) that state or prove it. NOT EDITED BY HAND: the source
+#            of truth is the attribute @[d5 <tag>] on the declarations in groups/ (MATH-453,
+#            MATH-458), and `python3 site/blueprint.py sync LOG` writes these fields from its output
+#            (LOG: `lake env lean D5Tags.lean` in groups/); CI checks that they are exactly the tagged
+#            pairs (blueprint.py tags), that each exists (.github/workflows/blueprint.yml), and the
+#            build that each is named in the paper's section on the formalization;
 #   proved   true if the proof is formalized, from the statements it uses (leanblueprint's \leanok on
 #            the proof); a statement with `lean` but not `proved` has only its statement (or a part)
 #            in Lean;
