@@ -473,6 +473,16 @@ addEventListener('scroll',function(){if(window.scrollY+window.innerHeight>=docum
 KOUROVKA = HERE / "kourovka.json"
 KOUROVKA_PROBLEMS = HERE / "kourovka-problems.json"
 KOUROVKA_URL = "https://arxiv.org/abs/1401.0300"
+# The tracker's own files are in site/, which PIN does not follow: their links name the last commit
+# that touched them (a commit of main when the site is built from main).
+KOUROVKA_FILES = ("site/kourovka.py", "site/kourovka.json", "site/kourovka-problems.json")
+KOUROVKA_PIN = git("log", "-1", "--format=%H", "--", *KOUROVKA_FILES).stdout.strip()
+
+
+def kgh(path):
+    if path not in KOUROVKA_FILES or not KOUROVKA_PIN:
+        sys.exit(f"kgh(): {path} is not a tracker file, or no commit touches them")
+    return f'<a href="{REPO}/blob/{KOUROVKA_PIN}/{path}">{path}</a>'
 KOUROVKA_SITE = "https://kourovkanotebookorg.wordpress.com/"
 NOTE_KINDS = {"recent": ("Решение вне тетради", "Solution not yet in the Notebook"),
               "ai": ("ИИ: подробности", "AI: details"), "self": ("Наша работа", "Our work"),
@@ -665,17 +675,17 @@ Last checked: <b>{d["checked"]}</b>; updated weekly.</p></div>""")
     body += t("<h2>Кто стоит за решениями ИИ</h2>", "<h2>Who is behind the AI solutions</h2>") + (
         f"<ul>{groups}</ul>" if groups else t("<p>Пока не выяснено.</p>", "<p>Not yet established.</p>"))
     body += t(f"""<h2>Как ведётся</h2>
-<p>Раз в неделю: свежий исходник тетради с arXiv разбирается заново ({gh("site/kourovka.py", "site/kourovka.py")}), изменения статусов
+<p>Раз в неделю: свежий исходник тетради с arXiv разбирается заново ({kgh("site/kourovka.py")}), изменения статусов
 попадают в журнал ниже; затем поиск по arXiv, <a href="{KOUROVKA_SITE}">сайту тетради</a>, блогам и MathOverflow по запросам ниже.
 Заметка добавляется только после чтения первоисточника. Знаете о решении, которого здесь нет? Напишите в
-<a href="{REPO}/issues">issues</a>. Данные: {gh("site/kourovka.json", "site/kourovka.json")}, {gh("site/kourovka-problems.json", "site/kourovka-problems.json")}.
+<a href="{REPO}/issues">issues</a>. Данные: {kgh("site/kourovka.json")}, {kgh("site/kourovka-problems.json")}.
 Формулировки&nbsp;— автоматическое преобразование LaTeX тетради; при расхождении верен PDF на arXiv.</p>
 <details><summary>Поисковые запросы</summary><ul>{queries}</ul></details>
 <h2>Журнал обновлений</h2><ul class="klog">{log}</ul>""", f"""<h2>How it is kept</h2>
-<p>Weekly: the latest source of the Notebook is fetched from arXiv and parsed again ({gh("site/kourovka.py", "site/kourovka.py")}), changes of
+<p>Weekly: the latest source of the Notebook is fetched from arXiv and parsed again ({kgh("site/kourovka.py")}), changes of
 status go into the log below; then a search of arXiv, the <a href="{KOUROVKA_SITE}">Notebook's site</a>, blogs and MathOverflow with the
 queries below. A note is added only after its primary source has been read. Know of a solution that is missing? Open an
-<a href="{REPO}/issues">issue</a>. The data: {gh("site/kourovka.json", "site/kourovka.json")}, {gh("site/kourovka-problems.json", "site/kourovka-problems.json")}.
+<a href="{REPO}/issues">issue</a>. The data: {kgh("site/kourovka.json")}, {kgh("site/kourovka-problems.json")}.
 The statements are converted from the Notebook's LaTeX automatically; where they differ, the PDF on arXiv is right.</p>
 <details><summary>Search queries</summary><ul>{queries}</ul></details>
 <h2>Update log</h2><ul class="klog">{log}</ul>""")
