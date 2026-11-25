@@ -6,15 +6,16 @@
       "kind": "self",
       "date": "2026-11-25",
       "text": {
-        "ru": "Наша работа над этой задачей. Вопрос сведён к конечным метабелевым $2$-группам ступени $3$; контрпример среди конечных $2$-групп ступени $3$, если он есть, имеет порядок не меньше $2^{12}$; $3$-кручения в $D_5/\\gamma_5$ нет для $3$-групп порядка до $3^9$. Задача остаётся открытой.",
-        "en": "Our own work on this problem. The question is reduced to finite metabelian $2$-groups of class $3$; a counterexample among finite $2$-groups of class $3$, if any, has order at least $2^{12}$; there is no $3$-torsion in $D_5/\\gamma_5$ for $3$-groups of order up to $3^9$. The problem remains open."
+        "ru": "Наша работа над этой задачей, ведётся с ИИ-агентами (Claude Code, модели Claude от Anthropic): поиск доказательств, компьютерные вычисления, формализация в Lean; результаты проверяются и направляются людьми. Вопрос сведён к конечным метабелевым $2$-группам ступени $3$; контрпример среди конечных $2$-групп ступени $3$, если он есть, имеет порядок не меньше $2^{12}$; $3$-кручения в $D_5/\\gamma_5$ нет для $3$-групп порядка до $3^9$. Задача остаётся открытой.",
+        "en": "Our own work on this problem, done with AI agents (Claude Code, Anthropic's Claude models): proof search, computer calculations, Lean formalization; directed and checked by people. The question is reduced to finite metabelian $2$-groups of class $3$; a counterexample among finite $2$-groups of class $3$, if any, has order at least $2^{12}$; there is no $3$-torsion in $D_5/\\gamma_5$ for $3$-groups of order up to $3^9$. The problem remains open."
       },
       "sources": [
         {
           "text": "ispacex.github.io/d5",
           "url": "https://ispacex.github.io/d5/"
         }
-      ]
+      ],
+      "ai": true
     },
     {
       "problem": "21.10",
