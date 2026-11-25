@@ -34,7 +34,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 
-DRY=0 ALLOW_DEL=0 ANCESTRY=1 JOB="" RUNNER=ax42 DS_REV=origin/main MIKH_REV=origin/main KERNEL_REV=main MSG="Rebuild"
+DRY=0 ALLOW_DEL=0 ANCESTRY=1 JOB="" RUNNER=ax42 DS_REV=origin/main MIKH_REV=origin/main KERNEL_REV=main MSG="Rebuild" MEM=6G PRIO=10
 while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) DRY=1 ;;
@@ -45,6 +45,8 @@ while [ $# -gt 0 ]; do
     --kernel) KERNEL_REV=$2; shift ;;
     --job) JOB=$2; shift ;;
     --runner) RUNNER=$2; shift ;;
+    --mem) MEM=$2; shift ;;    # the job's memory (MemoryMax); 6G by default
+    --prio) PRIO=$2; shift ;;  # tm priority; 10 by default: tm pauses lower-priority jobs for it (MATH-527)
     -m) MSG=$2; shift ;;
     -h|--help) sed -n '2,33p' "$0"; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
@@ -103,7 +105,7 @@ if [ -z "$JOB" ]; then
   git -C "$S/tree" init -q
   git -C "$S/tree" add -A -f
   git -C "$S/tree" -c user.name=d5site -c user.email=d5site@localhost commit -qm "d5 site inputs"
-  (cd "$S/tree" && "$TM" submit --name d5site --cache mikh --cores 2 --mem 6G --runner "$RUNNER" --issue MATH-460 -- bash tm_build.sh) \
+  (cd "$S/tree" && "$TM" submit --name d5site --cache mikh --cores 2 --mem "$MEM" --prio "$PRIO" --runner "$RUNNER" --issue MATH-460 -- bash tm_build.sh) \
     | tee "$S/submit.out"
   JOB=$(sed -n 's/^SUBMITTED: //p' "$S/submit.out")
   [ -n "$JOB" ] || die "no job submitted"
