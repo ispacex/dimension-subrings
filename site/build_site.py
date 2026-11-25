@@ -546,7 +546,7 @@ function filt(){
     if(ai==='ai_cited'&&p.ai.indexOf('ai_cited')<0)return false;
     if(ai==='ai_all'&&!p.ai.length&&!noteAI(p))return false;
     if(ai==='ai_confirmed'||ai==='ai_unverified'){if(p.ai.indexOf(ai)<0)return false}
-    if(ai==='none'&&(p.ai.length||noteAI(p)))return false;
+    if(ai==='none'&&(nbAI(p)||noteAI(p)))return false;
     if(ai==='notes'&&!NOTES[p.n])return false;
     if(ai==='human'&&!human(p))return false;
     if(e&&String(p.ed)!==e)return false;
