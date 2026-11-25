@@ -477,7 +477,7 @@ KOUROVKA_SITE = "https://kourovkanotebookorg.wordpress.com/"
 NOTE_KINDS = {"recent": ("Решение вне тетради", "Solution not yet in the Notebook"),
               "ai": ("ИИ: подробности", "AI: details"), "self": ("Наша работа", "Our work"),
               "partial": ("Частичный результат", "Partial result"), "formal": ("Формализация", "Formalization"),
-              "dispute": ("Оспорено", "Disputed"), "literature": ("Найдено в литературе", "Found in the literature")}
+              "dispute": ("Оспорено", "Disputed"), "withdrawn": ("Отозвано", "Withdrawn"), "literature": ("Найдено в литературе", "Found in the literature")}
 
 
 def check_kourovka(d, probs):
@@ -518,6 +518,8 @@ var $=function(id){return document.getElementById(id)};
 function norm(s){return s.toLowerCase().replace(/<[^>]+>/g,' ').replace(/\\[a-z]+/gi,' ').replace(/[{}$^_]/g,' ')
   .normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ')}
 function ed(p){return T.ed[p.ed]||''}
+function noteAI(p){return (NOTES[p.n]||[]).some(function(n){return n.ai})}
+function human(p){return p.status==='solved'&&!p.ai.length&&!noteAI(p)}
 function badge(p){var s='<span class="tag kst-'+p.status+'">'+T.status[p.status]+'</span>';
   if(p.ai.indexOf('ai_confirmed')>=0)s+=' <span class="tag kai-ok" title="'+T.ai_confirmed_t+'">'+T.ai_confirmed+'</span>';
   if(p.ai.indexOf('ai_unverified')>=0)s+=' <span class="tag kai-un" title="'+T.ai_unverified_t+'">♯ '+T.ai_unverified+'</span>';
@@ -538,10 +540,12 @@ function filt(){
   list=ITEMS.filter(function(it){var p=it.p;
     if(st&&p.status!==st)return false;
     if(ai==='any'&&!p.ai.length&&!NOTES[p.n])return false;
+    if(ai==='ai_note'&&!(noteAI(p)&&!p.ai.length))return false;
+    if(ai==='ai_all'&&!p.ai.length&&!noteAI(p))return false;
     if(ai==='ai_confirmed'||ai==='ai_unverified'){if(p.ai.indexOf(ai)<0)return false}
-    if(ai==='none'&&(p.ai.length))return false;
+    if(ai==='none'&&(p.ai.length||noteAI(p)))return false;
     if(ai==='notes'&&!NOTES[p.n])return false;
-    if(ai==='human'&&!(p.status==='solved'&&p.ai.indexOf('ai_confirmed')<0))return false;
+    if(ai==='human'&&!human(p))return false;
     if(e&&String(p.ed)!==e)return false;
     if(exact)return p.n===exact||p.n.indexOf(exact+'.')===0;
     for(var i=0;i<words.length;i++)if(it.t.indexOf(words[i])<0)return false;
@@ -558,8 +562,9 @@ function go(){var h=decodeURIComponent(location.hash.slice(1));if(/^\d+\.\d+$/.t
 fetch($('kourovka-app').dataset.src).then(function(r){return r.json()}).then(function(d){DATA=d;
   ITEMS=d.problems.map(function(p){var notes=(NOTES[p.n]||[]).map(function(n){return n.html}).join(' ');
     return {p:p,t:norm(p.n+' '+p.authors+' '+p.statement+' '+p.answer+' '+(p.archived_parts?p.archived_parts.answer:'')+' '+notes+' '+p.ai.join(' ')+(p.ai.length?' ai':''))}});
-  var c={open:0,partial:0,solved:0,ai_confirmed:0,ai_unverified:0,human:0};
-  d.problems.forEach(function(p){c[p.status]++;p.ai.forEach(function(a){if(a in c)c[a]++});if(p.status==='solved'&&p.ai.indexOf('ai_confirmed')<0)c.human++});
+  var c={open:0,partial:0,solved:0,ai_confirmed:0,ai_unverified:0,human:0,ai_note:0};
+  d.problems.forEach(function(p){c[p.status]++;p.ai.forEach(function(a){if(a in c)c[a]++});if(human(p))c.human++;
+    if(noteAI(p)&&!p.ai.length)c.ai_note++});
   Object.keys(c).forEach(function(k){var x=$('kc-'+k);if(x)x.textContent=c[k]});
   var u=new URLSearchParams(location.search);['q','status','ai','ed'].forEach(function(k){if(u.get(k))$(k==='q'?'kq':'k'+k).value=u.get(k)});
   if(location.hash)go();else filt()});
@@ -590,7 +595,7 @@ def kourovka_page(lang):
         return "; ".join(f'<a href="{html.escape(x["url"])}">{kourovka_text(x["text"])}</a>' for x in xs)
     notes = {}
     for e in sorted(d["notes"], key=lambda e: e["date"], reverse=True):
-        notes.setdefault(e["problem"], []).append({"kind": e["kind"], "date": e["date"],
+        notes.setdefault(e["problem"], []).append({"kind": e["kind"], "date": e["date"], "ai": e["kind"] == "ai" or bool(e.get("ai")),
                                                    "html": f'<p>{kourovka_text(e["text"][lang])} ({src(e["sources"])})</p>'})
     ui = {"status": {"open": t("открыта", "open"), "partial": t("решена частично", "partly solved"), "solved": t("решена", "solved")},
           "ai_confirmed": t("ИИ, подтверждено", "AI, confirmed"), "ai_confirmed_t": t("Решение ИИ подтверждено математиком (по тетради)",
@@ -631,15 +636,18 @@ Last checked: <b>{d["checked"]}</b>; updated weekly.</p></div>""")
     body += ('<div class="kstats">' + stat("open", t("открыто", "open"), {"status": "open"})
              + stat("partial", t("частично", "partly solved"), {"status": "partial"})
              + stat("solved", t("решено", "solved"), {"status": "solved"})
-             + stat("human", t("решено без ИИ", "solved without AI"), {"ai": "human"})
+             + stat("human", t("решено без ИИ (известного нам)", "solved without AI (as far as we know)"), {"ai": "human"})
              + stat("ai_confirmed", t("ИИ, подтверждено", "AI, confirmed"), {"ai": "ai_confirmed"})
-             + stat("ai_unverified", t("♯ ИИ, не проверено", "♯ AI, unverified"), {"ai": "ai_unverified"}) + "</div>")
+             + stat("ai_unverified", t("♯ ИИ, не проверено", "♯ AI, unverified"), {"ai": "ai_unverified"})
+             + stat("ai_note", t("ИИ без пометки в тетради", "AI, not marked in the Notebook"), {"ai": "ai_note"}) + "</div>")
     body += f"""<div id="kourovka-app" data-src="{pre}kourovka-problems.json">
 <div class="kctl"><input type="search" id="kq" placeholder="{t("номер (20.84), слова, автор…  нажмите /", "number (20.84), words, author…  press /")}" autocomplete="off" spellcheck="false" aria-label="{t("Поиск", "Search")}">
 <select id="kstatus" aria-label="{t("Статус", "Status")}"><option value="">{t("любой статус", "any status")}</option><option value="open">{t("открытые", "open")}</option>
 <option value="partial">{t("решённые частично", "partly solved")}</option><option value="solved">{t("решённые", "solved")}</option></select>
 <select id="kai" aria-label="{t("ИИ", "AI")}"><option value="">{t("с ИИ и без", "with or without AI")}</option><option value="any">{t("с участием ИИ или с заметкой", "AI involved, or with a note")}</option>
 <option value="ai_confirmed">{t("ИИ, подтверждено", "AI, confirmed")}</option><option value="ai_unverified">{t("♯ ИИ, не проверено", "♯ AI, unverified")}</option>
+<option value="ai_all">{t("любое участие ИИ", "any AI involvement")}</option>
+<option value="ai_note">{t("ИИ по нашим заметкам (тетрадь не отмечает)", "AI per our notes (not marked in the Notebook)")}</option>
 <option value="human">{t("решены без ИИ", "solved without AI")}</option><option value="none">{t("без ИИ", "no AI")}</option><option value="notes">{t("с нашей заметкой", "with our note")}</option></select>
 <select id="ked" aria-label="{t("Выпуск", "Issue")}"><option value="">{t("все выпуски", "all issues")}</option>{opts_ed}</select></div>
 <p id="kcount" class="muted" aria-live="polite">{t("Загрузка…", "Loading…")}</p>

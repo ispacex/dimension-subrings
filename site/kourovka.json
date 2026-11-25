@@ -1,5 +1,5 @@
 {
-  "checked": "2026-11-25",
+  "checked": "2026-11-26",
   "notes": [
     {
       "problem": "20.84",
@@ -15,24 +15,956 @@
           "url": "https://ispacex.github.io/d5/"
         }
       ]
+    },
+    {
+      "problem": "21.10",
+      "kind": "ai",
+      "date": "2026-05-11",
+      "text": {
+        "ru": "Решение М. Лакенби; в статье: «значительную помощь оказал инструмент AI co-mathematician Google DeepMind». В тетради записано без пометки ИИ.",
+        "en": "Solved by M. Lackenby; the paper says “significant assistance was provided by the AI co-mathematician tool developed by Google DeepMind”. The Notebook credits it without an AI mark."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2605.10402",
+          "url": "https://arxiv.org/abs/2605.10402"
+        }
+      ]
+    },
+    {
+      "problem": "14.85",
+      "kind": "ai",
+      "date": "2026-08-29",
+      "text": {
+        "ru": "Решение Ионина и Семидетнова; по словам авторов, все решения статьи найдены с помощью ИИ (Codex с ChatGPT 5.6 Sol, Claude Desktop с Opus 5) и проверены авторами. В тетради без пометки ИИ.",
+        "en": "Solved by Ionin and Semidetnov; the authors state that every solution in the paper was found with AI assistance (Codex with ChatGPT 5.6 Sol; Claude Desktop with Opus 5) and checked by them. No AI mark in the Notebook."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2608.29219",
+          "url": "https://arxiv.org/abs/2608.29219"
+        }
+      ]
+    },
+    {
+      "problem": "16.11",
+      "kind": "ai",
+      "date": "2026-08-29",
+      "text": {
+        "ru": "Решение Ионина и Семидетнова; по словам авторов, все решения статьи найдены с помощью ИИ (Codex с ChatGPT 5.6 Sol, Claude Desktop с Opus 5) и проверены авторами. В тетради без пометки ИИ.",
+        "en": "Solved by Ionin and Semidetnov; the authors state that every solution in the paper was found with AI assistance (Codex with ChatGPT 5.6 Sol; Claude Desktop with Opus 5) and checked by them. No AI mark in the Notebook."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2608.29219",
+          "url": "https://arxiv.org/abs/2608.29219"
+        }
+      ]
+    },
+    {
+      "problem": "17.32",
+      "kind": "ai",
+      "date": "2026-08-29",
+      "text": {
+        "ru": "Решение Ионина и Семидетнова; по словам авторов, все решения статьи найдены с помощью ИИ (Codex с ChatGPT 5.6 Sol, Claude Desktop с Opus 5) и проверены авторами. В тетради без пометки ИИ.",
+        "en": "Solved by Ionin and Semidetnov; the authors state that every solution in the paper was found with AI assistance (Codex with ChatGPT 5.6 Sol; Claude Desktop with Opus 5) and checked by them. No AI mark in the Notebook."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2608.29219",
+          "url": "https://arxiv.org/abs/2608.29219"
+        }
+      ]
+    },
+    {
+      "problem": "17.47",
+      "kind": "ai",
+      "date": "2026-08-29",
+      "text": {
+        "ru": "Решение Ионина и Семидетнова; по словам авторов, все решения статьи найдены с помощью ИИ (Codex с ChatGPT 5.6 Sol, Claude Desktop с Opus 5) и проверены авторами. В тетради без пометки ИИ.",
+        "en": "Solved by Ionin and Semidetnov; the authors state that every solution in the paper was found with AI assistance (Codex with ChatGPT 5.6 Sol; Claude Desktop with Opus 5) and checked by them. No AI mark in the Notebook."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2608.29219",
+          "url": "https://arxiv.org/abs/2608.29219"
+        }
+      ]
+    },
+    {
+      "problem": "19.94",
+      "kind": "ai",
+      "date": "2026-08-29",
+      "text": {
+        "ru": "Решение Ионина и Семидетнова; по словам авторов, все решения статьи найдены с помощью ИИ (Codex с ChatGPT 5.6 Sol, Claude Desktop с Opus 5) и проверены авторами. В тетради без пометки ИИ.",
+        "en": "Solved by Ionin and Semidetnov; the authors state that every solution in the paper was found with AI assistance (Codex with ChatGPT 5.6 Sol; Claude Desktop with Opus 5) and checked by them. No AI mark in the Notebook."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2608.29219",
+          "url": "https://arxiv.org/abs/2608.29219"
+        }
+      ]
+    },
+    {
+      "problem": "21.142",
+      "kind": "ai",
+      "date": "2026-08-01",
+      "text": {
+        "ru": "Гонг, Цзэн, Ян: в работе использована Albilich — их собственная генеративная система ИИ (LLM + компьютерная алгебра). В тетради без пометки ИИ.",
+        "en": "Gong, Zeng, Yang: the authors used Albilich, a generative AI system of their own (LLM + computer algebra). No AI mark in the Notebook."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2608.00703",
+          "url": "https://arxiv.org/abs/2608.00703"
+        },
+        {
+          "text": "Albilich: arXiv:2607.27705",
+          "url": "https://arxiv.org/abs/2607.27705"
+        }
+      ]
+    },
+    {
+      "problem": "20.2",
+      "kind": "ai",
+      "date": "2026-08-28",
+      "text": {
+        "ru": "Гонг, Цзэн, Ян: «основной аргумент получен с помощью Albilich». В тетради без пометки ИИ.",
+        "en": "Gong, Zeng, Yang: “the main argument was generated with the assistance of Albilich”. No AI mark in the Notebook."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2608.17878",
+          "url": "https://arxiv.org/abs/2608.17878"
+        }
+      ]
+    },
+    {
+      "problem": "21.29",
+      "kind": "ai",
+      "date": "2026-09-01",
+      "text": {
+        "ru": "Риццоли и Томас: с Codex, ChatGPT Pro и Claude искали новые примеры и конструкции, литературу, писали и правили текст.",
+        "en": "Rizzoli and Thomas: worked with Codex, ChatGPT Pro and Claude to find further examples and constructions, search the literature, and draft the manuscript."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2609.01367",
+          "url": "https://arxiv.org/abs/2609.01367"
+        }
+      ]
+    },
+    {
+      "problem": "20.74",
+      "kind": "ai",
+      "date": "2026-09-22",
+      "text": {
+        "ru": "Часть a). О. Шейнфельд: первая версия доказательства получена в диалоге с ChatGPT 5.6 и Gemini 3.1.",
+        "en": "Part a). O. Sheinfeld: a first version of the proof was obtained in interactive sessions with ChatGPT 5.6 and Gemini 3.1."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2609.22004",
+          "url": "https://arxiv.org/abs/2609.22004"
+        }
+      ]
+    },
+    {
+      "problem": "17.102",
+      "kind": "ai",
+      "date": "2026-08-01",
+      "text": {
+        "ru": "С. Ван: два примера статьи предложены GPT-5.6 Luna.",
+        "en": "S. Wan: two examples of the paper were supplied by GPT-5.6 Luna."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2608.00504",
+          "url": "https://arxiv.org/abs/2608.00504"
+        }
+      ]
+    },
+    {
+      "problem": "18.48",
+      "kind": "ai",
+      "date": "2026-10-02",
+      "text": {
+        "ru": "А. Искра: ChatGPT-5.6 Sol использовался для проверки и компьютерного поиска.",
+        "en": "A. Iskra: ChatGPT-5.6 Sol was used for checking and computational search."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2610.01793",
+          "url": "https://arxiv.org/abs/2610.01793"
+        }
+      ]
+    },
+    {
+      "problem": "17.60",
+      "kind": "ai",
+      "date": "2026-10-05",
+      "text": {
+        "ru": "А. Искра: ChatGPT-5.6 Sol использовался при написании и проверке.",
+        "en": "A. Iskra: ChatGPT-5.6 Sol was used in drafting and checking."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2610.04274",
+          "url": "https://arxiv.org/abs/2610.04274"
+        }
+      ]
+    },
+    {
+      "problem": "10.34",
+      "kind": "ai",
+      "date": "2026-08-05",
+      "text": {
+        "ru": "Р. Сейтер: генеративный ИИ (не назван) — поиск и формализация.",
+        "en": "R. Sater: unnamed generative AI for exploration and formalization."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2608.02970",
+          "url": "https://arxiv.org/abs/2608.02970"
+        }
+      ]
+    },
+    {
+      "problem": "12.15",
+      "kind": "ai",
+      "date": "2026-08-01",
+      "text": {
+        "ru": "К. Мулярчик: контрпример разработан «во взаимодействии автора с ChatGPT»; работой руководил автор.",
+        "en": "K. Muliarchyk: the counterexample was “developed through interaction between the author and ChatGPT”, directed by the author."
+      },
+      "sources": [
+        {
+          "text": "kourovka_12_15_counterexample.pdf",
+          "url": "https://kourovkanotebookorg.wordpress.com/wp-content/uploads/2026/08/kourovka_12_15_counterexample.pdf"
+        }
+      ]
+    },
+    {
+      "problem": "3.46",
+      "kind": "ai",
+      "date": "2026-07-20",
+      "text": {
+        "ru": "Решение найдено и формально проверено в Lean автономно системой Aristotle (Harmonic); подал П. Монтиконе. Редакторы назвали 20.125 и 21.150 первыми решениями в истории тетради, полученными системой ИИ.",
+        "en": "Found and formally verified in Lean autonomously by Aristotle (Harmonic); submitted by P. Monticone. The editors called 20.125 and 21.150 the first solutions in the Notebook's history obtained by an AI system."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2607.17477",
+          "url": "https://arxiv.org/abs/2607.17477"
+        },
+        {
+          "text": "github.com/pitmonticone/Kourovka",
+          "url": "https://github.com/pitmonticone/Kourovka"
+        }
+      ]
+    },
+    {
+      "problem": "18.50",
+      "kind": "ai",
+      "date": "2026-07-20",
+      "text": {
+        "ru": "Решение найдено и формально проверено в Lean автономно системой Aristotle (Harmonic); подал П. Монтиконе. Редакторы назвали 20.125 и 21.150 первыми решениями в истории тетради, полученными системой ИИ.",
+        "en": "Found and formally verified in Lean autonomously by Aristotle (Harmonic); submitted by P. Monticone. The editors called 20.125 and 21.150 the first solutions in the Notebook's history obtained by an AI system."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2607.17477",
+          "url": "https://arxiv.org/abs/2607.17477"
+        },
+        {
+          "text": "github.com/pitmonticone/Kourovka",
+          "url": "https://github.com/pitmonticone/Kourovka"
+        }
+      ]
+    },
+    {
+      "problem": "19.25",
+      "kind": "ai",
+      "date": "2026-07-20",
+      "text": {
+        "ru": "Решение найдено и формально проверено в Lean автономно системой Aristotle (Harmonic); подал П. Монтиконе. Редакторы назвали 20.125 и 21.150 первыми решениями в истории тетради, полученными системой ИИ.",
+        "en": "Found and formally verified in Lean autonomously by Aristotle (Harmonic); submitted by P. Monticone. The editors called 20.125 and 21.150 the first solutions in the Notebook's history obtained by an AI system."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2607.17477",
+          "url": "https://arxiv.org/abs/2607.17477"
+        },
+        {
+          "text": "github.com/pitmonticone/Kourovka",
+          "url": "https://github.com/pitmonticone/Kourovka"
+        }
+      ]
+    },
+    {
+      "problem": "20.125",
+      "kind": "ai",
+      "date": "2026-07-20",
+      "text": {
+        "ru": "Решение найдено и формально проверено в Lean автономно системой Aristotle (Harmonic); подал П. Монтиконе. Редакторы назвали 20.125 и 21.150 первыми решениями в истории тетради, полученными системой ИИ.",
+        "en": "Found and formally verified in Lean autonomously by Aristotle (Harmonic); submitted by P. Monticone. The editors called 20.125 and 21.150 the first solutions in the Notebook's history obtained by an AI system."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2607.17477",
+          "url": "https://arxiv.org/abs/2607.17477"
+        },
+        {
+          "text": "github.com/pitmonticone/Kourovka",
+          "url": "https://github.com/pitmonticone/Kourovka"
+        }
+      ]
+    },
+    {
+      "problem": "21.8",
+      "kind": "ai",
+      "date": "2026-07-20",
+      "text": {
+        "ru": "Решение найдено и формально проверено в Lean автономно системой Aristotle (Harmonic); подал П. Монтиконе. Редакторы назвали 20.125 и 21.150 первыми решениями в истории тетради, полученными системой ИИ.",
+        "en": "Found and formally verified in Lean autonomously by Aristotle (Harmonic); submitted by P. Monticone. The editors called 20.125 and 21.150 the first solutions in the Notebook's history obtained by an AI system."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2607.17477",
+          "url": "https://arxiv.org/abs/2607.17477"
+        },
+        {
+          "text": "github.com/pitmonticone/Kourovka",
+          "url": "https://github.com/pitmonticone/Kourovka"
+        }
+      ]
+    },
+    {
+      "problem": "21.24",
+      "kind": "ai",
+      "date": "2026-07-20",
+      "text": {
+        "ru": "Решение найдено и формально проверено в Lean автономно системой Aristotle (Harmonic); подал П. Монтиконе. Редакторы назвали 20.125 и 21.150 первыми решениями в истории тетради, полученными системой ИИ.",
+        "en": "Found and formally verified in Lean autonomously by Aristotle (Harmonic); submitted by P. Monticone. The editors called 20.125 and 21.150 the first solutions in the Notebook's history obtained by an AI system."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2607.17477",
+          "url": "https://arxiv.org/abs/2607.17477"
+        },
+        {
+          "text": "github.com/pitmonticone/Kourovka",
+          "url": "https://github.com/pitmonticone/Kourovka"
+        }
+      ]
+    },
+    {
+      "problem": "21.147",
+      "kind": "ai",
+      "date": "2026-07-20",
+      "text": {
+        "ru": "Решение найдено и формально проверено в Lean автономно системой Aristotle (Harmonic); подал П. Монтиконе. Редакторы назвали 20.125 и 21.150 первыми решениями в истории тетради, полученными системой ИИ.",
+        "en": "Found and formally verified in Lean autonomously by Aristotle (Harmonic); submitted by P. Monticone. The editors called 20.125 and 21.150 the first solutions in the Notebook's history obtained by an AI system."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2607.17477",
+          "url": "https://arxiv.org/abs/2607.17477"
+        },
+        {
+          "text": "github.com/pitmonticone/Kourovka",
+          "url": "https://github.com/pitmonticone/Kourovka"
+        }
+      ]
+    },
+    {
+      "problem": "21.150",
+      "kind": "ai",
+      "date": "2026-07-20",
+      "text": {
+        "ru": "Решение найдено и формально проверено в Lean автономно системой Aristotle (Harmonic); подал П. Монтиконе. Редакторы назвали 20.125 и 21.150 первыми решениями в истории тетради, полученными системой ИИ.",
+        "en": "Found and formally verified in Lean autonomously by Aristotle (Harmonic); submitted by P. Monticone. The editors called 20.125 and 21.150 the first solutions in the Notebook's history obtained by an AI system."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2607.17477",
+          "url": "https://arxiv.org/abs/2607.17477"
+        },
+        {
+          "text": "github.com/pitmonticone/Kourovka",
+          "url": "https://github.com/pitmonticone/Kourovka"
+        }
+      ]
+    },
+    {
+      "problem": "21.24",
+      "kind": "literature",
+      "date": "2026-07-20",
+      "text": {
+        "ru": "Независимо решено также Рундстрёмом (без ИИ).",
+        "en": "Also solved independently by Rundström (no AI)."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2607.17477",
+          "url": "https://arxiv.org/abs/2607.17477"
+        }
+      ]
+    },
+    {
+      "problem": "21.8",
+      "kind": "literature",
+      "date": "2026-07-20",
+      "text": {
+        "ru": "Независимо решено также Паном (в статье прямо сказано: без ИИ).",
+        "en": "Also solved independently by Pan (whose paper states no AI was used)."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2607.17477",
+          "url": "https://arxiv.org/abs/2607.17477"
+        }
+      ]
+    },
+    {
+      "problem": "18.50",
+      "kind": "literature",
+      "date": "2026-07-20",
+      "text": {
+        "ru": "Совпадает с ответом Коля на MathOverflow.",
+        "en": "Coincides with Kohl's MathOverflow answer."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2607.17477",
+          "url": "https://arxiv.org/abs/2607.17477"
+        }
+      ]
+    },
+    {
+      "problem": "21.147",
+      "kind": "literature",
+      "date": "2026-07-20",
+      "text": {
+        "ru": "Пример, по словам авторов задачи, уже был им известен.",
+        "en": "The example was already known to the problem's authors."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2607.17477",
+          "url": "https://arxiv.org/abs/2607.17477"
+        }
+      ]
+    },
+    {
+      "problem": "21.149",
+      "kind": "formal",
+      "date": "2026-09-27",
+      "text": {
+        "ru": "Aristotle решил исходную формулировку; авторы задачи уточнили, что имели в виду более сильный вопрос, и формулировка в тетради изменена. Формализация в formal-conjectures (с Claude Code).",
+        "en": "Aristotle solved the original wording; the problem's authors said they meant a stronger question, and the Notebook's statement was refined. Formalized in formal-conjectures (with Claude Code)."
+      },
+      "sources": [
+        {
+          "text": "formal-conjectures PR 6643",
+          "url": "https://github.com/google-deepmind/formal-conjectures/pull/6643"
+        },
+        {
+          "text": "arXiv:2607.17477",
+          "url": "https://arxiv.org/abs/2607.17477"
+        }
+      ],
+      "ai": true
+    },
+    {
+      "problem": "16.9",
+      "kind": "ai",
+      "date": "2026-10-15",
+      "text": {
+        "ru": "Дикерт, Фрид, Наттерер, Тумм: языковые модели — только для текста.",
+        "en": "Diekert, Frid, Natterer, Thumm: LLMs used for writing only."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2610.14536",
+          "url": "https://arxiv.org/abs/2610.14536"
+        }
+      ]
+    },
+    {
+      "problem": "16.63",
+      "kind": "ai",
+      "date": "2026-09-01",
+      "text": {
+        "ru": "А. Крибель: конструкция, доказательство и программы проверки получены с ChatGPT-6 Astra Pro (+ Codex).",
+        "en": "A. Kriebel: the construction, proof development and verification software were generated with ChatGPT-6 Astra Pro (+ Codex)."
+      },
+      "sources": [
+        {
+          "text": "kourovka_16_63_v1.1.0.pdf",
+          "url": "https://kourovkanotebookorg.wordpress.com/wp-content/uploads/2026/09/kourovka_16_63_v1.1.0.pdf"
+        }
+      ]
+    },
+    {
+      "problem": "16.78",
+      "kind": "ai",
+      "date": "2026-10-16",
+      "text": {
+        "ru": "И. С. Ннуга Монго: конструкция, доказательства и текст получены GPT-6.1 Sol (в тетради ♯).",
+        "en": "I. S. Nnuga Mongo: the construction, proofs and manuscript were generated using GPT-6.1 Sol (♯ in the Notebook)."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2610.37703",
+          "url": "https://arxiv.org/abs/2610.37703"
+        }
+      ]
+    },
+    {
+      "problem": "20.87",
+      "kind": "ai",
+      "date": "2026-10-01",
+      "text": {
+        "ru": "Решение получено системой AutoPasha («ИИ-сотрудник», autopasha.ru) с GAP; по словам подателя, человеком ещё не проверено.",
+        "en": "Obtained by AutoPasha (“an AI employee”, autopasha.ru) with GAP; per the submission, not yet reviewed by a human mathematician."
+      },
+      "sources": [
+        {
+          "text": "20-87.pdf",
+          "url": "https://kourovkanotebookorg.wordpress.com/wp-content/uploads/2026/10/20-87.pdf"
+        }
+      ]
+    },
+    {
+      "problem": "4.13",
+      "kind": "recent",
+      "date": "2026-11-22",
+      "text": {
+        "ru": "М. Й. Кызмаз: доказана гипотеза Берковича (у всякой конечной неабелевой $p$-группы есть невнутренний автоморфизм порядка $p$). Автор использовал языковые модели для поиска стратегий доказательства, проверки рассуждений, правки текста, поиска литературы и подготовки вычислений в GAP. Ещё не в тетради.",
+        "en": "M. Y. Kızmaz: proof of Berkovich's conjecture (every finite nonabelian $p$-group has a noninner automorphism of order $p$). The author used LLMs to explore proof strategies, examine arguments, revise the text, search the literature and prepare GAP computations. Not yet in the Notebook."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2611.29482",
+          "url": "https://arxiv.org/abs/2611.29482"
+        }
+      ],
+      "ai": true
+    },
+    {
+      "problem": "18.62",
+      "kind": "recent",
+      "date": "2026-11-13",
+      "text": {
+        "ru": "И. С. Ннуга Монго: заявлены ответы (для 18.62 — часть a)); подготовке рукописи помогала языковая модель. Нами не проверено; ещё не в тетради.",
+        "en": "I. S. Nnuga Mongo: claimed answers (part a) for 18.62); an AI language model assisted with the initial manuscript. Not checked by us; not yet in the Notebook."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2611.18465",
+          "url": "https://arxiv.org/abs/2611.18465"
+        }
+      ],
+      "ai": true
+    },
+    {
+      "problem": "18.63",
+      "kind": "recent",
+      "date": "2026-11-13",
+      "text": {
+        "ru": "И. С. Ннуга Монго: заявлены ответы (для 18.62 — часть a)); подготовке рукописи помогала языковая модель. Нами не проверено; ещё не в тетради.",
+        "en": "I. S. Nnuga Mongo: claimed answers (part a) for 18.62); an AI language model assisted with the initial manuscript. Not checked by us; not yet in the Notebook."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2611.18465",
+          "url": "https://arxiv.org/abs/2611.18465"
+        }
+      ],
+      "ai": true
+    },
+    {
+      "problem": "18.65",
+      "kind": "recent",
+      "date": "2026-11-13",
+      "text": {
+        "ru": "И. С. Ннуга Монго: заявлены ответы (для 18.62 — часть a)); подготовке рукописи помогала языковая модель. Нами не проверено; ещё не в тетради.",
+        "en": "I. S. Nnuga Mongo: claimed answers (part a) for 18.62); an AI language model assisted with the initial manuscript. Not checked by us; not yet in the Notebook."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2611.18465",
+          "url": "https://arxiv.org/abs/2611.18465"
+        }
+      ],
+      "ai": true
+    },
+    {
+      "problem": "20.120",
+      "kind": "recent",
+      "date": "2026-11-13",
+      "text": {
+        "ru": "И. С. Ннуга Монго: заявлены ответы (для 18.62 — часть a)); подготовке рукописи помогала языковая модель. Нами не проверено; ещё не в тетради.",
+        "en": "I. S. Nnuga Mongo: claimed answers (part a) for 18.62); an AI language model assisted with the initial manuscript. Not checked by us; not yet in the Notebook."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2611.18465",
+          "url": "https://arxiv.org/abs/2611.18465"
+        }
+      ],
+      "ai": true
+    },
+    {
+      "problem": "13.30",
+      "kind": "recent",
+      "date": "2026-10-18",
+      "text": {
+        "ru": "А. Дж. Сазерленд: локально кватернионная группа — счётная $B$-группа, что отвечает на задачу. Автор использовал ChatGPT и Claude при разработке и проверке рассуждений. Ещё не в тетради.",
+        "en": "A. J. Sutherland: the locally quaternion group is a countable $B$-group, answering the problem. The author used ChatGPT and Claude in developing and checking the arguments. Not yet in the Notebook."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2610.25022",
+          "url": "https://arxiv.org/abs/2610.25022"
+        }
+      ],
+      "ai": true
+    },
+    {
+      "problem": "9.52",
+      "kind": "recent",
+      "date": "2026-10-21",
+      "text": {
+        "ru": "Бреша, Инграссо, Тромбетти; ChatGPT во вспомогательной роли. Ещё не в тетради.",
+        "en": "Brescia, Ingrosso, Trombetti; ChatGPT in a supporting role. Not yet in the Notebook."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2610.29563",
+          "url": "https://arxiv.org/abs/2610.29563"
+        }
+      ],
+      "ai": true
+    },
+    {
+      "problem": "21.40",
+      "kind": "recent",
+      "date": "2026-10-16",
+      "text": {
+        "ru": "Ч. Цзян: пример 5.1 предложен Gemini 3 Pro. Ещё не в тетради.",
+        "en": "Z. Jiang: Example 5.1 was suggested by Gemini 3 Pro. Not yet in the Notebook."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2610.23373",
+          "url": "https://arxiv.org/abs/2610.23373"
+        }
+      ],
+      "ai": true
+    },
+    {
+      "problem": "17.112",
+      "kind": "recent",
+      "date": "2026-10-08",
+      "text": {
+        "ru": "Ш. Чжан: часть a) — при подготовке использованы ChatGPT 6-astra и 6.1-sol; часть b) (гипотеза Гальта–Тютянова) — по словам автора, ИИ для доказательства не использовался. Ещё не в тетради.",
+        "en": "S. Zhang: part a) — ChatGPT 6-astra and 6.1-sol were used in preparing the preprint; part b) (the Galt–Tyutyanov conjecture) — per the author, no AI was used for the proof. Not yet in the Notebook."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2610.12329",
+          "url": "https://arxiv.org/abs/2610.12329"
+        },
+        {
+          "text": "arXiv:2610.12295",
+          "url": "https://arxiv.org/abs/2610.12295"
+        }
+      ],
+      "ai": true
+    },
+    {
+      "problem": "17.39",
+      "kind": "recent",
+      "date": "2026-09-19",
+      "text": {
+        "ru": "Гонг, Лу, Ян, Цзэн: основной аргумент получен системой Albilich. В тетради стоит ♯ по решению другого автора; эта статья там не цитируется.",
+        "en": "Gong, Lu, Yang, Zeng: the main argument was generated by Albilich. The Notebook has a ♯ from another submitter and does not cite this paper."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2609.22764",
+          "url": "https://arxiv.org/abs/2609.22764"
+        }
+      ],
+      "ai": true
+    },
+    {
+      "problem": "10.46",
+      "kind": "recent",
+      "date": "2026-09-15",
+      "text": {
+        "ru": "И. Чиньере: положительный ответ для коммутативных колец (ChatGPT и Claude — только правка текста). В тетради уже есть отрицательный ответ Мулярчика для общих колец.",
+        "en": "I. Chinyere: positive answer for commutative rings (ChatGPT and Claude for editing only). The Notebook already records Muliarchyk's negative answer for general rings."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2609.17006",
+          "url": "https://arxiv.org/abs/2609.17006"
+        }
+      ]
+    },
+    {
+      "problem": "20.126",
+      "kind": "recent",
+      "date": "2026-11-11",
+      "text": {
+        "ru": "Люй Гун: решены обе части (левая скоба со свободной мультипликативной группой). Ещё не в тетради.",
+        "en": "Lü Gong: both parts solved (a left brace with free multiplicative group). Not yet in the Notebook."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2611.14972",
+          "url": "https://arxiv.org/abs/2611.14972"
+        }
+      ]
+    },
+    {
+      "problem": "21.7",
+      "kind": "recent",
+      "date": "2026-11-10",
+      "text": {
+        "ru": "Люй Гун: контрпример. Ещё не в тетради.",
+        "en": "Lü Gong: a counterexample. Not yet in the Notebook."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2611.13792",
+          "url": "https://arxiv.org/abs/2611.13792"
+        }
+      ]
+    },
+    {
+      "problem": "14.81",
+      "kind": "recent",
+      "date": "2026-10-27",
+      "text": {
+        "ru": "Чэньсяо Линь: отрицательный ответ. Ещё не в тетради.",
+        "en": "Chenxiao Lin: a negative answer. Not yet in the Notebook."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2610.37462",
+          "url": "https://arxiv.org/abs/2610.37462"
+        }
+      ]
+    },
+    {
+      "problem": "16.63",
+      "kind": "recent",
+      "date": "2026-05-06",
+      "text": {
+        "ru": "Гань, Омиров, Жуань: решение при $p\\ge7$ (ИИ — только язык). В тетради пока лишь непроверенное (♯) решение Крибеля, полученное ИИ.",
+        "en": "Gan, Omirov, Ruan: solution for $p\\ge7$ (AI for language only). The Notebook so far has only Kriebel's unverified (♯) AI solution."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2605.04602",
+          "url": "https://arxiv.org/abs/2605.04602"
+        }
+      ]
+    },
+    {
+      "problem": "20.21",
+      "kind": "withdrawn",
+      "date": "2026-01-03",
+      "text": {
+        "ru": "И. Чиньере заявил отрицательный ответ; препринт отозван (ошибка в §3.4).",
+        "en": "I. Chinyere claimed a negative answer; the preprint was withdrawn (error in §3.4)."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2601.01080",
+          "url": "https://arxiv.org/abs/2601.01080"
+        }
+      ]
     }
   ],
-  "ai_groups": [],
+  "ai_groups": [
+    {
+      "name": "M. Kinyon, J. Urban",
+      "system": {
+        "ru": "OpenAI GPT-6 Astra через Codex + GAP; работу затем разобрал Claude Opus в Claude Code. 48-часовой эксперимент 10–12 сентября 2026, 45 предложенных ответов.",
+        "en": "OpenAI GPT-6 Astra via Codex + GAP; the work was then reviewed by Claude Opus in Claude Code. A 48-hour experiment, 10–12 Sep 2026, 45 proposed answers."
+      },
+      "sources": [
+        {
+          "text": "kourovka-mathematics.pdf",
+          "url": "https://kourovkanotebookorg.wordpress.com/wp-content/uploads/2026/09/kourovka-mathematics.pdf"
+        },
+        {
+          "text": "github.com/JUrban/kour1",
+          "url": "https://github.com/JUrban/kour1"
+        }
+      ]
+    },
+    {
+      "name": "OpenAI",
+      "system": {
+        "ru": "Внутренняя (не выпущенная) модель OpenAI; в самих PDF модель не названа. Связь с номерами задач — только в тетради.",
+        "en": "An internal, unreleased OpenAI model; the PDFs do not name it. Only the Notebook ties the proofs to problem numbers."
+      },
+      "sources": [
+        {
+          "text": "ten-proofs-oai.pdf",
+          "url": "https://cdn.openai.com/pdf/ten-proofs-oai.pdf"
+        },
+        {
+          "text": "Sharing AI progress in mathematics (6 Oct 2026)",
+          "url": "https://openai.com/index/sharing-ai-progress-in-mathematics/"
+        }
+      ]
+    },
+    {
+      "name": "P. Monticone (Harmonic)",
+      "system": {
+        "ru": "Aristotle (Harmonic): решения найдены и проверены в Lean 4 автономно.",
+        "en": "Aristotle (Harmonic): solutions found and verified in Lean 4 autonomously."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2607.17477",
+          "url": "https://arxiv.org/abs/2607.17477"
+        },
+        {
+          "text": "github.com/pitmonticone/Kourovka",
+          "url": "https://github.com/pitmonticone/Kourovka"
+        }
+      ]
+    },
+    {
+      "name": "Achyuth Jayadevan",
+      "system": {
+        "ru": "Система, давшая математику, не названа; формализация в Lean — с GPT-Astra (или дообученной DeepSeek V4.1) через собственную обвязку на LangGraph. Около 25 записей на Zenodo, сентябрь 2026.",
+        "en": "The system behind the mathematics is not named; the Lean formalization used GPT-Astra (or a fine-tuned DeepSeek V4.1) through a custom LangGraph harness. About 25 Zenodo records, Sep 2026."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2609.10281",
+          "url": "https://arxiv.org/abs/2609.10281"
+        },
+        {
+          "text": "kourovka-21-40-paper.pdf",
+          "url": "https://kourovkanotebookorg.wordpress.com/wp-content/uploads/2026/09/kourovka-21-40-paper.pdf"
+        }
+      ]
+    },
+    {
+      "name": "Ionin, Semidetnov",
+      "system": {
+        "ru": "Codex с ChatGPT 5.6 Sol; Claude Desktop с Opus 5.",
+        "en": "Codex with ChatGPT 5.6 Sol; Claude Desktop with Opus 5."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2608.29219",
+          "url": "https://arxiv.org/abs/2608.29219"
+        }
+      ]
+    },
+    {
+      "name": "T. Gong, M. R. Zeng, Y. Yang",
+      "system": {
+        "ru": "Albilich — собственная система авторов (LLM + компьютерная алгебра).",
+        "en": "Albilich, the authors' own system (LLM + computer algebra)."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2607.27705",
+          "url": "https://arxiv.org/abs/2607.27705"
+        }
+      ]
+    },
+    {
+      "name": "Nilradical",
+      "system": {
+        "ru": "Агент nilradical.ai с формализацией в Lean; итог утверждает человек (для 21.35 — А. Риццоли). По их словам, это «текст, написанный агентом, не рецензированный».",
+        "en": "The nilradical.ai agent with Lean formalization; a human final-stage approver (A. Rizzoli for 21.35). In their words, “an agent-written mathematical account, not a refereed article”."
+      },
+      "sources": [
+        {
+          "text": "nilradical-kourovka-21-35.pdf",
+          "url": "https://kourovkanotebookorg.wordpress.com/wp-content/uploads/2026/09/nilradical-kourovka-21-35.pdf"
+        }
+      ]
+    },
+    {
+      "name": "A. Ferudun (Mercury Software)",
+      "system": {
+        "ru": "«Инструменты с ИИ», не названы.",
+        "en": "Unnamed “AI-assisted tools”."
+      },
+      "sources": [
+        {
+          "text": "doi:10.5281/zenodo.23445980",
+          "url": "https://doi.org/10.5281/zenodo.23445980"
+        }
+      ]
+    },
+    {
+      "name": "R. Sater",
+      "system": {
+        "ru": "Генеративный ИИ, не назван.",
+        "en": "Unnamed generative AI."
+      },
+      "sources": [
+        {
+          "text": "arXiv:2608.12432",
+          "url": "https://arxiv.org/abs/2608.12432"
+        }
+      ]
+    },
+    {
+      "name": "G. Cat, B. G. Di Siena, J. DeCaro, J. Liao",
+      "system": {
+        "ru": "Тетрадь отмечает их решения как решения ИИ; система в текстах не названа.",
+        "en": "The Notebook labels their solutions as AI solutions; the texts do not name the system."
+      },
+      "sources": [
+        {
+          "text": "kourovka_15-26-ai.pdf",
+          "url": "https://kourovkanotebookorg.wordpress.com/wp-content/uploads/2026/08/kourovka_15-26-ai.pdf"
+        },
+        {
+          "text": "arXiv:2609.17027",
+          "url": "https://arxiv.org/abs/2609.17027"
+        }
+      ]
+    }
+  ],
   "queries": [
-    "arXiv:1401.0300 — latest version of the source (site/kourovka.py fetch)",
-    "arxiv.org full text: \"Kourovka\" (sorted by date, last 2 weeks)",
-    "arxiv.org: \"Kourovka notebook\" AND (\"language model\" OR GPT OR Gemini OR Claude OR \"AI-assisted\" OR AlphaEvolve OR \"AlphaProof\")",
-    "arxiv.org: \"Kourovka\" AND Lean",
-    "zenodo.org: \"Kourovka\"",
-    "kourovkanotebookorg.wordpress.com — new posts and uploads",
-    "MathOverflow: \"Kourovka\" (newest)",
+    "arXiv:1401.0300 — latest source (python3 site/kourovka.py update)",
+    "https://export.arxiv.org/api/query?search_query=all:Kourovka&sortBy=submittedDate&sortOrder=descending&max_results=200 (metadata only)",
+    "full text of new papers citing arXiv:1401.0300: grep AI|GPT|Gemini|Claude|Codex|Aristotle|language model|Lean",
+    "kourovkanotebookorg.wordpress.com/category/update/ and /repository/ — new posts and PDFs",
+    "zenodo.org: Kourovka",
+    "unsolvedmath.com/problems/KOU-*",
+    "github: formal-conjectures Kourovka",
+    "MathOverflow, X, Mathstodon: Kourovka (newest)",
     "web: \"Kourovka problem\" solved AI"
   ],
   "log": [
     {
-      "date": "2026-11-25",
+      "date": "2026-11-26",
       "ru": "Страница заведена: все задачи тетради по исходнику arXiv:1401.0300v50 (MATH-526).",
       "en": "Page started: every problem of the Notebook, from the source of arXiv:1401.0300v50 (MATH-526)."
+    },
+    {
+      "date": "2026-11-26",
+      "ru": "Заметки: участие ИИ в 28 задачах по статьям авторов (часть из них в тетради без пометки ИИ: 21.10, 21.29, 21.142, 20.2, задачи Aristotle и др.); 15 задач с решениями после v50; кто стоит за решениями ИИ.",
+      "en": "Notes: AI involvement in 28 problems per the authors' papers (some credited in the Notebook without an AI mark: 21.10, 21.29, 21.142, 20.2, the Aristotle problems and others); 15 problems with solutions after v50; who is behind the AI solutions."
     }
   ]
 }

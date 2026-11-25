@@ -23558,8 +23558,15 @@
 "archive":false,
 "status":"solved",
 "mark":"*",
-"ai":[],
-"ai_by":[],
+"ai":[
+"ai_confirmed"
+],
+"ai_by":[
+{
+"by":"OpenAI: https://cdn.openai.com/pdf/ten-proofs-oai.pdf ). More examples were found in (G. Kun, A. Thom",
+"verified_by":""
+}
+],
 "authors":"A. Lubotzky",
 "statement":"<p>(M. Gromov, B. Weiss). A group $G$ is said to be <i>sofic</i> if for every finite set $F\\subseteq G$ containing $1$ and every $\\e \\gt 0$ there exist $n\\in \\N$ and a map $\\varphi : F \\to S_n$ such that $\\varphi (1) = 1$, $d(\\varphi (gh), \\varphi(g)\\varphi(h)) \\lt \\e $ for all $g, h$ such that $gh \\in F$, $\\varphi (g)$ does not have fixed points for every $g\\in F\\setminus \\{1\\}$.</p><p>Is every group sofic?</p>",
 "answer":"<p>No, not every (AI solution by OpenAI: <a href=\"https://cdn.openai.com/pdf/ten-proofs-oai.pdf\">https://cdn.openai.com/pdf/ten-proofs-oai.pdf</a>). More examples were found in (G. Kun, A. Thom, <i>Preprint</i>, 2026, <a href=\"https://arxiv.org/abs/2608.06222\">https://arxiv.org/abs/2608.06222</a>).</p>"
@@ -23939,8 +23946,15 @@
 "archive":false,
 "status":"solved",
 "mark":"*",
-"ai":[],
-"ai_by":[],
+"ai":[
+"ai_confirmed"
+],
+"ai_by":[
+{
+"by":"",
+"verified_by":"B. Sambale"
+}
+],
 "authors":"B. Sambale",
 "statement":"<p>Let $C_1,\\ldots,C_n$ be (left or right) cosets of a finite group $G$ such that $U:=C_1\\cup\\cdots\\cup C_n$ is not $G$. Is it always true that $|G\\setminus U|\\ge |G|/2^n$?</p><p>Affirmative answers are known in some special cases (B. Sambale, M. Tărnăuceanu, <i>J. Algebraic Combin.</i>, <b>55</b> (2022), 979–987).</p>",
 "answer":"<p>Yes, it is true (Anonymous AI-proof confirmed by B. Sambale: <i>Preprint</i>, August 2026, <a href=\"https://www.unsolvedmath.com/problems/KOU-21.115\">https://www.unsolvedmath.com/problems/KOU-21.115</a>; B. Sambale, <i>Preprint</i>, September 2026, <a href=\"https://arxiv.org/abs/2609.09052\">https://arxiv.org/abs/2609.09052</a>).</p>"

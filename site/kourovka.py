@@ -362,7 +362,7 @@ def flags(text):
     """AI flags of an answer or comment, in the editors' words."""
     low = text.lower()
     f = []
-    if re.search(r"ai solutions? (confirmed|verified)", low):
+    if re.search(r"ai(?: |-)(?:solutions?|proofs?) (confirmed|verified)|ai(?: |-)solutions? by|ai-proof confirmed", low):
         f.append("ai_confirmed")
     if "unverified ai solution" in low:
         f.append("ai_unverified")
@@ -374,7 +374,7 @@ def flags(text):
 def ai_authors(text):
     """Names after 'AI solution confirmed by X:' / 'unverified AI solution:' up to the {\\it Preprint."""
     out = []
-    for m in re.finditer(r"(?:AI solutions? (?:confirmed|verified) by\s*(?P<v>[^:]+):|unverified AI solutions?:)\s*\\?\s*(?P<a>.*?)\{?\\it",
+    for m in re.finditer(r"(?:AI(?: |-)(?:solutions?|proofs?) (?:confirmed|verified) by\s*(?P<v>[^:]+):|AI solutions? by\s*|unverified AI solutions?:)\s*\\?\s*(?P<a>.*?)\{?\\it",
                          text, re.S):
         who = plain_of(html_of(m.group("a"))[0]).strip(" ,;")
         ver = plain_of(html_of(m.group("v"))[0]).strip() if m.group("v") else ""
@@ -413,7 +413,7 @@ def parse(tex):
             fl = sorted(set(fl) | {"ai_unverified"})
         probs.append({"n": num, "ed": int(num.split(".")[0]), "archive": archive, "status": status,
                       "mark": {"zv": "*", "zva": "*", "ai": "♯", "oai": "♯"}.get(mark, ""),
-                      "ai": fl, "ai_by": ai_authors(after + stmt), "authors": authors,
+                      "ai": fl, "authors": authors,
                       "statement": st_html, "answer": an_html})
     seen, out = {}, []
     for p in probs:  # a number twice: the main part first, then the Archive; keep the first and report
