@@ -193,6 +193,10 @@ jobs:
           cp ../site/blueprint.toml bp.saved
           check sync tags-label.log 'which is not a tag D5:XXXX'
           check sync tags-tag.log 'a tag that no node of blueprint.toml has'
+          # a proved node (thm:g4cube, D5:000P) left without declarations: the rewritten file fails load(), so sync puts the old one back
+          grep -vF '"key":"D5:000P"' tags.log > tags-noproof.log
+          cmp -s tags.log tags-noproof.log && { echo "::error::tags.log has no D5:000P"; exit 1; }
+          check sync tags-noproof.log 'node thm:g4cube is proved but names no Lean declaration'
           cmp -s bp.saved ../site/blueprint.toml || { echo "::error::a refused sync changed blueprint.toml"; exit 1; }
           echo "negative controls: a missing tag, another node's tag, a label and an unregistered tag fail, as they should"
       - name: sync (the lean fields from the attribute) changes nothing on the real tags, and does the right thing on altered ones

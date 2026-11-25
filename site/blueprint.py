@@ -239,7 +239,10 @@ def toml_list(key, items, width=120, indent=8):
 def sync(data, log, text):
     """blueprint.toml (its text) with the `lean` field of every node rewritten from the attribute
     (attr_pairs): the declarations that stay keep their order, new ones follow, sorted; a node left
-    without declarations loses the field. Returns (new text, errors, changes)."""
+    without declarations loses the field. Returns (new text, errors, changes). The command `sync`
+    writes the text only if it reads back as the attribute's pairs and passes load() and check()
+    (e.g. a proved node left without declarations is refused); otherwise the file is left as it was.
+    (Not the synchronization with the tracker of wiki 912 §4.3, which never writes blueprint.toml.)"""
     got, errors = attr_pairs(data, log)
     if errors:
         return text, errors, []
@@ -1101,9 +1104,13 @@ def main(argv):
         if errors:
             sys.exit("blueprint: cannot sync from the @[d5] tags:\n  " + "\n  ".join(errors))
         if changes:
+            old = DATA.read_text()
             DATA.write_text(text)
-            data = load()
-            check(data, lean_index())
+            try:  # the rewritten file must pass load() and check(), or the old one is put back
+                check(load(), lean_index())
+            except SystemExit as e:
+                DATA.write_text(old)
+                sys.exit(f"blueprint: sync refused, {DATA.name} left as it was: the rewritten file fails the checks: {e.code}")
         print(f"blueprint: {DATA.name}: " + ("\n  ".join(["lean fields rewritten from the @[d5] tags:"] + changes)
                                            if changes else "the lean fields already agree with the @[d5] tags"))
     elif cmd == "src":
