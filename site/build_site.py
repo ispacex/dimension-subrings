@@ -163,6 +163,7 @@ NAV = [("index.html", "Сводка", "Summary"), ("coverage.html", "Карта 
        ("computations.html", "Вычисления", "Computations"),
        ("kernel.html", "Быстрое ядро", "Fast kernel"),
        ("timeline.html", "Хронология", "Timeline"), ("open.html", "Открытые вопросы", "Open questions"),
+       ("kourovka.html", "Коуровская тетрадь", "Kourovka Notebook"),
        ("paper.html", "Статья", "Paper"), ("search.html", "Поиск", "Search")]
 
 # Colours: as on the metalibrary site, plus three for the status of a result: computer (--cmp),
@@ -225,6 +226,25 @@ footer { border-top:1px solid var(--line); margin-top:3rem; }
 .tag.c { background:var(--cmp); } .tag.p { background:var(--ppr); } .tag.cp { background:var(--both); }
 .tag.o { background:var(--open); } .tag.l { background:var(--soft); color:var(--ink); }
 .tag.k { background:var(--soft); color:var(--ink); border:1px dashed var(--ink); }
+.kstats { display:flex; flex-wrap:wrap; gap:.5rem; margin:1rem 0; }
+.kstat { display:flex; flex-direction:column; min-width:7.5rem; padding:.4rem .7rem; border:1px solid var(--line); border-radius:6px;
+        text-decoration:none; color:var(--ink); background:var(--soft); } .kstat:hover { border-color:var(--acc); }
+.kstat .big { font-size:1.4rem; font-weight:600; font-variant-numeric:tabular-nums; } .kstat span + span { font-size:.85rem; color:var(--muted); }
+.kctl { display:flex; flex-wrap:wrap; gap:.5rem; margin:1rem 0 .3rem; position:sticky; top:0; background:var(--bg); padding:.4rem 0; z-index:2; }
+.kctl input { flex:1 1 18em; padding:.45em .6em; font-size:1em; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--ink); }
+.kctl select { padding:.4em; font-size:.92em; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--ink); }
+.kp { border:1px solid var(--line); border-radius:6px; padding:.6rem .9rem; margin:.7rem 0; }
+.kp header { display:flex; flex-wrap:wrap; align-items:baseline; gap:.3rem .5rem; margin-bottom:.3rem; }
+.kp .kn { font-weight:700; font-size:1.05rem; text-decoration:none; } .kp .ka { margin-left:auto; color:var(--muted); font-size:.88rem; font-style:italic; }
+.kp p { margin:.35rem 0; } .kp .kst { overflow-x:auto; }
+.kans, .knote { border-left:3px solid var(--line); padding:.1rem .7rem; margin:.5rem 0; font-size:.94rem; overflow-x:auto; }
+.knote { border-left-color:var(--acc); background:var(--soft); } .kl { font-size:.8rem; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; }
+.kmark { color:var(--badink); font-weight:700; margin-right:.1em; }
+.tag.kst-open { background:var(--open); } .tag.kst-partial { background:var(--ppr); } .tag.kst-solved { background:var(--cmp); }
+.tag.kai-ok { background:var(--both); } .tag.kai-un { background:var(--bad); color:var(--badink); } .tag.kai-m { background:var(--soft); border:1px dashed var(--ink); }
+.tag[class*="kn-"] { background:var(--soft); color:var(--acc); border:1px solid var(--acc); }
+#kmore { padding:.4em 1.2em; font-size:1em; border:1px solid var(--acc); border-radius:6px; background:var(--bg); color:var(--acc); cursor:pointer; }
+ul.klog { list-style:none; padding-left:0; } ul.klog .d { color:var(--muted); font-variant-numeric:tabular-nums; margin-right:.5em; }
 figure.scene { margin:1rem 0; } figure.scene iframe { border:0; width:100%; max-width:640px; aspect-ratio:640/460; height:auto; display:block; }
 figure.scene figcaption { font-size:.88rem; color:var(--muted); margin-top:.3rem; }
 dl.terms dt { font-weight:600; margin-top:.8rem; } dl.terms dd { margin:.2rem 0 0 1.2rem; } dl.terms dd p { margin:.2rem 0; }
@@ -296,7 +316,7 @@ KATEX = """<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],
- macros:{'\\\\D':'\\\\Delta','\\\\Z':'\\\\mathbb{Z}'},ignoredTags:['script','noscript','style','textarea','pre','code','svg']})"></script>"""
+ macros:{'\\\\D':'\\\\Delta','\\\\Z':'\\\\mathbb{Z}'},ignoredTags:['script','noscript','style','textarea','pre','code','svg'],ignoredClasses:['knomath']})"></script>"""
 
 
 def plain(s):
@@ -437,6 +457,236 @@ var o=new IntersectionObserver(pick,{rootMargin:'0px 0px -70% 0px'});for(var i=0
 addEventListener('scroll',function(){if(window.scrollY+window.innerHeight>=document.documentElement.scrollHeight-2)mark(h[h.length-1].id)},{passive:true});pick()})()</script>"""
 
 
+# ---------------------------------------------------------------------------------------------
+# kourovka.html (MATH-526): every problem of the Kourovka Notebook with its statement, status and who
+# solved it, by people or with AI, in the manner of T. Tao's "AI contributions to Erdős problems".
+# Two sources, both in site/:
+#   kourovka-problems.json  made by site/kourovka.py from the Notebook's LaTeX (arXiv:1401.0300): the
+#                           statements, authors, answers, the Notebook's own marks (* solved, # an
+#                           unverified AI solution) and the AI flags read off the editors' comments;
+#   kourovka.json           ours, by hand, weekly: notes on single problems (solutions not yet in the
+#                           Notebook, the tools behind the AI solutions, our own work on 20.84), the AI
+#                           groups, the search queries and the update log.
+# The page is a search over the problems in the reader's browser (the data are one JSON file served next
+# to it); check_kourovka() stops the build on a malformed note or one about a problem the Notebook lacks.
+
+KOUROVKA = HERE / "kourovka.json"
+KOUROVKA_PROBLEMS = HERE / "kourovka-problems.json"
+KOUROVKA_URL = "https://arxiv.org/abs/1401.0300"
+KOUROVKA_SITE = "https://kourovkanotebookorg.wordpress.com/"
+NOTE_KINDS = {"recent": ("Решение вне тетради", "Solution not yet in the Notebook"),
+              "ai": ("ИИ: подробности", "AI: details"), "self": ("Наша работа", "Our work"),
+              "partial": ("Частичный результат", "Partial result"), "formal": ("Формализация", "Formalization"),
+              "dispute": ("Оспорено", "Disputed"), "withdrawn": ("Отозвано", "Withdrawn"), "literature": ("Найдено в литературе", "Found in the literature")}
+
+
+def check_kourovka(d, probs):
+    bad = []
+    nums = {p["n"] for p in probs["problems"]}
+    for e in d["notes"]:
+        p = e.get("problem", "?")
+        if p not in nums:
+            bad.append(f"note on {p}: no such problem in {probs['source']}")
+        if e.get("kind") not in NOTE_KINDS:
+            bad.append(f"note on {p}: kind {e.get('kind')!r} not in {', '.join(NOTE_KINDS)}")
+        if not re.fullmatch(r"\d{4}-\d{2}(-\d{2})?", e.get("date", "")):
+            bad.append(f"note on {p}: date")
+        if not all(e.get("text", {}).get(l) for l in LANGS):
+            bad.append(f"note on {p}: text needs ru and en")
+        if not e.get("sources") or not all(re.match(r"https://", x.get("url", "")) and x.get("text") for x in e["sources"]):
+            bad.append(f"note on {p}: sources, each with text and an https URL")
+    for g in d.get("ai_groups", []):
+        if not (g.get("name") and all(g.get("system", {}).get(l) for l in LANGS) and g.get("sources")):
+            bad.append(f"AI group {g.get('name')}: name, system (ru, en), sources")
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", d.get("checked", "")):
+        bad.append("checked: the day of the last check")
+    if bad:
+        sys.exit("site/kourovka.json:\n  " + "\n  ".join(bad))
+
+
+def kourovka_text(s):
+    """Our own text: $...$ kept for KaTeX; [text](https://...) becomes a link."""
+    s = html.escape(s, quote=False)
+    return re.sub(r"\[([^\]]+)\]\((https://[^)\s]+)\)", lambda m: f'<a href="{html.escape(html.unescape(m[2]))}">{m[1]}</a>', s)
+
+
+KOUROVKA_JS = r"""<script>
+(function(){
+var L=document.documentElement.lang==='ru'?'ru':'en', T=JSON.parse(document.getElementById('k-ui').textContent),
+    NOTES=JSON.parse(document.getElementById('k-notes').textContent), DATA=null, ITEMS=[], shown=0, PAGE=40, list=[];
+var $=function(id){return document.getElementById(id)};
+function norm(s){return s.toLowerCase().replace(/<[^>]+>/g,' ').replace(/\\[a-z]+/gi,' ').replace(/[{}$^_]/g,' ')
+  .normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ')}
+function ed(p){return T.ed[p.ed]||''}
+function noteAI(p){return (NOTES[p.n]||[]).some(function(n){return n.ai})}
+function nbAI(p){return p.ai.some(function(a){return a!=='ai_cited'})}
+function human(p){return p.status==='solved'&&!nbAI(p)&&!noteAI(p)}
+function badge(p){var s='<span class="tag kst-'+p.status+'">'+T.status[p.status]+'</span>';
+  if(p.ai.indexOf('ai_confirmed')>=0)s+=' <span class="tag kai-ok" title="'+T.ai_confirmed_t+'">'+T.ai_confirmed+'</span>';
+  if(p.ai.indexOf('ai_unverified')>=0)s+=' <span class="tag kai-un" title="'+T.ai_unverified_t+'">♯ '+T.ai_unverified+'</span>';
+  if(p.ai.indexOf('ai_cited')>=0)s+=' <span class="tag kai-m" title="'+T.ai_cited_t+'">'+T.ai_cited+'</span>';
+  (NOTES[p.n]||[]).forEach(function(n){s+=' <span class="tag kn-'+n.kind+'">'+T.kinds[n.kind]+'</span>'});
+  return s}
+function card(p){
+  var h='<article class="kp" id="p'+p.n+'"><header><a class="kn" href="#'+p.n+'">'+(p.mark?'<span class="kmark">'+p.mark+'</span>':'')+p.n+'</a> '
+   +'<span class="muted">'+ed(p)+(p.archive?' · '+T.archive:'')+'</span> '+badge(p)+'<span class="ka">'+p.authors+'</span></header>'
+   +'<div class="kst">'+p.statement+'</div>';
+  if(p.archived_parts)h+='<details class="kans"><summary>'+T.archived_parts+'</summary>'+p.archived_parts.statement+p.archived_parts.answer+'</details>';
+  if(p.answer)h+='<div class="kans"><div class="kl">'+(p.status==='open'?T.comments:T.answer)+'</div>'+p.answer+'</div>';
+  (NOTES[p.n]||[]).forEach(function(n){h+='<div class="knote kn-'+n.kind+'"><div class="kl">'+T.kinds[n.kind]+' · '+n.date+'</div>'+n.html+'</div>'});
+  return h+'</article>'}
+function filt(){
+  if(!DATA)return;
+  var q=norm($('kq').value).trim(), st=$('kstatus').value, ai=$('kai').value, e=$('ked').value;
+  var words=q?q.split(' '):[], exact=/^\d+\.\d+$/.test(q)?q:null;
+  list=ITEMS.filter(function(it){var p=it.p;
+    if(st&&p.status!==st)return false;
+    if(ai==='any'&&!p.ai.length&&!NOTES[p.n])return false;
+    if(ai==='ai_note'&&!(noteAI(p)&&!nbAI(p)))return false;
+    if(ai==='ai_cited'&&p.ai.indexOf('ai_cited')<0)return false;
+    if(ai==='ai_all'&&!p.ai.length&&!noteAI(p))return false;
+    if(ai==='ai_confirmed'||ai==='ai_unverified'){if(p.ai.indexOf(ai)<0)return false}
+    if(ai==='none'&&(nbAI(p)||noteAI(p)))return false;
+    if(ai==='notes'&&!NOTES[p.n])return false;
+    if(ai==='human'&&!human(p))return false;
+    if(e&&String(p.ed)!==e)return false;
+    if(exact)return p.n===exact||p.n.indexOf(exact+'.')===0;
+    for(var i=0;i<words.length;i++)if(it.t.indexOf(words[i])<0)return false;
+    return true});
+  shown=0;$('klist').innerHTML='';more();
+  $('kcount').textContent=T.found.replace('{n}',list.length).replace('{all}',ITEMS.length);
+  var u=new URLSearchParams();if($('kq').value)u.set('q',$('kq').value);if(st)u.set('status',st);if(ai)u.set('ai',ai);if(e)u.set('ed',e);
+  var h=location.hash&&decodeURIComponent(location.hash.slice(1))===$('kq').value?location.hash:'';
+  history.replaceState(null,'',location.pathname+(u.toString()?'?'+u:'')+h)}
+function render(el,n){n=n||0;if(window.renderMathInElement)renderMathInElement(el,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],
+  macros:Object.assign({},DATA.macros),throwOnError:false,strict:false});else if(n<150)setTimeout(function(){render(el,n+1)},200)}
+function more(){var box=document.createElement('div');box.innerHTML=list.slice(shown,shown+PAGE).map(function(it){return card(it.p)}).join('');
+  shown+=PAGE;$('klist').appendChild(box);render(box);$('kmore').hidden=shown>=list.length}
+function go(){var h=decodeURIComponent(location.hash.slice(1));if(/^\d+\.\d+$/.test(h)){$('kq').value=h;$('kstatus').value='';$('kai').value='';$('ked').value='';filt()}}
+fetch($('kourovka-app').dataset.src).then(function(r){return r.json()}).then(function(d){DATA=d;
+  ITEMS=d.problems.map(function(p){var notes=(NOTES[p.n]||[]).map(function(n){return n.html}).join(' ');
+    return {p:p,t:norm(p.n+' '+p.authors+' '+p.statement+' '+p.answer+' '+(p.archived_parts?p.archived_parts.answer:'')+' '+notes+' '+p.ai.join(' ')+(p.ai.length?' ai':''))}});
+  var c={open:0,partial:0,solved:0,ai_confirmed:0,ai_unverified:0,human:0,ai_note:0};
+  d.problems.forEach(function(p){c[p.status]++;p.ai.forEach(function(a){if(a in c)c[a]++});if(human(p))c.human++;
+    if(noteAI(p)&&!nbAI(p))c.ai_note++});
+  Object.keys(c).forEach(function(k){var x=$('kc-'+k);if(x)x.textContent=c[k]});
+  var u=new URLSearchParams(location.search);['q','status','ai','ed'].forEach(function(k){if(u.get(k))$(k==='q'?'kq':'k'+k).value=u.get(k)});
+  if(location.hash)go();else filt()});
+var tm;$('kq').addEventListener('input',function(){clearTimeout(tm);tm=setTimeout(filt,120)});
+['kstatus','kai','ked'].forEach(function(id){$(id).addEventListener('change',filt)});
+$('kmore').addEventListener('click',more);window.addEventListener('hashchange',go);
+document.querySelectorAll('[data-kset]').forEach(function(b){b.addEventListener('click',function(ev){ev.preventDefault();
+  var s=JSON.parse(b.dataset.kset);$('kq').value='';$('kstatus').value=s.status||'';$('kai').value=s.ai||'';$('ked').value='';
+  history.replaceState(null,'',location.pathname);filt();$('kq').focus()})});
+document.addEventListener('keydown',function(ev){if(ev.key==='/'&&document.activeElement.tagName!=='INPUT'){ev.preventDefault();$('kq').focus()}});
+})();
+</script>"""
+
+EDITIONS = {1: 1965, 2: 1967, 3: 1969, 4: 1973, 5: 1976, 6: 1978, 7: 1980, 8: 1982, 9: 1984, 10: 1986, 11: 1990, 12: 1992,
+            13: 1995, 14: 1999, 15: 2002, 16: 2006, 17: 2010, 18: 2014, 19: 2018, 20: 2022, 21: 2026}
+
+
+def kourovka_page(lang):
+    d = json.loads(KOUROVKA.read_text(encoding="utf-8"))
+    probs = json.loads(KOUROVKA_PROBLEMS.read_text(encoding="utf-8"))
+    check_kourovka(d, probs)
+    li = 0 if lang == "ru" else 1
+
+    def t(ru, en):
+        return ru if lang == "ru" else en
+
+    def src(xs):
+        return "; ".join(f'<a href="{html.escape(x["url"])}">{kourovka_text(x["text"])}</a>' for x in xs)
+    notes = {}
+    for e in sorted(d["notes"], key=lambda e: e["date"], reverse=True):
+        notes.setdefault(e["problem"], []).append({"kind": e["kind"], "date": e["date"], "ai": e["kind"] == "ai" or bool(e.get("ai")),
+                                                   "html": f'<p>{kourovka_text(e["text"][lang])} ({src(e["sources"])})</p>'})
+    ui = {"status": {"open": t("открыта", "open"), "partial": t("решена частично", "partly solved"), "solved": t("решена", "solved")},
+          "ai_confirmed": t("ИИ, подтверждено", "AI, confirmed"), "ai_confirmed_t": t("Решение ИИ подтверждено математиком (по тетради)",
+                                                                                     "AI solution confirmed by a mathematician (per the Notebook)"),
+          "ai_unverified": t("ИИ, не проверено", "AI, unverified"), "ai_unverified_t": t("Решение ИИ ещё не проверено; задача считается открытой",
+                                                                                       "AI solution not yet verified; the problem counts as open"),
+          "ai_cited": t("упомянуто решение ИИ", "AI solution cited"),
+          "ai_cited_t": t("В комментарии тетради упомянуто непроверенное решение ИИ (задача не помечена ♯)",
+                          "The Notebook's comment cites an unverified AI solution (the problem is not marked ♯)"), "archive": t("архив", "Archive"),
+          "answer": t("Ответ", "Answer"), "comments": t("Комментарии", "Comments"),
+          "archived_parts": t("Решённые части (архив)", "Solved parts (Archive)"),
+          "found": t("Найдено: {n} из {all}", "{n} of {all} problems"),
+          "kinds": {k: v[li] for k, v in NOTE_KINDS.items()},
+          "ed": {str(k): t(f"{k}-й выпуск, {y}", f"issue {k}, {y}") for k, y in EDITIONS.items()}}
+    opts_ed = "".join(f'<option value="{k}">{t(f"{k}-й выпуск ({y})", f"Issue {k} ({y})")}</option>' for k, y in EDITIONS.items())
+    groups = "".join(f'<li><b>{kourovka_text(g["name"])}</b>: {kourovka_text(g["system"][lang])} ({src(g["sources"])})</li>'
+                     for g in d.get("ai_groups", []))
+    log = "".join(f'<li><span class="d">{x["date"]}</span> {kourovka_text(x[lang])}</li>' for x in reversed(d.get("log", [])))
+    queries = "".join(f"<li><code>{html.escape(q)}</code></li>" for q in d.get("queries", []))
+    pre = "" if lang == "en" else "../"
+
+    def stat(k, label, kset):
+        return (f'<a class="kstat" href="#" data-kset=\'{json.dumps(kset)}\'><span class="big" id="kc-{k}">…</span>'
+                f'<span>{label}</span></a>')
+    body = t(f"""
+<div class="box"><p>Все задачи <a href="{KOUROVKA_URL}">Коуровской тетради</a> (нерешённые задачи теории групп, под ред.
+Е.&nbsp;И.&nbsp;Хухро и В.&nbsp;Д.&nbsp;Мазурова) с формулировками, статусом и тем, кем решены: людьми или с участием ИИ.
+По образцу страницы Т.&nbsp;Тао <a href="https://github.com/teorth/erdosproblems/wiki/AI-contributions-to-Erd%C5%91s-problems">«AI contributions
+to Erdős problems»</a>. Формулировки, ответы и пометки&nbsp;— из исходника тетради ({html.escape(probs["source"])}): там с 2026&nbsp;г.
+решения, предложенные ИИ, отмечены знаком ♯, пока их не подтвердит математик, и словами «AI solution confirmed by …» после проверки.
+Сверх тетради&nbsp;— наши заметки со ссылкой на первоисточник: решения, ещё не вошедшие в тетрадь, и какие системы ИИ стоят
+за решениями. Последняя проверка: <b>{d["checked"]}</b>, обновляется раз в неделю.</p></div>""", f"""
+<div class="box"><p>Every problem of the <a href="{KOUROVKA_URL}">Kourovka Notebook</a> (unsolved problems in group theory, eds.
+E.&nbsp;I.&nbsp;Khukhro and V.&nbsp;D.&nbsp;Mazurov), with its statement, its status and who solved it: people, or people with AI.
+Modelled on T.&nbsp;Tao's <a href="https://github.com/teorth/erdosproblems/wiki/AI-contributions-to-Erd%C5%91s-problems">“AI contributions
+to Erdős problems”</a>. Statements, answers and marks come from the Notebook's source ({html.escape(probs["source"])}): since 2026 it marks
+a solution proposed by AI with ♯ until a mathematician confirms it, and with “AI solution confirmed by …” once checked. Beyond the
+Notebook: our notes, each with a primary source: solutions not yet in the Notebook, and which AI systems are behind the solutions.
+Last checked: <b>{d["checked"]}</b>; updated weekly.</p></div>""")
+    body += ('<div class="kstats">' + stat("open", t("открыто", "open"), {"status": "open"})
+             + stat("partial", t("частично", "partly solved"), {"status": "partial"})
+             + stat("solved", t("решено", "solved"), {"status": "solved"})
+             + stat("human", t("решено без ИИ (известного нам)", "solved without AI (as far as we know)"), {"ai": "human"})
+             + stat("ai_confirmed", t("ИИ, подтверждено", "AI, confirmed"), {"ai": "ai_confirmed"})
+             + stat("ai_unverified", t("♯ ИИ, не проверено", "♯ AI, unverified"), {"ai": "ai_unverified"})
+             + stat("ai_note", t("ИИ без пометки в тетради", "AI, not marked in the Notebook"), {"ai": "ai_note"}) + "</div>")
+    body += f"""<div id="kourovka-app" data-src="{pre}kourovka-problems.json">
+<div class="kctl"><input type="search" id="kq" placeholder="{t("номер (20.84), слова, автор…  нажмите /", "number (20.84), words, author…  press /")}" autocomplete="off" spellcheck="false" aria-label="{t("Поиск", "Search")}">
+<select id="kstatus" aria-label="{t("Статус", "Status")}"><option value="">{t("любой статус", "any status")}</option><option value="open">{t("открытые", "open")}</option>
+<option value="partial">{t("решённые частично", "partly solved")}</option><option value="solved">{t("решённые", "solved")}</option></select>
+<select id="kai" aria-label="{t("ИИ", "AI")}"><option value="">{t("с ИИ и без", "with or without AI")}</option><option value="any">{t("с участием ИИ или с заметкой", "AI involved, or with a note")}</option>
+<option value="ai_confirmed">{t("ИИ, подтверждено", "AI, confirmed")}</option><option value="ai_unverified">{t("♯ ИИ, не проверено", "♯ AI, unverified")}</option>
+<option value="ai_all">{t("любое участие ИИ", "any AI involvement")}</option>
+<option value="ai_note">{t("ИИ по нашим заметкам (тетрадь не отмечает)", "AI per our notes (not marked in the Notebook)")}</option>
+<option value="ai_cited">{t("упомянуто непроверенное решение ИИ (без ♯)", "an unverified AI solution cited (no ♯)")}</option>
+<option value="human">{t("решены без ИИ", "solved without AI")}</option><option value="none">{t("без ИИ", "no AI")}</option><option value="notes">{t("с нашей заметкой", "with our note")}</option></select>
+<select id="ked" aria-label="{t("Выпуск", "Issue")}"><option value="">{t("все выпуски", "all issues")}</option>{opts_ed}</select></div>
+<p id="kcount" class="muted" aria-live="polite">{t("Загрузка…", "Loading…")}</p>
+<div id="klist" class="knomath"></div><p><button id="kmore" type="button" hidden>{t("Показать ещё", "Show more")}</button></p>
+<noscript><p>{t("Для поиска нужен JavaScript; данные&nbsp;—", "The search needs JavaScript; the data:")} <a href="{pre}kourovka-problems.json">kourovka-problems.json</a>.</p></noscript></div>
+<script type="application/json" id="k-ui">{json.dumps(ui, ensure_ascii=False).replace("</", "<\\/")}</script>
+<script type="application/json" id="k-notes">{json.dumps(notes, ensure_ascii=False).replace("</", "<\\/")}</script>"""
+    body += t("<h2>Кто стоит за решениями ИИ</h2>", "<h2>Who is behind the AI solutions</h2>") + (
+        f"<ul>{groups}</ul>" if groups else t("<p>Пока не выяснено.</p>", "<p>Not yet established.</p>"))
+    body += t(f"""<h2>Как ведётся</h2>
+<p>Раз в неделю: свежий исходник тетради с arXiv разбирается заново ({gh("site/kourovka.py", "site/kourovka.py")}), изменения статусов
+попадают в журнал ниже; затем поиск по arXiv, <a href="{KOUROVKA_SITE}">сайту тетради</a>, блогам и MathOverflow по запросам ниже.
+Заметка добавляется только после чтения первоисточника. Знаете о решении, которого здесь нет? Напишите в
+<a href="{REPO}/issues">issues</a>. Данные: {gh("site/kourovka.json", "site/kourovka.json")}, {gh("site/kourovka-problems.json", "site/kourovka-problems.json")}.
+Формулировки&nbsp;— автоматическое преобразование LaTeX тетради; при расхождении верен PDF на arXiv.</p>
+<details><summary>Поисковые запросы</summary><ul>{queries}</ul></details>
+<h2>Журнал обновлений</h2><ul class="klog">{log}</ul>""", f"""<h2>How it is kept</h2>
+<p>Weekly: the latest source of the Notebook is fetched from arXiv and parsed again ({gh("site/kourovka.py", "site/kourovka.py")}), changes of
+status go into the log below; then a search of arXiv, the <a href="{KOUROVKA_SITE}">Notebook's site</a>, blogs and MathOverflow with the
+queries below. A note is added only after its primary source has been read. Know of a solution that is missing? Open an
+<a href="{REPO}/issues">issue</a>. The data: {gh("site/kourovka.json", "site/kourovka.json")}, {gh("site/kourovka-problems.json", "site/kourovka-problems.json")}.
+The statements are converted from the Notebook's LaTeX automatically; where they differ, the PDF on arXiv is right.</p>
+<details><summary>Search queries</summary><ul>{queries}</ul></details>
+<h2>Update log</h2><ul class="klog">{log}</ul>""")
+    body += KOUROVKA_JS
+    return t("Коуровская тетрадь: кто решил и с чем", "The Kourovka Notebook: who solved what, and how"), body
+
+
+def copy_kourovka():
+    shutil.copy(KOUROVKA_PROBLEMS, OUT / "kourovka-problems.json")
+
+
 def side_toc(lang, entries):
     """The <aside> of the right-hand contents; entries: (level 2 or 3, id, html) of the headings."""
     head = "На этой странице" if lang == "ru" else "On this page"
@@ -572,7 +822,7 @@ def blocks_of(body):
             self.buf, self.section, self.svg = [], "", 0
 
         def handle_starttag(self, tag, attrs):
-            if tag == "svg":
+            if tag in ("svg", "script", "style", "noscript"):
                 self.svg += 1
             elif tag in self.BLOCK:
                 self.flush()
@@ -580,7 +830,7 @@ def blocks_of(body):
                 self.buf.append(" · ")
 
         def handle_endtag(self, tag):
-            if tag == "svg":
+            if tag in ("svg", "script", "style", "noscript"):
                 self.svg -= 1
             elif tag in self.BLOCK:
                 text = self.flush()
@@ -1902,6 +2152,7 @@ def main():
     print("search index:", sum(1 for p in PAGES if p[1] != "search.html"), "pages,", nblocks, "blocks")
     for lang in LANGS:
         shutil.copy(HERE / f"og-{lang}.png", OUT / f"og-{lang}.png")
+    copy_kourovka()
     (OUT / ".nojekyll").write_text("")
     print("site written to", OUT, "| paper of", pdate, "| pages:", pdfs, "| paper links:", len(USED), "labels",
           "| code at", PIN[:7])
@@ -2229,6 +2480,9 @@ Checks: two independent methods, PARI/GP, known values.</small></p>""")
         f'<li id="{x[0]}"><p>{x[1 + li]} '
         + (f'{claim_mark(OPEN_CLAIM[x[0]], ODEF(OPEN_CLAIM[x[0]]))}. ' if x[0] in OPEN_CLAIM else "")
         + f'<a href="{TASK_URL}{x[3]}">{t("Трекер", "Tracker")}: {x[3]}</a></p></li>' for x in OPEN) + "</ol>")
+
+    # ---------- Kourovka & AI (MATH-526) ----------
+    P("kourovka.html", *kourovka_page(lang))
 
     # ---------- paper ----------
     # The contents from the .aux of the build: every entry has an anchor here and opens the viewer at

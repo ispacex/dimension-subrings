@@ -47,3 +47,18 @@ python3 site/build_site.py --paper PAPER --kernel KERNEL --blueprint BP OUT && s
 `PAPER` is `paper/` of a mikh checkout, `KERNEL` a checkout of cflint-fast-core. Without
 `--blueprint` the output has no `blueprint/`, and copying it over ispacex/d5 would delete the live
 leanblueprint pages.
+
+## kourovka.html: the Kourovka Notebook (MATH-526)
+
+Every problem of the Kourovka Notebook with its statement, status and who solved it (people, or with AI),
+searched in the reader's browser. Two data files, both committed:
+
+- `kourovka-problems.json`: made by `kourovka.py` from the Notebook's LaTeX (arXiv:1401.0300); the
+  statements, answers and the Notebook's own marks (`*` solved, `♯` unverified AI solution, "AI solution
+  confirmed by …").
+- `kourovka.json`: ours, by hand: notes on single problems (each with a primary source), the AI groups,
+  the search queries and the update log.
+
+Weekly (a recurring MATH issue): `python3 site/kourovka.py update` (fetch, parse, diff, log), then the
+search for new solutions with the queries in `kourovka.json`, notes added by hand, a PR, and a rebuild
+with `publish_via_tm.sh`. `build_site.py` stops on a note about a problem the Notebook does not have.
