@@ -151,8 +151,10 @@ batches 97 and 100 were collected by hand); its notifications go to Telegram onl
 - **Tracker comment** (`tracker.enabled`, `base_url`, `events`): `POST
   {base_url}/rest/api/2/issue/<issue>/comment` with `Authorization: Bearer <token>` (the
   tracker's compatible API), token in `secrets/tracker-token`. Redirects are not followed, so
-  the token cannot be carried to another host. Off until a token for this
-  service exists. The heartbeat and disk alerts that belong to no batch go to Telegram only.
+  the token cannot be carried to another host. `base_url` is the tracker company that holds
+  the MATH project, `https://default.kaiku.tech`; a token works only at the company it was
+  made in (D5 is on `math.kaiku.tech`, and a token from there gets 404 on MATH issues). Enabled on
+  kimmy since 2026-11-26 (MATH-492). The heartbeat and disk alerts that belong to no batch go to Telegram only.
 
 ## Tests
 

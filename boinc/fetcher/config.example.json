@@ -13,6 +13,6 @@
  },
  "tracker": {
   "enabled": false,
-  "base_url": "https://math.kaiku.tech"
+  "base_url": "https://default.kaiku.tech"
  }
 }

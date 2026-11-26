@@ -80,7 +80,7 @@ DEFAULTS: dict = {
     "telegram": {"enabled": False, "chat_id": None, "token_file": "telegram-bot-token"},
     "tracker": {
         "enabled": False,
-        "base_url": "https://math.kaiku.tech",
+        "base_url": "https://default.kaiku.tech",
         "token_file": "tracker-token",
         # events that also go to the registry issue as a comment
         "events": ["complete", "download_failed", "verify_failed", "error_fraction",
