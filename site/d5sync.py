@@ -87,6 +87,7 @@ import pathlib
 import re
 import subprocess
 import sys
+import urllib.error
 import urllib.request
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
@@ -223,6 +224,21 @@ def claims(src):
 
 
 # ---------------------------------------------------------------------------------------------
+# Requests that carry a token (tm's API, the tracker's MCP endpoint)
+
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    """urllib follows a redirect with every header of the request, Authorization too, even to another host
+    (and turns a POST into a GET): a request that carries a token treats a redirect as an error instead."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise urllib.error.HTTPError(req.full_url, code, f"redirect to {newurl} not followed (the request carries "
+                                     "a token)", headers, fp)
+
+
+AUTHED = urllib.request.build_opener(NoRedirect)
+
+
+# ---------------------------------------------------------------------------------------------
 # tm jobs (MATH-529)
 
 def tm_settings():
@@ -273,13 +289,16 @@ def tm_jobs(src=None):
     req = urllib.request.Request(url + "/api/state?all=1", headers={
         "Authorization": "Bearer " + token, "Accept-Encoding": "gzip", "User-Agent": "d5sync"})
     try:
-        with urllib.request.urlopen(req, timeout=120) as r:
+        with AUTHED.open(req, timeout=120) as r:
             body = r.read()
             if r.headers.get("Content-Encoding") == "gzip":
                 body = gzip.decompress(body)
     except OSError as e:  # URLError and HTTPError among them; the message never holds the token
         sys.exit(f"d5sync: tm at {url} does not answer: {e}")
-    return [norm_job(j) for j in json.loads(body)["jobs"]]
+    try:
+        return [norm_job(j) for j in json.loads(body)["jobs"]]
+    except (ValueError, KeyError, TypeError, AttributeError):
+        sys.exit(f"d5sync: tm at {url} did not answer with its list of jobs")
 
 
 def job_states(data, jobs):
@@ -463,7 +482,10 @@ def tex_md(tex, numbers):
     s = re.sub(r"\\textup\{([^{}]*)\}", r"\1", s)
     s = re.sub(r"\\D(?![A-Za-z])", r"\\Delta", s)
     s = re.sub(r"\\Z(?![A-Za-z])", r"\\mathbb{Z}", s)
-    s = s.replace("~", " ").replace("\\ ", " ").replace("\\,", " ")
+    s = s.replace("~", " ").replace("\\ ", " ")
+    # \, is a thin space: kept in a formula (1\,587\,389, which KaTeX would print 1587389), a space in the text
+    s = "".join(x if i % 2 else x.replace("\\,", " ")
+                for i, x in enumerate(re.split(r"(\$\$.*?\$\$|(?<!\\)\$.*?(?<!\\)\$)", s, flags=re.S)))
     k = 0
 
     def item(m):
@@ -512,7 +534,9 @@ def create_missing(data, stmts, derived, registry, numbers, ctx):
                 "statement": tex_md(st["body"], numbers), "status": initial,
                 "reason": (f"Created by site/d5sync.py --create-missing (MATH-529): {st['env']} {number} of the paper; "
                            f"derived {status}" + (" (lean once a later run binds its Lean bases)" if status == "lean" else "")
-                           + ": " + "; ".join(derived[label]["why"]))[:1000],
+                           + ": " + "; ".join(derived[label]["why"])
+                           + (f"; capped at {status} by what it uses: " + ", ".join(derived[label]["capped_by"])
+                              if derived[label]["capped_by"] else ""))[:1000],
                 "bases": json.dumps([{"kind": "source", "ref": source}], ensure_ascii=False)}
         title = re.sub(r"\s+", " ", (st.get("title") or "")).strip()
         if title.lower() == "computer-assisted":  # a mark of the proof, not a name
@@ -774,9 +798,10 @@ def report(rows, calls, notes, ctx, created=None):
 
 class Tracker:
     def __init__(self, token):
-        self.token, self.session, self.n = token, None, 0
-        self.rpc("initialize", {"protocolVersion": "2025-06-18", "capabilities": {},
-                                "clientInfo": {"name": "d5sync", "version": "1"}})
+        self.token, self.session, self.n, self.protocol = token, None, 0, None
+        res = self.rpc("initialize", {"protocolVersion": "2025-06-18", "capabilities": {},
+                                      "clientInfo": {"name": "d5sync", "version": "1"}})
+        self.protocol = res.get("protocolVersion") if isinstance(res, dict) else None
         self.rpc("notifications/initialized", None, notify=True)
 
     def rpc(self, method, params, notify=False):
@@ -787,18 +812,19 @@ class Tracker:
                    "Accept": "application/json, text/event-stream", "User-Agent": "d5sync"}
         if self.session:
             headers["Mcp-Session-Id"] = self.session
+        if self.protocol:
+            headers["MCP-Protocol-Version"] = self.protocol
         req = urllib.request.Request(MCP, data=json.dumps(body).encode(), headers=headers, method="POST")
-        with urllib.request.urlopen(req, timeout=120) as r:
+        with AUTHED.open(req, timeout=120) as r:
             self.session = r.headers.get("Mcp-Session-Id") or self.session
             text = r.read().decode()
         if notify:
             return None
-        if text.lstrip().startswith("{"):
-            msg = json.loads(text)
-        else:  # server-sent events: the data line of the answer
-            msg = next(json.loads(ln[5:]) for ln in text.splitlines() if ln.startswith("data:") and '"id"' in ln)
+        msg = rpc_answer(text, self.n)
         if "error" in msg:
             raise RuntimeError(f"{method}: {msg['error']}")
+        if "result" not in msg:
+            raise RuntimeError(f"{method}: an answer without a result")
         return msg["result"]
 
     def call(self, tool, args):
@@ -810,6 +836,26 @@ class Tracker:
             return json.loads(text)
         except ValueError:
             return text
+
+
+def rpc_answer(text, rid):
+    """The JSON-RPC answer to the request `rid`: the body itself, or, in server-sent events, the data line
+    whose message has that id (the stream may carry notifications and progress before it). RuntimeError
+    when there is none, so that --apply counts it as one failed call and goes on."""
+    if text.lstrip().startswith("{"):
+        msgs = [json.loads(text)]
+    else:
+        msgs = []
+        for ln in text.splitlines():
+            if ln.startswith("data:") and ln[5:].strip():
+                try:
+                    msgs.append(json.loads(ln[5:]))
+                except ValueError:
+                    continue
+    for m in msgs:
+        if isinstance(m, dict) and m.get("id") == rid:
+            return m
+    raise RuntimeError(f"no answer to request {rid} from the tracker")
 
 
 def found_in(res, file):

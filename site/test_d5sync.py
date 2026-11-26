@@ -187,6 +187,16 @@ class Derive(unittest.TestCase):
         self.assertEqual(a["statement"], "By Lemma 2.3, $\\Delta^2\\ne\\mathbb{Z}$ *here*:\n- (1) one;\n- (2) two.")
         self.assertIn("ispacex/mikh ppppppp), Theorem 1.1", json.loads(a["bases"])[0]["ref"])
         self.assertEqual({x for x, _, _ in skipped}, {"ext:lit", "thm:paper", "q:main"})
+        # review (703) of #185: a created claim's reason says what capped it (own basis lean, derived computer),
+        # and a thin space stays in a formula (KaTeX prints $1 587$ as 1587), a space in the text
+        reg = [c for c in reg if c["label"] != "prop:uses"]
+        self.stmts["prop:uses"] = dict(stmt(), env="proposition", body=r"All $1\,587\,389$ groups,\, and $$a\,b$$ too.")
+        calls, _, _ = d5sync.create_missing({"nodes": self.nodes}, self.stmts, self.d, reg, {}, ctx)
+        a = next(c["args"] for c in calls if c["claim"] == "prop:uses")
+        self.assertEqual(a["status"], "computer")
+        self.assertIn("derived computer: proved in Lean", a["reason"])
+        self.assertTrue(a["reason"].endswith("; capped at computer by what it uses: prop:cert"))
+        self.assertEqual(a["statement"], "All $1\\,587\\,389$ groups, and $$a\\,b$$ too.")
 
     def run_apply(self, refuse=(), files=None, missing=(), refuse_create=()):
         """The plan of test_plan, applied to a fake tracker that refuses the tools in `refuse` and finds each
@@ -260,6 +270,31 @@ class Derive(unittest.TestCase):
         self.assertTrue(any(t == "report_lean_audit" for t, _ in made))
         calls, made, failed = self.run_apply(missing=("thm:a", "thm:jobs"))
         self.assertEqual((failed, len(made)), (0, len(calls)))
+
+    def test_rpc_answer(self):
+        """Review (703) of #185: the answer is the event whose message has the request's id, not the first data
+        line that mentions "id"; no answer is a RuntimeError (one failed call), not a StopIteration that ends
+        the whole --apply."""
+        ok = {"jsonrpc": "2.0", "id": 3, "result": {"content": []}}
+        note = {"jsonrpc": "2.0", "method": "notifications/message", "params": {"data": {"id": 99, "text": "\"id\""}}}
+        sse = f"event: message\ndata: {json.dumps(note)}\n\nevent: message\ndata: {json.dumps(ok)}\n\n"
+        self.assertEqual(d5sync.rpc_answer(sse, 3), ok)
+        self.assertEqual(d5sync.rpc_answer(json.dumps(ok), 3), ok)
+        with self.assertRaises(RuntimeError):
+            d5sync.rpc_answer(f"data: {json.dumps(note)}\n\n", 3)
+        with self.assertRaises(RuntimeError):
+            d5sync.rpc_answer("", 3)
+
+    def test_no_redirect(self):
+        """Review (703) of #185: a request with a token does not follow a redirect (urllib would resend its
+        Authorization header to wherever the redirect points)."""
+        import urllib.error
+        import urllib.request
+        req = urllib.request.Request("https://task.math.tmless.org/api/state?all=1", headers={"Authorization": "Bearer t"})
+        with self.assertRaises(urllib.error.HTTPError) as e:
+            d5sync.NoRedirect().redirect_request(req, None, 302, "Found", {}, "https://elsewhere.example/x")
+        self.assertNotIn("Bearer", str(e.exception))
+        self.assertTrue(any(isinstance(h, d5sync.NoRedirect) for h in d5sync.AUTHED.handlers))
 
     def test_native(self):
         self.assertTrue(d5sync.native(NATIVE))
