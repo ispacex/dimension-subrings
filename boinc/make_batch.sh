@@ -1,5 +1,5 @@
 #!/bin/sh
-# make_batch.sh [-r REPLICAS] [-d DUMPLEVEL] [-f] [-F FLAGS] RANK OUTDIR FILE... — a BUDA batch directory from
+# make_batch.sh [-r REPLICAS] [-d DUMPLEVEL] [-f] [-F FLAGS] [-q LOGQ] RANK OUTDIR FILE... — a BUDA batch directory from
 # the split files of compute/pq2048/run_rank.sh (B/in_NNNN, B/in_dNNNNN, Cin/c_NNNN): one job per
 # file and replica, and the batch's manifest OUTDIR.manifest beside it (not inside: every
 # directory of the batch is a job).
@@ -12,7 +12,8 @@
 # asks for the full lines instead.  REPLICAS (default 2): BUDA validates nothing (min_quorum 1),
 # so every piece is sent twice and collect.sh compares the two results byte for byte.  FLAGS: the
 # tree.g switches the run used, comma-separated (e.g. TAH19,NOSTAB,TIGHT,THMB,THMA,LIBROOT,OWNCOVER);
-# run_piece.sh sets PQ2048_<FLAG>=1 for each.  They must match the run the pieces come from.
+# run_piece.sh sets PQ2048_<FLAG>=1 for each.  They must match the run the pieces come from.  LOGQ
+# (default 11): the order 2^LOGQ of the candidates, NMAX = LOGQ - 1 (12 for the search at 2^12, MATH-40).
 #
 # The manifest: a line "# batch ..." with the parameters, a line "# split {...}" with the split
 # manifest (Cin/split.json of run_rank.sh with CSEED: the seed and the pieces) when the files
@@ -20,17 +21,18 @@
 # collect.sh FILESDIR RUNDIR OUTDIR.manifest checks the results against it.
 #   cd OUTDIR && zip -qr ../batch.zip .        # the batch file for the BUDA submit form
 set -eu
-reps=2 dl='' compact=true flags=''
-while getopts r:d:fF: o; do
-  case $o in r) reps=$OPTARG ;; d) dl=$OPTARG ;; f) compact=false ;; F) flags=$OPTARG ;; *) exit 2 ;; esac
+reps=2 dl='' compact=true flags='' logq=11
+while getopts r:d:fF:q: o; do
+  case $o in r) reps=$OPTARG ;; d) dl=$OPTARG ;; f) compact=false ;; F) flags=$OPTARG ;; q) logq=$OPTARG ;; *) exit 2 ;; esac
 done
 shift $((OPTIND - 1))
-[ $# -ge 3 ] || { echo "usage: make_batch.sh [-r REPLICAS] [-d DUMPLEVEL] [-f] [-F FLAGS] RANK OUTDIR FILE..." >&2; exit 2; }
+[ $# -ge 3 ] || { echo "usage: make_batch.sh [-r REPLICAS] [-d DUMPLEVEL] [-f] [-F FLAGS] [-q LOGQ] RANK OUTDIR FILE..." >&2; exit 2; }
+case $logq in 11|12) ;; *) echo "make_batch.sh: LOGQ must be 11 or 12" >&2; exit 2 ;; esac
 rank=$1 out=${2%/}; shift 2
 sha() { if command -v sha256sum >/dev/null; then sha256sum < "$1"; else shasum -a 256 < "$1"; fi | cut -c1-64; }
 mkdir -p "$out"
 man=$out.manifest
-echo "# batch $(basename "$out") rank=$rank replicas=$reps dumplevel=${dl:--} compact=$compact flags=${flags:--}" > "$man"
+echo "# batch $(basename "$out") rank=$rank logq=$logq replicas=$reps dumplevel=${dl:--} compact=$compact flags=${flags:--}" > "$man"
 split=$(dirname "$1")/split.json
 if [ -s "$split" ]; then echo "# split $(cat "$split")" >> "$man"; fi
 for f in "$@"; do
@@ -39,7 +41,7 @@ for f in "$@"; do
     in_*) name=b_${b#in_} ;;
     *) name=$b ;;
   esac
-  hdr="# piece v1 name=$name rank=$rank nmax=10 logq=11 covermax=10 steprules=true"
+  hdr="# piece v1 name=$name rank=$rank nmax=$((logq - 1)) logq=$logq covermax=10 steprules=true"
   [ -z "$dl" ] || hdr="$hdr dumplevel=$dl"
   [ "$compact" = false ] || hdr="$hdr compact=true"
   [ -z "$flags" ] || hdr="$hdr flags=$flags"
