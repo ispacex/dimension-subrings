@@ -48,6 +48,24 @@ python3 site/build_site.py --paper PAPER --kernel KERNEL --blueprint BP OUT && s
 `--blueprint` the output has no `blueprint/`, and copying it over ispacex/d5 would delete the live
 leanblueprint pages.
 
+## d5sync.py: the claims of D5 from the sources (MATH-459)
+
+The status of a claim of the project D5 (math.kaiku.tech) is derived, not set (wiki 912 §4.3): from
+`blueprint.toml`, the paper (its proofs' `\ref` and the `.aux`), `#d5_tags`, the axiom audit of the pinned
+group-dimension commit and the tm jobs of a node (`jobs`). The rules are in the docstring of `d5sync.py`;
+`test_d5sync.py` (CI, job `data`) checks them on made-up nodes.
+
+```bash
+latexmk -pdf PAPER/d5.tex                                      # the .aux (PAPER: paper/ of mikh)
+python3 site/d5sync.py --paper PAPER --aux PAPER/d5.aux --paper-rev SHA --from-ci --report r.md --plan p.json
+D5_TOKEN=... python3 site/d5sync.py ... --from-ci --apply      # only after the dry run is approved
+```
+
+The dry run (the default) reads only public data (the claims: `GET /api/projects/D5/claims`, no token) and
+CI logs (`gh`), and writes nothing; `--plan` saves the tracker calls it would make (MCP tools of
+math.kaiku.tech, replayable by an agent). `--apply` makes them with a person's token. It never writes
+`blueprint.toml`, never creates claims, never touches a refuted or retracted claim.
+
 ## kourovka.html: the Kourovka Notebook (MATH-526)
 
 Every problem of the Kourovka Notebook with its statement, status and who solved it (people, or with AI),

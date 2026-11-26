@@ -95,7 +95,11 @@ def load():
         n.setdefault("note_ru", "")
         n.setdefault("not_in_paper", [])
         n.setdefault("not_formalized", False)
-        unknown = set(n) - {"tag", "lean", "proved", "computer", "uses", "uses_drop", "note", "note_ru", "title", "title_ru",
+        n.setdefault("jobs", [])
+        bad = [j for j in n["jobs"] if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", j)]
+        if bad:
+            sys.exit(f"blueprint.toml: node {label}: jobs {bad} are not tm job keys runner/kind/id")
+        unknown = set(n) - {"tag", "lean", "jobs", "proved", "computer", "uses", "uses_drop", "note", "note_ru", "title", "title_ru",
                                 "statement", "not_in_paper", "not_formalized"}
         if unknown:
             sys.exit(f"blueprint.toml: node {label}: unknown fields {sorted(unknown)}")
