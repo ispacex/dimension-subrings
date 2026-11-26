@@ -27,6 +27,9 @@
 #            the proof); a statement with `lean` but not `proved` has only its statement (or a part)
 #            in Lean;
 #   computer true if the proof rests on a computation (the paper's "Computer-assisted");
+#   jobs     the tm jobs (keys runner/kind/id, e.g. kimmy/tm/20261112-151713-case450-main-5710316, the
+#            commit at the end) whose computation the proof rests on (wiki 912, §4.2; by hand): the D5
+#            sync (site/d5sync.py, MATH-459) makes each a basis `computation` of the claim;
 #   uses     statements the proof uses besides those the paper's proof refers to (\ref in the proof
 #            are taken from the paper); uses_drop: references of the proof that are not dependencies;
 #   not_in_paper  declarations that the paper's section on the formalization does not name (the
