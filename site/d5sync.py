@@ -77,7 +77,8 @@ agent may also replay). --apply makes them through the tracker's MCP endpoint
 (https://math.kaiku.tech/mcp) with the token in D5_TOKEN (a person's token, scoped to D5; never
 stored here); a call that fails leaves the rest of its claim unwritten and the run goes on, a failed
 report_lean_audit moves no claim to lean, a find_lean_declaration that does not list the declaration's
-own file first leaves its claim alone; any failure makes the exit status non-zero.
+own file first leaves its claim alone; any failure makes the exit status non-zero. --apply refuses to run
+when nodes name tm jobs and tm cannot be read (the dry run shows those nodes open).
 """
 import gzip
 import json
@@ -985,6 +986,11 @@ def main(argv):
         sys.exit("d5sync: the #d5_tags log does not match blueprint.toml:\n  " + "\n  ".join(errors))
     axioms = audit(audit_text)
     states = job_states(data, tm_jobs(opts.get("--tm-jobs")) if named else [])
+    if states is None and opts.get("--apply"):
+        # a job not checked makes its node open in the dry run; written, that would take a claim down to open
+        # in public for want of a token, not because a job failed
+        sys.exit("d5sync: nodes name tm jobs, but tm cannot be read (TM_TOKEN, ~/.config/tm/config or --tm-jobs); "
+                 "--apply would set them open for want of access. Nothing was written")
     date = opts.get("--paper-date") or subprocess.run(["git", "-C", str(paper), "log", "-1", "--format=%cs", rev],
                                                       capture_output=True, text=True).stdout.strip() or "?"
     src = opts.get("--claims", CLAIMS)
