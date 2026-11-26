@@ -16,12 +16,13 @@ The claims of the project D5 of the tracker (math.kaiku.tech) from the sources o
 and derives the status of every node:
 
   own basis   lean      proved = true, every declaration of the tag covers it in full (no comment
-                        "part ..."), and every one of them is in the audit with at most propext,
-                        Classical.choice, Quot.sound;
+                        "part ..."), every theorem of it is in the audit (at least one), and every
+                        audited one has at most propext, Classical.choice, Quot.sound;
               paper     a statement of the paper (or a result of the literature, ext:, or our own with a
-                        reviewed proof on paper, own:) whose proof is not computer-assisted;
-              computer  computer = true (the paper's "Computer-assisted"), a tm job, or a Lean
-                        certificate whose audit shows the axioms of native_decide;
+                        reviewed proof on paper, own:) whose proof is not computer-assisted (a Lean
+                        certificate of such a statement confirms it and does not lower it, 703 §3);
+              computer  computer = true (the paper's "Computer-assisted"), a tm job (`jobs`: the proof
+                        rests on it), or a Lean certificate whose audit shows native_decide;
               open      none of these (the questions q:, oq: always);
               the strongest wins: lean > paper > computer > open.
   the cap     not above the lowest derived status of what it uses, transitively (the uses of
@@ -45,7 +46,9 @@ at that commit (`gh run view --log`). The dry run (the default) prints the table
 tracker calls it would make, in the order it would make them (the MCP tools of math.kaiku.tech, which an
 agent may also replay). --apply makes them through the tracker's MCP endpoint
 (https://math.kaiku.tech/mcp) with the token in D5_TOKEN (a person's token, scoped to D5; never
-stored here); it stops at the first call that fails.
+stored here); a call that fails leaves the rest of its claim unwritten and the run goes on, a failed
+report_lean_audit moves no claim to lean, a find_lean_declaration that does not list the declaration's
+own file first leaves its claim alone; any failure makes the exit status non-zero.
 """
 import json
 import os
@@ -65,7 +68,9 @@ MCP = f"{D5}/mcp"
 LEAN_REPO = "ispacex/group-dimension"
 THIS_REPO = "ispacex/dimension-subrings"
 CLEAN = {"propext", "Classical.choice", "Quot.sound"}
-NATIVE = re.compile(r"\._native\.native_decide\.ax_")
+# native_decide: since Lean 4.2x an auxiliary axiom per use (`_private....c00_ok._native.native_decide.ax_1_1`);
+# before, the axiom Lean.ofReduceBool (and Lean.trustCompiler behind it)
+NATIVE = re.compile(r"\._native\.native_decide\.ax_|^Lean\.(ofReduceBool|ofReduceNat|trustCompiler)$")
 RANK = {"open": 0, "computer": 1, "paper": 2, "lean": 3}
 KEEP_BASES = ("page", "source", "legal")  # the bases of a claim this script does not own
 UNTOUCHED = ("refuted", "retracted")
@@ -198,16 +203,24 @@ def own_basis(label, n, stmts, comments, axioms, theorems):
         if dirty:
             why.append("audit not clean: " + ", ".join(f"{x} ({len(set(axioms[x]) - CLEAN)} other axioms"
                                                          + (", native_decide" if x in cert else "") + ")" for x in dirty))
-        if not (part or missing or dirty):
+        if not [x for x in n["lean"] if x in theorems and x in axioms]:
+            # only definitions (statements as a Prop) in `lean`, or no theorem of it audited: nothing proved
+            why.append("no theorem of the node in the audit")
+        elif not (part or missing or dirty):
             return "lean", [f"proved in Lean, {len(n['lean'])} declarations, clean audit"]
     elif n["lean"]:
         why.append("in Lean only as a statement (proved = false)")
     if question:
         return "open", why + ["a question"]
     computer = n["computer"] or cert or n["jobs"]
-    if not computer and (label in stmts or blueprint.outside(label)):
+    # paper > computer: a Lean certificate of a statement whose proof on paper is not computer-assisted
+    # confirms that proof, it does not replace it (703 §3); a proof that rests on a computation (the
+    # paper's "Computer-assisted", or the tm jobs of `jobs`, by that field's definition) is computer
+    if not (n["computer"] or n["jobs"]) and (label in stmts or blueprint.outside(label)):
         src = {"ext": "a result of the literature", "own": "our proof on paper (not in the paper)"}.get(label.split(":")[0],
                                                                                                          "proof in the paper")
+        if cert:
+            src += " (confirmed by a Lean certificate with native_decide: " + ", ".join(cert) + ")"
         return "paper", why + [src]
     if computer:
         what = []
@@ -252,13 +265,37 @@ def derive(data, stmts, comments, axioms, theorems):
 # ---------------------------------------------------------------------------------------------
 # The plan
 
-def plan(data, derived, registry, axioms, numbers, ctx):
-    """(rows of the report, the tracker calls in order, the notes)."""
+def native(axs):
+    """Whether an audit's axioms show native_decide."""
+    return any(NATIVE.search(a) for a in axs)
+
+
+def plan(data, derived, registry, axioms, numbers, ctx, index=None):
+    """(rows of the report, the tracker calls in order, the notes). `index` (blueprint.lean_index()) gives
+    each find_lean_declaration the file the declaration is in, which --apply checks the tracker's answer
+    against."""
     nodes = data["nodes"]
+    index = index or {}
     by_tag = {c.get("tag"): c for c in registry if c.get("tag")}
     rows, calls, notes = [], [], []
-    audited = sorted({x for label, n in nodes.items() if n.get("tag") in by_tag
-                      for x in n["lean"] if x in axioms})
+    linked = sorted({x for label, n in nodes.items() if n.get("tag") in by_tag for x in n["lean"] if x in axioms})
+    # report_lean_audit refuses a list with the auxiliary axioms of native_decide (seen 26.11.2026), and one
+    # refused name fails the whole call: the certificates are not reported (they are never 'lean' anyway)
+    audited = [x for x in linked if not native(axioms[x])]
+    certs = [x for x in linked if native(axioms[x])]
+    if certs:
+        notes.append(f"{len(certs)} native_decide certificates not in report_lean_audit (the tracker refuses their "
+                     "axioms); their lean bases stay without an audit, so they never make a claim 'lean': "
+                     + ", ".join(certs))
+    # find_lean_declaration answers by the last part of the name and binds to the first file it lists
+    files_of = {}
+    for name, (rel, _) in index.items():
+        files_of.setdefault(name.split(".")[-1], set()).add(rel)
+    ambiguous = sorted({x for x in linked if len(files_of.get(x.split(".")[-1], ())) > 1})
+    if ambiguous:
+        notes.append(f"{len(ambiguous)} declarations share their last name with a declaration in another file (e.g. "
+                     "the sorry statements of Challenge.lean): --apply binds them only where find_lean_declaration "
+                     "lists the right file first: " + ", ".join(ambiguous))
     if audited:
         calls.append({"tool": "report_lean_audit", "args": {
             "project": PROJECT, "repository": LEAN_REPO, "commit": ctx["groups"], "url": ctx["audit_url"],
@@ -293,7 +330,7 @@ def plan(data, derived, registry, axioms, numbers, ctx):
         if [(b["kind"], b.get("ref")) for b in want] != have:
             for x in bound:
                 calls.append({"tool": "find_lean_declaration", "args": {"project": PROJECT, "name": x, "repo": LEAN_REPO},
-                              "claim": label})
+                              "claim": label, "file": index[x][0] if x in index else None})
             calls.append({"tool": "set_claim", "args": {"id": c["id"], "bases": json.dumps(want, ensure_ascii=False)},
                           "claim": label})
             row["write"].append(f"bases: keep {len(kept)} " + "/".join(b["kind"] for b in kept)
@@ -301,7 +338,8 @@ def plan(data, derived, registry, axioms, numbers, ctx):
                                 + (f", {len(n['jobs'])} computation" if n["jobs"] else ""))
         if d["status"] != c["status"]:
             calls.append({"tool": "set_claim_status", "args": {"id": c["id"], "status": d["status"],
-                                                               "reason": reason(label, d, n, ctx)}, "claim": label})
+                                                               "reason": reason(label, d, n, ctx)}, "claim": label,
+                          "needs_audit": d["status"] == "lean"})
             row["write"].append(f"status {c['status']} -> {d['status']}")
     missing = [r["label"] for r in rows if r["claim"] is None]
     if missing:
@@ -411,23 +449,62 @@ class Tracker:
             return text
 
 
-def apply(calls):
-    token = os.environ.get("D5_TOKEN")
-    if not token:
-        sys.exit("d5sync: --apply needs a token of the tracker in D5_TOKEN (nothing was written)")
-    t = Tracker(token)
-    skip = set()
+def found_in(res, file):
+    """Whether find_lean_declaration's answer puts the declaration in `file` (relative to the repository),
+    first: the tracker binds the name to the first place it lists. An answer without any file is not
+    taken as found."""
+    if not isinstance(res, dict) or res.get("found") is False:
+        return False
+    places = res.get("results") if isinstance(res.get("results"), list) else [res]
+    paths = [p.get("file") or p.get("path") for p in places if isinstance(p, dict)]
+    paths = [p for p in paths if p]
+    if not paths:
+        return False
+    return file is None or paths[0].lstrip("/").endswith(file)
+
+
+def apply(calls, tracker=None):
+    """Make the calls, claim by claim: a call that fails or is refused leaves the rest of its claim
+    unwritten (its status untouched) and the run goes on with the next claim. If report_lean_audit fails,
+    no claim is moved to 'lean' (the tracker would hold no audit for it). Returns the number of failures;
+    main exits non-zero on any."""
+    if tracker is None:
+        token = os.environ.get("D5_TOKEN")
+        if not token:
+            sys.exit("d5sync: --apply needs a token of the tracker in D5_TOKEN (nothing was written)")
+        try:
+            tracker = Tracker(token)
+        except (OSError, RuntimeError, ValueError) as e:
+            sys.exit(f"d5sync: the tracker's MCP endpoint {MCP} did not open a session ({e}); nothing was written")
+    skip, failed, audit_ok = set(), 0, True
     for c in calls:
-        if c.get("claim") in skip:
-            print(f"skipped {c['tool']} of {c['claim']}")
+        claim = c.get("claim")
+        if claim in skip:
+            print(f"skipped {c['tool']} of {claim}")
             continue
-        res = t.call(c["tool"], c["args"])
-        if c["tool"] == "find_lean_declaration" and not (isinstance(res, dict) and res.get("found", True)
-                                                         and res.get("results", [1])):
-            print(f"{c['args']['name']}: not found in {LEAN_REPO}; claim {c['claim']} left as it is: {res}")
-            skip.add(c["claim"])
+        if c.get("needs_audit") and not audit_ok:
+            print(f"skipped {c['tool']} of {claim}: report_lean_audit failed, no claim is moved to lean")
+            failed += 1
             continue
-        print(f"{c['tool']} {c.get('claim', '')}: ok")
+        try:
+            res = tracker.call(c["tool"], c["args"])
+        except (OSError, RuntimeError, ValueError) as e:  # HTTP and URL errors are OSError
+            failed += 1
+            print(f"FAILED {c['tool']} {claim or ''}: {e}")
+            if c["tool"] == "report_lean_audit":
+                audit_ok = False
+            elif claim:
+                skip.add(claim)
+                print(f"  claim {claim} left as it is from here on")
+            continue
+        if c["tool"] == "find_lean_declaration" and not found_in(res, c.get("file")):
+            failed += 1
+            print(f"{c['args']['name']}: find_lean_declaration does not list it first in {c.get('file')} of "
+                  f"{LEAN_REPO}; claim {claim} left as it is: {res}")
+            skip.add(claim)
+            continue
+        print(f"{c['tool']} {claim or ''}: ok")
+    return failed
 
 
 # ---------------------------------------------------------------------------------------------
@@ -471,8 +548,9 @@ def main(argv):
     registry = claims(src)
     ctx = {"head": head(), "groups": pin, "paper": rev, "audit_url": audit_url, "tags_src": tags_src,
            "n_audit": len(axioms), "claims_src": src, "n_claims": len(registry)}
-    derived = derive(data, stmts, tag_comments(tags_log), axioms, proofs(blueprint.lean_index()))
-    rows, calls, notes = plan(data, derived, registry, axioms, numbers, ctx)
+    index = blueprint.lean_index()
+    derived = derive(data, stmts, tag_comments(tags_log), axioms, proofs(index))
+    rows, calls, notes = plan(data, derived, registry, axioms, numbers, ctx, index)
     text = report(rows, calls, notes, ctx)
     if "--report" in opts:
         pathlib.Path(opts["--report"]).write_text(text)
@@ -480,7 +558,9 @@ def main(argv):
         pathlib.Path(opts["--plan"]).write_text(json.dumps(calls, indent=1, ensure_ascii=False) + "\n")
     print(text)
     if opts.get("--apply"):
-        apply(calls)
+        failed = apply(calls)
+        if failed:
+            sys.exit(f"d5sync: {failed} tracker calls failed or were skipped (see above)")
     else:
         print(f"dry run: {len(calls)} tracker calls planned, none made (--apply makes them)")
 
