@@ -99,7 +99,8 @@ ssh root@157.22.134.209 'f=/etc/boinc-fetcher/secrets/boinc-authenticator; umask
 ```
 
 The Telegram bot token (bot @math_tasks_tmless_bot, credential 21 on MATH-75) goes to
-`secrets/telegram-bot-token`, a tracker API token to `secrets/tracker-token`, the same way.
+`secrets/telegram-bot-token`, a tracker API token (made at the MATH company, `default.kaiku.tech`) to
+`secrets/tracker-token`, the same way.
 
 Useful commands on kimmy, as root (`F="runuser -u boinc-fetcher -- python3 -I /opt/boinc-fetcher/fetcher.py"`):
 
@@ -151,8 +152,11 @@ batches 97 and 100 were collected by hand); its notifications go to Telegram onl
 - **Tracker comment** (`tracker.enabled`, `base_url`, `events`): `POST
   {base_url}/rest/api/2/issue/<issue>/comment` with `Authorization: Bearer <token>` (the
   tracker's compatible API), token in `secrets/tracker-token`. Redirects are not followed, so
-  the token cannot be carried to another host. Off until a token for this
-  service exists. The heartbeat and disk alerts that belong to no batch go to Telegram only.
+  the token cannot be carried to another host. `base_url` is the tracker company that holds
+  the MATH project, `https://default.kaiku.tech`; a token works only at the company it was
+  made in (D5 is on `math.kaiku.tech`: a token from there gets 404 on MATH issues, which
+  hides the real cause). Enabled in the kimmy config (MATH-492). The heartbeat and disk
+  alerts that belong to no batch go to Telegram only.
 
 ## Tests
 
