@@ -35,9 +35,37 @@ page, source and legal bases are kept), the audit of those declarations (report_
 pinned commit, once), and the status (set_claim_status, the reason naming the commits, the CI run and the
 jobs). A claim that is refuted or retracted is never touched. Nothing is written without --apply.
 
+The jobs of a node must be done (MATH-529): a job of `jobs` that tm does not know, or that is not `done`,
+makes the node `open` whatever its other bases are (and so caps what uses it); so does a node with jobs
+when tm cannot be read at all. The job states come from --tm-jobs FILE (an export, see below) or from tm's
+API (TM_URL/TM_TOKEN, else ~/.config/tm/config, as the tm CLI reads them).
+
+--create-missing (MATH-529) adds, to the report and the plan, a claim for every numbered statement of
+the paper (theorem, proposition, lemma, corollary; not a remark, question, ext: or own: node, which act
+through `uses`) whose tag has no claim in D5: set_claim with the tag, kind, number, the statement from the
+paper and a source basis naming the paper; status as derived (lean becomes paper until a later run binds
+the Lean bases). Like everything else, created only with --apply.
+
+    python3 site/d5sync.py --suggest-jobs --paper PAPER_DIR [--tm-jobs FILE] [--computations FILE]
+                           [--report OUT.md] [--suggest-out OUT.json]
+
+drafts the `jobs` of each computer node (computer = true): the done tm jobs of dimension-subrings (and the
+jobs reported to MATH issues, from FILE: the JSON of the tracker's list_computations) whose command runs a
+script that the node names (a compute/ path or a script file named in the paper from its \\label to the
+next statement, or in its note). A job matched only by a directory is listed, and is in the draft only
+when that directory is narrow (at most DIR_DRAFT distinct scripts among its jobs). It writes nothing: a
+person copies what is right into blueprint.toml.
+
+    python3 site/d5sync.py --check-jobs [--tm-jobs FILE] [--data BLUEPRINT.toml]
+
+exits 1 if a job named in `jobs` is unknown to tm or not done (CI; prints SKIPPED and exits 0 when no tm
+access is configured and nodes have jobs; exits 0 when no node has jobs). FILE for --tm-jobs: the JSON of
+tm's GET /api/state?all=1 (`curl -H "Authorization: Bearer $TM_TOKEN" https://task.math.tmless.org/api/state?all=1`)
+or of the MCP tool list_jobs (all=true): an object with "jobs", each with key, state, repo, and cmd or command.
+
     python3 site/d5sync.py --paper PAPER_DIR --aux D5.aux (--from-ci | --tags LOG --audit LOG [--audit LOG]
-                           --audit-url URL) [--claims FILE] [--paper-rev SHA] [--report OUT.md]
-                           [--plan OUT.json] [--apply]
+                           --audit-url URL) [--claims FILE] [--paper-rev SHA] [--paper-date DATE]
+                           [--tm-jobs FILE] [--create-missing] [--report OUT.md] [--plan OUT.json] [--apply]
 
 --from-ci takes the `#d5_tags` log from the latest green run of .github/workflows/blueprint.yml of this
 repository at the same groups/ commit, and the audits from the green CI run of ispacex/group-dimension
@@ -47,8 +75,10 @@ agent may also replay). --apply makes them through the tracker's MCP endpoint
 (https://math.kaiku.tech/mcp) with the token in D5_TOKEN (a person's token, scoped to D5; never
 stored here); it stops at the first call that fails.
 """
+import gzip
 import json
 import os
+import posixpath
 import pathlib
 import re
 import subprocess
@@ -70,6 +100,14 @@ RANK = {"open": 0, "computer": 1, "paper": 2, "lean": 3}
 KEEP_BASES = ("page", "source", "legal")  # the bases of a claim this script does not own
 UNTOUCHED = ("refuted", "retracted")
 JOB = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
+TM = "https://task.math.tmless.org"
+NUMBERED = ("theorem", "proposition", "lemma", "corollary")  # the claims --create-missing makes
+DIR_DRAFT = 8  # a directory named by a node drafts its jobs only if they run at most this many scripts
+SCRIPT = re.compile(r"(?<![\w$/.-])((?:\.{1,2}/)?[A-Za-z0-9_](?:[A-Za-z0-9_./-]*[A-Za-z0-9_])?\.(?:g|gi|py|sh|gp|c))\b")
+# the jobs that ran this repository's compute/: tm jobs of it, and the older script jobs (kind mikh, or no repo
+# in tm's meta) that ran its compute/ too
+OUR_REPOS = ("dimension-subrings", "mikh", None)
+NOT_A_RESULT = re.compile(r"bench|probe|prof|setup|debug|dbg|test|tmp|disk|clean", re.I)  # kept out of a draft
 
 
 # ---------------------------------------------------------------------------------------------
@@ -179,11 +217,319 @@ def claims(src):
 
 
 # ---------------------------------------------------------------------------------------------
+# tm jobs (MATH-529)
+
+def tm_settings():
+    """(url, token) of tm's API as the tm CLI takes them: TM_URL/TM_TOKEN, else ~/.config/tm/config; token
+    None when there is none. The token is only sent to tm, never printed."""
+    import tomllib
+    conf = {}
+    path = pathlib.Path(os.environ.get("TM_CLI_CONFIG", "~/.config/tm/config")).expanduser()
+    if path.exists():
+        try:
+            conf = tomllib.loads(path.read_text())
+        except (OSError, ValueError):
+            conf = {}
+    return (os.environ.get("TM_URL") or conf.get("url") or TM).rstrip("/"), os.environ.get("TM_TOKEN") or conf.get("token")
+
+
+def norm_job(j):
+    """A job of tm (API or MCP) or a computation of the tracker, as {key, state, repo, sha, name, issue, cmd,
+    finished, source}."""
+    if "externalId" in j:  # list_computations
+        repo = (j.get("repository") or "").rstrip("/").rsplit("/", 1)[-1] or None
+        return {"key": j.get("externalId") or "", "state": j.get("state"), "repo": repo, "sha": j.get("commit"),
+                "name": j.get("title"), "issue": j.get("issueKey"), "cmd": j.get("command") or "",
+                "finished": j.get("finishedAt"), "source": "computation"}
+    return {"key": j.get("key") or "", "state": j.get("state"), "repo": j.get("repo"), "sha": j.get("sha"),
+            "name": j.get("name"), "issue": j.get("issue"), "cmd": j.get("cmd") or j.get("command") or "",
+            "finished": j.get("finished"), "source": "tm"}
+
+
+def load_jobs(src):
+    """The jobs of a JSON file: {"jobs": [...]} (tm's /api/state?all=1, MCP list_jobs), {"computations": [...]}
+    (list_computations) or a plain list."""
+    data = json.loads(pathlib.Path(src).read_text())
+    if isinstance(data, dict):
+        data = data.get("jobs", data.get("computations"))
+    if not isinstance(data, list):
+        sys.exit(f"d5sync: {src} has no list of jobs (\"jobs\" or \"computations\")")
+    return [norm_job(j) for j in data]
+
+
+def tm_jobs(src=None):
+    """Every job tm shows, from the export `src` or from tm's API; None when neither is to be had."""
+    if src:
+        return load_jobs(src)
+    url, token = tm_settings()
+    if not token:
+        return None
+    req = urllib.request.Request(url + "/api/state?all=1", headers={
+        "Authorization": "Bearer " + token, "Accept-Encoding": "gzip", "User-Agent": "d5sync"})
+    try:
+        with urllib.request.urlopen(req, timeout=120) as r:
+            body = r.read()
+            if r.headers.get("Content-Encoding") == "gzip":
+                body = gzip.decompress(body)
+    except OSError as e:  # URLError and HTTPError among them; the message never holds the token
+        sys.exit(f"d5sync: tm at {url} does not answer: {e}")
+    return [norm_job(j) for j in json.loads(body)["jobs"]]
+
+
+def job_states(data, jobs):
+    """key -> state of every job named in `jobs` of a node (None: tm does not know it); {} when no node
+    names a job, None when jobs could not be read at all."""
+    named = {k for n in data["nodes"].values() for k in n["jobs"]}
+    if not named:
+        return {}
+    if jobs is None:
+        return None
+    by = {j["key"]: j["state"] for j in jobs}
+    return {k: by.get(k) for k in named}
+
+
+def jobs_bad(n, states):
+    """The jobs of node n that do not count, as 'key (why)'."""
+    if not n["jobs"]:
+        return []
+    if states is None:
+        return [f"{k} (not checked: no tm access)" for k in n["jobs"]]
+    return [f"{k} ({states.get(k) or 'not found in tm'})" for k in n["jobs"] if states.get(k) != "done"]
+
+
+def check_jobs(data, jobs):
+    """(exit code, lines) of --check-jobs."""
+    states = job_states(data, jobs)
+    if states == {}:
+        return 0, ["jobs: no node of blueprint.toml names a tm job; nothing to check"]
+    if states is None:
+        n = sum(len(x["jobs"]) for x in data["nodes"].values())
+        return 0, [f"SKIPPED: {n} tm jobs are named in blueprint.toml, but there is no tm access (TM_TOKEN or "
+                   "--tm-jobs); they are not checked, and d5sync derives these nodes as open"]
+    bad = [(x, b) for x, n in data["nodes"].items() for b in jobs_bad(n, states)]
+    if bad:
+        return 1, [f"node {x}: job {b}: every job of `jobs` must exist in tm and be done" for x, b in bad]
+    return 0, [f"jobs: all {len(states)} tm jobs named in blueprint.toml exist and are done"]
+
+
+# ---------------------------------------------------------------------------------------------
+# --suggest-jobs (MATH-529)
+
+def job_scripts(cmd):
+    """The repository paths a job's command runs: script files (resolved against the `cd`s before them,
+    from the repository root) and, for a `cd` into compute/, that directory with a trailing '/'."""
+    out, cwd = set(), ""
+    for part in re.split(r"\s*(?:&&|\|\||;|\n|\|)\s*", cmd or ""):
+        m = re.match(r"\(?\s*cd\s+(\S+)", part)
+        if m:
+            t = m.group(1).strip("\"')")
+            cwd = posixpath.normpath(posixpath.join(cwd, t)) if cwd is not None and not t.startswith(("$", "/", "~")) \
+                else None
+            if cwd and cwd.startswith("compute/"):
+                out.add(cwd + "/")
+            continue
+        for f in SCRIPT.findall(part):
+            if cwd is not None:
+                out.add(posixpath.normpath(f if f.startswith("compute/") else posixpath.join(cwd, f)))
+    return out
+
+
+def named_scripts(label, n, body):
+    """The compute/ paths and the script files a node names: in the paper from its \\label to the next
+    statement or section (statement, proof and the text after it), and in its note."""
+    text = (n.get("note") or "") + " " + (n.get("note_ru") or "")
+    i = body.find("\\label{" + label + "}")
+    if i >= 0:
+        nxt = re.compile(r"\\section\*?\{|\\appendix\b|\\begin\{(" + "|".join(blueprint.ENVS) + r")\}").search(body, i)
+        text += " " + body[i:nxt.start() if nxt else len(body)]
+    text = text.replace("\\_", "_")
+    paths = {m.rstrip("/.") for m in re.findall(r"compute/[A-Za-z0-9_./-]*[A-Za-z0-9_]", text)}
+    files = set(re.findall(r"\\texttt\{([A-Za-z0-9_./-]+\.(?:g|gi|py|sh|gp|c))\}", text))
+    paths |= {f for f in files if "/" in f}
+    return sorted(paths - {"compute"}), sorted(f for f in files if "/" not in f)
+
+
+def suggest(data, body, jobs):
+    """label -> {named, files, by_file, by_dir, draft} for every computer node: the done jobs of this
+    repository whose command runs what the node names."""
+    done = {}
+    for j in jobs:
+        if j["state"] == "done" and j["repo"] in OUR_REPOS and JOB.fullmatch(j["key"]):
+            k = done.setdefault(j["key"], dict(j, issues=set()))
+            if j.get("issue"):
+                k["issues"].add(j["issue"])
+            if j["source"] == "computation" and not k["cmd"]:
+                k["cmd"] = j["cmd"]
+    for j in done.values():
+        j["scripts"] = job_scripts(j["cmd"])
+    out = {}
+    for label, n in data["nodes"].items():
+        if not n["computer"]:
+            continue
+        paths, files = named_scripts(label, n, body)
+        exact = [p for p in paths if re.search(r"\.[a-z]+$", p)]
+        dirs = [p for p in paths if p not in exact]
+        by_file, by_dir = {}, {}
+        for j in done.values():
+            hit = [s for s in j["scripts"] if s in exact or posixpath.basename(s) in files]
+            if hit:
+                for s in hit:
+                    by_file.setdefault(s, []).append(j)
+                continue
+            for d in dirs:
+                inside = sorted(s for s in j["scripts"] if s.startswith(d + "/") and not s.endswith("/"))
+                if inside or d + "/" in j["scripts"]:
+                    by_dir.setdefault(d, []).append((j, inside))
+        draft, why = set(), []
+        for s, js in by_file.items():
+            draft |= {j["key"] for j in js if not NOT_A_RESULT.search(j["name"] or "")}
+        for d, js in by_dir.items():
+            scripts = {s for _, inside in js for s in inside}
+            if len(scripts) <= DIR_DRAFT:
+                draft |= {j["key"] for j, _ in js if not NOT_A_RESULT.search(j["name"] or "")}
+            else:
+                why.append(f"{d}: {len(js)} jobs run {len(scripts)} different scripts there, too broad for a draft; "
+                           "name the script in the paper or the note")
+        out[label] = {"tag": n.get("tag"), "named": paths + files, "by_file": by_file, "by_dir": by_dir,
+                      "draft": sorted(draft), "why": why, "jobs": n["jobs"]}
+    return out
+
+
+def suggest_report(sug, ctx):
+    out = ["# Draft `jobs` for the computer nodes (d5sync --suggest-jobs, MATH-529)", "",
+           f"- jobs: {ctx['jobs_src']} ({ctx['n_jobs']} jobs, {ctx['n_done']} done of dimension-subrings, of kind mikh "
+           "or without a repository)",
+           f"- a job is matched when its command runs a script the node names (in the paper from its \\label to the next "
+           f"statement, or in its note), or runs in a compute/ directory it names; a directory drafts its jobs only "
+           f"if they run at most {DIR_DRAFT} scripts there; jobs named like a bench, probe, test or setup are listed "
+           "but kept out of a draft",
+           f"- paper: {ctx['paper']}", "",
+           "Nothing written: copy what is right into the `jobs` of blueprint.toml (a person decides).", ""]
+    for label, s in sug.items():
+        out += [f"## `{label}` (D5:{s['tag']})", "",
+                f"- names: {', '.join('`' + x + '`' for x in s['named']) or 'no compute/ path or script'}"]
+        if s["jobs"]:
+            out.append(f"- `jobs` now: {', '.join(s['jobs'])}")
+        for f, js in sorted(s["by_file"].items()):
+            out.append(f"- runs `{f}`: {len(js)} done jobs")
+            out += [f"  - `{j['key']}` {j['name'] or ''} {'(' + ', '.join(sorted(j['issues'])) + ')' if j['issues'] else ''}"
+                    for j in sorted(js, key=lambda j: j["key"])]
+        for d, js in sorted(s["by_dir"].items()):
+            scripts = sorted({x for _, inside in js for x in inside})
+            out.append(f"- in `{d}/`: {len(js)} done jobs, {len(scripts)} scripts; per script, the number of jobs and "
+                       "the latest:")
+            per = {}
+            for j, inside in js:
+                for x in inside or [d + "/"]:
+                    per.setdefault(x, []).append(j)
+            for x in sorted(per):
+                last = max(per[x], key=lambda j: j["finished"] or j["key"].split("/")[-1])
+                out.append(f"  - `{posixpath.relpath(x, d) if x != d + '/' else '(no script named)'}`: {len(per[x])}; "
+                           f"`{last['key']}` {last['name'] or ''}")
+        out += [f"- {w}" for w in s["why"]]
+        if s["draft"]:
+            out += ["", "```toml", blueprint.toml_list("jobs", s["draft"]).rstrip(), "```", ""]
+        else:
+            out += ["- draft: none", ""]
+    return "\n".join(out) + "\n"
+
+
+# ---------------------------------------------------------------------------------------------
+# --create-missing (MATH-529)
+
+def tex_md(tex, numbers):
+    """A statement of the paper as the registry's Markdown: \\ref to numbers, emphasis, lists, the paper's
+    two macros; the formulas stay TeX."""
+    s = re.sub(r"(?<!\\)%.*", "", tex)
+    s = re.sub(r"\\label\{[^{}]*\}", "", s)
+    s = re.sub(r"\\(?:eq)?ref\{([^{}]*)\}", lambda m: numbers.get(m.group(1), m.group(1)), s)
+    s = re.sub(r"\\cite\[([^\]]*)\]\{([^{}]*)\}", r"[\2, \1]", s)
+    s = re.sub(r"\\cite\{([^{}]*)\}", r"[\1]", s)
+    s = re.sub(r"\\(?:emph|textit)\{([^{}]*)\}", r"*\1*", s)
+    s = re.sub(r"\\texttt\{([^{}]*)\}", r"`\1`", s)
+    s = re.sub(r"\\\[(.*?)\\\]", lambda m: "\n\n$$" + " ".join(m.group(1).split()) + "$$\n\n", s, flags=re.S)
+    s = re.sub(r"\\href\{([^{}]*)\}\{([^{}]*)\}", r"[\2](\1)", s)
+    s = re.sub(r"\\url\{([^{}]*)\}", r"\1", s)
+    s = re.sub(r"\\S(?![A-Za-z])\s*", "§", s)
+    s = re.sub(r"(?<![-$])---(?!-)", "—", s)
+    s = re.sub(r"(?<![-$])--(?!-)", "–", s)
+    s = re.sub(r"\\textup\{(\(?)\}|\\textup\{(\)?)\}", lambda m: m.group(1) or m.group(2) or "", s)
+    s = re.sub(r"\\textup\{([^{}]*)\}", r"\1", s)
+    s = re.sub(r"\\D(?![A-Za-z])", r"\\Delta", s)
+    s = re.sub(r"\\Z(?![A-Za-z])", r"\\mathbb{Z}", s)
+    s = s.replace("~", " ").replace("\\ ", " ").replace("\\,", " ")
+    k = 0
+
+    def item(m):
+        nonlocal k
+        k += 1
+        label = m.group(1)
+        return "\n- " + (label + " " if label else f"({k}) ")
+    s = re.sub(r"\\begin\{(?:enumerate|itemize)\}(?:\[[^\]]*\])?", "\n", s)
+    s = re.sub(r"\\end\{(?:enumerate|itemize)\}", "\n", s)
+    s = re.sub(r"\s*\\item(?:\[([^\]]*)\])?\s*", item, s)
+    s = re.sub(r"[ \t]*\n[ \t]*", "\n", s)
+    s = re.sub(r"\n{3,}", "\n\n", s)
+    s = re.sub(r"(?<!\n)\n(?!-|\n)", " ", s)
+    return re.sub(r"  +", " ", s).strip()
+
+
+def create_missing(data, stmts, derived, registry, numbers, ctx):
+    """(the set_claim calls that create claims, rows {label, tag, kind, number, status, title}, skipped
+    [(label, tag, why)]) for the nodes with a tag and no claim in D5."""
+    by_tag = {c.get("tag") for c in registry if c.get("tag")}
+    by_label = {c.get("label") for c in registry}
+    calls, rows, skipped = [], [], []
+    for label, n in data["nodes"].items():
+        tag = n.get("tag")
+        if not tag or tag in by_tag:
+            continue
+        st = stmts.get(label)
+        pre = label.split(":")[0]
+        if pre in ("ext", "own"):
+            skipped.append((label, tag, "outside the paper (blueprint/Lean only; acts through `uses`)"))
+            continue
+        if st is None or st["env"] not in NUMBERED:
+            env = st["env"] if st else "not a statement of the paper"
+            skipped.append((label, tag, f"{'open question' if pre == 'oq' else env}, not a numbered "
+                                        "theorem/proposition/lemma/corollary"))
+            continue
+        if label in by_label:
+            skipped.append((label, tag, "the registry has a claim with this label but another tag"))
+            continue
+        number = numbers.get(label, st["number"])
+        status = derived[label]["status"]
+        initial = "paper" if status == "lean" else status
+        source = (f"S. Vorobev, D5 paper (https://ispacex.github.io/d5/paper/d5.pdf, draft of {ctx['paper_date']}, "
+                  f"ispacex/mikh {ctx['paper'][:7]}), {st['env'].capitalize()} {number}")
+        args = {"project": PROJECT, "label": label, "kind": st["env"], "number": number, "tag": tag,
+                "statement": tex_md(st["body"], numbers), "status": initial,
+                "reason": (f"Created by site/d5sync.py --create-missing (MATH-529): {st['env']} {number} of the paper; "
+                           f"derived {status}" + (" (lean once a later run binds its Lean bases)" if status == "lean" else "")
+                           + ": " + "; ".join(derived[label]["why"]))[:1000],
+                "bases": json.dumps([{"kind": "source", "ref": source}], ensure_ascii=False)}
+        title = re.sub(r"\s+", " ", (st.get("title") or "")).strip()
+        if title.lower() == "computer-assisted":  # a mark of the proof, not a name
+            args["statement"] += "\n\nBy computer."
+            title = ""
+        if title:
+            args["title"] = title[0].upper() + title[1:]
+        calls.append({"tool": "set_claim", "args": args, "claim": label, "create": True})
+        rows.append({"label": label, "tag": tag, "kind": st["env"], "number": number, "status": initial,
+                     "derived": status, "title": args.get("title", "")})
+    return calls, rows, skipped
+
+
+# ---------------------------------------------------------------------------------------------
 # The derivation (wiki 912, §4.3)
 
-def own_basis(label, n, stmts, comments, axioms, theorems):
+def own_basis(label, n, stmts, comments, axioms, theorems, states=None):
     """(status, why) of a node by its own bases, the strongest first. The audit must cover every theorem of
-    the node; a definition (the statement as a Prop) has no proof to audit."""
+    the node; a definition (the statement as a Prop) has no proof to audit. A node with a tm job that is
+    not done (or not found, or not checked: `states` None) is open, whatever else it has (MATH-529)."""
+    bad = jobs_bad(n, states)
+    if bad:
+        return "open", ["tm jobs not done: " + ", ".join(bad)]
     why = []
     question = label.split(":")[0] in ("q", "oq")
     cert = [x for x in n["lean"] if any(NATIVE.search(a) for a in axioms.get(x, []))]
@@ -221,11 +567,12 @@ def own_basis(label, n, stmts, comments, axioms, theorems):
     return "open", why + ["no basis"]
 
 
-def derive(data, stmts, comments, axioms, theorems):
-    """label -> {own, why, status, capped_by, uses} for every node."""
+def derive(data, stmts, comments, axioms, theorems, states=None):
+    """label -> {own, why, status, capped_by, uses} for every node; states: key -> state of the tm jobs
+    named in `jobs` (job_states), None when tm could not be read."""
     nodes = data["nodes"]
     uses = {x: blueprint.uses_of(x, n, stmts, nodes) for x, n in nodes.items()}
-    own = {x: own_basis(x, n, stmts, comments, axioms, theorems) for x, n in nodes.items()}
+    own = {x: own_basis(x, n, stmts, comments, axioms, theorems, states) for x, n in nodes.items()}
     memo = {}
 
     def status(x, seen=()):
@@ -288,7 +635,7 @@ def plan(data, derived, registry, axioms, numbers, ctx):
             notes.append(f"D5:{n['tag']} {label}: no lean basis for {', '.join(unaudited)}: not in the axiom audit "
                          "(the tracker refuses 'lean' while a Lean basis has no clean audit)")
         want = kept + [{"kind": "lean", "ref": x, "repo": LEAN_REPO} for x in bound] \
-            + [{"kind": "computation", "ref": j} for j in n["jobs"]]
+            + [{"kind": "computation", "ref": j} for j in n["jobs"] if not jobs_bad({"jobs": [j]}, ctx.get("states"))]
         have = [(b.get("kind"), b.get("ref") or (b.get("lean") or {}).get("name")) for b in c.get("bases") or []]
         if [(b["kind"], b.get("ref")) for b in want] != have:
             for x in bound:
@@ -298,14 +645,16 @@ def plan(data, derived, registry, axioms, numbers, ctx):
                           "claim": label})
             row["write"].append(f"bases: keep {len(kept)} " + "/".join(b["kind"] for b in kept)
                                 + (f", add {len(bound)} lean" if bound else "")
-                                + (f", {len(n['jobs'])} computation" if n["jobs"] else ""))
+                                + (f", {sum(b['kind'] == 'computation' for b in want)} computation"
+                                   if any(b['kind'] == 'computation' for b in want) else ""))
         if d["status"] != c["status"]:
             calls.append({"tool": "set_claim_status", "args": {"id": c["id"], "status": d["status"],
                                                                "reason": reason(label, d, n, ctx)}, "claim": label})
             row["write"].append(f"status {c['status']} -> {d['status']}")
     missing = [r["label"] for r in rows if r["claim"] is None]
     if missing:
-        notes.append(f"{len(missing)} nodes have no claim in D5 (not created here): " + " ".join(missing))
+        notes.append(f"{len(missing)} nodes have no claim in D5 (--create-missing creates those of the paper's "
+                     "numbered statements): " + " ".join(missing))
     return rows, calls, notes
 
 
@@ -340,13 +689,16 @@ def reason(label, d, n, ctx):
 # ---------------------------------------------------------------------------------------------
 # The report
 
-def report(rows, calls, notes, ctx):
+def report(rows, calls, notes, ctx, created=None):
+    """The dry run as Markdown; created: (rows, skipped) of --create-missing, or None."""
     changes = [r for r in rows if r["claim"] is not None and r["current"] != r["derived"] and r["current"] not in UNTOUCHED]
     out = [f"# D5 sync, dry run (MATH-459)", "",
            f"- dimension-subrings `{ctx['head'][:7]}`; group-dimension `{ctx['groups'][:7]}` (groups/); paper mikh "
            f"`{ctx['paper'][:7]}`", f"- `#d5_tags`: {ctx['tags_src']}", f"- axiom audit: {ctx['audit_url']} "
-           f"({ctx['n_audit']} declarations)", f"- claims: {ctx['claims_src']} ({ctx['n_claims']} claims)", "",
-           f"**{len(changes)} status changes**, {sum(c['tool'] == 'set_claim' for c in calls)} claims get new bases, "
+           f"({ctx['n_audit']} declarations)", f"- claims: {ctx['claims_src']} ({ctx['n_claims']} claims)",
+           f"- tm jobs: {ctx.get('jobs_src', '—')}", "",
+           f"**{len(changes)} status changes**, {sum(c['tool'] == 'set_claim' and not c.get('create') for c in calls)} "
+           f"claims get new bases, {sum(bool(c.get('create')) for c in calls)} claims created, "
            f"{sum(c['tool'] == 'report_lean_audit' for c in calls)} audit report; {len(calls)} tracker calls in all.", "",
            "## Claims of the D5 registry", "",
            "| tag | label | no. | now | derived | own basis | capped by | why | would write |",
@@ -363,6 +715,16 @@ def report(rows, calls, notes, ctx):
         if r["claim"] is None:
             out.append(f"| D5:{r['tag']} | `{r['label']}` | {r['number']} | {r['derived']} | {r['own']} | "
                        f"{', '.join(r['capped_by']) or '—'} | {'; '.join(r['why'])} |")
+    if created is not None:
+        made, skipped = created
+        out += ["", f"## Claims --create-missing would create ({len(made)}; MATH-529)", "",
+                "The numbered statements of the paper whose tag has no claim in D5. Status at creation: as derived "
+                "(lean becomes paper until a later run binds the Lean bases).", "",
+                "| tag | label | kind | no. | status | derived | title |", "|---|---|---|---|---|---|---|"]
+        out += [f"| D5:{r['tag']} | `{r['label']}` | {r['kind']} | {r['number']} | {r['status']} | {r['derived']} | "
+                f"{r['title'] or '—'} |" for r in made]
+        out += ["", f"Skipped ({len(skipped)}):", "", "| tag | label | why |", "|---|---|---|"]
+        out += [f"| D5:{t} | `{x}` | {w} |" for x, t, w in skipped]
     if notes:
         out += ["", "## Notes", ""] + [f"- {x}" for x in notes]
     return "\n".join(out) + "\n"
@@ -434,23 +796,56 @@ def apply(calls):
 
 def main(argv):
     opts, audits = {}, []
-    flags = {"--from-ci", "--apply"}
+    flags = {"--from-ci", "--apply", "--suggest-jobs", "--check-jobs", "--create-missing"}
     while argv:
         a = argv.pop(0)
         if a in flags:
             opts[a] = True
         elif a == "--audit" and argv:
             audits.append(argv.pop(0))
-        elif a in ("--paper", "--aux", "--tags", "--audit-url", "--claims", "--paper-rev", "--report", "--plan") and argv:
+        elif a in ("--paper", "--aux", "--tags", "--audit-url", "--claims", "--paper-rev", "--paper-date", "--report",
+                   "--plan", "--tm-jobs", "--computations", "--suggest-out", "--data") and argv:
             opts[a] = argv.pop(0)
         else:
             sys.exit(__doc__)
-    if "--paper" not in opts or "--aux" not in opts:
+    if "--data" in opts:  # another blueprint.toml (CI's negative controls)
+        blueprint.DATA = pathlib.Path(opts["--data"])
+    data = blueprint.load()
+    named = any(n["jobs"] for n in data["nodes"].values())
+    if opts.get("--check-jobs"):
+        code, lines = check_jobs(data, tm_jobs(opts.get("--tm-jobs")) if named else [])
+        print("\n".join(lines))
+        sys.exit(code)
+    if "--paper" not in opts:
+        sys.exit("d5sync: --paper is needed\n" + __doc__)
+    paper = pathlib.Path(opts["--paper"])
+    tex = (paper / "d5.tex").read_text()
+    rev = opts.get("--paper-rev") or subprocess.run(["git", "-C", str(paper), "rev-parse", "HEAD"], capture_output=True,
+                                                    text=True).stdout.strip() or "?"
+    if opts.get("--suggest-jobs"):
+        jobs = tm_jobs(opts.get("--tm-jobs"))
+        if jobs is None:
+            sys.exit("d5sync: --suggest-jobs needs the tm jobs: --tm-jobs FILE, or TM_TOKEN / ~/.config/tm/config")
+        if "--computations" in opts:
+            jobs += load_jobs(opts["--computations"])
+        sug = suggest(data, tex[tex.index("\\begin{document}"):], jobs)
+        ctx = {"jobs_src": (opts.get("--tm-jobs") or "tm API") + (f" + {opts['--computations']}" if "--computations" in opts
+                                                                 else ""),
+               "n_jobs": len({j["key"] for j in jobs}),
+               "n_done": len({j["key"] for j in jobs if j["state"] == "done" and j["repo"] in OUR_REPOS}),
+               "paper": f"mikh {rev[:7]}"}
+        text = suggest_report(sug, ctx)
+        if "--report" in opts:
+            pathlib.Path(opts["--report"]).write_text(text)
+        if "--suggest-out" in opts:
+            pathlib.Path(opts["--suggest-out"]).write_text(json.dumps(
+                {x: v["draft"] for x, v in sug.items()}, indent=1) + "\n")
+        print(text)
+        return
+    if "--aux" not in opts:
         sys.exit("d5sync: --paper and --aux are needed (the uses come from the proofs, the numbers from the .aux)\n"
                  + __doc__)
-    data = blueprint.load()
-    paper = pathlib.Path(opts["--paper"])
-    stmts, _ = blueprint.statements((paper / "d5.tex").read_text())
+    stmts, _ = blueprint.statements(tex)
     numbers = aux_numbers(pathlib.Path(opts["--aux"]).read_text(errors="replace"))
     pin = groups_pin()
     if opts.get("--from-ci"):
@@ -465,15 +860,23 @@ def main(argv):
     if errors:
         sys.exit("d5sync: the #d5_tags log does not match blueprint.toml:\n  " + "\n  ".join(errors))
     axioms = audit(audit_text)
-    rev = opts.get("--paper-rev") or subprocess.run(["git", "-C", str(paper), "rev-parse", "HEAD"], capture_output=True,
-                                                    text=True).stdout.strip() or "?"
+    states = job_states(data, tm_jobs(opts.get("--tm-jobs")) if named else [])
+    date = opts.get("--paper-date") or subprocess.run(["git", "-C", str(paper), "log", "-1", "--format=%cs", rev],
+                                                      capture_output=True, text=True).stdout.strip() or "?"
     src = opts.get("--claims", CLAIMS)
     registry = claims(src)
-    ctx = {"head": head(), "groups": pin, "paper": rev, "audit_url": audit_url, "tags_src": tags_src,
-           "n_audit": len(axioms), "claims_src": src, "n_claims": len(registry)}
-    derived = derive(data, stmts, tag_comments(tags_log), axioms, proofs(blueprint.lean_index()))
+    ctx = {"head": head(), "groups": pin, "paper": rev, "paper_date": date, "audit_url": audit_url, "tags_src": tags_src,
+           "n_audit": len(axioms), "claims_src": src, "n_claims": len(registry), "states": states,
+           "jobs_src": "no node names a job" if not named else
+           (opts.get("--tm-jobs") or "tm API") if states is not None else "NOT CHECKED (no tm access): nodes with jobs are open"}
+    derived = derive(data, stmts, tag_comments(tags_log), axioms, proofs(blueprint.lean_index()), states)
     rows, calls, notes = plan(data, derived, registry, axioms, numbers, ctx)
-    text = report(rows, calls, notes, ctx)
+    created = None
+    if opts.get("--create-missing"):
+        made, cmade, skipped = create_missing(data, stmts, derived, registry, numbers, ctx)
+        calls += made
+        created = (cmade, skipped)
+    text = report(rows, calls, notes, ctx, created)
     if "--report" in opts:
         pathlib.Path(opts["--report"]).write_text(text)
     if "--plan" in opts:

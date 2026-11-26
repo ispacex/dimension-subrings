@@ -64,7 +64,26 @@ D5_TOKEN=... python3 site/d5sync.py ... --from-ci --apply      # only after the 
 The dry run (the default) reads only public data (the claims: `GET /api/projects/D5/claims`, no token) and
 CI logs (`gh`), and writes nothing; `--plan` saves the tracker calls it would make (MCP tools of
 math.kaiku.tech, replayable by an agent). `--apply` makes them with a person's token. It never writes
-`blueprint.toml`, never creates claims, never touches a refuted or retracted claim.
+`blueprint.toml`, never touches a refuted or retracted claim, and creates claims only with `--create-missing`.
+
+**tm jobs** (MATH-529). `jobs` of a node is filled by hand. Every job named there must exist in tm and be
+`done`; otherwise the node is derived `open` (and caps what uses it), and CI (job `data`,
+`d5sync.py --check-jobs`) fails. tm has no public API: the check reads it with the repository secret
+`TM_TOKEN`; without the secret it is SKIPPED with a warning. Locally the job states come from
+`~/.config/tm/config` (as the tm CLI reads it), `TM_URL`/`TM_TOKEN`, or an export (`--tm-jobs FILE`: the JSON
+of `GET /api/state?all=1` or of the MCP tool `list_jobs`).
+
+```bash
+# a draft of `jobs` for the computer nodes, from the done jobs whose command runs what the node names
+python3 site/d5sync.py --suggest-jobs --paper PAPER [--tm-jobs tm.json] [--computations math.json] --report jobs.md
+python3 site/d5sync.py --check-jobs                            # what CI checks
+# the claims for the paper's numbered statements that D5 lacks: in the report and the plan, written only with --apply
+python3 site/d5sync.py --paper PAPER --aux PAPER/d5.aux --paper-rev SHA --paper-date DATE --from-ci --create-missing --report r.md
+```
+
+`--computations FILE` adds the jobs reported to MATH issues (the JSON of the tracker's `list_computations`). A
+node matches a job by the script it names (a `compute/` path or script file in the paper, from its `\label` to
+the next statement, or in its note); the draft is for a person to review and copy, never written by the script.
 
 ## kourovka.html: the Kourovka Notebook (MATH-526)
 
