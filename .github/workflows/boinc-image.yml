@@ -24,17 +24,13 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: build and push
-        run: |
-          tag="ghcr.io/${GITHUB_REPOSITORY,,}-boinc:${GITHUB_REF_NAME}-${{ matrix.arch }}"
-          docker build -f boinc/Dockerfile --build-arg CODE_COMMIT="$GITHUB_SHA" -t "$tag" .
-          docker push "$tag"
-          echo "$tag → $(docker inspect --format '{{index .RepoDigests 0}}' "$tag")" >> "$GITHUB_STEP_SUMMARY"
-      # The pilot piece of the 2^12 search (MATH-40): the first 10 library ids of the LIBROOT step, run in the
-      # image as BUDA runs it; its result.txt (sha256 in the summary, the file as an artifact) must be the
-      # same on both architectures and match the reference run on kimmy (boinc/README.md, "2^12").
-      - name: pilot piece (2^12, LIBROOT ids 60904-60913)
-        if: startsWith(github.ref_name, 'boinc-v6')
+      # Build, run the pilot piece of the 2^12 search (MATH-40) in the image as BUDA runs it, and push only if
+      # it agrees with the reference run on kimmy (boinc/pilot12/: the stat counters and the sha256 of the
+      # candidate lines): a failed pilot publishes nothing.  The pilot is the first 10 library ids of the
+      # LIBROOT step of rank 4 (README, "2^12"); its files are kept as an artifact.
+      - name: build
+        run: docker build -f boinc/Dockerfile --build-arg CODE_COMMIT="$GITHUB_SHA" -t "ghcr.io/${GITHUB_REPOSITORY,,}-boinc:${GITHUB_REF_NAME}-${{ matrix.arch }}" .
+      - name: pilot piece (2^12, LIBROOT ids 60904-60913) against the reference
         run: |
           tag="ghcr.io/${GITHUB_REPOSITORY,,}-boinc:${GITHUB_REF_NAME}-${{ matrix.arch }}"
           mkdir -p pilot && cd pilot
@@ -42,9 +38,17 @@ jobs:
             echo '{"order":16,"code":0,"steps":[5],"ids":[60904,60913]}'; } > piece.txt
           docker run --rm --cpus 1 -v "$PWD:/app" "$tag" piece.txt result.txt 2> stderr.txt || { cat stderr.txt; exit 1; }
           tail -3 stderr.txt
-          echo "pilot b_dL10 ${{ matrix.arch }}: result.txt sha256 $(sha256sum < result.txt | cut -c1-64), $(sed -n 's/^# candidates //p' result.txt) candidates" >> "$GITHUB_STEP_SUMMARY"
+          set -o pipefail
+          python3 ../boinc/pilot12/check.py result.txt ../boinc/pilot12/b_dL10.stat.json \
+            00af71cd1e60a69bda8573a589f0068453bd41779cbc807a5038ae5d291d1d59 | tee check.txt
+          echo "pilot b_dL10 ${{ matrix.arch }}: $(cat check.txt | head -1)" >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
-        if: startsWith(github.ref_name, 'boinc-v6')
+        if: always()
         with:
           name: pilot-${{ matrix.arch }}
           path: pilot/
+      - name: push
+        run: |
+          tag="ghcr.io/${GITHUB_REPOSITORY,,}-boinc:${GITHUB_REF_NAME}-${{ matrix.arch }}"
+          docker push "$tag"
+          echo "$tag → $(docker inspect --format '{{index .RepoDigests 0}}' "$tag")" >> "$GITHUB_STEP_SUMMARY"

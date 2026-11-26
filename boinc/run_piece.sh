@@ -68,7 +68,7 @@ dumplevel=$(field dumplevel)
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 if [ "${PQ2048_NOSTAB:-}" = 1 ]; then
-  # PQ_BINARY: the pq to use outside the image (a native run of the pilot, under pqrun.sh)
+  # PQ_BINARY: the pq behind binary_nostab outside the image (a native run, under pqrun.sh)
   pq=${PQ_BINARY:-$(ls "$root"/../gap/pkg/anupq/bin/*/pq /opt/gap/pkg/anupq/bin/*/pq 2>/dev/null | head -n 1)}
   [ -n "$pq" ] || fail 1 "NOSTAB: no pq binary found"
   printf '#!/bin/sh\nPQ_NOSTAB=1 exec "%s" "$@"\n' "$pq" > "$work/pq-nostab"; chmod +x "$work/pq-nostab"

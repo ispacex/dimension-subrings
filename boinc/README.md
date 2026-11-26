@@ -1,10 +1,11 @@
-# boinc — the $2^{11}$ search as volunteer-computing jobs
+# boinc — the $2^{11}$ and $2^{12}$ searches as volunteer-computing jobs
 
 The search for candidates of order $2^{11}$ ([`../compute/pq2048/`](../compute/pq2048/README.md),
 section "Search by one rank") is already split into independent pieces by `run_rank.sh`. This
 directory packs one piece into one job for [BOINC](https://boinc.berkeley.edu/) through
 [BUDA](https://github.com/BOINC/boinc/wiki/BUDA-overview), the BOINC framework for Docker apps:
-one input file in, one output file out, the same bytes on every host.
+one input file in, one output file out, the same bytes on every host. The same pieces of the
+search at $2^{12}$ (MATH-40) go the same way from `boinc-v6` on: section "$2^{12}$" below.
 
 | File | What it is |
 |---|---|
@@ -111,7 +112,7 @@ docker build -f boinc/Dockerfile --build-arg CODE_COMMIT=$(git rev-parse HEAD) -
 ```
 
 * Debian 12 (pinned by digest), GAP 4.15.1 from the release tarball (pinned by SHA-256), built
-  with the system GMP; IO compiled from the same tarball; **ANUPQ** from our fork ispacex/anupq at a pinned commit (branch `uf-nostab-v4`: `correctness` b7deefa — the correctness fixes proposed upstream, gap-packages/anupq #96–#121, and the union-find orbits of insoluble automorphism groups, [D5-30](https://math.kaiku.tech/issue/D5-30), less memory — with the `PQ_NOSTAB` switch on top), replacing the release's 3.3.2 — the fixes change `PqDescendants` output for input groups not in pq's own pcp and for 127 or more automorphisms (#96, #99).
+  with the system GMP; IO compiled from the same tarball; **ANUPQ** from our fork ispacex/anupq at a pinned commit (up to `boinc-v5`; for `boinc-v6` see "$2^{12}$" below: branch `uf-nostab-v4`: `correctness` b7deefa — the correctness fixes proposed upstream, gap-packages/anupq #96–#121, and the union-find orbits of insoluble automorphism groups, [D5-30](https://math.kaiku.tech/issue/D5-30), less memory — with the `PQ_NOSTAB` switch on top), replacing the release's 3.3.2 — the fixes change `PqDescendants` output for input groups not in pq's own pcp and for 127 or more automorphisms (#96, #99).
 * Of the 160-odd packages in the tarball only those GAP loads are kept: its start-up set plus
   `LoadPackage("anupq")` (29 packages, listed in `/opt/gap/loaded-packages.txt`). The set of
   loaded packages is what can change method selection and so the bytes of a result; it is the set
@@ -307,17 +308,24 @@ part of rank 4 that suits volunteer hosts: on the pilot (kimmy, `m40-heavy-test`
 
 `boinc-v6` differs from `boinc-v5` in:
 
-* **ANUPQ** `0690fc2` of `pq-gz-library` (master + PQ_NOSTAB; PQ_GZ and PQ_NOCLASSFILE are unused
-  here), the pq that `compute/pq2048/pqrun.sh` builds for the $2^{12}$ runs on our machines, so a
-  piece is the same computation there and here. (`boinc-v5` has the `correctness` line,
-  `c05b729`, used for $2^{11}$.)
+* **ANUPQ** `0690fc2` of `pq-gz-library`: the audit fixes, union-find and PQ_NOSTAB (`ecdf1a7`)
+  plus PQ_GZ and PQ_NOCLASSFILE, which are unused here. Its pq *binary* is the one of the $2^{12}$
+  runs on our machines (`pqrun.sh` with `anupq-src` = `ecdf1a7`; the GZ code is off without the
+  environment switches). Its *GAP library* is not: those runs keep the library of the anupq 3.3.2
+  release, the image has the fork's (3.3.3dev, with e.g. 0018fb5, automorphisms sent in pq's own
+  pcp). The groups handed to pq here are SmallGroups and pq's own output, already in pq's pcp, so
+  the results are expected to agree; the pilot piece checks it rather than assume it.
+  (`boinc-v5` has the `correctness` line, `c05b729`, used for $2^{11}$.)
 * **`run_piece.sh`** accepts the `"ids":[a,b]` field after `"steps"`, and the flags `THMA1`,
-  `STREAM`, `STREAMFILE`; `PQ_BINARY` names the pq for a run outside the image.
+  `STREAM`, `STREAMFILE`; `PQ_BINARY` names the pq behind `binary_nostab` for a run outside the
+  image (at $2^{12}$ the one-stage NOSTAB path is not reached: `onestage` stays empty).
 * **`make_batch.sh -q 12`** writes `nmax=11 logq=12` into the header (the default stays 11).
-* **The workflow** runs the pilot piece (ids 60904–60913) in the image on both architectures and
-  writes the sha256 of `result.txt` into the job summary: the two must agree, and the candidates
-  and counters must be those of the kimmy run (118 candidates, sha256 of the candidate lines
-  `00af71cd…`).
+* **The workflow** builds the image, runs the pilot piece (ids 60904–60913) in it on both
+  architectures and pushes only if `pilot12/check.py` finds the stat counters (without `ms_*`) and
+  the sha256 of the candidate lines equal to the reference run on kimmy
+  (`kimmy/tm/20261122-193259-m40-heavy-test-8cc20e4`: 118 candidates, `00af71cd…`, the counters in
+  `pilot12/b_dL10.stat.json`). A failed pilot publishes no image. Every later tag runs the same
+  check: a code change that alters this piece needs a new reference.
 
 The batch: one piece per 10 ids (671 pieces, the last one 9 ids), two replicas, flags
 `THMA,THMA1,THMB,TAH19,TIGHT,LIBROOT,NOSTAB,STREAM,STREAMFILE` (those of the pilot):
@@ -331,6 +339,17 @@ boinc/make_batch.sh -q 12 -F THMA,THMA1,THMB,TAH19,TIGHT,LIBROOT,NOSTAB,STREAM,S
 ```
 
 ≈ 300 CPU-hours for one replica (the pilot's rate; the ids are not uniform), ≈ 600 with both.
+Disk and time per piece are known only for the pilot (0.8 GB of pq's files in the container's
+`/tmp`, 27 minutes); a piece that fails or is cut off on volunteer hosts is run on our machines
+with the same `run_piece.sh` (`PQ_BINARY` = the pq of `pqrun.sh`, the same code commit, so that
+`collect.sh` accepts it beside the BOINC replica).
+
+**Back into the run.** The run's own LIBROOT piece is the one line of stage A
+(`B/in_dNNNNN`, one line for all 6709 ids at the default `CH_DEFERCHUNK`) or its hand-cut
+parts. Before `boinc-merge.sh`, put the 671 `in_dL####` files into the run's `B/` and move the
+run's own LIBROOT pieces (and any of their `b_*` results) out of `B/` (to `held/`): otherwise
+`run_rank.sh` walks those ids again and `rank_sum.py` (`B/b_*.json`) counts them twice. These
+pieces have no dump: `make_batch.sh` is called without `-d`.
 
 ## Limits
 

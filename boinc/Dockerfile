@@ -1,12 +1,14 @@
-# The image for the volunteer-computing pieces of the 2^11 search (boinc/README.md).
+# The image for the volunteer-computing pieces of the 2^11 and 2^12 searches (boinc/README.md).
 #
 # GAP 4.15.1 from the release tarball (sha256 pinned), IO compiled from that tarball, ANUPQ from
 # our fork ispacex/anupq at a pinned commit (sha256 pinned).  boinc-v1..v5 (the 2^11 search): branch
 # uf-nostab-v4, c05b729 = the correctness fixes proposed upstream (gap-packages/anupq #96-#121), the
 # union-find orbits of insoluble automorphism groups (D5-30) and the PQ_NOSTAB switch.  boinc-v6 (the
-# 2^12 search, MATH-40): pq-gz-library, 0690fc2 = master + PQ_NOSTAB (+ PQ_GZ, PQ_NOCLASSFILE, unused
-# here), the pq that compute/pq2048/pqrun.sh builds for the 2^12 runs on our machines, so that the
-# pieces done here and there are the same computation.
+# 2^12 search, MATH-40): pq-gz-library, 0690fc2 = the audit fixes, union-find and PQ_NOSTAB (ecdf1a7)
+# plus PQ_GZ / PQ_NOCLASSFILE, which are unused here: the pq *binary* is that of the 2^12 runs on our
+# machines (pqrun.sh with anupq-src = ecdf1a7).  Those runs keep the GAP library of the anupq 3.3.2
+# release, the image has the fork's (3.3.3dev); that the results agree is checked by the pilot piece
+# against the kimmy reference (boinc/pilot12, the image workflow), not assumed.
 # Every other package left out unless GAP loads it on start-up or with ANUPQ (the set of
 # loaded packages is what can change a computation; it is kept exactly).  The search code of
 # compute/pq1024 and compute/pq2048 is copied in at build time, so one image = one version of
