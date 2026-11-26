@@ -324,7 +324,8 @@ part of rank 4 that suits volunteer hosts: on the pilot (kimmy, `m40-heavy-test`
   architectures and pushes only if `pilot12/check.py` finds the stat counters (without `ms_*`) and
   the sha256 of the candidate lines equal to the reference run on kimmy
   (`kimmy/tm/20261122-193259-m40-heavy-test-8cc20e4`: 118 candidates, `00af71cd…`, the counters in
-  `pilot12/b_dL10.stat.json`). A failed pilot publishes no image. Every later tag runs the same
+  `pilot12/b_dL10.stat.json`). A failed pilot publishes no image of that architecture (the other
+one may already be pushed: then redo the tag; BUDA needs both digests). Every later tag runs the same
   check: a code change that alters this piece needs a new reference.
 
 The batch: one piece per 10 ids (671 pieces, the last one 9 ids), two replicas, flags
@@ -340,9 +341,11 @@ boinc/make_batch.sh -q 12 -F THMA,THMA1,THMB,TAH19,TIGHT,LIBROOT,NOSTAB,STREAM,S
 
 ≈ 300 CPU-hours for one replica (the pilot's rate; the ids are not uniform), ≈ 600 with both.
 Disk and time per piece are known only for the pilot (0.8 GB of pq's files in the container's
-`/tmp`, 27 minutes); a piece that fails or is cut off on volunteer hosts is run on our machines
-with the same `run_piece.sh` (`PQ_BINARY` = the pq of `pqrun.sh`, the same code commit, so that
-`collect.sh` accepts it beside the BOINC replica).
+`/tmp`, 27 minutes); a piece that fails or is cut off on volunteer hosts is resubmitted, or run
+on our machines in the image itself (the same digest, under docker, podman or apptainer), which
+gives a replica `collect.sh` accepts. A native run (`run_piece.sh` under `pqrun.sh`, `GAP` = its
+wrapper) is not such a replica: it writes `# code unknown` unless `COMMIT` is written beside the
+code, and it uses the 3.3.2 GAP library of ANUPQ, so agreement there is expected, not guaranteed.
 
 **Back into the run.** The run's own LIBROOT piece is the one line of stage A
 (`B/in_dNNNNN`, one line for all 6709 ids at the default `CH_DEFERCHUNK`) or its hand-cut

@@ -38,10 +38,11 @@ jobs:
             echo '{"order":16,"code":0,"steps":[5],"ids":[60904,60913]}'; } > piece.txt
           docker run --rm --cpus 1 -v "$PWD:/app" "$tag" piece.txt result.txt 2> stderr.txt || { cat stderr.txt; exit 1; }
           tail -3 stderr.txt
-          set -o pipefail
-          python3 ../boinc/pilot12/check.py result.txt ../boinc/pilot12/b_dL10.stat.json \
-            00af71cd1e60a69bda8573a589f0068453bd41779cbc807a5038ae5d291d1d59 | tee check.txt
-          echo "pilot b_dL10 ${{ matrix.arch }}: $(cat check.txt | head -1)" >> "$GITHUB_STEP_SUMMARY"
+          rc=0; python3 ../boinc/pilot12/check.py result.txt ../boinc/pilot12/b_dL10.stat.json \
+            00af71cd1e60a69bda8573a589f0068453bd41779cbc807a5038ae5d291d1d59 > check.txt 2>&1 || rc=$?
+          cat check.txt
+          echo "pilot b_dL10 ${{ matrix.arch }}: $(head -1 check.txt) (check exit $rc)" >> "$GITHUB_STEP_SUMMARY"
+          exit $rc
       - uses: actions/upload-artifact@v4
         if: always()
         with:
