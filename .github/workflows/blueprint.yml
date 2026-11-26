@@ -15,6 +15,8 @@
 #         under [superseded] here); with negative controls;
 #         and the tests of site/d5sync.py (the D5 claims sync, MATH-459: the status rules of wiki 912 §4.3
 #         on made-up nodes; the sync itself needs the paper and runs on a person's machine);
+#         (in data) the tm jobs named in `jobs` exist and are done (MATH-529; needs the secret TM_TOKEN,
+#         SKIPPED with a warning without it), with negative controls;
 #   web:  the leanblueprint pages build (plasTeX, versions pinned in site/blueprint-requirements.txt).
 #         The paper is not in this repository, so here the statements are placeholders; the pages
 #         on the site are built with the paper (site/build_site.py --blueprint).
@@ -39,8 +41,43 @@ jobs:
       - uses: actions/checkout@v4
       - run: git submodule update --init groups
       - run: python3 site/blueprint.py check
-      - name: the derivation of the D5 claim statuses (site/d5sync.py, MATH-459), on made-up nodes
+      - name: the derivation of the D5 claim statuses (site/d5sync.py, MATH-459, MATH-529), on made-up nodes
         run: python3 site/test_d5sync.py
+      # MATH-529: every tm job named in `jobs` exists in tm and is done. tm has no public API: this needs the
+      # repository secret TM_TOKEN (a tm API token); without it, and with jobs named, the check is SKIPPED,
+      # loudly (a warning on the run and its summary), and d5sync derives those nodes as open anyway.
+      - name: the tm jobs of `jobs` exist and are done (site/d5sync.py --check-jobs, MATH-529)
+        env:
+          TM_TOKEN: ${{ secrets.TM_TOKEN }}
+        run: |
+          set -euo pipefail
+          python3 site/d5sync.py --check-jobs | tee jobs.out
+          if grep -q '^SKIPPED' jobs.out; then
+            echo "::warning title=tm jobs not checked::$(cat jobs.out) (set the repository secret TM_TOKEN)"
+            { echo "### tm jobs of blueprint.toml: SKIPPED"; echo; cat jobs.out; } >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: negative controls of the jobs check (a failed job, a job tm does not know, no tm access; a done job passes)
+        run: |
+          set -euo pipefail
+          key=kimmy/tm/20261126-000000-neg-0000000
+          grep -q '^tag = "000L"$' site/blueprint.toml || { echo "::error::no node with tag 000L (prop:2048)"; exit 1; }
+          sed "s|^tag = \"000L\"\$|tag = \"000L\"\njobs = [\"$key\"]|" site/blueprint.toml > jobs.toml
+          cmp -s site/blueprint.toml jobs.toml && { echo "::error::jobs.toml is not changed"; exit 1; }
+          printf '{"jobs": [{"key": "%s", "state": "done", "repo": "dimension-subrings", "cmd": ""}]}' $key > done.json
+          sed 's/"done"/"failed"/' done.json > failed.json
+          echo '{"jobs": []}' > none.json
+          python3 site/d5sync.py --check-jobs --data jobs.toml --tm-jobs done.json
+          check() {  # check MESSAGE ARGS...: the jobs check must fail, with MESSAGE
+            msg=$1; shift
+            if python3 site/d5sync.py --check-jobs --data jobs.toml "$@" > neg.out 2>&1; then echo "::error::the jobs check passes $*"; exit 1; fi
+            cat neg.out
+            grep -qF "$msg" neg.out || { echo "::error::the jobs check of $* fails for another reason"; exit 1; }
+          }
+          check "node prop:2048: job $key (failed)" --tm-jobs failed.json
+          check "node prop:2048: job $key (not found in tm)" --tm-jobs none.json
+          TM_TOKEN= TM_CLI_CONFIG=/nonexistent python3 site/d5sync.py --check-jobs --data jobs.toml | tee skip.out
+          grep -q '^SKIPPED: 1 tm jobs' skip.out || { echo "::error::no tm access is not reported as SKIPPED"; exit 1; }
+          echo "negative controls: a failed and an unknown job fail, no tm access is SKIPPED, a done job passes"
   tags:
     runs-on: ubuntu-latest
     steps:
