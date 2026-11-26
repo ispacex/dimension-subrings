@@ -1,0 +1,9 @@
+# The variant intel_cpu of BUDA app ds12 (the search at 2^12, image tag boinc-v6, amd64; boinc/README.md, "2^12").
+# BUDA builds it on the volunteer's host, so it only names the prebuilt image (by digest: the image is the
+# version of the code) and runs main_ds12.sh, which BUDA copies with the input file into the job's directory,
+# mounted at /app.  In the file sandbox: Dockerfile_ds12_intel_v6, main_ds12.sh.
+FROM ghcr.io/ispacex/dimension-subrings-boinc@sha256:d897923d3555fd037ad9a566558177df6dbfcfd4151003725960e826113daadf
+ENTRYPOINT []
+WORKDIR /app
+ENV ARGS=""
+CMD /bin/sh ./main_ds12.sh ${ARGS}

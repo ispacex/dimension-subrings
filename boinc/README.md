@@ -340,6 +340,15 @@ boinc/make_batch.sh -q 12 -F THMA,THMA1,THMB,TAH19,TIGHT,LIBROOT,NOSTAB,STREAM,S
 ```
 
 ≈ 300 CPU-hours for one replica (the pilot's rate; the ids are not uniform), ≈ 600 with both.
+
+**On BOINC Central** (26.11.2026): BUDA app `ds12` ("Dimension subgroups: the 2-group search of
+order 2^12"; input `piece.txt`, output `result.txt`, 64 MB, gzip, 7 days), variants `intel_cpu`
+and `arm_cpu` from `buda/ds12/` (sandbox names `Dockerfile_ds12_{intel,arm}_v6`, `main_ds12.sh`:
+not `main.sh`, which the other apps' variants use), image `boinc-v6` (code `512050c`; amd64
+`sha256:d897923d…`, arm64 `sha256:0a2b93b7…`, both pilots equal to the reference). **Batch 195**
+(`buda_38542_1795678473`): `ds12-dL-v1.zip`, 1342 jobs, expected 0.03 days, maximum 0.5 days
+(on BOINC's 4.3 GFLOPS reference host); manifest and zip on kimmy in `/srv/boinc-inputs/ds12-dL-v1/`,
+results collected by boinc-fetcher into `/srv/boinc-results/195/`.
 Disk and time per piece are known only for the pilot (0.8 GB of pq's files in the container's
 `/tmp`, 27 minutes); a piece that fails or is cut off on volunteer hosts is resubmitted, or run
 on our machines in the image itself (the same digest, under docker, podman or apptainer), which
