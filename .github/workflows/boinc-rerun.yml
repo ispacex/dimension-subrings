@@ -1,0 +1,53 @@
+# Reruns pieces of a BUDA batch in the published volunteer image, pinned by the same digest as the BUDA
+# variant (boinc/buda/ds12/Dockerfile.intel), as BUDA runs them: one CPU, /app mounted, piece.txt ->
+# result.txt.  For pieces that volunteers do not finish (README, "failed pieces"): the result is a
+# replica from the image, compared with the volunteers' ones by collect.sh like any other.
+# Trigger: push to a branch boinc-rerun/**; every boinc/rerun/*.txt is a piece file exactly as in the
+# batch zip (its sha256 is the one in the batch manifest).  Results are the job's artifact.
+name: boinc rerun
+on:
+  push:
+    branches: ['boinc-rerun/**']
+permissions:
+  contents: read
+  packages: read
+jobs:
+  list:
+    runs-on: ubuntu-24.04
+    outputs:
+      pieces: ${{ steps.l.outputs.pieces }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: l
+        run: echo "pieces=$(ls boinc/rerun/*.txt | xargs -n1 basename | sed 's/\.txt$//' | jq -R . | jq -sc .)" >> "$GITHUB_OUTPUT"
+  piece:
+    needs: list
+    strategy:
+      fail-fast: false
+      matrix:
+        piece: ${{ fromJson(needs.list.outputs.pieces) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: run ${{ matrix.piece }} in the image
+        run: |
+          img=$(sed -n 's/^FROM //p' boinc/buda/ds12/Dockerfile.intel)
+          mkdir -p out && cp "boinc/rerun/${{ matrix.piece }}.txt" out/piece.txt
+          sha256sum out/piece.txt | tee out/piece.sha256
+          docker pull "$img"
+          start=$(date +%s); rc=0
+          docker run --rm --cpus 1 -v "$PWD/out:/app" "$img" piece.txt result.txt 2> out/stderr.txt || rc=$?
+          tail -5 out/stderr.txt
+          echo "${{ matrix.piece }}: image $img, exit $rc, wall $(( $(date +%s) - start )) s, result $(sha256sum < out/result.txt 2>/dev/null | cut -c1-16)" | tee -a "$GITHUB_STEP_SUMMARY"
+          exit $rc
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rerun-${{ matrix.piece }}
+          path: out/

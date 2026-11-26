@@ -1,0 +1,2 @@
+# piece v1 name=b_dL0096 rank=4 nmax=11 logq=12 covermax=10 steprules=true compact=true flags=THMA,THMA1,THMB,TAH19,TIGHT,LIBROOT,NOSTAB,STREAM,STREAMFILE
+{"order":16,"code":0,"steps":[5],"ids":[61864,61873]}
