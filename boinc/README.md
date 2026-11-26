@@ -12,6 +12,7 @@ search at $2^{12}$ (MATH-40) go the same way from `boinc-v6` on: section "$2^{12
 | `Dockerfile` | the image: GAP 4.15.1 and ANUPQ from our fork (correctness fixes + PQ_NOSTAB, pinned commit), the search code copied in at build time |
 | `run_piece.sh` | the entry point inside the image: a piece file → a result file |
 | `buda/Dockerfile.intel`, `buda/Dockerfile.arm`, `buda/main.sh` | the BUDA variants `intel_cpu` and `arm_cpu`: their Dockerfiles (the published image by digest) and the main program BUDA runs |
+| `buda/ds12/` | the same for app `ds12`, the search at $2^{12}$ (image `boinc-v6`; `desc.json`, `Dockerfile.intel`, `Dockerfile.arm`, `main_ds12.sh`) |
 | `buda/desc.json` | the BUDA science app as the "Add science app" form records it |
 | `make_batch.sh` | split files of `run_rank.sh` → a BUDA batch directory (one job per piece and replica) and its manifest |
 | `collect.sh` | the batch's output files → compared replicas, checked against the manifest → the layout of a `run_rank.sh` run |
@@ -145,7 +146,7 @@ result.txt`.
 
 1. **Publish the image.** Push a tag `boinc-vN`: the workflow `.github/workflows/boinc-image.yml`
    builds `ghcr.io/ispacex/dimension-subrings-boinc:boinc-vN-amd64` and `-arm64` and writes their
-   digests into the job summary. Put them into `buda/Dockerfile.intel` and `buda/Dockerfile.arm`.
+   digests into the job summary. Put them into `buda/Dockerfile.intel` and `buda/Dockerfile.arm` (for $2^{12}$: `buda/ds12/`).
    The package must be public in the registry's settings.
 
    | tag | code | amd64 (`intel_cpu`) | arm64 (`arm_cpu`) |
@@ -154,11 +155,12 @@ result.txt`.
    | `boinc-v2` | `97cb2ec` | `sha256:a4e169d844d19a5a971d44737dbcc2ba630fe473be7781ef2bc8819c81628e1c` | `sha256:7ccf9780f0f4e6cb5c41e21fc658097e26a777bfbb53f0c8a4620ff76dd9d9f8` |
    | `boinc-v3` | `20247a3` | `sha256:49b169a9a396087ac3542506d80bfce2ecb1d57fffa093e0624b7594fe8ef5dc` | `sha256:34568d602464776e6f35004b7f6603e51050f5f7bc3721df058dcfc8ffea299b` |
    | `boinc-v5` | `bab60fa` | `sha256:e5d4d2b91115b7546fb257ccd4b58c065c9cf095c7f9130599663bf111a64110` | `sha256:4109cd6b5928b3850de13c520aae96dc7eec06406fef045a724e3eea3bfe9070` |
+   | `boinc-v6` | `512050c` | `sha256:d897923d3555fd037ad9a566558177df6dbfcfd4151003725960e826113daadf` | `sha256:0a2b93b75c4ffc3de3ed63b1bb185e458427e9c0ec806db8060dde7f460b79d2` |
 
    `boinc-v1` does not read deferred-step lines and ignores `compact=true` (it writes the full
    lines); `boinc-v2` adds deferred steps and compact candidates; `boinc-v3` (ANUPQ with our
    correctness fixes and union-find, ispacex/anupq `uf-nostab`; the `flags=` header field;
-   `children.g`); `boinc-v5` (ANUPQ = `correctness` b7deefa + PQ_NOSTAB, GAP workspace 16g; boinc-v4 was skipped: its image still set GAPMEM=4g) is the one the variants use.
+   `children.g`); `boinc-v5` (ANUPQ = `correctness` b7deefa + PQ_NOSTAB, GAP workspace 16g; boinc-v4 was skipped: its image still set GAPMEM=4g) is the one the variants of app `dsubrings` ($2^{11}$) use; `boinc-v6` (section "$2^{12}$") the variants of app `ds12`.
 2. **Science app** ("Manage BUDA apps" → "Add science app"), the fields of `buda/desc.json`:
    input file names `piece.txt`, output file names `result.txt`, max output size 64 MB, gzip
    output on, max delay 7 days.
@@ -349,6 +351,7 @@ not `main.sh`, which the other apps' variants use), image `boinc-v6` (code `5120
 (`buda_38542_1795678473`): `ds12-dL-v1.zip`, 1342 jobs, expected 0.03 days, maximum 0.5 days
 (on BOINC's 4.3 GFLOPS reference host); manifest and zip on kimmy in `/srv/boinc-inputs/ds12-dL-v1/`,
 results collected by boinc-fetcher into `/srv/boinc-results/195/`.
+
 Disk and time per piece are known only for the pilot (0.8 GB of pq's files in the container's
 `/tmp`, 27 minutes); a piece that fails or is cut off on volunteer hosts is resubmitted, or run
 on our machines in the image itself (the same digest, under docker, podman or apptainer), which
