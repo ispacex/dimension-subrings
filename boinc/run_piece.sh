@@ -1,5 +1,5 @@
 #!/bin/sh
-# run_piece.sh IN OUT — one piece of the 2^11 search (compute/pq2048/tree.g) as one job:
+# run_piece.sh IN OUT — one piece of the 2^11 or 2^12 search (compute/pq2048/tree.g) as one job:
 # one input file in, one output file out (boinc/README.md).
 #
 # IN: a header line, then vertex lines exactly as run_rank.sh writes them (A/dump.jsonl, B/in_*,
@@ -8,6 +8,7 @@
 #     [flags=TAH19,NOSTAB,...]
 #   {"order":512,"code":2545205939215099486623156405135}
 #   {"order":256,"code":77523550526317933098992015,"steps":[2]}   ← a step deferred by stage A
+#   {"order":16,"code":0,"steps":[5],"ids":[60904,60913]}       ← LIBROOT: library ids of that step (2^12)
 #   ...
 # compact=true: the candidates are tree.g's compact lines (code and involution, ≈ 150 bytes each;
 # ../compute/pq2048/expand_compact.g gives the full lines back); without it the full lines.
@@ -17,7 +18,7 @@
 #   # input-sha256 <sha256 of IN>
 #   # code <commit of the search code in the image>
 #   # stat <tree.g's STATFILE without the ms_* timings>
-#   # candidates N        then N lines: tree.g's OUTFILE (candidates of order 2^11, compact or full)
+#   # candidates N        then N lines: tree.g's OUTFILE (candidates of order 2^LOGQ, compact or full)
 #   # dump M              then M lines: tree.g's DUMPFILE (only with dumplevel)
 #   # end
 # Timings and peak memory go to stderr (BOINC returns it as stderr.txt), never into OUT.
@@ -51,11 +52,13 @@ compact=$(field compact); [ -n "$compact" ] || compact=false
 case $compact in true|false) ;; *) fail 2 "compact must be true or false" ;; esac
 # flags: the search switches of tree.g that run_rank.sh takes from the environment (PQ2048_<FLAG>=1),
 # only these.  NOSTAB uses pq with PQ_NOSTAB set (ANUPQData.binary_nostab, as remote pqrun.sh does).
+# STREAM, STREAMFILE (children.g): pq's descendants read from its file one group at a time (the 2^12
+# pieces; same walk, a fraction of the memory).
 flags=$(field flags)
 pre=""
 for f in $(printf '%s\n' "$flags" | tr ',' ' '); do
   case $f in
-    TAH19|NOSTAB|TIGHT|THMA|THMB|LIBROOT|OWNCOVER|OWNDESC) export "PQ2048_$f=1" ;;
+    TAH19|NOSTAB|TIGHT|THMA|THMA1|THMB|LIBROOT|OWNCOVER|OWNDESC|STREAM|STREAMFILE) export "PQ2048_$f=1" ;;
     *) fail 2 "unknown flag '$f'" ;;
   esac
 done
@@ -65,7 +68,8 @@ dumplevel=$(field dumplevel)
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 if [ "${PQ2048_NOSTAB:-}" = 1 ]; then
-  pq=$(ls "$root"/../gap/pkg/anupq/bin/*/pq /opt/gap/pkg/anupq/bin/*/pq 2>/dev/null | head -n 1)
+  # PQ_BINARY: the pq to use outside the image (a native run of the pilot, under pqrun.sh)
+  pq=${PQ_BINARY:-$(ls "$root"/../gap/pkg/anupq/bin/*/pq /opt/gap/pkg/anupq/bin/*/pq 2>/dev/null | head -n 1)}
   [ -n "$pq" ] || fail 1 "NOSTAB: no pq binary found"
   printf '#!/bin/sh\nPQ_NOSTAB=1 exec "%s" "$@"\n' "$pq" > "$work/pq-nostab"; chmod +x "$work/pq-nostab"
   pre="LoadPackage(\"anupq\");; ANUPQData.binary_nostab := \"$work/pq-nostab\";;"
@@ -73,7 +77,7 @@ fi
 # The vertex lines are evaluated by GAP: accept nothing but the exact shape run_rank.sh writes.
 tail -n +2 "$in" | grep -v '^[[:space:]]*$' > "$work/start.jsonl" || true
 [ -s "$work/start.jsonl" ] || fail 2 "no vertex lines"
-if grep -Evq '^\{"order":[0-9]+,"code":[0-9]+(,"steps":\[[0-9]+(,[0-9]+)*\])?\}$' "$work/start.jsonl"; then
+if grep -Evq '^\{"order":[0-9]+,"code":[0-9]+(,"steps":\[[0-9]+(,[0-9]+)*\](,"ids":\[[0-9]+,[0-9]+\])?)?\}$' "$work/start.jsonl"; then
   fail 2 "a vertex line is not {\"order\":N,\"code\":N}"
 fi
 

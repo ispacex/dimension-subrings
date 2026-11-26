@@ -30,3 +30,21 @@ jobs:
           docker build -f boinc/Dockerfile --build-arg CODE_COMMIT="$GITHUB_SHA" -t "$tag" .
           docker push "$tag"
           echo "$tag → $(docker inspect --format '{{index .RepoDigests 0}}' "$tag")" >> "$GITHUB_STEP_SUMMARY"
+      # The pilot piece of the 2^12 search (MATH-40): the first 10 library ids of the LIBROOT step, run in the
+      # image as BUDA runs it; its result.txt (sha256 in the summary, the file as an artifact) must be the
+      # same on both architectures and match the reference run on kimmy (boinc/README.md, "2^12").
+      - name: pilot piece (2^12, LIBROOT ids 60904-60913)
+        if: startsWith(github.ref_name, 'boinc-v6')
+        run: |
+          tag="ghcr.io/${GITHUB_REPOSITORY,,}-boinc:${GITHUB_REF_NAME}-${{ matrix.arch }}"
+          mkdir -p pilot && cd pilot
+          { echo '# piece v1 name=b_dL10 rank=4 nmax=11 logq=12 covermax=10 steprules=true compact=true flags=THMA,THMA1,THMB,TAH19,TIGHT,LIBROOT,NOSTAB,STREAM,STREAMFILE'
+            echo '{"order":16,"code":0,"steps":[5],"ids":[60904,60913]}'; } > piece.txt
+          docker run --rm --cpus 1 -v "$PWD:/app" "$tag" piece.txt result.txt 2> stderr.txt || { cat stderr.txt; exit 1; }
+          tail -3 stderr.txt
+          echo "pilot b_dL10 ${{ matrix.arch }}: result.txt sha256 $(sha256sum < result.txt | cut -c1-64), $(sed -n 's/^# candidates //p' result.txt) candidates" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: startsWith(github.ref_name, 'boinc-v6')
+        with:
+          name: pilot-${{ matrix.arch }}
+          path: pilot/

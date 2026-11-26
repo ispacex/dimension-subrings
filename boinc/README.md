@@ -292,6 +292,46 @@ The levels above 512 (≈ 26 thousand vertices of rank 5 of orders 64–256) are
 * **Stages A and B** stay local: A is one process, and B for rank 5 is hours of CPU plus about a
   day to generate the 5.87 million vertices of order 512, with up to a few GB per process.
 
+## $2^{12}$: the library step of rank 4 (MATH-40, `boinc-v6`)
+
+The search at $2^{12}$ (`run_rank.sh` of branch `math40-est12` with `NMAX = 11`, `LOGQ = 12`) runs
+with `LIBROOT`: the step of the root $2^4$ (elementary abelian, rank 4) to order 512 is not a pq
+call but the SmallGroups library, ids **60904–67612** of order 512 (rank 4, 2-class 2,
+`CH_RANGE512` of `children.g`; 6709 groups). Stage A writes it as lines
+`{"order":16,"code":0,"steps":[5],"ids":[a,b]}`; such a piece walks the subtree of each of its
+groups down to the candidates of order $2^{12}$ itself (no dump, no stage C). These pieces are the
+part of rank 4 that suits volunteer hosts: on the pilot (kimmy, `m40-heavy-test`) ids
+60904–60913 took 27 minutes of one core, 0.35 GB of GAP and 0.8 GB of pq's temporary files, with
+`STREAM` and `STREAMFILE` (descendants read from pq's file one at a time). The other pieces of rank
+4 at $2^{12}$ (vertices of order 256 whose pq step writes tens of GB) stay on our machines.
+
+`boinc-v6` differs from `boinc-v5` in:
+
+* **ANUPQ** `0690fc2` of `pq-gz-library` (master + PQ_NOSTAB; PQ_GZ and PQ_NOCLASSFILE are unused
+  here), the pq that `compute/pq2048/pqrun.sh` builds for the $2^{12}$ runs on our machines, so a
+  piece is the same computation there and here. (`boinc-v5` has the `correctness` line,
+  `c05b729`, used for $2^{11}$.)
+* **`run_piece.sh`** accepts the `"ids":[a,b]` field after `"steps"`, and the flags `THMA1`,
+  `STREAM`, `STREAMFILE`; `PQ_BINARY` names the pq for a run outside the image.
+* **`make_batch.sh -q 12`** writes `nmax=11 logq=12` into the header (the default stays 11).
+* **The workflow** runs the pilot piece (ids 60904–60913) in the image on both architectures and
+  writes the sha256 of `result.txt` into the job summary: the two must agree, and the candidates
+  and counters must be those of the kimmy run (118 candidates, sha256 of the candidate lines
+  `00af71cd…`).
+
+The batch: one piece per 10 ids (671 pieces, the last one 9 ids), two replicas, flags
+`THMA,THMA1,THMB,TAH19,TIGHT,LIBROOT,NOSTAB,STREAM,STREAMFILE` (those of the pilot):
+
+```bash
+i=60904; k=0
+while [ $i -le 67612 ]; do j=$((i + 9)); [ $j -le 67612 ] || j=67612
+  printf '{"order":16,"code":0,"steps":[5],"ids":[%d,%d]}\n' $i $j > in/in_dL$(printf %04d $k)
+  i=$((j + 1)); k=$((k + 1)); done
+boinc/make_batch.sh -q 12 -F THMA,THMA1,THMB,TAH19,TIGHT,LIBROOT,NOSTAB,STREAM,STREAMFILE 4 batch_dL in/in_dL*
+```
+
+≈ 300 CPU-hours for one replica (the pilot's rate; the ids are not uniform), ≈ 600 with both.
+
 ## Limits
 
 * The variants name the image by digest, and the package has to be public for volunteers' hosts
