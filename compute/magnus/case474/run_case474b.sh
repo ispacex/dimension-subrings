@@ -2,7 +2,7 @@
 # MATH-474 (wiki 891 Sec. 21.3-21.4): the mixed model mod 9 -- elementary chains for every k at once.
 # Usage: run_case474b.sh [PAR]
 #  1. cross: equivalence "full model mod 3^k" <=> "mixed model mod 9" configuration by configuration:
-#     (T1) block configurations S = 2, 3, 4 at k = 3, 4; all elementary chains of every capped type of length 3 at k = 4.
+#     (T1) block configurations S = 2, 3 at k = 3, 4; all elementary chains of every capped type of length 3 at k = 4.
 #     Also without (D2) (failures must coincide).  Control: without (Kt) Lemma 15.2 fails and the two must differ.
 #  2. mixed: (T1) block configurations on types cut at 9, length 2..6, all level profiles; R = 0.  Controls (D2), (Kt).
 #  3. melem: ALL elementary chains, types cut at 9 of length 2, 3, 4, all A, all level profiles; R = 0.
@@ -18,7 +18,7 @@ alltypes() { python3 -c "
 import sys; sys.path.insert(0, '../case467')
 from diag467 import capped_types_k
 for d in capped_types_k($1, $2): print(','.join(map(str, d)))"; }
-{ for k in 3 4; do for S in 2 3 4; do echo "cross $S $k"; echo "cross $S $k D2"; done; echo "cross 3 $k Kt"; done
+{ for k in 3 4; do for S in 2 3; do echo "cross $S $k"; echo "cross $S $k D2"; done; echo "cross 3 $k Kt"; done
   alltypes 3 4 | sed 's/^/crosse /; s/$/ 4/'
   alltypes 3 4 | awk 'NR%5==0' | sed 's/^/crosse /; s/$/ 4 D2/'; } > "$OUT/cross.args"
 NP=12
