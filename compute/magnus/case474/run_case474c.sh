@@ -23,21 +23,6 @@ for D in D2 Kt; do
   x=$(grep '^MODK' "$OUT/ctl.txt" | grep "'$D'" | sed 's/.*FAILING: \([0-9]*\).*/\1/' | awk '{s+=$1} END{print s+0}')
   echo "control without $D: failing $x (must be > 0)"; [ "$x" -gt 0 ] || st=1
 done
-# rerun of part 1 of run_case474.sh (Claim D, random diagonal chains up to k = 7) after the int64 fix in diag467.py
-cd ../case474
-{ for S in 3 4 5; do for k in 4 5 6 7; do for seed in 1 2; do echo "diag $S $k 100 $seed"; done; done; done; } > "$OUT/diag.args"
-{ for D in D2 B Kt Ko; do for k in 4 5; do echo "diag 3 $k 200 7 $D"; echo "diag 4 $k 100 8 $D"; done; done; } > "$OUT/diagctl.args"
-xargs -P "$PAR" -L 1 python3 t474.py < "$OUT/diag.args" > "$OUT/diag.txt" 2>&1
-xargs -P "$PAR" -L 1 python3 t474.py < "$OUT/diagctl.args" > "$OUT/diagctl.txt" 2>&1
-n=$(wc -l < "$OUT/diag.args"); ok=$(grep -c '^DIAG' "$OUT/diag.txt")
-f=$(awk '$1=="DIAG"{f+=$(NF-2)+$NF} END{print f+0}' "$OUT/diag.txt")
-c=$(awk '$1=="DIAG"{c+=$7; z+=$13} END{print c+0, "sigma!=0", z+0}' "$OUT/diag.txt")
-echo "diag: lines $ok of $n, chains $c, FAILING (incl. termwise) $f"
-[ "$ok" -eq "$n" ] && [ "$f" -eq 0 ] || st=1
-for D in D2 B Kt Ko; do
-  x=$(awk -v D="['$D']" '$1=="DIAG" && $11==D {f+=$(NF-2)} END{print f+0}' "$OUT/diagctl.txt")
-  echo "diag control without $D: failing chains $x"; [ "$D" != D2 ] || [ "$x" -gt 0 ] || st=1
-done
 echo "overall ok=$((1 - st))"
 if [ -n "${JOB_CACHE:-}" ]; then D=$JOB_CACHE/m474c/$(date +%Y%m%d-%H%M%S); mkdir -p "$D" && cp "$OUT"/*.txt "$OUT"/*.args "$D"/ && echo "copied to $D"; fi
 exit $st

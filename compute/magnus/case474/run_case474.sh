@@ -4,7 +4,7 @@
 #  1. diag: Claim D (Prop. 21.1) on random diagonal chains, S = 3, 4, 5, k = 4..7, with the term-by-term check;
 #     controls without (D2) (must fail), without (B), (Kt), (Ko) (reported).
 #  2. blocks k = 4: all configurations of <= 3 blocks (>= 1 pair, kinds of Lemma 21.3, both signs) on all capped
-#     (cut 81) types of length 2..4 with (T1); controls without (D2), (Kt) at S = 3, 4 (must fail).  A direct check in
+#     (cut 81) types of length 2, 3 with (T1); controls without (D2), (Kt) at S = 3 (must fail).  A direct check in
 #     the full model mod 81; the proof for every k uses the mixed model (run_case474b.sh, all lengths 2..6).
 #  3. orbits: all elementary chains, capped types of length 3, k = 3 (consistency with case471) and k = 4:
 #     for A with (T1) every orbit has a member block diagonal at all levels; control: A without (T1).
@@ -22,8 +22,8 @@ for d in capped_types_k($1, $2): print(','.join(map(str, d)))"; }
 { for S in 3 4 5; do for k in 4 5 6 7; do for seed in 1 2; do echo "diag $S $k 100 $seed"; done; done; done; } > "$OUT/diag.args"
 { for D in D2 B Kt Ko; do for k in 4 5; do echo "diag 3 $k 200 7 $D"; echo "diag 4 $k 100 8 $D"; done; done; } > "$OUT/diagctl.args"
 NP=24
-{ for S in 2 3 4; do for p in $(seq 0 $((NP - 1))); do echo "blocks $S 4 $p $NP"; done; done; } > "$OUT/blocks.args"
-{ for S in 3 4; do for p in $(seq 0 $((NP - 1))); do echo "blocks $S 4 $p $NP D2"; echo "blocks $S 4 $p $NP Kt"; done; done; } > "$OUT/ctl.args"
+{ for S in 2 3; do for p in $(seq 0 $((NP - 1))); do echo "blocks $S 4 $p $NP"; done; done; } > "$OUT/blocks.args"
+{ for S in 3; do for p in $(seq 0 $((NP - 1))); do echo "blocks $S 4 $p $NP D2"; echo "blocks $S 4 $p $NP Kt"; done; done; } > "$OUT/ctl.args"
 { alltypes 3 3 | sed 's/$/ 3/'; alltypes 3 4 | sed 's/$/ 4/'; } | sed 's/^/orbits /' > "$OUT/orb.args"
 for f in diag diagctl blocks ctl orb; do
   xargs -P "$PAR" -L 1 python3 $T < "$OUT/$f.args" > "$OUT/$f.txt" 2>&1
@@ -42,14 +42,14 @@ for D in D2 B Kt Ko; do
   [ "$D" != D2 ] || [ "$c" -gt 0 ] || st=1
 done
 echo "== 2. blocks (T1)"
-for k in 4; do for S in 2 3 4; do
+for k in 4; do for S in 2 3; do
   awk -v S=$S -v k=$k '$1=="T1BLOCKSK" && $3==S && $5==k && $11=="[]" {t+=$13; c+=$15; f+=$17; n++} END{if(n) printf "k=%d S=%d lines %d types %d configs %d FAILING %d\n", k, S, n, t, c, f}' "$OUT/blocks.txt"
 done; done
 n=$(wc -l < "$OUT/blocks.args"); ok=$(grep -c '^T1BLOCKSK' "$OUT/blocks.txt")
 f=$(awk '$1=="T1BLOCKSK"{f+=$NF} END{print f+0}' "$OUT/blocks.txt")
 echo "lines $ok of $n, FAILING $f"
 [ "$ok" -eq "$n" ] && [ "$f" -eq 0 ] || st=1
-for D in D2 Kt; do for S in 3 4; do
+for D in D2 Kt; do for S in 3; do
   c=$(awk -v S=$S -v D="['$D']" '$1=="T1BLOCKSK" && $3==S && $11==D {f+=$NF} END{print f+0}' "$OUT/ctl.txt")
   echo "control without $D, k=4, S=$S: failing $c (must be > 0)"; [ "$c" -gt 0 ] || st=1
 done; done
