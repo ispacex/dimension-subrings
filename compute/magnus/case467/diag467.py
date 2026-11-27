@@ -63,7 +63,7 @@ def kernel(conds, n, mod):
     A = np.zeros((n, m + n), dtype=np.int64)
     for c, (r, mm) in enumerate(conds):
         f = mod // mm
-        for k, x in r.items(): A[k, c] += f * x
+        for k, x in r.items(): A[k, c] = (int(A[k, c]) + f * (x % mm)) % mod   # reduce first: no int64 overflow
     A[:, m:] = np.eye(n, dtype=np.int64)
     piv = howell(list(A), m + n, mod)
     return [row[m:] for col, row, v in piv if col >= m]
@@ -108,7 +108,7 @@ class Model:
         self.sig = sig
         RB = np.zeros((NP, NS), dtype=np.int64)
         def addR(p, f, c):
-            for t, x in f.items(): RB[p, t] += c * x
+            for t, x in f.items(): RB[p, t] = (int(RB[p, t]) + c * x) % mod     # Python ints, reduced: no overflow
         for i, h in itertools.combinations(idx, 2):
             hh = (d[h] - 1) // 2
             addR(U[i, h], om(i, h, i), hh * q(i, h))
