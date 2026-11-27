@@ -9,7 +9,8 @@ Dimension vector (Drozd--Kubichka): (r = dim S; number of columns per point; x_j
 Tits form Q = r^2 + sum x_p^2 + sum_{p,q comparable} x_p x_q + sum x_j^2 + sum_{i<j} x_i x_j - r (sum x_p + sum x_j).
 [DK04, Thm 1.4]: if P ⊔ C is of finite type, the indecomposables are exactly the positive roots (Q = 1), one per root,
 End = F_3.  Here a representative of each root is FOUND by random search and certified by dim End = 1 (computed);
-roots whose indecomposable does not have S spanned by its columns cannot occur and are dropped (reported).
+roots whose indecomposable does not have S spanned by its columns could not occur; any such would be reported as
+missing (at s = 4, 5: none).
 
 Modes:
   catalog S [PART NPARTS]   for every finite-type open (d, A) of length S: roots, representatives, failures
@@ -241,7 +242,6 @@ def all_chains(s, t, subs):
 
 def count_mode(S, T, maxch, part=0, nparts=1):
     subs = subspaces(S); done = set(); nsig = bad = 0; norb = 0; isig = -1
-    from functools import lru_cache
     chains_by_t = {}
     for d, A, t in open_pairs(S):
         if t > T: continue

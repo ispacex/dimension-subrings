@@ -33,8 +33,11 @@ nk=$(grep -c "^FINCHECK.*drop \[\] " "$OUT/check.txt"); nkl=$(grep -c -v " D2$\|
 fk=$(grep "^FINCHECK.*drop \[\] " "$OUT/check.txt" | sed 's/.*FAILING \([0-9]*\).*/\1/' | awk '{s+=$1} END{print s+0}')
 ck=$(grep "^FINCHECK.*drop \[\] " "$OUT/check.txt" | sed 's/.*configurations \([0-9]*\).*/\1/' | awk '{s+=$1} END{print s+0}')
 ms=$(grep "^FINCHECK.*drop \[\] " "$OUT/check.txt" | sed 's/.*missing roots \([0-9]*\).*/\1/' | awk '{s+=$1} END{print s+0}')
-echo "check: $nk of $nkl parts, configurations $ck, missing roots $ms, FAILING $fk"
+np5=$(grep "^FINCHECK.*drop \[\] " "$OUT/check.txt" | sed 's/.*finite (d,A) \([0-9]*\).*/\1/' | awk '{s+=$1} END{print s+0}')
+echo "check: $nk of $nkl parts, finite pairs $np5, configurations $ck, missing roots $ms, FAILING $fk"
 [ "$nk" -eq "$nkl" ] && [ "$fk" -eq 0 ] && [ "$ms" -eq 0 ] || st=1
+grep -q "finite (d,A) 1324 " "$OUT/catalog.txt" || { echo "catalog: not 1324 finite pairs"; st=1; }
+[ "$MODE" = pilot ] || [ "$np5" -eq 1324 ] || { echo "check parts do not cover the 1324 finite pairs"; st=1; }
 for D in D2 Kt; do
   x=$(grep "^FINCHECK.*'$D'" "$OUT/check.txt" | sed 's/.*FAILING \([0-9]*\).*/\1/'); x=${x:-0}
   echo "control without $D: failing $x (must be > 0)"; [ "$x" -gt 0 ] || st=1
