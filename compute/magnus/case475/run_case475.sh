@@ -1,6 +1,7 @@
 #!/bin/bash
 # MATH-475 (wiki 891 Sec. 21): classes 2A1N / 1A2N (and 2A2N) of elementary chains mod 27 beyond (T1).
 # Usage: run_case475.sh MODE [PAR] [NPARTS]
+#   full PAR NPARTS CLASS...  every configuration of the classes (e.g. 2A1N 1A2N) + controls D2/Kt on part 0
 #   pilot PAR NPARTS [nostruct]  (a) (skipped with 'nostruct') struct475: block sizes on orbits for every s = 5 signature (all classes) and a fixed set of
 #                         s = 6 signatures; claim: max block size == Tits prediction everywhere (MISMATCH 0);
 #                     (b) enum475 cat / count for 2A1N, 1A2N, 2A2N;
@@ -45,6 +46,32 @@ if [ "$MODE" = pilot ]; then
     for D in D2 Kt; do
       c=$(awk -v C=$C -v D="['$D']" '/^RUN475/ && $2==C && $8==D {print $NF}' "$OUT/run.txt")
       echo "control $C without $D: failing ${c:-missing} (must be > 0)"; [ "${c:-0}" -gt 0 ] || st=1
+    done
+  done
+fi
+if [ "$MODE" = full ]; then
+  # full PAR NPARTS CLASS...: every configuration of each class (parts 0..NPARTS-1, full model), plus the controls
+  # without (D2) and without (Kt) on part 0.  Claims: NPARTS lines per class, checked total == COUNTSUM, FAILING 0,
+  # controls fail.
+  PAR=$1; NP=$2; shift 2
+  for C in "$@"; do python3 enum475.py count $C; done > "$OUT/count.txt" 2>&1
+  grep COUNTSUM "$OUT/count.txt"
+  for C in "$@"; do for p in $(seq 0 $((NP - 1))); do echo "run $C $p $NP -"; done
+    for D in D2 Kt; do echo "run $C 0 $NP $D"; done; done > "$OUT/full.args"
+  xargs -P "$PAR" -L 1 python3 enum475.py < "$OUT/full.args" > "$OUT/full.txt" 2>&1
+  grep -v '^FAIL ' "$OUT/full.txt" | sort
+  grep '^FAIL ' "$OUT/full.txt" | head -20
+  for C in "$@"; do
+    want=$(awk -v C=$C '/^COUNTSUM/ && $2==C {print $4}' "$OUT/count.txt")
+    nl=$(awk -v C=$C '/^RUN475/ && $2==C && $8=="[]"' "$OUT/full.txt" | wc -l)
+    got=$(awk -v C=$C '/^RUN475/ && $2==C && $8=="[]" {s+=$10} END{print s+0}' "$OUT/full.txt")
+    f=$(awk -v C=$C '/^RUN475/ && $2==C && $8=="[]" {s+=$NF} END{print s+0}' "$OUT/full.txt")
+    z=$(awk -v C=$C '/^RUN475/ && $2==C && $8=="[]" {s+=$12} END{print s+0}' "$OUT/full.txt")
+    echo "$C: parts $nl of $NP, checked $got of $want, sigma!=0 $z, FAILING $f"
+    [ "$nl" -eq "$NP" ] && [ "$got" = "$want" ] && [ "$f" -eq 0 ] || st=1
+    for D in D2 Kt; do
+      c=$(awk -v C=$C -v D="['$D']" '/^RUN475/ && $2==C && $8==D {print $NF}' "$OUT/full.txt")
+      echo "control $C without $D (part 0): failing ${c:-missing} (must be > 0)"; [ "${c:-0}" -gt 0 ] || st=1
     done
   done
 fi
