@@ -824,6 +824,93 @@ tag = "003Z"
 id = 4477
 name = "L'_N"
 
+# Working terms of Theorem B (MATH-540, D5 page 2340)
+
+[terms."adapted-basis"]
+tag = "0040"
+id = 5712
+name = "adapted basis"
+
+[terms."elementary-change-of-basis"]
+tag = "0041"
+id = 5713
+name = "elementary change of basis"
+
+[terms."lattice-chain"]
+tag = "0042"
+id = 5714
+name = "lattice chain"
+
+[terms."elementary-chain"]
+tag = "0043"
+id = 5715
+name = "elementary chain"
+
+[terms."depth-of-a-chain"]
+tag = "0044"
+id = 5716
+name = "depth of a chain"
+
+[terms."block-of-a-chain"]
+tag = "0045"
+id = 5717
+name = "block of a chain"
+
+[terms."truncated-type"]
+tag = "0046"
+id = 5718
+name = "truncated type"
+
+[terms."tahara-vector"]
+tag = "0047"
+id = 5719
+name = "Tahara vector"
+
+[terms."universal-model"]
+tag = "0048"
+id = 5720
+name = "universal model"
+
+[terms."mixed-model"]
+tag = "0049"
+id = 5721
+name = "mixed model"
+
+[terms."level-profile"]
+tag = "004A"
+id = 5722
+name = "level profile"
+
+[terms."condition-t0"]
+tag = "004B"
+id = 5723
+name = "condition (T0)"
+
+[terms."condition-t1"]
+tag = "004C"
+id = 5724
+name = "condition (T1)"
+
+[terms."class-poset"]
+tag = "004D"
+id = 5725
+name = "class poset"
+
+[terms."shape-of-incomparable-pairs"]
+tag = "004E"
+id = 5726
+name = "shape of incomparable pairs"
+
+[terms."atom-of-an-enumeration"]
+tag = "004F"
+id = 5727
+name = "atom (of an enumeration)"
+
+[terms."configuration-of-an-enumeration"]
+tag = "004G"
+id = 5728
+name = "configuration (of an enumeration)"
+
 # ---------------------------------------------------------------------------------------------
 # The rows of results.html, in their order.
 
