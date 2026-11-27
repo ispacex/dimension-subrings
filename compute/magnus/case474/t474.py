@@ -223,16 +223,27 @@ def gcd_(a, b):
     from math import gcd
     return gcd(a, b)
 
+def is_elementary(K, A, s, k):
+    """3K_3 <= K_{3^k} (Sec. 15.2); Prop. 21.4 is stated only for such chains"""
+    top = [np.array(v) for v in K[3 ** k]]
+    K3x3 = [3 * np.eye(s, dtype=np.int64)[h] * (3 if h in A else 1) for h in range(s)]
+    return hnf_key(top + K3x3, s, 3 ** k) == hnf_key(top, s, 3 ** k)
+
 def cross_mode(S, k, drop):
-    """per configuration of 'blocks' (mod 3^k): full model ok == mixed model ok (Sec. 21.3, equivalence)"""
-    n = diff = nf = 0
+    """per ELEMENTARY configuration of 'blocks' (mod 3^k): full model ok == mixed model ok (Sec. 21.3, equivalence).
+    'blocks' also contains non-elementary singleton labels (labels_k is a superset); they are skipped and only counted
+    (for them Lemma 15.2 fails and the two models may differ: reported as 'nonelem-different', information only)."""
+    n = diff = nf = ne = ned = 0
     for d in capped_types_k(S, k):
         M = None
         for P, A, K in configs(d, k):
             if M is None: M = Model(d, 3 ** k, drop); MM = MixedModel(d, drop)
             a, _ = M.check(K); b, _ = MM.check(mixed_K_from_chain(d, k, K))
+            if not is_elementary(K, A, S, k):
+                ne += 1; ned += (a != b); continue
             n += 1; diff += (a != b); nf += (not a)
-    print("CROSS S", S, "k", k, "drop", sorted(drop), "configs", n, "full-model failing", nf, "DIFFERENT", diff, flush=True)
+    print("CROSS S", S, "k", k, "drop", sorted(drop), "nonelementary-skipped", ne, "nonelem-different", ned,
+          "configs", n, "full-model failing", nf, "DIFFERENT", diff, flush=True)
     return diff
 
 def cross_elem_mode(dstr, k, drop):
