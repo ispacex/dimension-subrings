@@ -1,5 +1,5 @@
 #!/bin/bash
-# MATH-474 (wiki 891 Sec. 21.3-21.4): the mixed model mod 9 -- elementary chains for every k at once.
+# MATH-474 (wiki 891 Sec. 22.3-22.4): the mixed model mod 9 -- elementary chains for every k at once.
 # Usage: run_case474b.sh [PAR]
 #  1. cross: equivalence "full model mod 3^k" <=> "mixed model mod 9" configuration by configuration:
 #     (T1) block configurations S = 2, 3 at k = 3, 4; all elementary chains of every capped type of length 3 at k = 4.

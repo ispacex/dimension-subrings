@@ -1,9 +1,9 @@
 #!/bin/bash
-# MATH-474 (wiki 891 Sec. 21): gamma_4 = C_{3^k}, k >= 4 -- (T0) for every k, (T1) at k = 4 (and evidence at k = 5).
+# MATH-474 (wiki 891 Sec. 22): gamma_4 = C_{3^k}, k >= 4 -- (T0) for every k, (T1) at k = 4 (and evidence at k = 5).
 # Usage: run_case474.sh [PAR]
-#  1. diag: Claim D (Prop. 21.1) on random diagonal chains, S = 3, 4, 5, k = 4..7, with the term-by-term check;
+#  1. diag: Claim D (Prop. 22.1) on random diagonal chains, S = 3, 4, 5, k = 4..7, with the term-by-term check;
 #     controls without (D2) (must fail), without (B), (Kt), (Ko) (reported).
-#  2. blocks k = 4: all configurations of <= 3 blocks (>= 1 pair, kinds of Lemma 21.3, both signs) on all capped
+#  2. blocks k = 4: all configurations of <= 3 blocks (>= 1 pair, kinds of Lemma 22.3, both signs) on all capped
 #     (cut 81) types of length 2, 3 with (T1); controls without (D2), (Kt) at S = 3 (must fail).  A direct check in
 #     the full model mod 81; the proof for every k uses the mixed model (run_case474b.sh, all lengths 2..6).
 #  3. orbits: all elementary chains, capped types of length 3, k = 3 (consistency with case471) and k = 4:
