@@ -1,6 +1,8 @@
 #!/bin/bash
 # MATH-475 (wiki 891 Sec. 21): classes 2A1N / 1A2N (and 2A2N) of elementary chains mod 27 beyond (T1).
 # Usage: run_case475.sh MODE [PAR] [NPARTS]
+#   full PAR NPARTS CLASS...  every configuration of the classes (e.g. 2A1N 1A2N) + controls D2/Kt on part 0
+#   fullpts PAR NPARTS CLASS...  the same with parts by point set (2A2N)
 #   pilot PAR NPARTS [nostruct]  (a) (skipped with 'nostruct') struct475: block sizes on orbits for every s = 5 signature (all classes) and a fixed set of
 #                         s = 6 signatures; claim: max block size == Tits prediction everywhere (MISMATCH 0);
 #                     (b) enum475 cat / count for 2A1N, 1A2N, 2A2N;
@@ -47,6 +49,42 @@ if [ "$MODE" = pilot ]; then
       echo "control $C without $D: failing ${c:-missing} (must be > 0)"; [ "${c:-0}" -gt 0 ] || st=1
     done
   done
+fi
+if [ "$MODE" = full ] || [ "$MODE" = fullpts ]; then
+  # full PAR NPARTS CLASS...: every configuration of each class, parts 0..NPARTS-1 by running number (enum475 run),
+  # full model, plus the controls without (D2) and without (Kt) on part 0.
+  # fullpts: the same with parts by point set (enum475 runpts, RUN475P lines; the enumeration is not repeated per part,
+  # used for 2A2N); there checked == COUNTSUM is a real check that the point-set parts partition the configurations.
+  # Claims: NPARTS distinct parts per class, checked total == COUNTSUM, FAILING 0, both controls fail (> 0).
+  # The controls depend on what part 0 contains; with a very large NPARTS a control can come out 0 (a false alarm,
+  # never a false pass) -- then use fewer parts.
+  PAR=$1; NP=$2; shift 2
+  [ $# -ge 1 ] || { echo "no classes given"; exit 2; }
+  SUB=run; T=RUN475; [ "$MODE" = fullpts ] && { SUB=runpts; T=RUN475P; }
+  for C in "$@"; do python3 enum475.py count $C; done > "$OUT/count.txt" 2>&1
+  grep COUNTSUM "$OUT/count.txt"
+  for C in "$@"; do for p in $(seq 0 $((NP - 1))); do echo "$SUB $C $p $NP -"; done
+    for D in D2 Kt; do echo "$SUB $C 0 $NP $D"; done; done > "$OUT/$MODE.args"
+  xargs -P "$PAR" -L 1 python3 enum475.py < "$OUT/$MODE.args" > "$OUT/$MODE.txt" 2>&1 || { echo "xargs: a part exited non-zero"; st=1; }
+  grep -v '^FAIL ' "$OUT/$MODE.txt" | sort
+  grep '^FAIL ' "$OUT/$MODE.txt" | head -20
+  for C in "$@"; do
+    M='$1==T && $2==C && $6==NP && $8=="[]"'
+    want=$(awk -v C=$C '$1=="COUNTSUM" && $2==C {print $4}' "$OUT/count.txt")
+    nl=$(awk -v T=$T -v C=$C -v NP=$NP "$M && !seen[\$4]++" "$OUT/$MODE.txt" | wc -l)
+    got=$(awk -v T=$T -v C=$C -v NP=$NP "$M {s+=\$10} END{print s+0}" "$OUT/$MODE.txt")
+    f=$(awk -v T=$T -v C=$C -v NP=$NP "$M {s+=\$NF} END{print s+0}" "$OUT/$MODE.txt")
+    z=$(awk -v T=$T -v C=$C -v NP=$NP "$M {s+=\$12} END{print s+0}" "$OUT/$MODE.txt")
+    le=$(awk -v T=$T -v C=$C -v NP=$NP "$M && \$13==\"L=0\" {s+=\$14} END{print s+0}" "$OUT/$MODE.txt")
+    echo "$C: parts $nl of $NP, checked $got of $want, sigma!=0 $z, L=0 $le, FAILING $f"
+    [ "$nl" -eq "$NP" ] && [ "$got" = "$want" ] && [ "$f" -eq 0 ] || st=1
+    for D in D2 Kt; do
+      c=$(awk -v T=$T -v C=$C -v D="['$D']" '$1==T && $2==C && $8==D {print $NF}' "$OUT/$MODE.txt")
+      echo "control $C without $D (part 0): failing ${c:-missing} (must be > 0)"; [ "${c:-0}" -gt 0 ] || st=1
+    done
+  done
+elif [ "$MODE" != pilot ]; then
+  echo "unknown mode $MODE"; exit 2
 fi
 persist
 echo "overall ok=$((1-st))"

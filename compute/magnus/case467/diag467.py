@@ -181,6 +181,7 @@ class Model:
                 if r: sconds.append((r, mod))
         Sg = kernel(sconds, self.NS, mod)
         self.last_unit = any(bool((np.asarray(g) % 3).any()) for g in Sg)
+        self.last_emptyL = not Lg                          # R = 0 holds trivially (read by case475)
         if not Lg or not Sg: return True, bool(Sg)
         Lm = np.array(Lg) % mod; Sm = np.array(Sg) % mod
         val = (Lm @ self.RB % mod) @ Sm.T % mod
