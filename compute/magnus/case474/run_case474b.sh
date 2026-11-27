@@ -5,7 +5,8 @@
 #     (T1) block configurations S = 2, 3 at k = 3, 4; all elementary chains of every capped type of length 3 at k = 4.
 #     Also without (D2) (failures must coincide).  Control: without (Kt) Lemma 15.2 fails and the two must differ.
 #  2. mixed: (T1) block configurations on types cut at 9, length 2..6, all level profiles; R = 0.  Controls (D2), (Kt).
-#  3. melem: ALL elementary chains, types cut at 9 of length 2, 3, 4, all A, all level profiles; R = 0.
+#  3. melem: ALL elementary chains, types cut at 9 of length 2, 3 (and 4 if MELEM4 is set: ~10 CPU-h), all A, all
+#     level profiles; R = 0.
 #     Controls (D2), (Kt) at S = 3.
 # Durable copy: $JOB_CACHE/m474b/<date>.  Exit 0 iff every claim holds and every control fails.
 set -uo pipefail
@@ -25,7 +26,7 @@ NP=12
 { for S in 2 3 4 5 6; do for p in $(seq 0 $((NP - 1))); do echo "mixed $S $p $NP"; done; done
   for S in 3 4; do for p in $(seq 0 $((NP - 1))); do echo "mixed $S $p $NP D2"; echo "mixed $S $p $NP Kt"; done; done; } > "$OUT/mixed.args"
 NE=54
-{ for S in 2 3; do echo "melem $S 0 1"; done; for p in $(seq 0 $((NE - 1))); do echo "melem 4 $p $NE"; done
+{ for S in 2 3; do echo "melem $S 0 1"; done; [ -n "${MELEM4:-}" ] && for p in $(seq 0 $((NE - 1))); do echo "melem 4 $p $NE"; done
   echo "melem 3 0 1 D2"; echo "melem 3 0 1 Kt"; } > "$OUT/melem.args"
 for f in cross mixed melem; do
   xargs -P "$PAR" -L 1 python3 $T < "$OUT/$f.args" > "$OUT/$f.txt" 2>&1
