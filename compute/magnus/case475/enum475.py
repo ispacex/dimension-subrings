@@ -22,6 +22,8 @@ Open Math OS note (whose explicit representatives use the opposite orientation o
 Modes (one summary line; exit status 1 iff a claim fails):
   cat C                 the catalogue: per block shape, the number of indecomposable orbits (compare: Tits roots)
   count C               number of U-configurations by size |U|, no model checks
+  runpts C PART NPARTS [DROP]  the same, but parts by point set (each part enumerates only its point sets; used for
+                        the full 2A2N run); prints RUN475P lines
   run C PART NPARTS [DROP]  check R = 0 on the configurations with running number = PART mod NPARTS
                         (NPARTS large = a uniform sample, used by the pilot); with DROP (D2, Kt) the model without that
                         condition (control: must fail somewhere; exit 0 regardless)
@@ -89,11 +91,16 @@ def point_sets(maxpts):
                 pts = tuple((x, c) for x, cc in zip(v, cl) for c in cc)
                 if len(pts) <= maxpts: yield pts
 
-def configs(C):
+def configs(C, ppart=None):
+    """all U-configurations; with ppart = (PART, NPARTS) only the point sets with running number = PART mod NPARTS
+    (among the point sets that pass the shape filter) -- parts by point set, so the enumeration is not repeated"""
     ca, cn, b = CLASSES[C]
+    np_ = -1
     for pts in point_sets(b + 2):
         sh = shape_pts(pts)
         if sh == (0, 0) or sh[0] > ca or sh[1] > cn: continue
+        np_ += 1
+        if ppart and np_ % ppart[1] != ppart[0]: continue
         atoms = []
         for k in range(1, b + 1):
             for blk in itertools.combinations_with_replacement(pts, k):
@@ -150,10 +157,12 @@ def count_mode(C):
     for k in sorted(by): print("COUNT", C, "S", k[0], "blocks", "+".join(map(str, k[1])), by[k])
     print("COUNTSUM", C, "configs", tot, "sec", round(time.time() - t0, 1), flush=True)
 
-def run_mode(C, part, nparts, drop):
+def run_mode(C, part, nparts, drop, bypts=False):
     t0 = time.time(); models = {}; n = nf = nz = 0; secS = {}; cntS = {}
-    for t, (pts, blks) in enumerate(configs(C)):
-        if t % nparts != part: continue
+    gen = configs(C, (part, nparts)) if bypts else configs(C)
+    for t, (pts, blks) in enumerate(gen):
+        if not bypts and t % nparts != part: continue
+        if len(models) > 2000: models.clear()          # bound the memory of the model cache
         t1 = time.time()
         d, A, X9, X27 = assemble(blks); s = len(d)
         key = tuple(d)
@@ -164,7 +173,7 @@ def run_mode(C, part, nparts, drop):
         if not ok and not drop:
             print("FAIL", C, "d", d, "A", sorted(A), "X9", X9, "X27", X27, flush=True)
     per = " ".join("S%d:%d/%.1fs" % (s, cntS[s], secS[s]) for s in sorted(cntS))
-    print("RUN475", C, "part", part, "of", nparts, "drop", sorted(drop), "checked", n, "sigma!=0", nz,
+    print("RUN475" + ("P" if bypts else ""), C, "part", part, "of", nparts, "drop", sorted(drop), "checked", n, "sigma!=0", nz,
           "per-size[count/sec]", per, "sec", round(time.time() - t0, 1), "FAILING", nf, flush=True)
     return nf
 
@@ -172,8 +181,8 @@ if __name__ == '__main__':
     m, C = sys.argv[1], sys.argv[2]
     if m == 'cat': cat_mode(C); sys.exit(0)
     if m == 'count': count_mode(C); sys.exit(0)
-    if m == 'run':
+    if m in ('run', 'runpts'):
         part, nparts = int(sys.argv[3]), int(sys.argv[4])
         drop = tuple(x for x in (sys.argv[5].split(',') if len(sys.argv) > 5 else []) if x and x != '-')
-        f = run_mode(C, part, nparts, drop)
+        f = run_mode(C, part, nparts, drop, m == 'runpts')
         sys.exit(0 if drop else (1 if f else 0))
