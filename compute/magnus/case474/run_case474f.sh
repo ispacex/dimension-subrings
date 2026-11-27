@@ -12,7 +12,7 @@ cd "$(dirname "$0")"
 . ../case467/env467.sh
 OUT=${JOB_OUT:-$PWD/out474f}; mkdir -p "$OUT"; st=0
 F=fin474.py
-/usr/bin/time -f "catalog %e s" python3 $F catalog 5 > "$OUT/catalog.txt" 2>&1; cat "$OUT/catalog.txt"
+t0=$SECONDS; python3 $F catalog 5 > "$OUT/catalog.txt" 2>&1; echo "TIME $((SECONDS - t0)) s: catalog 5" >> "$OUT/catalog.txt"; cat "$OUT/catalog.txt"
 grep -q "roots without a spanned End=1 representative 0 " "$OUT/catalog.txt" || { echo "catalog: missing roots"; st=1; }
 if [ "$MODE" = pilot ]; then
   { echo "count 4 4 1000000000 0 2"; echo "count 4 4 1000000000 1 2"; echo "count 5 2 1000000000 0 $NP"; } > "$OUT/count.args"
@@ -21,7 +21,7 @@ else
   { for p in $(seq 0 $((NP - 1))); do echo "count 5 2 1000000000 $p $NP"; done; } > "$OUT/count.args"
   { for p in $(seq 0 $((NP - 1))); do echo "check 5 $p $NP"; done; echo "check 5 0 $NP D2"; echo "check 5 0 $NP Kt"; } > "$OUT/check.args"
 fi
-run() { /usr/bin/time -f "%e s: $*" python3 $F "$@"; }
+run() { local t0=$SECONDS; python3 $F "$@"; local rc=$?; echo "TIME $((SECONDS - t0)) s: $*"; return $rc; }
 export -f run; export F
 xargs -P "$PAR" -L 1 bash -c 'run "$@"' _ < "$OUT/count.args" > "$OUT/count.txt" 2>&1; rc1=$?
 xargs -P "$PAR" -L 1 bash -c 'run "$@"' _ < "$OUT/check.args" > "$OUT/check.txt" 2>&1; rc2=$?
