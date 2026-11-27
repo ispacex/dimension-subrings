@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """MATH-474 (wiki 891 Sec. 23): chains of DEPTH c -- the mixed model mod 3^(c+1), uniform in k.
 
-Depth of a chain (A, K_3 >= K_9 >= ... >= K_{3^k}), 3K_e <= K_{3e}: the least c >= 1 with 3^c K_3 <= K_{3^k}
-(always c <= k-1; c = 1: elementary, Sec. 15.2).  Prop. 23.1: if the depth is <= c <= k-1, every sigma in Sigma
+Depth of a chain (A, K_3 >= K_9 >= ... >= K_{3^k}), 3K_e <= K_{3e}: the least c >= 0 with 3^c K_3 <= K_{3^k}
+(always c <= k-1; c <= 1: elementary, Sec. 15.2).  Prop. 23.1: if the depth is <= c <= k-1, every sigma in Sigma
 (model mod 3^k) is divisible by 3^(k-c-1), and R = 0 on Lambda x Sigma mod 3^k  <=>  R = 0 mod 3^(c+1) on the
 depth-c MIXED model: modulus 3^(c+1), type cut at 3^(c+1), every condition of index level (3^k, d(i)) with the
 lattice L(i) = K_{(3^k, d(i))} of that index (for c = 1: Prop. 22.4).
@@ -11,6 +11,8 @@ Modes (one summary line each; exit 1 iff a claim fails; with DROP the line is a 
   cross S K C N SEED [DROP]  N random chains mod 3^K on random capped (cut 3^K) types of length S; for those of depth
                              <= C: (i) all generators of Sigma divisible by 3^(K-C-1); (ii) verdict of the full model mod
                              3^K == verdict of the depth-C mixed model.  Reported by depth.
+  divctl S K C N SEED        control for (i): on random chains of depth > C count those with a generator of Sigma
+                             NOT divisible by 3^(K-C-1) (must be > 0, so the divisibility test can say no)
   mdeep S C PART NPARTS [DROP]  all capped (cut 3^(C+1)) types of length S (index = PART mod NPARTS), all A, all
                              profiles: monotone chains (one lattice per distinct value d >= 9) of lattices
                              3^C K_3 <= L <= K_3, L >= 3K_3 for d = 9, K_3 for d = 3;  R = 0 in the depth-C mixed model.
@@ -110,6 +112,18 @@ def cross_mode(S, k, C, N, seed, drop):
           "sigma-not-divisible", ndiv, "DIFFERENT", ndiff, flush=True)
     return ndiff + ndiv
 
+def divctl_mode(S, k, C, N, seed):
+    rng = random.Random(seed); types = capped_types_k(S, k); deep = bad = 0; cache = {}
+    for it in range(N):
+        d = rng.choice(types); A = {h for h in range(S) if rng.random() < 0.5}
+        K = rand_chain(S, k, A, rng, bias=0.2)
+        if depth(K, A, S, k) <= C: continue
+        if tuple(d) not in cache: cache[tuple(d)] = Model(d, 3 ** k)
+        deep += 1
+        if any(int(x) % 3 ** (k - C - 1) for g in sigma_gens(cache[tuple(d)], K) for x in g): bad += 1
+    print("DIVCTL S", S, "k", k, "C", C, "N", N, "seed", seed, "depth>C", deep, "NOT-DIVISIBLE", bad, flush=True)
+    return 0
+
 @lru_cache(None)
 def lattice_table(s, c):
     """all lattices 3^c Z^s <= L <= Z^s (coordinates in the basis b of K_3) as HNF rows; containment; L >= 3Z^s"""
@@ -174,6 +188,8 @@ if __name__ == '__main__':
         S, k, C, N, seed = map(int, sys.argv[2:7])
         drop = sys.argv[7].split(',') if len(sys.argv) > 7 and sys.argv[7] else ()
         f = cross_mode(S, k, C, N, seed, drop); sys.exit(0 if drop else (1 if f else 0))
+    if m == 'divctl':
+        sys.exit(divctl_mode(*map(int, sys.argv[2:7])))
     if m == 'mdeep':
         S, C, part, nparts = map(int, sys.argv[2:6])
         drop = sys.argv[6].split(',') if len(sys.argv) > 6 and sys.argv[6] else ()

@@ -19,7 +19,7 @@ OUT=${JOB_OUT:-$PWD/out474n}; mkdir -p "$OUT"; st=0
 python3 loc474.py cost 5 400 1 > "$OUT/cost.txt" 2>&1; cat "$OUT/cost.txt"
 { echo "cross 3 4 2 4000 1"; echo "cross 3 5 2 4000 2"; echo "cross 3 5 3 4000 3"; echo "cross 3 6 3 3000 4"
   echo "cross 3 6 2 3000 5"; echo "cross 4 5 2 1500 6"
-  echo "cross 3 5 2 4000 2 D2"; echo "cross 3 6 3 3000 4 D2"; echo "cross 3 5 2 4000 2 Kt"; } > "$OUT/cross.args"
+  echo "divctl 3 5 2 2000 8"; echo "cross 3 5 2 4000 2 D2"; echo "cross 3 6 3 3000 4 D2"; echo "cross 3 5 2 4000 2 Kt"; } > "$OUT/cross.args"
 NP=16
 { for p in $(seq 0 $((NP - 1))); do echo "mdeep 3 2 $p $NP"; done; echo "mdeep 3 1 0 1"
   echo "mdeep 3 2 0 $NP D2"; echo "mdeep 3 2 0 $NP Kt"; } > "$OUT/mdeep.args"
@@ -30,10 +30,13 @@ xargs -P "$PAR" -L 1 python3 loc474.py < "$OUT/loc.args" > "$OUT/loc.txt" 2>&1
 cat "$OUT/cross.txt" "$OUT/mdeep.txt" "$OUT/loc.txt"
 # claims
 nc=$(grep -c "^DEEPCROSS.*drop \[\] " "$OUT/cross.txt"); dc=$(grep "^DEEPCROSS.*drop \[\] " "$OUT/cross.txt" | awk '{s+=$NF} END{print s+0}')
-echo "cross: $nc of 6 lines, DIFFERENT+nondivisible $dc"; [ "$nc" -eq 6 ] && [ "$dc" -eq 0 ] || st=1
+nd=$(grep "^DEEPCROSS.*drop \[\] " "$OUT/cross.txt" | sed 's/.*sigma-not-divisible \([0-9]*\).*/\1/' | awk '{s+=$1} END{print s+0}')
+dc=$((dc + nd)); echo "cross: $nc of 6 lines, DIFFERENT+nondivisible $dc"; [ "$nc" -eq 6 ] && [ "$dc" -eq 0 ] || st=1
 ff=$(grep "^DEEPCROSS.*'D2'" "$OUT/cross.txt" | grep -o "\[[0-9]*, [0-9]*, [0-9]*, [0-9]*\]" | awk -F'[][, ]+' '{s+=$4} END{print s+0}')
 fd=$(grep "^DEEPCROSS.*'D2'" "$OUT/cross.txt" | awk '{s+=$NF} END{print s+0}')
 echo "cross control without D2: full failing $ff (must be > 0), DIFFERENT $fd (must be 0)"; [ "$ff" -gt 0 ] && [ "$fd" -eq 0 ] || st=1
+xd=$(grep "^DIVCTL" "$OUT/cross.txt" | sed 's/.*NOT-DIVISIBLE \([0-9]*\).*/\1/'); xd=${xd:-0}
+echo "divisibility control (depth > C): not divisible $xd (must be > 0)"; [ "$xd" -gt 0 ] || st=1
 nm=$(grep -c "^MDEEP S 3 C 2 part .* drop \[\] " "$OUT/mdeep.txt")
 pm=$(grep "^MDEEP S 3 C 2 part .* drop \[\] " "$OUT/mdeep.txt" | sed 's/.*profiles \([0-9]*\).*/\1/' | awk '{s+=$1} END{print s+0}')
 fm=$(grep "^MDEEP S 3 C 2 part .* drop \[\] " "$OUT/mdeep.txt" | sed 's/.*FAILING \([0-9]*\).*/\1/' | awk '{s+=$1} END{print s+0}')

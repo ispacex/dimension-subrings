@@ -11,7 +11,7 @@ Modes:
   cost S N SEED                 size of the full enumeration outside (T0), (T1) and measured CPU seconds per check
   local S [PART NPARTS] [DROP]  all LOCAL data on |U| = S: two monotone chains C_j ⊆ P_j of subspaces of K_3/3K_3
                                 (indexed by the distinct values d >= 9 of U): R_I = 0 on Lambda(P) x Sigma(C) for all I
-                                with I ⊆ U, |I| = S (smaller I are covered by smaller U).
+                                with I ⊆ U, |I| in {2, 3} for S <= 3 (|I| = 3 for S > 3; information only).
 """
 import itertools, os, sys
 import numpy as np
