@@ -14,6 +14,10 @@ elementary chain on the block (orbits under the block's gen_mats, computed by br
 iff no member splits along coordinates, struct475.max_atom).  Kept: at least one multi-index atom, and the
 incomparable pairs of U have <= ca A-values and <= cn N-values ((ca, cn) = (2,1), (1,2), (2,2)), shape not T0.
 This is a superset of what occurs inside a chain of class C (restrictions of C have such shapes).
+Values are capped as in wiki 891 Sec. 17.1 (ratios of neighbours cut at 27): the legality of a move and gen_mats
+depend on d(i), d(j) only through min(d(j)/d(i), 27) and the thresholds 3, 9, so a block orbit computed on the capped
+values of U is the orbit for the true values.  The catalogue is computed here from the orbits, not taken from the
+Open Math OS note (whose explicit representatives use the opposite orientation of the chains, review of 27.11.2026).
 
 Modes (one summary line; exit status 1 iff a claim fails):
   cat C                 the catalogue: per block shape, the number of indecomposable orbits (compare: Tits roots)
