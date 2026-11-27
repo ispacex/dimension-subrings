@@ -195,3 +195,178 @@ if __name__ == '__main__':
         sys.exit(0 if drop else (1 if f else 0))
     if m == 'orbits':
         sys.exit(1 if orbits_mode([int(a) for a in sys.argv[2].split(',')], int(sys.argv[3])) else 0)
+
+# ---------------------------------------------------------------- the mixed model mod 9 (Sec. 21.3): all k at once
+class MixedModel(Model):
+    """Model mod 9 for an ELEMENTARY chain mod 3^k written as sigma = 3^(k-2) sigma' (Lemma 15.2): every condition of
+    index level (3^k, d(i)) uses the lattice L(i) of that index, given per index; coefficients mod 9 (they depend on
+    d only through the type cut at 9).  K passed to check(): {('L', h): generators of L(h)}."""
+    def __init__(self, d, drop=()):
+        super().__init__(d, 9, drop)
+        s = self.s; idx = range(s); dr = self.drop; V = []; t = 0
+        keys = []
+        if 'B' not in dr: keys += [i for i in idx]
+        if 'D2' not in dr: keys += [i for i, j in itertools.combinations(idx, 2)]
+        if 'D1' not in dr: keys += [i for i in idx]
+        assert len(keys) == len(self.V)
+        self.V = [(vec, ('L', i)) for (vec, e), i in zip(self.V, keys)]
+        fk = [(m if d[m] <= d[n] else n) for m, n in itertools.product(idx, idx)] + \
+             [a for a, b in itertools.combinations(idx, 2)]
+        assert len(fk) == len(self.F)
+        self.F = [(fv, ('L', h), kind) for (fv, e, kind), h in zip(self.F, fk) if kind not in self.drop]
+
+def mixed_K_from_chain(d, k, K):
+    """L(h) = K_{(3^k, d(h))}"""
+    return {('L', h): K[gcd_(3 ** k, d[h])] for h in range(len(d))}
+
+def gcd_(a, b):
+    from math import gcd
+    return gcd(a, b)
+
+def cross_mode(S, k, drop):
+    """per configuration of 'blocks' (mod 3^k): full model ok == mixed model ok (Sec. 21.3, equivalence)"""
+    n = diff = nf = 0
+    for d in capped_types_k(S, k):
+        M = None
+        for P, A, K in configs(d, k):
+            if M is None: M = Model(d, 3 ** k, drop); MM = MixedModel(d, drop)
+            a, _ = M.check(K); b, _ = MM.check(mixed_K_from_chain(d, k, K))
+            n += 1; diff += (a != b); nf += (not a)
+    print("CROSS S", S, "k", k, "drop", sorted(drop), "configs", n, "full-model failing", nf, "DIFFERENT", diff, flush=True)
+    return diff
+
+def cross_elem_mode(dstr, k, drop):
+    """the same on ALL elementary chains of one type (any A), not only (T1) blocks"""
+    d = [int(a) for a in dstr.split(',')]; s = len(d)
+    M = Model(d, 3 ** k, drop); MM = MixedModel(d, drop); n = diff = nf = 0
+    for r in range(s + 1):
+        for A in itertools.combinations(range(s), r):
+            for K in elem_chains(s, k, set(A)):
+                a, _ = M.check(K); b, _ = MM.check(mixed_K_from_chain(d, k, K))
+                n += 1; diff += (a != b); nf += (not a)
+    print("CROSSE type", d, "k", k, "drop", sorted(drop), "chains", n, "full-model failing", nf, "DIFFERENT", diff, flush=True)
+    return diff
+
+def seqs_single(cls, t):
+    lo, hi = (3, 9) if cls == 'A' else (1, 3)
+    return [tuple([lo] * a + [hi] * (t - a)) for a in range(t + 1)]
+
+def seqs_pair(t):
+    """monotone sequences of pair lattices over levels 1..t (Lemma 21.3): F (= K_3), W_c, G_c, D"""
+    out = set()
+    for c in (1, -1):
+        for a in range(t + 1): out.add(tuple(['F'] * a + [('W', c)] * (t - a)))
+        for a in range(t + 1):
+            for b in range(t - a + 1): out.add(tuple(['F'] * a + [('G', c)] * b + ['D'] * (t - a - b)))
+    return sorted(out, key=str)
+
+def pair_gens(lab):
+    if lab == 'F': return [(3, 0), (0, 1)]
+    if lab == 'D': return [(9, 0), (0, 3)]
+    kind, c = lab
+    return [(3, (-c) % 9), (0, 3)] if kind == 'W' else [(3, c % 9), (0, 3)]
+
+def mixed_configs(d):
+    """(T1) block configurations (<= 3 blocks, >= 1 pair) on the type d cut at 9, with every level profile:
+    level j(h) = rank of d(h) among the distinct values >= 9 (j = 0 for d(h) = 3, lattice K_3); per block a monotone
+    sequence of lattices over levels 1..t (repetitions allowed, so this covers every k and every chain profile)."""
+    s = len(d); E = np.eye(s, dtype=np.int64)
+    vals = sorted({x for x in d if x >= 9}); t = len(vals)
+    lev = [0 if d[h] == 3 else vals.index(d[h]) + 1 for h in range(s)]
+    for P in partitions(list(range(s)), d):
+        if len(P) > 3: continue
+        pairs = [b for b in P if len(b) == 2]
+        if not pairs: continue
+        if len({d[x] for x, y in pairs}) > 1 or len({d[y] for x, y in pairs}) > 1: continue
+        singles = [b[0] for b in P if len(b) == 1]
+        for cls in itertools.product('AN', repeat=len(singles)):
+            A = {x for x, y in pairs} | {h for h, c in zip(singles, cls) if c == 'A'}
+            if not T1(d, A): continue
+            for ss in itertools.product(*[seqs_single(c, t) for c in cls]):
+                for ps in itertools.product(seqs_pair(t), repeat=len(pairs)):
+                    L = {}
+                    for h in range(s):
+                        j = lev[h]; g = []
+                        for q in range(s): g.append(E[q] * (3 if q in A else 1) * 3)     # 3K_3 (9Z^s implicit)
+                        if j == 0:
+                            g = [E[q] * (3 if q in A else 1) for q in range(s)]
+                        else:
+                            for hh, sq in zip(singles, ss): g.append(E[hh] * sq[j - 1])
+                            for (x, y), sq in zip(pairs, ps):
+                                for gx, gy in pair_gens(sq[j - 1]): g.append(gx * E[x] + gy * E[y])
+                        L[('L', h)] = g
+                    yield P, A, L
+
+def capped9(S):
+    from diag467 import capped_types
+    return capped_types(S, 9)
+
+def mixed_mode(S, part, nparts, drop):
+    ncase = nfail = nt = 0
+    for t_, d in enumerate(capped9(S)):
+        if t_ % nparts != part: continue
+        nt += 1; MM = None
+        for P, A, L in mixed_configs(d):
+            if MM is None: MM = MixedModel(d, drop)
+            ok, _ = MM.check(L); ncase += 1; nfail += (not ok)
+    print("MIXED S", S, "part", part, "of", nparts, "drop", sorted(drop), "types", nt, "configs", ncase,
+          "FAILING", nfail, flush=True)
+    return nfail
+
+def melem_mode(S, part, nparts, drop):
+    """ALL elementary chains, every k at once (Sec. 21.4): capped (cut 9) types of length S (index = PART mod NPARTS),
+    every A, every chain X_1 >= ... >= X_t of subspaces of K_3/3K_3 (t = number of distinct values d >= 9, level of
+    an index = rank of its d among them; L = 3K_3 + X_level, K_3 for d = 3); R = 0 in the mixed model mod 9."""
+    from diag467 import subspaces, rref3
+    subs = subspaces(S)
+    def inside(Y, X): return rref3(list(X) + list(Y), S) == X
+    def chains(t, X=None):
+        if t == 0: yield (); return
+        for Y in subs:
+            if X is None or inside(Y, X):
+                for rest in chains(t - 1, Y): yield (Y,) + rest
+    E = np.eye(S, dtype=np.int64)
+    ncase = nfail = nt = 0; ex = []
+    for t_, d in enumerate(capped9(S)):
+        if t_ % nparts != part: continue
+        nt += 1; MM = MixedModel(d, drop)
+        vals = sorted({x for x in d if x >= 9}); t = len(vals)
+        lev = [0 if d[h] == 3 else vals.index(d[h]) + 1 for h in range(S)]
+        allch = list(chains(t))
+        for r in range(S + 1):
+            for A in itertools.combinations(range(S), r):
+                A = set(A)
+                K3 = [E[q] * (3 if q in A else 1) for q in range(S)]
+                for ch in allch:
+                    L = {}
+                    for h in range(S):
+                        if lev[h] == 0: L[('L', h)] = K3; continue
+                        X = ch[lev[h] - 1]
+                        L[('L', h)] = [3 * v for v in K3] + [np.array([x[q] * (3 if q in A else 1) for q in range(S)],
+                                                                      dtype=np.int64) for x in X]
+                    ok, _ = MM.check(L); ncase += 1
+                    if not ok:
+                        nfail += 1
+                        if len(ex) < 3: ex.append((d, sorted(A), ch))
+    print("MELEM S", S, "part", part, "of", nparts, "drop", sorted(drop), "types", nt, "chains", ncase,
+          "FAILING", nfail, ex, flush=True)
+    return nfail
+
+if __name__ == '__main__':
+    m = sys.argv[1]
+    if m == 'melem':
+        S, part, nparts = map(int, sys.argv[2:5])
+        drop = sys.argv[5].split(',') if len(sys.argv) > 5 and sys.argv[5] else ()
+        f = melem_mode(S, part, nparts, drop)
+        sys.exit(0 if drop else (1 if f else 0))
+    if m == 'cross':
+        S, k = map(int, sys.argv[2:4]); drop = sys.argv[4].split(',') if len(sys.argv) > 4 and sys.argv[4] else ()
+        sys.exit(1 if cross_mode(S, k, drop) else 0)
+    if m == 'crosse':
+        drop = sys.argv[4].split(',') if len(sys.argv) > 4 and sys.argv[4] else ()
+        sys.exit(1 if cross_elem_mode(sys.argv[2], int(sys.argv[3]), drop) else 0)
+    if m == 'mixed':
+        S, part, nparts = map(int, sys.argv[2:5])
+        drop = sys.argv[5].split(',') if len(sys.argv) > 5 and sys.argv[5] else ()
+        f = mixed_mode(S, part, nparts, drop)
+        sys.exit(0 if drop else (1 if f else 0))
