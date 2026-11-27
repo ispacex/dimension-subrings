@@ -50,58 +50,41 @@ if [ "$MODE" = pilot ]; then
     done
   done
 fi
-if [ "$MODE" = full ]; then
-  # full PAR NPARTS CLASS...: every configuration of each class (parts 0..NPARTS-1, full model), plus the controls
-  # without (D2) and without (Kt) on part 0.  Claims: NPARTS lines per class, checked total == COUNTSUM, FAILING 0,
-  # controls fail.
+if [ "$MODE" = full ] || [ "$MODE" = fullpts ]; then
+  # full PAR NPARTS CLASS...: every configuration of each class, parts 0..NPARTS-1 by running number (enum475 run),
+  # full model, plus the controls without (D2) and without (Kt) on part 0.
+  # fullpts: the same with parts by point set (enum475 runpts, RUN475P lines; the enumeration is not repeated per part,
+  # used for 2A2N); there checked == COUNTSUM is a real check that the point-set parts partition the configurations.
+  # Claims: NPARTS distinct parts per class, checked total == COUNTSUM, FAILING 0, both controls fail (> 0).
+  # The controls depend on what part 0 contains; with a very large NPARTS a control can come out 0 (a false alarm,
+  # never a false pass) -- then use fewer parts.
   PAR=$1; NP=$2; shift 2
+  [ $# -ge 1 ] || { echo "no classes given"; exit 2; }
+  SUB=run; T=RUN475; [ "$MODE" = fullpts ] && { SUB=runpts; T=RUN475P; }
   for C in "$@"; do python3 enum475.py count $C; done > "$OUT/count.txt" 2>&1
   grep COUNTSUM "$OUT/count.txt"
-  for C in "$@"; do for p in $(seq 0 $((NP - 1))); do echo "run $C $p $NP -"; done
-    for D in D2 Kt; do echo "run $C 0 $NP $D"; done; done > "$OUT/full.args"
-  xargs -P "$PAR" -L 1 python3 enum475.py < "$OUT/full.args" > "$OUT/full.txt" 2>&1
-  grep -v '^FAIL ' "$OUT/full.txt" | sort
-  grep '^FAIL ' "$OUT/full.txt" | head -20
+  for C in "$@"; do for p in $(seq 0 $((NP - 1))); do echo "$SUB $C $p $NP -"; done
+    for D in D2 Kt; do echo "$SUB $C 0 $NP $D"; done; done > "$OUT/$MODE.args"
+  xargs -P "$PAR" -L 1 python3 enum475.py < "$OUT/$MODE.args" > "$OUT/$MODE.txt" 2>&1 || { echo "xargs: a part exited non-zero"; st=1; }
+  grep -v '^FAIL ' "$OUT/$MODE.txt" | sort
+  grep '^FAIL ' "$OUT/$MODE.txt" | head -20
   for C in "$@"; do
-    want=$(awk -v C=$C '/^COUNTSUM/ && $2==C {print $4}' "$OUT/count.txt")
-    nl=$(awk -v C=$C '/^RUN475/ && $2==C && $8=="[]"' "$OUT/full.txt" | wc -l)
-    got=$(awk -v C=$C '/^RUN475/ && $2==C && $8=="[]" {s+=$10} END{print s+0}' "$OUT/full.txt")
-    f=$(awk -v C=$C '/^RUN475/ && $2==C && $8=="[]" {s+=$NF} END{print s+0}' "$OUT/full.txt")
-    z=$(awk -v C=$C '/^RUN475/ && $2==C && $8=="[]" {s+=$12} END{print s+0}' "$OUT/full.txt")
-    echo "$C: parts $nl of $NP, checked $got of $want, sigma!=0 $z, FAILING $f"
+    M='$1==T && $2==C && $6==NP && $8=="[]"'
+    want=$(awk -v C=$C '$1=="COUNTSUM" && $2==C {print $4}' "$OUT/count.txt")
+    nl=$(awk -v T=$T -v C=$C -v NP=$NP "$M && !seen[\$4]++" "$OUT/$MODE.txt" | wc -l)
+    got=$(awk -v T=$T -v C=$C -v NP=$NP "$M {s+=\$10} END{print s+0}" "$OUT/$MODE.txt")
+    f=$(awk -v T=$T -v C=$C -v NP=$NP "$M {s+=\$NF} END{print s+0}" "$OUT/$MODE.txt")
+    z=$(awk -v T=$T -v C=$C -v NP=$NP "$M {s+=\$12} END{print s+0}" "$OUT/$MODE.txt")
+    le=$(awk -v T=$T -v C=$C -v NP=$NP "$M && \$13==\"L=0\" {s+=\$14} END{print s+0}" "$OUT/$MODE.txt")
+    echo "$C: parts $nl of $NP, checked $got of $want, sigma!=0 $z, L=0 $le, FAILING $f"
     [ "$nl" -eq "$NP" ] && [ "$got" = "$want" ] && [ "$f" -eq 0 ] || st=1
     for D in D2 Kt; do
-      c=$(awk -v C=$C -v D="['$D']" '/^RUN475/ && $2==C && $8==D {print $NF}' "$OUT/full.txt")
+      c=$(awk -v T=$T -v C=$C -v D="['$D']" '$1==T && $2==C && $8==D {print $NF}' "$OUT/$MODE.txt")
       echo "control $C without $D (part 0): failing ${c:-missing} (must be > 0)"; [ "${c:-0}" -gt 0 ] || st=1
     done
   done
-fi
-if [ "$MODE" = fullpts ]; then
-  # fullpts: as full, but parts by point set (enumeration not repeated; for 2A2N).
-  # full PAR NPARTS CLASS...: every configuration of each class (parts 0..NPARTS-1, full model), plus the controls
-  # without (D2) and without (Kt) on part 0.  Claims: NPARTS lines per class, checked total == COUNTSUM, FAILING 0,
-  # controls fail.
-  PAR=$1; NP=$2; shift 2
-  for C in "$@"; do python3 enum475.py count $C; done > "$OUT/count.txt" 2>&1
-  grep COUNTSUM "$OUT/count.txt"
-  for C in "$@"; do for p in $(seq 0 $((NP - 1))); do echo "runpts $C $p $NP -"; done
-    for D in D2 Kt; do echo "runpts $C 0 $NP $D"; done; done > "$OUT/fullpts.args"
-  xargs -P "$PAR" -L 1 python3 enum475.py < "$OUT/fullpts.args" > "$OUT/fullpts.txt" 2>&1
-  grep -v '^FAIL ' "$OUT/fullpts.txt" | sort
-  grep '^FAIL ' "$OUT/fullpts.txt" | head -20
-  for C in "$@"; do
-    want=$(awk -v C=$C '/^COUNTSUM/ && $2==C {print $4}' "$OUT/count.txt")
-    nl=$(awk -v C=$C '/^RUN475P/ && $2==C && $8=="[]"' "$OUT/fullpts.txt" | wc -l)
-    got=$(awk -v C=$C '/^RUN475P/ && $2==C && $8=="[]" {s+=$10} END{print s+0}' "$OUT/fullpts.txt")
-    f=$(awk -v C=$C '/^RUN475P/ && $2==C && $8=="[]" {s+=$NF} END{print s+0}' "$OUT/fullpts.txt")
-    z=$(awk -v C=$C '/^RUN475P/ && $2==C && $8=="[]" {s+=$12} END{print s+0}' "$OUT/fullpts.txt")
-    echo "$C: parts $nl of $NP, checked $got of $want, sigma!=0 $z, FAILING $f"
-    [ "$nl" -eq "$NP" ] && [ "$got" = "$want" ] && [ "$f" -eq 0 ] || st=1
-    for D in D2 Kt; do
-      c=$(awk -v C=$C -v D="['$D']" '/^RUN475P/ && $2==C && $8==D {print $NF}' "$OUT/fullpts.txt")
-      echo "control $C without $D (part 0): failing ${c:-missing} (must be > 0)"; [ "${c:-0}" -gt 0 ] || st=1
-    done
-  done
+elif [ "$MODE" != pilot ]; then
+  echo "unknown mode $MODE"; exit 2
 fi
 persist
 echo "overall ok=$((1-st))"

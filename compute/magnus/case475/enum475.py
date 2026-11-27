@@ -22,11 +22,13 @@ Open Math OS note (whose explicit representatives use the opposite orientation o
 Modes (one summary line; exit status 1 iff a claim fails):
   cat C                 the catalogue: per block shape, the number of indecomposable orbits (compare: Tits roots)
   count C               number of U-configurations by size |U|, no model checks
-  runpts C PART NPARTS [DROP]  the same, but parts by point set (each part enumerates only its point sets; used for
-                        the full 2A2N run); prints RUN475P lines
   run C PART NPARTS [DROP]  check R = 0 on the configurations with running number = PART mod NPARTS
                         (NPARTS large = a uniform sample, used by the pilot); with DROP (D2, Kt) the model without that
                         condition (control: must fail somewhere; exit 0 regardless)
+  runpts C PART NPARTS [DROP]  as run, but parts by point set: part PART enumerates only the point sets with running
+                        number = PART mod NPARTS (no repeated enumeration; used for the full 2A2N run); RUN475P lines
+  RUN lines: ... checked n sigma!=0 nz L=0 nl ... -- nl = configurations whose space L is zero (R = 0 holds there
+  without a computation; reported so that the check is visibly non-trivial)
 """
 import itertools, os, sys, time
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -158,7 +160,7 @@ def count_mode(C):
     print("COUNTSUM", C, "configs", tot, "sec", round(time.time() - t0, 1), flush=True)
 
 def run_mode(C, part, nparts, drop, bypts=False):
-    t0 = time.time(); models = {}; n = nf = nz = 0; secS = {}; cntS = {}
+    t0 = time.time(); models = {}; n = nf = nz = nl = 0; secS = {}; cntS = {}
     gen = configs(C, (part, nparts)) if bypts else configs(C)
     for t, (pts, blks) in enumerate(gen):
         if not bypts and t % nparts != part: continue
@@ -168,12 +170,12 @@ def run_mode(C, part, nparts, drop, bypts=False):
         key = tuple(d)
         if key not in models: models[key] = Model(d, MOD, drop)
         ok, sig = models[key].check(chain_K(X9, X27, A, s))
-        n += 1; nf += (not ok); nz += sig
+        n += 1; nf += (not ok); nz += sig; nl += models[key].last_emptyL
         secS[s] = secS.get(s, 0) + time.time() - t1; cntS[s] = cntS.get(s, 0) + 1
         if not ok and not drop:
             print("FAIL", C, "d", d, "A", sorted(A), "X9", X9, "X27", X27, flush=True)
     per = " ".join("S%d:%d/%.1fs" % (s, cntS[s], secS[s]) for s in sorted(cntS))
-    print("RUN475" + ("P" if bypts else ""), C, "part", part, "of", nparts, "drop", sorted(drop), "checked", n, "sigma!=0", nz,
+    print("RUN475" + ("P" if bypts else ""), C, "part", part, "of", nparts, "drop", sorted(drop), "checked", n, "sigma!=0", nz, "L=0", nl,
           "per-size[count/sec]", per, "sec", round(time.time() - t0, 1), "FAILING", nf, flush=True)
     return nf
 
