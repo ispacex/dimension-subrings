@@ -170,6 +170,6 @@ if __name__ == '__main__':
     if m == 'count': count_mode(C); sys.exit(0)
     if m == 'run':
         part, nparts = int(sys.argv[3]), int(sys.argv[4])
-        drop = tuple(x for x in (sys.argv[5].split(',') if len(sys.argv) > 5 else []) if x)
+        drop = tuple(x for x in (sys.argv[5].split(',') if len(sys.argv) > 5 else []) if x and x != '-')
         f = run_mode(C, part, nparts, drop)
         sys.exit(0 if drop else (1 if f else 0))
