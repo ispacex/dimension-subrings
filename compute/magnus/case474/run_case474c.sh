@@ -1,5 +1,5 @@
 #!/bin/bash
-# MATH-474 (wiki 891 Sec. 21.4): gamma_4^81 = 1, s = 3 -- ALL chains (A, K_3 >= K_9 >= K_27 >= K_81) with 3K_e <= K_3e,
+# MATH-474 (wiki 891 Sec. 22.4): gamma_4^81 = 1, s = 3 -- ALL chains (A, K_3 >= K_9 >= K_27 >= K_81) with 3K_e <= K_3e,
 # elementary or not, on every capped (cut 81) type of length 3 (case467 diag467.py brutek, model mod 81 without (C)).
 # Controls: without (D2) and without (Kt) on [9,81,729]-like types (must fail).  Exit 0 iff 0 failures and controls fail.
 set -uo pipefail

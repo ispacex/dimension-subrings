@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""MATH-474 (wiki 891 Sec. 21): gamma_4 = C_{3^k}, k >= 4 -- conditions (T0) and (T1) for every k.
+"""MATH-474 (wiki 891 Sec. 22): gamma_4 = C_{3^k}, k >= 4 -- conditions (T0) and (T1) for every k.
 
 Model: case467/diag467.py (Sec. 11.4 without (C), modulus 3^k).
 
 Modes (one summary line each; exit status 1 iff a claim fails; with DROP the line is a control and exits 0):
-  diag S K N SEED [DROP]   Claim D (Prop. 21.1): R = 0 on every DIAGONAL chain (K_e = (+)_h m_e(h) Z) -- N random
+  diag S K N SEED [DROP]   Claim D (Prop. 22.1): R = 0 on every DIAGONAL chain (K_e = (+)_h m_e(h) Z) -- N random
                            capped types of length S mod 3^K with random diagonal labels (labels_k: m_3 | 3,
                            m_{3e} in {m_e, 3 m_e}); in addition the four term-by-term vanishings of the proof are checked
                            on generators of Lambda x Sigma.  With DROP (e.g. D2, Kt, Ko, B) the same without that
                            condition: the number of failing chains is reported (control).
   blocks S K PART NPARTS [DROP]
-                           Thm 21.4 (finite part): all configurations of <= 3 blocks with at least one pair on the capped
+                           Thm 22.5 (finite part): all configurations of <= 3 blocks with at least one pair on the capped
                            (cut 3^K) types of length S (index = PART mod NPARTS) satisfying (T1): singletons with
-                           diagonal labels, pairs {x, y} of the kinds of Lemma 21.3 with both signs; R = 0 mod 3^K.
+                           diagonal labels, pairs {x, y} of the kinds of Lemma 22.3 with both signs; R = 0 mod 3^K.
   orbits TYPE K            all elementary chains on TYPE mod 3^K; for every A with (T1) every orbit under gen_mats
                            (case467) contains a chain that is block diagonal (singletons and pairs {a, n}, a in A, n in N,
                            d(n) >= 9 d(a)) at ALL levels simultaneously; reported for the other A (control).
@@ -61,7 +61,7 @@ def lambda_sigma(M, K):
     return np.array(Lg, dtype=np.int64) % mod, np.array(Sg, dtype=np.int64) % mod
 
 def termwise_ok(M, Lm, Sm):
-    """every single product lambda_p * RB[p, :] . sigma vanishes (the proof of Prop. 21.1 is term by term)"""
+    """every single product lambda_p * RB[p, :] . sigma vanishes (the proof of Prop. 22.1 is term by term)"""
     if not len(Lm) or not len(Sm): return True
     mod = M.mod
     for p in range(M.NP):
@@ -86,7 +86,7 @@ def diag_mode(S, k, N, seed, drop):
 
 # ---------------------------------------------------------------- (T1) blocks for any k
 def pair_kinds(k):
-    """kinds of Lemma 21.3: ('w', l, c) -- t_x = w, z_y = c w, w in H_j iff j <= l (0 <= l <= k-2);
+    """kinds of Lemma 22.3: ('w', l, c) -- t_x = w, z_y = c w, w in H_j iff j <= l (0 <= l <= k-2);
     ('p', a, m, c) -- t_x = u, z_y = c v, H_j cap <u,v> = all (j <= a), <u+v> (a < j <= m), 0 (j > m), 0 <= a < m <= k-2.
     c in {1, -1}."""
     out = [('w', l, c) for l in range(k - 1) for c in (1, -1)]
@@ -138,7 +138,7 @@ def blocks_mode(S, k, part, nparts, drop):
           "FAILING", nfail, flush=True)
     return nfail
 
-# ---------------------------------------------------------------- orbit check of Lemma 21.3
+# ---------------------------------------------------------------- orbit check of Lemma 22.3
 def is_T1_block_k(key, d, A, k):
     s = len(d)
     Xs = [subspace_of(key[j], A, s) for j in range(k - 1)]
@@ -196,7 +196,7 @@ if __name__ == '__main__':
     if m == 'orbits':
         sys.exit(1 if orbits_mode([int(a) for a in sys.argv[2].split(',')], int(sys.argv[3])) else 0)
 
-# ---------------------------------------------------------------- the mixed model mod 9 (Sec. 21.3): all k at once
+# ---------------------------------------------------------------- the mixed model mod 9 (Sec. 22.3): all k at once
 class MixedModel(Model):
     """Model mod 9 for an ELEMENTARY chain mod 3^k written as sigma = 3^(k-2) sigma' (Lemma 15.2): every condition of
     index level (3^k, d(i)) uses the lattice L(i) of that index, given per index; coefficients mod 9 (they depend on
@@ -224,13 +224,13 @@ def gcd_(a, b):
     return gcd(a, b)
 
 def is_elementary(K, A, s, k):
-    """3K_3 <= K_{3^k} (Sec. 15.2); Prop. 21.4 is stated only for such chains"""
+    """3K_3 <= K_{3^k} (Sec. 15.2); Prop. 22.4 is stated only for such chains"""
     top = [np.array(v) for v in K[3 ** k]]
     K3x3 = [3 * np.eye(s, dtype=np.int64)[h] * (3 if h in A else 1) for h in range(s)]
     return hnf_key(top + K3x3, s, 3 ** k) == hnf_key(top, s, 3 ** k)
 
 def cross_mode(S, k, drop):
-    """per ELEMENTARY configuration of 'blocks' (mod 3^k): full model ok == mixed model ok (Sec. 21.3, equivalence).
+    """per ELEMENTARY configuration of 'blocks' (mod 3^k): full model ok == mixed model ok (Sec. 22.3, equivalence).
     'blocks' also contains non-elementary singleton labels (labels_k is a superset); they are skipped and only counted
     (for them Lemma 15.2 fails and the two models may differ: reported as 'nonelem-different', information only)."""
     n = diff = nf = ne = ned = 0
@@ -263,7 +263,7 @@ def seqs_single(cls, t):
     return [tuple([lo] * a + [hi] * (t - a)) for a in range(t + 1)]
 
 def seqs_pair(t):
-    """monotone sequences of pair lattices over levels 1..t (Lemma 21.3): F (= K_3), W_c, G_c, D"""
+    """monotone sequences of pair lattices over levels 1..t (Lemma 22.3): F (= K_3), W_c, G_c, D"""
     out = set()
     for c in (1, -1):
         for a in range(t + 1): out.add(tuple(['F'] * a + [('W', c)] * (t - a)))
@@ -325,7 +325,7 @@ def mixed_mode(S, part, nparts, drop):
     return nfail
 
 def melem_mode(S, part, nparts, drop):
-    """ALL elementary chains, every k at once (Sec. 21.4): capped (cut 9) types of length S (index = PART mod NPARTS),
+    """ALL elementary chains, every k at once (Sec. 22.4): capped (cut 9) types of length S (index = PART mod NPARTS),
     every A, every chain X_1 >= ... >= X_t of subspaces of K_3/3K_3 (t = number of distinct values d >= 9, level of
     an index = rank of its d among them; L = 3K_3 + X_level, K_3 for d = 3); R = 0 in the mixed model mod 9."""
     from diag467 import subspaces, rref3
